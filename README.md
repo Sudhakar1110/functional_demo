@@ -208,11 +208,12 @@ bench pip install -e apps/functional_demo
 ```
 
 or use the bundled one-shot installer, which also handles the pip step, falls
-back to a `.pth` entry when needed, installs the app and builds assets:
+back to a `.pth` entry when needed, installs the app and builds assets
+(the site name is optional - it is auto-detected when omitted):
 
 ```bash
 cd ~/frappe-bench-v15
-bash apps/functional_demo/install.sh fd.bizaxl.local
+bash apps/functional_demo/install.sh
 ```
 
 ### Clean re-install (recommended when the folder was cloned manually)
