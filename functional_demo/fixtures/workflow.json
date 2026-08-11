@@ -14,6 +14,7 @@
 				"parentfield": "states",
 				"parenttype": "Workflow",
 				"state": "Draft",
+				"allow_edit": "Sales User",
 				"update_field": "status",
 				"update_value": "Draft"
 			},
@@ -24,6 +25,7 @@
 				"parentfield": "states",
 				"parenttype": "Workflow",
 				"state": "Requested",
+				"allow_edit": "Sales User",
 				"update_field": "status",
 				"update_value": "Requested"
 			},
@@ -34,6 +36,7 @@
 				"parentfield": "states",
 				"parenttype": "Workflow",
 				"state": "Assigned",
+				"allow_edit": "Functional Team Manager",
 				"update_field": "status",
 				"update_value": "Assigned"
 			},
@@ -44,6 +47,7 @@
 				"parentfield": "states",
 				"parenttype": "Workflow",
 				"state": "Scheduled",
+				"allow_edit": "Sales User",
 				"update_field": "status",
 				"update_value": "Scheduled"
 			},
@@ -54,6 +58,7 @@
 				"parentfield": "states",
 				"parenttype": "Workflow",
 				"state": "Demo In Progress",
+				"allow_edit": "Functional Consultant",
 				"update_field": "status",
 				"update_value": "Demo In Progress"
 			},
@@ -64,6 +69,7 @@
 				"parentfield": "states",
 				"parenttype": "Workflow",
 				"state": "Demo Completed",
+				"allow_edit": "Functional Consultant",
 				"update_field": "status",
 				"update_value": "Demo Completed"
 			},
@@ -74,6 +80,7 @@
 				"parentfield": "states",
 				"parenttype": "Workflow",
 				"state": "Follow-up Required",
+				"allow_edit": "Sales User",
 				"update_field": "status",
 				"update_value": "Follow-up Required"
 			},
@@ -84,6 +91,7 @@
 				"parentfield": "states",
 				"parenttype": "Workflow",
 				"state": "Converted",
+				"allow_edit": "Sales User",
 				"update_field": "status",
 				"update_value": "Converted"
 			},
@@ -94,6 +102,7 @@
 				"parentfield": "states",
 				"parenttype": "Workflow",
 				"state": "Not Interested",
+				"allow_edit": "Sales User",
 				"update_field": "status",
 				"update_value": "Not Interested"
 			},
@@ -104,6 +113,7 @@
 				"parentfield": "states",
 				"parenttype": "Workflow",
 				"state": "Cancelled",
+				"allow_edit": "Sales Manager",
 				"update_field": "status",
 				"update_value": "Cancelled"
 			},
@@ -114,6 +124,7 @@
 				"parentfield": "states",
 				"parenttype": "Workflow",
 				"state": "Closed",
+				"allow_edit": "Sales Manager",
 				"update_field": "status",
 				"update_value": "Closed"
 			}
