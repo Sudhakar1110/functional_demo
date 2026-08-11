@@ -80,10 +80,9 @@ def import_module_docs():
 def fix_dashboard_charts():
 	"""Directly set group_by_field on the Group By charts (belt & braces).
 
-	Frappe v15 requires `group_by_field` for 'Group By' charts; the legacy
-	`x_field` key is ignored, leaving the value empty and crashing the chart
-	renderer. This sets it directly so an already-installed site is fixed
-	without waiting for a JSON re-import.
+	Frappe v15 requires `group_by_based_on` for 'Group By' charts. This sets it
+directly so an already-installed site is fixed without waiting for a JSON
+re-import.
 	"""
 	chart_fields = {
 		"Demo Requests by Module": "interested_module",
@@ -93,9 +92,9 @@ def fix_dashboard_charts():
 	}
 	for chart_name, field in chart_fields.items():
 		if frappe.db.exists("Dashboard Chart", chart_name):
-			cur = frappe.db.get_value("Dashboard Chart", chart_name, "group_by_field")
+			cur = frappe.db.get_value("Dashboard Chart", chart_name, "group_by_based_on")
 			if cur != field:
-				frappe.db.set_value("Dashboard Chart", chart_name, "group_by_field", field)
+				frappe.db.set_value("Dashboard Chart", chart_name, "group_by_based_on", field)
 	frappe.db.commit()
 
 

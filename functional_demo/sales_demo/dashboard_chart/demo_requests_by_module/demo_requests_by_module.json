@@ -25,6 +25,6 @@
  "type": "Bar",
  "use_report_chart": 0,
  "value_based_on": "",
- "group_by_field": "interested_module",
+ "group_by_based_on": "interested_module",
  "y_axis": []
 }

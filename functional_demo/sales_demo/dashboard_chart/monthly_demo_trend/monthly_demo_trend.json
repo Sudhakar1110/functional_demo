@@ -1,7 +1,7 @@
 {
  "based_on": "creation",
  "chart_name": "Monthly Demo Trend",
- "chart_type": "Timeseries",
+ "chart_type": "Count",
  "creation": "2026-08-12 00:00:00.000000",
  "docstatus": 0,
  "doctype": "Dashboard Chart",
