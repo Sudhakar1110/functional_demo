@@ -26,6 +26,7 @@ def after_install():
 	"""Idempotent post-install setup."""
 	create_roles()
 	import_module_docs()
+	create_workflow_states()
 
 
 def create_roles():
@@ -108,6 +109,36 @@ def fix_workspace_parents():
 	for ws in ("Sales Demo Workspace", "Functional Demo Workspace"):
 		if frappe.db.exists("Workspace", ws):
 			frappe.db.set_value("Workspace", ws, "parent_page", "Home")
+	frappe.db.commit()
+
+
+def create_workflow_states():
+	"""Create the Workflow State records used by the Demo Request workflow.
+
+	Frappe v15 references Workflow State documents from workflow-enabled forms
+	(e.g. the workflow state indicator/link). A workflow imported via fixture
+	does not auto-create these records, so missing states surface as
+	"Workflow State <name> not found" when opening or editing a Demo Request.
+	"""
+	workflow_states = [
+		("Draft", "Inverse"),
+		("Requested", "Info"),
+		("Assigned", "Primary"),
+		("Scheduled", "Primary"),
+		("Demo In Progress", "Info"),
+		("Demo Completed", "Success"),
+		("Follow-up Required", "Warning"),
+		("Converted", "Success"),
+		("Not Interested", "Danger"),
+		("Cancelled", "Danger"),
+		("Closed", "Inverse"),
+	]
+	for state, style in workflow_states:
+		if not frappe.db.exists("Workflow State", state):
+			doc = frappe.new_doc("Workflow State")
+			doc.workflow_state_name = state
+			doc.style = style
+			doc.insert(ignore_permissions=True)
 	frappe.db.commit()
 
 
