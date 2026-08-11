@@ -1,3 +1,4 @@
 # Patches for functional_demo
 # Add patch module paths here, one per line, e.g.:
 # functional_demo.patches.v1.some_patch
+functional_demo.patches.fix_dashboard_charts
