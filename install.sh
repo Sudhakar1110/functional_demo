@@ -5,12 +5,14 @@
 # Run from the bench root (e.g. ~/frappe-bench-v15):
 #     bash apps/functional_demo/install.sh <site-name>
 #
-# What it does:
-#   1. Registers the app in the bench virtualenv (editable pip install) so
-#      `import functional_demo` works - this is the step that fixes the
-#      "No module named 'functional_demo'" error.
-#   2. Falls back to a .pth sys.path entry if pip is unavailable.
-#   3. Installs the app on the site and builds assets.
+# This fixes the "No module named 'functional_demo'" error. The error happens
+# because a manually-cloned app is never registered in the bench's Python
+# virtualenv. This script does that registration (and only then installs the
+# app on your site):
+#   1. pip editable install  -> needs internet, the "proper" way
+#   2. .pth fallback         -> works offline, writes the app dir to sys.path
+#   3. verify import         -> confirms `import functional_demo` works
+#   4. install-app + build
 # -----------------------------------------------------------------------------
 set -euo pipefail
 
@@ -31,46 +33,60 @@ if [ ! -f "$APP_DIR/hooks.py" ]; then
 	exit 1
 fi
 
+# find the venv python (bin/python, bin/python3, bin/python3.11, ...)
+PYTHON_BIN=""
+if [ -x "$PYENV/bin/python" ]; then
+	PYTHON_BIN="$PYENV/bin/python"
+else
+	PYTHON_BIN="$(ls "$PYENV"/bin/python* 2>/dev/null | head -1 || true)"
+fi
+
 echo "==> Bench root : $BENCH_ROOT"
 echo "==> Site       : $SITE"
+echo "==> Venv python: ${PYTHON_BIN:-<none>}"
 
-# --- 1. register the app in the virtualenv ---------------------------------
-if [ -d "$PYENV" ]; then
+# --- Step 1: make `import functional_demo` work -----------------------------
+import_ok() {
+	[ -n "$PYTHON_BIN" ] && "$PYTHON_BIN" -c "import functional_demo" >/dev/null 2>&1
+}
+
+if import_ok; then
+	echo "==> functional_demo is already importable - OK"
+else
+	echo "==> Registering app in the virtualenv (pip editable install)..."
 	if (cd "$BENCH_ROOT" && bench pip install -e apps/functional_demo >/dev/null 2>&1); then
-		echo "==> App registered via pip editable install"
+		echo "==> pip editable install: OK"
 	else
-		echo "==> pip install failed - using .pth sys.path fallback"
-		PYVER_DIR="$(ls -d "$PYENV"/lib/python*/site-packages 2>/dev/null | head -1 || true)"
-		if [ -z "$PYVER_DIR" ]; then
+		echo "==> pip install unavailable - applying .pth sys.path fallback (offline-safe)"
+		SP_DIR="$(ls -d "$PYENV"/lib/python*/site-packages 2>/dev/null | head -1 || true)"
+		if [ -z "$SP_DIR" ]; then
 			echo "ERROR: could not locate site-packages under $PYENV"
 			exit 1
 		fi
-		echo "$BENCH_ROOT/apps" > "$PYVER_DIR/frappe_apps.pth"
-		echo "==> Wrote $PYVER_DIR/frappe_apps.pth"
+		# the app package lives at <bench>/apps/functional_demo/functional_demo/
+		# so the project root (apps/functional_demo) must be on sys.path
+		echo "$APP_DIR" > "$SP_DIR/frappe_apps.pth"
+		echo "==> Wrote $SP_DIR/frappe_apps.pth"
 	fi
-else
-	echo "==> No virtualenv found at $PYENV - assuming apps are on PYTHONPATH already"
-fi
 
-# --- 2. verify import works -------------------------------------------------
-if (cd "$BENCH_ROOT" && bench execute "frappe.utils.install.get_installed_apps" >/dev/null 2>&1 \
-	&& python -c "import functional_demo" >/dev/null 2>&1); then
-	echo "==> import functional_demo: OK"
-else
-	# python inside the venv
-	if [ -x "$PYENV/bin/python" ] && "$PYENV/bin/python" -c "import functional_demo" >/dev/null 2>&1; then
-		echo "==> import functional_demo: OK (venv python)"
+	if import_ok; then
+		echo "==> import functional_demo: OK"
 	else
-		echo "WARNING: could not verify import; continuing anyway"
+		echo "ERROR: still cannot import functional_demo."
+		echo "       Check the venv: $PYENV"
+		exit 1
 	fi
 fi
 
-# --- 3. install on site -----------------------------------------------------
+# --- Step 2: install on the site --------------------------------------------
 echo "==> Installing functional_demo on site $SITE ..."
 (cd "$BENCH_ROOT" && bench --site "$SITE" install-app functional_demo)
 
+# --- Step 3: build assets ----------------------------------------------------
 echo "==> Building assets ..."
 (cd "$BENCH_ROOT" && bench build)
 
 echo ""
-echo "✅ DONE - functional_demo is installed on site '$SITE'"
+echo "============================================================"
+echo " DONE - functional_demo is installed on site '$SITE'"
+echo "============================================================"
