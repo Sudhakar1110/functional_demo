@@ -1,0 +1,53 @@
+{
+	"creation": "2026-08-12 00:00:00.000000",
+	"docstatus": 0,
+	"doctype": "Page",
+	"icon": "octicon octicon-play",
+	"idx": 0,
+	"modified": "2026-08-12 00:00:00.000000",
+	"modified_by": "Administrator",
+	"module": "Sales Demo",
+	"name": "demo-execution",
+	"owner": "Administrator",
+	"page_name": "demo-execution",
+	"roles": [
+		{
+			"doctype": "Has Role",
+			"parent": "demo-execution",
+			"parentfield": "roles",
+			"parenttype": "Page",
+			"role": "Functional Consultant"
+		},
+		{
+			"doctype": "Has Role",
+			"parent": "demo-execution",
+			"parentfield": "roles",
+			"parenttype": "Page",
+			"role": "Functional Team Manager"
+		},
+		{
+			"doctype": "Has Role",
+			"parent": "demo-execution",
+			"parentfield": "roles",
+			"parenttype": "Page",
+			"role": "Sales User"
+		},
+		{
+			"doctype": "Has Role",
+			"parent": "demo-execution",
+			"parentfield": "roles",
+			"parenttype": "Page",
+			"role": "Sales Manager"
+		},
+		{
+			"doctype": "Has Role",
+			"parent": "demo-execution",
+			"parentfield": "roles",
+			"parenttype": "Page",
+			"role": "System Manager"
+		}
+	],
+	"standard": "Yes",
+	"system_page": 0,
+	"title": "Demo Execution"
+}

@@ -21,8 +21,9 @@ required_apps = ["erpnext"]
 before_install = "functional_demo.install.before_install"
 after_install = "functional_demo.install.after_install"
 
-# Custom "Demo Execution" screen (a light, user-friendly page for consultants)
-app_include_js = ["/assets/functional_demo/js/demo_execution.js"]
+# Demo Execution screen: ships as a standard Page doctype (Sales Demo > Page >
+# demo-execution) - its JS is loaded by Frappe for the /app/demo-execution route.
+# Only the shared CSS is included globally so the styling also applies in other views.
 app_include_css = ["/assets/functional_demo/css/demo_execution.css"]
 
 # Per-doctype form customizations
