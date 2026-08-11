@@ -1,0 +1,349 @@
+{
+ "charts": [
+  {
+   "chart_name": "Demo Requests by Status",
+   "label": "Demo Requests by Status"
+  },
+  {
+   "chart_name": "Demo Requests by Module",
+   "label": "Demo Requests by Module"
+  }
+ ],
+ "content": "[{\"id\":\"f8b1c2d3e4\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>Sales Demo Management</b></span>\",\"col\":12}},{\"id\":\"a1b2c3d4e5\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"New Lead\",\"col\":3}},{\"id\":\"b2c3d4e5f6\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"New Demo Request\",\"col\":3}},{\"id\":\"c3d4e5f6a7\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Schedule Demo\",\"col\":3}},{\"id\":\"d4e5f6a7b8\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Create Follow-up\",\"col\":3}},{\"id\":\"e5f6a7b8c9\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Open Demo Execution\",\"col\":3}},{\"id\":\"f6a7b8c9d0\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"a7b8c9d0e1\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>Quick Links</b></span>\",\"col\":12}},{\"id\":\"b8c9d0e1f2\",\"type\":\"card\",\"data\":{\"card_name\":\"Demo Requests\",\"col\":4}},{\"id\":\"c9d0e1f2a3\",\"type\":\"card\",\"data\":{\"card_name\":\"Customers\",\"col\":4}},{\"id\":\"d0e1f2a3b4\",\"type\":\"card\",\"data\":{\"card_name\":\"Reports & Analytics\",\"col\":4}},{\"id\":\"e1f2a3b4c5\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"f2a3b4c5d6\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>Analytics</b></span>\",\"col\":12}},{\"id\":\"a3b4c5d6e7\",\"type\":\"chart\",\"data\":{\"chart_name\":\"Demo Requests by Status\",\"col\":6}},{\"id\":\"b4c5d6e7f8\",\"type\":\"chart\",\"data\":{\"chart_name\":\"Demo Requests by Module\",\"col\":6}},{\"id\":\"c5d6e7f8a9\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Total Demo Requests\",\"col\":3}},{\"id\":\"d6e7f8a9b0\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Pending Demo Requests\",\"col\":3}},{\"id\":\"e7f8a9b0c1\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Scheduled Demos\",\"col\":3}},{\"id\":\"f8a9b0c1d2\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Today's Demos\",\"col\":3}},{\"id\":\"a9b0c1d2e3\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Completed Demos\",\"col\":3}},{\"id\":\"b0c1d2e3f4\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Follow-ups Due\",\"col\":3}},{\"id\":\"c1d2e3f4a5\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Converted Customers\",\"col\":3}}]",
+ "creation": "2026-08-11 10:00:00.000000",
+ "custom_blocks": [],
+ "docstatus": 0,
+ "doctype": "Workspace",
+ "for_user": "",
+ "hide_custom": 0,
+ "icon": "briefcase",
+ "idx": 0,
+ "is_hidden": 0,
+ "label": "Sales Demo Workspace",
+ "links": [
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Demo Requests",
+   "link_count": 0,
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Demo Request",
+   "link_count": 0,
+   "link_to": "Demo Request",
+   "link_type": "DocType",
+   "onboard": 1,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Demo Session",
+   "link_count": 0,
+   "link_to": "Demo Session",
+   "link_type": "DocType",
+   "onboard": 1,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Demo Follow Up",
+   "link_count": 0,
+   "link_to": "Demo Follow Up",
+   "link_type": "DocType",
+   "onboard": 1,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Functional Consultant",
+   "link_count": 0,
+   "link_to": "Functional Consultant",
+   "link_type": "DocType",
+   "onboard": 1,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Customers",
+   "link_count": 0,
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Lead",
+   "link_count": 0,
+   "link_to": "Lead",
+   "link_type": "DocType",
+   "onboard": 1,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Customer",
+   "link_count": 0,
+   "link_to": "Customer",
+   "link_type": "DocType",
+   "onboard": 1,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Contact",
+   "link_count": 0,
+   "link_to": "Contact",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Opportunity",
+   "link_count": 0,
+   "link_to": "Opportunity",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Reports & Analytics",
+   "link_count": 0,
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Demo Request Report",
+   "link_count": 0,
+   "link_to": "Demo Request Report",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Demo Session Report",
+   "link_count": 0,
+   "link_to": "Demo Session Report",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Follow-up Report",
+   "link_count": 0,
+   "link_to": "Follow-up Report",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Upcoming Demo Report",
+   "link_count": 0,
+   "link_to": "Upcoming Demo Report",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Completed Demo Report",
+   "link_count": 0,
+   "link_to": "Completed Demo Report",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Demo Conversion Report",
+   "link_count": 0,
+   "link_to": "Demo Conversion Report",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Sales Person-wise Demo Report",
+   "link_count": 0,
+   "link_to": "Sales Person-wise Demo Report",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Module-wise Demo Report",
+   "link_count": 0,
+   "link_to": "Module-wise Demo Report",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Customer Demo History",
+   "link_count": 0,
+   "link_to": "Customer Demo History",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Consultant Workload Report",
+   "link_count": 0,
+   "link_to": "Consultant Workload Report",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Consultant-wise Demo Report",
+   "link_count": 0,
+   "link_to": "Consultant-wise Demo Report",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Template Usage Report",
+   "link_count": 0,
+   "link_to": "Template Usage Report",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Demo Status Report",
+   "link_count": 0,
+   "link_to": "Demo Status Report",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  }
+ ],
+ "modified": "2026-08-11 10:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Sales Demo",
+ "name": "Sales Demo Workspace",
+ "number_cards": [
+  {
+   "label": "Total Demo Requests",
+   "number_card_name": "Total Demo Requests",
+   "statistics": "Count"
+  },
+  {
+   "label": "Pending Demo Requests",
+   "number_card_name": "Pending Demo Requests",
+   "statistics": "Count"
+  },
+  {
+   "label": "Scheduled Demos",
+   "number_card_name": "Scheduled Demos",
+   "statistics": "Count"
+  },
+  {
+   "label": "Today's Demos",
+   "number_card_name": "Today's Demos",
+   "statistics": "Count"
+  },
+  {
+   "label": "Completed Demos",
+   "number_card_name": "Completed Demos",
+   "statistics": "Count"
+  },
+  {
+   "label": "Follow-ups Due",
+   "number_card_name": "Follow-ups Due",
+   "statistics": "Count"
+  },
+  {
+   "label": "Converted Customers",
+   "number_card_name": "Converted Customers",
+   "statistics": "Count"
+  }
+ ],
+ "owner": "Administrator",
+ "parent_page": "",
+ "public": 1,
+ "quick_lists": [],
+ "restrict_to_domain": "",
+ "roles": [
+  {
+   "role": "Sales User"
+  },
+  {
+   "role": "Sales Manager"
+  }
+ ],
+ "sequence_id": 1.0,
+ "shortcuts": [
+  {
+   "color": "Green",
+   "format": "{} Open",
+   "label": "New Lead",
+   "link_to": "Lead",
+   "stats_filter": "{\n \"status\": \"Open\"\n}",
+   "type": "DocType"
+  },
+  {
+   "color": "Blue",
+   "label": "New Demo Request",
+   "link_to": "Demo Request",
+   "type": "DocType"
+  },
+  {
+   "color": "Yellow",
+   "label": "Schedule Demo",
+   "link_to": "Demo Session",
+   "type": "DocType"
+  },
+  {
+   "color": "Orange",
+   "label": "Create Follow-up",
+   "link_to": "Demo Follow Up",
+   "type": "DocType"
+  },
+  {
+   "color": "Purple",
+   "label": "Open Demo Execution",
+   "type": "URL",
+   "url": "/app/demo-execution"
+  }
+ ],
+ "title": "Sales Demo Workspace"
+}

@@ -1,0 +1,33 @@
+{
+ "attach_print": 0,
+ "channel": "Email",
+ "condition": "doc.demo_status == \"Scheduled\" and doc.reschedule_count > 0",
+ "creation": "2026-08-11 10:00:00.000000",
+ "days_in_advance": 0,
+ "docstatus": 0,
+ "doctype": "Notification",
+ "document_type": "Demo Session",
+ "enabled": 1,
+ "event": "Value Change",
+ "idx": 0,
+ "is_standard": 1,
+ "message": "<h4>{{ _(\"Demo Rescheduled\") }}</h4><p>{{ _(\"Demo Session {0} has been rescheduled.\") }}</p><ul><li>{{ _(\"Customer\") }}: {{ doc.customer or doc.demo_request }}</li><li>{{ _(\"New Date\") }}: {{ doc.scheduled_date }}</li><li>{{ _(\"Start Time\") }}: {{ doc.start_time or \"-\" }}</li><li>{{ _(\"Meeting Link\") }}: {{ doc.meeting_link or \"-\" }}</li></ul><p>{{ frappe.utils.get_link_to_form(\"Demo Session\", doc.name, _(\"Open Demo Session\")) }}</p>",
+ "message_type": "HTML",
+ "modified": "2026-08-11 10:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Sales Demo",
+ "name": "Demo Rescheduled",
+ "owner": "Administrator",
+ "recipients": [
+  {
+   "receiver_by_document_field": "consultant_user"
+  },
+  {
+   "receiver_by_document_field": "sales_person"
+  }
+ ],
+ "send_system_notification": 1,
+ "send_to_all_assignees": 0,
+ "subject": "{{ _(\"Demo Rescheduled: {0} to {1}\").format(doc.customer or doc.demo_request, doc.scheduled_date) }}",
+ "value_changed": "scheduled_date"
+}

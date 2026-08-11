@@ -1,0 +1,33 @@
+{
+ "attach_print": 0,
+ "channel": "Email",
+ "condition": "doc.status == \"Follow-up Required\"",
+ "creation": "2026-08-11 10:00:00.000000",
+ "days_in_advance": 0,
+ "docstatus": 0,
+ "doctype": "Notification",
+ "document_type": "Demo Request",
+ "enabled": 1,
+ "event": "Value Change",
+ "idx": 0,
+ "is_standard": 1,
+ "message": "<h4>{{ _(\"Follow-up Required\") }}</h4><p>{{ _(\"A follow-up is required for\") }} <b>{{ doc.customer or doc.lead }}</b> {{ _(\"after the demo.\") }}</p><ul><li>{{ _(\"Follow-up Date\") }}: {{ doc.follow_up_date or \"-\" }}</li><li>{{ _(\"Next Action\") }}: {{ doc.next_action or \"-\" }}</li></ul><p>{{ _(\"Please reach out to the customer and plan the next step.\") }}</p><p>{{ frappe.utils.get_link_to_form(\"Demo Request\", doc.name, _(\"Open Demo Request\")) }}</p>",
+ "message_type": "HTML",
+ "modified": "2026-08-11 10:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Sales Demo",
+ "name": "Follow-up Required",
+ "owner": "Administrator",
+ "recipients": [
+  {
+   "receiver_by_document_field": "sales_person"
+  },
+  {
+   "receiver_by_role": "Sales Manager"
+  }
+ ],
+ "send_system_notification": 1,
+ "send_to_all_assignees": 0,
+ "subject": "{{ _(\"Follow-up Required: {0}\").format(doc.customer or doc.lead) }}",
+ "value_changed": "status"
+}

@@ -1,0 +1,347 @@
+# Copyright (c) 2026, Functional Demo Team and Contributors
+# License: GNU General Public License (v3). See LICENSE
+
+import frappe
+from frappe import _
+from frappe.model.document import Document
+from frappe.utils import now_datetime, today
+
+
+class DemoRequest(Document):
+	def validate(self):
+		self.validate_sales_person()
+		self.validate_lead_or_customer()
+		self.fetch_contact_details()
+		self.validate_consultant()
+		self.validate_schedule_conflict()
+		self.validate_follow_up_date()
+		self.set_reassignment_flag()
+
+	def after_insert(self):
+		self.log_activity("Created", remarks="Demo Request created")
+
+	def on_update(self):
+		self.log_status_and_assignment_activity()
+		self.assign_consultant_todo()
+
+	# ------------------------------------------------------------------
+	# validation
+	# ------------------------------------------------------------------
+
+	def validate_sales_person(self):
+		if not self.sales_person:
+			self.sales_person = frappe.session.user
+
+	def validate_lead_or_customer(self):
+		if not self.lead and not self.customer and self.workflow_state not in (None, "", "Draft"):
+			frappe.throw(
+				_("Please select a Lead or a Customer for this Demo Request."),
+				title=_("Missing Party"),
+			)
+
+	def fetch_contact_details(self):
+		"""Auto-populate the contact person / number / email from the selected
+		Customer or Lead so the sales user does not have to type them again."""
+		if self.customer:
+			if not self.contact_person:
+				self.set_primary_contact("Customer", self.customer)
+			return
+
+		if self.lead:
+			if not self.contact_person:
+				self.set_primary_contact("Lead", self.lead)
+			lead = frappe.db.get_value(
+				"Lead", self.lead, ["email_id", "phone", "mobile_no"], as_dict=True
+			)
+			if lead:
+				self.email = self.email or lead.email_id
+				self.contact_number = self.contact_number or lead.mobile_no or lead.phone
+
+	def set_primary_contact(self, party_type, party_name):
+		contact = get_primary_contact(party_type, party_name)
+		if not contact:
+			return
+		self.contact_person = contact.name
+		details = frappe.db.get_value(
+			"Contact", contact.name, ["email_id", "phone", "mobile_no"], as_dict=True
+		)
+		if details:
+			self.email = self.email or details.email_id
+			self.contact_number = self.contact_number or (details.mobile_no or details.phone)
+
+	def validate_consultant(self):
+		if self.functional_consultant:
+			consultant = frappe.db.get_value(
+				"Functional Consultant",
+				self.functional_consultant,
+				["status", "user"],
+				as_dict=True,
+			)
+			if not consultant:
+				frappe.throw(
+					_("Functional Consultant {0} was not found.").format(self.functional_consultant)
+				)
+			if consultant.status != "Active":
+				frappe.throw(
+					_("Functional Consultant {0} is not active. Only active consultants can be assigned.").format(
+						self.functional_consultant
+					),
+					title=_("Consultant Not Active"),
+				)
+		elif self.workflow_state in ("Assigned", "Scheduled", "Demo In Progress", "Demo Completed", "Follow-up Required"):
+			frappe.throw(
+				_("Please assign a Functional Consultant before the demo moves forward."),
+				title=_("Consultant Required"),
+			)
+
+	def validate_schedule_conflict(self):
+		"""Warn (and prevent) conflicting schedules for the same consultant on the
+		same date. The Demo Session validates actual overlaps."""
+		if not (self.functional_consultant and self.preferred_demo_date and self.preferred_demo_time):
+			return
+		if self.workflow_state not in ("Assigned", "Scheduled", "Demo In Progress"):
+			return
+		conflicts = frappe.db.sql(
+			"""
+			select ds.name
+			from `tabDemo Session` ds
+			where ds.functional_consultant = %(consultant)s
+				and ds.scheduled_date = %(date)s
+				and ds.demo_status not in ('Cancelled', 'Completed', 'Closed')
+				and (ds.demo_request is null or ds.demo_request = '' or ds.demo_request != %(self_name)s)
+			""",
+			{
+				"consultant": self.functional_consultant,
+				"date": self.preferred_demo_date,
+				"self_name": self.name or "",
+			},
+		)
+		if conflicts:
+			frappe.throw(
+				_("Functional Consultant {0} already has a demo scheduled on {1} ({2}). Please pick a different date, time or consultant.").format(
+					self.functional_consultant, self.preferred_demo_date, conflicts[0][0]
+				),
+				title=_("Schedule Conflict"),
+			)
+
+	def validate_follow_up_date(self):
+		if self.follow_up_date and self.follow_up_date < today():
+			frappe.throw(_("Follow-up Date cannot be in the past."))
+
+	def set_reassignment_flag(self):
+		old = self.db_get("functional_consultant")
+		self.consultant_reassigned = 1 if (old and old != self.functional_consultant) else 0
+
+	# ------------------------------------------------------------------
+	# activity history (audit trail)
+	# ------------------------------------------------------------------
+
+	def log_status_and_assignment_activity(self):
+		old_status = self.db_get("status")
+		old_consultant = self.db_get("functional_consultant")
+
+		if old_status and old_status != self.status:
+			self.log_activity(
+				"Status Changed",
+				status=self.status,
+				remarks="{0} -> {1}".format(old_status, self.status),
+			)
+
+		if old_consultant != self.functional_consultant:
+			if old_consultant:
+				self.log_activity(
+					"Consultant Reassigned",
+					remarks="{0} -> {1}".format(old_consultant, self.functional_consultant or "Unassigned"),
+				)
+			elif self.functional_consultant:
+				self.log_activity("Consultant Assigned", remarks="Assigned to {0}".format(self.functional_consultant))
+
+	def log_activity(self, activity_type, status=None, remarks=None):
+		row = frappe.new_doc("Demo Request Activity")
+		row.update(
+			{
+				"parent": self.name,
+				"parentfield": "demo_request_activity",
+				"parenttype": "Demo Request",
+				"activity_type": activity_type,
+				"activity_date": now_datetime(),
+				"user": frappe.session.user,
+				"status": status or self.status,
+				"remarks": remarks,
+			}
+		)
+		row.db_insert()
+
+	def assign_consultant_todo(self):
+		"""Create a ToDo for the assigned consultant (standard ERPNext assignment)."""
+		old = self.db_get("functional_consultant")
+		if not self.functional_consultant or old == self.functional_consultant:
+			return
+		user = frappe.db.get_value("Functional Consultant", self.functional_consultant, "user")
+		if not user or user == "Administrator":
+			return
+		if frappe.db.exists(
+			"ToDo",
+			{
+				"reference_type": "Demo Request",
+				"reference_name": self.name,
+				"owner": user,
+				"status": ["in", ["Open", "Overdue"]],
+			},
+		):
+			return
+		todo = frappe.new_doc("ToDo")
+		todo.description = _(
+			"You have been assigned Demo Request {0} ({1}). Please review the customer requirements and confirm your availability."
+		).format(self.name, self.customer or self.lead)
+		todo.reference_type = "Demo Request"
+		todo.reference_name = self.name
+		todo.role = "Functional Consultant"
+		todo.owner = user
+		todo.insert(ignore_permissions=True)
+
+
+# ------------------------------------------------------------------
+# helpers used across the app
+# ------------------------------------------------------------------
+
+def get_primary_contact(party_type, party_name):
+	"""Return the primary (or first) Contact linked to a Customer/Lead."""
+	if not party_type or not party_name:
+		return None
+	names = frappe.get_all(
+		"Contact",
+		filters=[
+			["Dynamic Link", "link_doctype", "=", party_type],
+			["Dynamic Link", "link_name", "=", party_name],
+			["is_primary_contact", "=", 1],
+		],
+		limit=1,
+		order_by="creation asc",
+	)
+	if not names:
+		names = frappe.get_all(
+			"Contact",
+			filters=[
+				["Dynamic Link", "link_doctype", "=", party_type],
+				["Dynamic Link", "link_name", "=", party_name],
+			],
+			limit=1,
+			order_by="creation asc",
+		)
+	if not names:
+		return None
+	return frappe.get_doc("Contact", names[0].name)
+
+
+def change_status(doc, new_status, ignore_permissions=False):
+	"""Move a Demo Request through its workflow with friendly validation.
+
+	Walks the workflow graph so intermediate states (e.g. Requested -> Assigned ->
+	Scheduled) are applied in order even when no direct transition exists. Every
+	step is validated by the framework against the current user's roles, so users
+	can only move the request along transitions their role allows. Jumps further
+	than three transitions ahead are not allowed.
+	"""
+	from collections import deque
+
+	from frappe.model.workflow import get_transitions
+
+	doc = frappe.get_doc(doc.doctype, doc.name)
+	current = doc.get("workflow_state") or doc.get("status") or "Draft"
+	if current == new_status:
+		return doc
+
+	# find a path through the workflow graph using role-allowed transitions.
+	# The path is capped at 3 transitions: real flows never need more than
+	# Draft -> Requested -> Assigned -> Scheduled, and jumping further ahead
+	# (e.g. straight to Converted without a demo) must not be possible.
+	parent = {current: None}
+	queue = deque([(current, 0)])
+	visited = set()
+	while queue:
+		state, depth = queue.popleft()
+		if state in visited:
+			continue
+		visited.add(state)
+		if state == new_status:
+			break
+		if depth >= 3:
+			continue  # do not explore deeper than 3 transitions
+		doc.workflow_state = state
+		for transition in get_transitions(doc) or []:
+			next_state = transition.get("next_state")
+			if next_state and next_state not in parent:
+				parent[next_state] = state
+				queue.append((next_state, depth + 1))
+
+	if new_status not in parent:
+		frappe.throw(
+			_("Demo Request cannot move from '{0}' to '{1}' directly. Please use a supported action.").format(
+				current, new_status
+			),
+			title=_("Invalid Status Change"),
+		)
+
+	# apply the path step by step
+	path = []
+	step = new_status
+	while step is not None:
+		path.append(step)
+		step = parent.get(step)
+	path.reverse()
+
+	for state in path:
+		doc.workflow_state = state
+		doc.status = state  # keep the status field in sync with the workflow state
+		doc.save(ignore_permissions=ignore_permissions)
+		doc.reload()
+
+	return doc
+
+
+# ------------------------------------------------------------------
+# permission filters
+# ------------------------------------------------------------------
+
+def get_permission_query_conditions(user=None):
+	"""Sales users see their own requests; consultants see requests assigned to them;
+	managers and System Manager see everything."""
+	user = user or frappe.session.user
+	if not user or user == "Administrator":
+		return ""
+	roles = frappe.get_roles(user)
+	if any(r in roles for r in ("System Manager", "Sales Manager", "Functional Team Manager")):
+		return ""
+	if "Sales User" in roles:
+		return "(`tabDemo Request`.`sales_person` = {0} or `tabDemo Request`.`owner` = {0})".format(
+			frappe.db.escape(user)
+		)
+	if "Functional Consultant" in roles:
+		return (
+			"(`tabDemo Request`.`functional_consultant` in "
+			"(select `tabFunctional Consultant`.`name` from `tabFunctional Consultant` "
+			"where `tabFunctional Consultant`.`user` = {0}))"
+		).format(frappe.db.escape(user))
+	return ""
+
+
+def has_permission(doc, ptype="read", user=None):
+	user = user or frappe.session.user
+	if user == "Administrator":
+		return True
+	roles = frappe.get_roles(user)
+	if any(r in roles for r in ("System Manager", "Sales Manager", "Functional Team Manager")):
+		return True
+	if "Sales User" in roles:
+		if doc.get("sales_person") == user or doc.get("owner") == user:
+			return True
+		return False
+	if "Functional Consultant" in roles:
+		consultant_user = None
+		if doc.get("functional_consultant"):
+			consultant_user = frappe.db.get_value(
+				"Functional Consultant", doc.get("functional_consultant"), "user"
+			)
+		return consultant_user == user
+	return False

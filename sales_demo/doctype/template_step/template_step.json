@@ -1,0 +1,52 @@
+{
+ "actions": [],
+ "autoname": "hash",
+ "creation": "2026-08-11 10:00:00.000000",
+ "doctype": "DocType",
+ "document_type": "Document",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "step_no",
+  "description",
+  "doctype_to_demo",
+  "duration_min"
+ ],
+ "fields": [
+  {
+   "fieldname": "step_no",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Step No"
+  },
+  {
+   "fieldname": "description",
+   "fieldtype": "Text",
+   "in_list_view": 1,
+   "label": "Step Description",
+   "reqd": 1
+  },
+  {
+   "fieldname": "doctype_to_demo",
+   "fieldtype": "Data",
+   "label": "DocType / Screen to Demonstrate"
+  },
+  {
+   "fieldname": "duration_min",
+   "fieldtype": "Int",
+   "label": "Duration (minutes)"
+  }
+ ],
+ "istable": 1,
+ "links": [],
+ "modified": "2026-08-11 10:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Sales Demo",
+ "name": "Template Step",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 0
+}

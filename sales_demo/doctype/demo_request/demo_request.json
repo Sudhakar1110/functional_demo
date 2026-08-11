@@ -1,0 +1,316 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "autoname": "DEMO-RQ-.YYYY.-.#####",
+ "creation": "2026-08-11 10:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "customer_section",
+  "lead",
+  "customer",
+  "company",
+  "contact_person",
+  "contact_number",
+  "email",
+  "requirement_section",
+  "sales_person",
+  "interested_module",
+  "customer_requirements",
+  "business_process_requirements",
+  "priority",
+  "planning_section",
+  "preferred_demo_date",
+  "preferred_demo_time",
+  "demo_type",
+  "functional_consultant",
+  "consultant_user",
+  "status_section",
+  "status",
+  "workflow_state",
+  "follow_up_date",
+  "next_action",
+  "consultant_reassigned",
+  "remarks_section",
+  "sales_remarks",
+  "functional_remarks",
+  "activity_section",
+  "demo_request_activity"
+ ],
+ "fields": [
+  {
+   "fieldname": "customer_section",
+   "fieldtype": "Section Break",
+   "label": "Customer & Contact"
+  },
+  {
+   "fieldname": "lead",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Lead",
+   "options": "Lead"
+  },
+  {
+   "fieldname": "customer",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Customer",
+   "options": "Customer"
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company",
+   "options": "Company"
+  },
+  {
+   "fieldname": "contact_person",
+   "fieldtype": "Link",
+   "ignore_user_permissions": 1,
+   "label": "Contact Person",
+   "options": "Contact"
+  },
+  {
+   "fetch_from": "contact_person.mobile_no",
+   "fetch_if_empty": 1,
+   "fieldname": "contact_number",
+   "fieldtype": "Data",
+   "label": "Contact Number"
+  },
+  {
+   "fetch_from": "contact_person.email_id",
+   "fetch_if_empty": 1,
+   "fieldname": "email",
+   "fieldtype": "Data",
+   "label": "Email",
+   "options": "Email"
+  },
+  {
+   "fieldname": "requirement_section",
+   "fieldtype": "Section Break",
+   "label": "Requirement Details"
+  },
+  {
+   "fieldname": "sales_person",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Sales Person",
+   "options": "User",
+   "reqd": 1
+  },
+  {
+   "fieldname": "interested_module",
+   "fieldtype": "Select",
+   "in_standard_filter": 1,
+   "label": "Interested Product / Module",
+   "options": "\nAccounting\nCRM\nSelling\nBuying\nStock\nManufacturing\nHR & Payroll\nProjects\nHealthcare\nEducation\nAgriculture\nCustom Application"
+  },
+  {
+   "fieldname": "customer_requirements",
+   "fieldtype": "Text",
+   "label": "Customer Requirements"
+  },
+  {
+   "fieldname": "business_process_requirements",
+   "fieldtype": "Text",
+   "label": "Business Process Requirements"
+  },
+  {
+   "default": "Medium",
+   "fieldname": "priority",
+   "fieldtype": "Select",
+   "in_standard_filter": 1,
+   "label": "Priority",
+   "options": "Low\nMedium\nHigh\nCritical"
+  },
+  {
+   "fieldname": "planning_section",
+   "fieldtype": "Section Break",
+   "label": "Demo Planning"
+  },
+  {
+   "fieldname": "preferred_demo_date",
+   "fieldtype": "Date",
+   "label": "Preferred Demo Date"
+  },
+  {
+   "fieldname": "preferred_demo_time",
+   "fieldtype": "Time",
+   "label": "Preferred Demo Time"
+  },
+  {
+   "default": "Standard Demo",
+   "fieldname": "demo_type",
+   "fieldtype": "Select",
+   "label": "Demo Type",
+   "options": "Standard Demo\nCustomized Demo\nWalkthrough\nDeep Dive\nFollow-up Demo"
+  },
+  {
+   "fieldname": "functional_consultant",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Assigned Functional Consultant",
+   "options": "Functional Consultant"
+  },
+  {
+   "fetch_from": "functional_consultant.user",
+   "fieldname": "consultant_user",
+   "fieldtype": "Link",
+   "hidden": 1,
+   "label": "Consultant User",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "status_section",
+   "fieldtype": "Section Break",
+   "label": "Status & Follow-up"
+  },
+  {
+   "default": "Draft",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "options": "Draft\nRequested\nAssigned\nScheduled\nDemo In Progress\nDemo Completed\nFollow-up Required\nConverted\nNot Interested\nCancelled\nClosed",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "workflow_state",
+   "fieldtype": "Select",
+   "hidden": 1,
+   "label": "Workflow State",
+   "options": "Draft\nRequested\nAssigned\nScheduled\nDemo In Progress\nDemo Completed\nFollow-up Required\nConverted\nNot Interested\nCancelled\nClosed",
+   "read_only": 1
+  },
+  {
+   "fieldname": "follow_up_date",
+   "fieldtype": "Date",
+   "label": "Follow-up Date"
+  },
+  {
+   "fieldname": "next_action",
+   "fieldtype": "Small Text",
+   "label": "Next Action"
+  },
+  {
+   "default": "0",
+   "fieldname": "consultant_reassigned",
+   "fieldtype": "Check",
+   "hidden": 1,
+   "label": "Consultant Reassigned"
+  },
+  {
+   "fieldname": "remarks_section",
+   "fieldtype": "Section Break",
+   "label": "Remarks"
+  },
+  {
+   "fieldname": "sales_remarks",
+   "fieldtype": "Small Text",
+   "label": "Sales Remarks"
+  },
+  {
+   "fieldname": "functional_remarks",
+   "fieldtype": "Small Text",
+   "label": "Functional Remarks"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "activity_section",
+   "fieldtype": "Section Break",
+   "label": "Activity History"
+  },
+  {
+   "fieldname": "demo_request_activity",
+   "fieldtype": "Table",
+   "label": "Activity",
+   "options": "Demo Request Activity",
+   "read_only": 1
+  }
+ ],
+ "links": [
+  {
+   "group": "Demo Management",
+   "link_doctype": "Demo Session",
+   "link_fieldname": "demo_request"
+  },
+  {
+   "group": "Demo Management",
+   "link_doctype": "Demo Follow Up",
+   "link_fieldname": "demo_request"
+  }
+ ],
+ "modified": "2026-08-11 10:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Sales Demo",
+ "name": "Demo Request",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "if_owner": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Sales User",
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Sales Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Functional Consultant"
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Functional Team Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "quick_entry": 1,
+ "search_fields": "customer, lead, sales_person, status",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "status_field": "status",
+ "track_changes": 1
+}

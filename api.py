@@ -1,0 +1,384 @@
+# Copyright (c) 2026, Functional Demo Team and Contributors
+# License: GNU General Public License (v3). See LICENSE
+"""Whitelisted API endpoints used by the Demo Execution screen and quick actions."""
+
+import frappe
+from frappe import _
+
+from functional_demo.sales_demo.doctype.demo_request.demo_request import (
+	change_status,
+	get_primary_contact,
+)
+from functional_demo.sales_demo.doctype.demo_session.demo_session import (
+	create_calendar_event,
+)
+
+
+# ---------------------------------------------------------------------------
+# Lookup helpers (auto-fetch customer / lead / consultant / template details)
+# ---------------------------------------------------------------------------
+
+@frappe.whitelist()
+def get_customer_details(customer):
+	"""Auto-fetch primary contact details for a Customer."""
+	if not customer:
+		return {}
+	contact = get_primary_contact("Customer", customer)
+	details = {
+		"contact_person": contact.name if contact else "",
+		"contact_number": "",
+		"email": "",
+	}
+	if contact:
+		contact_doc = frappe.db.get_value(
+			"Contact", contact.name, ["email_id", "phone", "mobile_no"], as_dict=True
+		)
+		if contact_doc:
+			details["email"] = contact_doc.email_id or ""
+			details["contact_number"] = contact_doc.mobile_no or contact_doc.phone or ""
+	return details
+
+
+@frappe.whitelist()
+def get_lead_details(lead):
+	"""Auto-fetch details for a Lead."""
+	if not lead:
+		return {}
+	lead_doc = frappe.db.get_value(
+		"Lead", lead, ["lead_name", "email_id", "phone", "mobile_no", "company_name"], as_dict=True
+	)
+	if not lead_doc:
+		return {}
+	return {
+		"contact_person": lead_doc.lead_name or "",
+		"contact_number": lead_doc.mobile_no or lead_doc.phone or "",
+		"email": lead_doc.email_id or "",
+	}
+
+
+@frappe.whitelist()
+def get_available_consultants(module=None, include_inactive=0):
+	"""List Functional Consultants (active by default), optionally filtered by
+	an ERPNext module they specialize in. Also returns their current workload."""
+	filters = {"status": "Active"} if not include_inactive else {}
+	consultants = frappe.get_all(
+		"Functional Consultant",
+		filters=filters,
+		fields=[
+			"name",
+			"consultant_name",
+			"user",
+			"specialization",
+			"availability",
+			"experience_years",
+			"status",
+		],
+		order_by="consultant_name asc",
+	)
+
+	# ERPNext modules per consultant (child table - fetched separately for safety)
+	modules_map = {}
+	names = [c.name for c in consultants]
+	if names:
+		for row in frappe.get_all(
+			"Consultant Module",
+			filters={"parent": ["in", names]},
+			fields=["parent", "module"],
+		):
+			modules_map.setdefault(row.parent, []).append(row.module)
+
+	# workload: scheduled/in-progress demo sessions per consultant
+	workload = dict(
+		frappe.db.sql(
+			"""select functional_consultant, count(*) from `tabDemo Session`
+			where demo_status in ('Scheduled', 'In Progress')
+			group by functional_consultant"""
+		)
+	)
+
+	out = []
+	for c in consultants:
+		modules = modules_map.get(c.name) or []
+		if module and module not in modules and c.get("specialization") != module:
+			continue
+		out.append(
+			{
+				"name": c.name,
+				"consultant_name": c.consultant_name,
+				"user": c.user,
+				"specialization": c.specialization,
+				"availability": c.availability,
+				"experience_years": c.experience_years,
+				"status": c.status,
+				"modules": modules,
+				"active_demos": int(workload.get(c.name) or 0),
+			}
+		)
+	return out
+
+
+@frappe.whitelist()
+def get_consultant_templates(consultant):
+	"""List active demo templates belonging to a Functional Consultant."""
+	if not consultant:
+		return []
+	return frappe.get_all(
+		"Functional Demo Template",
+		filters={"functional_consultant": consultant, "is_active": 1},
+		fields=["name", "template_name", "erpnext_module", "business_area", "demo_objective"],
+		order_by="template_name asc",
+	)
+
+
+# ---------------------------------------------------------------------------
+# Demo Request quick actions
+# ---------------------------------------------------------------------------
+
+@frappe.whitelist()
+def schedule_demo(demo_request, scheduled_date, start_time=None, end_time=None, meeting_link=None):
+	"""Schedule (or reschedule) a demo for a Demo Request and create a Demo Session."""
+	if not scheduled_date:
+		frappe.throw(_("Please select a scheduled date."))
+
+	dr = frappe.get_doc("Demo Request", demo_request)
+	frappe.has_permission("Demo Request", "write", doc=dr, throw=True)
+
+	if not dr.functional_consultant:
+		frappe.throw(
+			_("Please assign a Functional Consultant before scheduling the demo."),
+			title=_("Consultant Required"),
+		)
+
+	session_name = frappe.db.get_value(
+		"Demo Session",
+		{"demo_request": dr.name, "demo_status": ["in", ["Scheduled", "In Progress"]]},
+		"name",
+	)
+
+	if session_name:
+		ds = frappe.get_doc("Demo Session", session_name)
+		frappe.has_permission("Demo Session", "write", doc=ds, throw=True)
+		ds.scheduled_date = scheduled_date
+		ds.start_time = start_time
+		ds.end_time = end_time
+		ds.meeting_link = meeting_link
+		ds.reschedule_count = int(ds.reschedule_count or 0) + 1
+		ds.flags.rescheduling = True
+		ds.save(ignore_permissions=True)
+		frappe.msgprint(_("Demo Session {0} rescheduled to {1}.").format(ds.name, scheduled_date))
+	else:
+		ds = frappe.new_doc("Demo Session")
+		ds.demo_request = dr.name
+		ds.scheduled_date = scheduled_date
+		ds.start_time = start_time
+		ds.end_time = end_time
+		ds.meeting_link = meeting_link
+		ds.insert(ignore_permissions=True)
+		frappe.msgprint(_("Demo Session {0} scheduled for {1}.").format(ds.name, scheduled_date))
+
+	# keep the Demo Request in sync (fields first, then the workflow move)
+	dr.preferred_demo_date = scheduled_date
+	dr.preferred_demo_time = start_time or dr.preferred_demo_time
+	dr.save(ignore_permissions=True)
+	change_status(dr, "Scheduled", ignore_permissions=True)
+
+	create_calendar_event(ds)
+	return {"demo_session": ds.name, "demo_request": dr.name}
+
+
+@frappe.whitelist()
+def create_demo_follow_up(demo_request, follow_up_date, next_action=None, assigned_to=None):
+	"""Create a Demo Follow Up record + ToDo for a Demo Request."""
+	if not follow_up_date:
+		frappe.throw(_("Please select a follow-up date."))
+
+	dr = frappe.get_doc("Demo Request", demo_request)
+	frappe.has_permission("Demo Request", "write", doc=dr, throw=True)
+
+	fu = frappe.new_doc("Demo Follow Up")
+	fu.demo_request = dr.name
+	fu.customer = dr.customer
+	fu.sales_person = dr.sales_person
+	fu.functional_consultant = dr.functional_consultant
+	fu.follow_up_date = follow_up_date
+	fu.next_action = next_action
+	fu.assigned_to = assigned_to or dr.sales_person
+	fu.insert(ignore_permissions=True)
+
+	dr.follow_up_date = follow_up_date
+	dr.next_action = next_action
+	dr.save(ignore_permissions=True)
+	change_status(dr, "Follow-up Required", ignore_permissions=True)
+
+	frappe.msgprint(_("Follow-up {0} created. A task has been assigned to {1}.").format(fu.name, fu.assigned_to))
+	return fu.name
+
+
+@frappe.whitelist()
+def set_demo_result(demo_request, result):
+	"""Set the final result on a Demo Request (Converted / Not Interested / Closed)."""
+	allowed = ["Converted", "Not Interested", "Closed"]
+	if result not in allowed:
+		frappe.throw(_("Invalid result. Choose from {0}.").format(", ".join(allowed)))
+
+	dr = frappe.get_doc("Demo Request", demo_request)
+	frappe.has_permission("Demo Request", "write", doc=dr, throw=True)
+	dr = change_status(dr, result, ignore_permissions=True)
+	frappe.msgprint(_("Demo Request {0} marked as {1}.").format(dr.name, result))
+	return dr.status
+
+
+# ---------------------------------------------------------------------------
+# Demo Session quick actions (used by the form and the Execution screen)
+# ---------------------------------------------------------------------------
+
+def _get_session(name):
+	ds = frappe.get_doc("Demo Session", name)
+	frappe.has_permission("Demo Session", "write", doc=ds, throw=True)
+	return ds
+
+
+@frappe.whitelist()
+def get_demo_execution_data(demo_session):
+	"""Load everything the consultant needs for the demo on a single screen."""
+	ds = frappe.get_doc("Demo Session", demo_session)
+	frappe.has_permission("Demo Session", "read", doc=ds, throw=True)
+
+	request_doc = frappe.get_doc("Demo Request", ds.demo_request) if ds.demo_request else None
+	consultant = None
+	if ds.functional_consultant:
+		consultant = frappe.db.get_value(
+			"Functional Consultant",
+			ds.functional_consultant,
+			["consultant_name", "user", "specialization", "availability", "email"],
+			as_dict=True,
+		)
+
+	can_write = frappe.has_permission("Demo Session", "write", doc=ds)
+
+	return {
+		"session": {
+			"name": ds.name,
+			"demo_status": ds.demo_status,
+			"scheduled_date": ds.scheduled_date,
+			"start_time": str(ds.start_time or ""),
+			"end_time": str(ds.end_time or ""),
+			"meeting_link": ds.meeting_link,
+			"demo_type": ds.demo_type,
+			"demo_notes": ds.demo_notes,
+			"overall_feedback": ds.overall_feedback,
+			"interested": ds.interested,
+			"requirements_met": ds.requirements_met,
+			"follow_up_required": ds.follow_up_required,
+			"follow_up_date": ds.follow_up_date,
+			"next_action": ds.next_action,
+			"consultant_remarks": ds.consultant_remarks,
+			"final_result": ds.final_result,
+			"started_on": ds.started_on,
+			"completed_on": ds.completed_on,
+		},
+		"request": {
+			"name": ds.demo_request,
+			"status": request_doc.status if request_doc else "",
+			"customer_requirements": request_doc.customer_requirements if request_doc else "",
+			"business_process_requirements": request_doc.business_process_requirements if request_doc else "",
+			"priority": request_doc.priority if request_doc else "",
+			"lead": request_doc.lead if request_doc else "",
+		},
+		"customer": {
+			"customer": ds.customer,
+			"lead": ds.lead,
+			"contact_person": ds.contact_person,
+			"contact_number": ds.contact_number,
+			"email": ds.email,
+			"company": ds.company,
+		},
+		"team": {
+			"sales_person": ds.sales_person,
+			"functional_consultant": ds.functional_consultant,
+			"consultant_name": consultant.consultant_name if consultant else "",
+			"consultant_specialization": consultant.specialization if consultant else "",
+		},
+		"template": {
+			"name": ds.demo_template,
+			"template_name": frappe.db.get_value("Functional Demo Template", ds.demo_template, "template_name")
+			if ds.demo_template
+			else "",
+			"sections": [{"section": s.section, "content": s.content} for s in ds.template_sections],
+			"snapshot_date": ds.template_snapshot_date,
+		},
+		"can_write": can_write,
+	}
+
+
+@frappe.whitelist()
+def start_demo_session(demo_session):
+	ds = _get_session(demo_session)
+	ds.start_demo()
+	frappe.msgprint(_("Demo Session {0} started. Good luck!").format(ds.name))
+	return {"demo_status": ds.demo_status}
+
+
+@frappe.whitelist()
+def complete_demo_session(demo_session, feedback=None):
+	"""Complete a demo and record customer feedback."""
+	ds = _get_session(demo_session)
+	ds.complete_demo(feedback or {})
+	frappe.msgprint(_("Demo Session {0} completed and feedback recorded.").format(ds.name))
+	return {
+		"demo_status": ds.demo_status,
+		"request_status": frappe.db.get_value("Demo Request", ds.demo_request, "status"),
+	}
+
+
+@frappe.whitelist()
+def cancel_demo_session(demo_session, reason=None):
+	ds = _get_session(demo_session)
+	ds.cancel_demo(reason)
+	frappe.msgprint(_("Demo Session {0} cancelled.").format(ds.name))
+	return {"demo_status": ds.demo_status}
+
+
+@frappe.whitelist()
+def reschedule_demo_session(demo_session, scheduled_date, start_time=None, end_time=None, meeting_link=None):
+	if not scheduled_date:
+		frappe.throw(_("Please select a new date."))
+	ds = _get_session(demo_session)
+	ds.reschedule_demo(scheduled_date, start_time, end_time, meeting_link)
+	frappe.msgprint(_("Demo Session {0} rescheduled to {1}.").format(ds.name, scheduled_date))
+	return {"demo_status": ds.demo_status}
+
+
+@frappe.whitelist()
+def create_follow_up_from_session(demo_session, follow_up_date, next_action=None, assigned_to=None):
+	"""Create a follow-up directly from a completed demo session."""
+	if not follow_up_date:
+		frappe.throw(_("Please select a follow-up date."))
+	ds = _get_session(demo_session)
+	fu = ds.create_follow_up(follow_up_date, next_action, assigned_to)
+	frappe.msgprint(_("Follow-up {0} created.").format(fu.name))
+	return {"follow_up": fu.name}
+
+
+@frappe.whitelist()
+def set_session_final_result(demo_session, result):
+	"""Close a demo session with a final result (Converted / Not Interested / Closed / Pending)."""
+	ds = _get_session(demo_session)
+	ds.set_final_result(result)
+	frappe.msgprint(_("Demo Session {0} marked as {1}.").format(ds.name, result))
+	return {"final_result": ds.final_result}
+
+
+@frappe.whitelist()
+def get_my_demo_sessions(demo_status=None):
+	"""Sessions visible to the current user (permission filters apply)."""
+	filters = {}
+	if demo_status:
+		filters["demo_status"] = demo_status
+	return frappe.get_list(
+		"Demo Session",
+		filters=filters,
+		fields=["name", "customer", "scheduled_date", "start_time", "demo_status", "functional_consultant"],
+		order_by="scheduled_date desc",
+		limit_page_length=50,
+	)

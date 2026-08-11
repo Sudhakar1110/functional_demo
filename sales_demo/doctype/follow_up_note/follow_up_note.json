@@ -1,0 +1,51 @@
+{
+ "actions": [],
+ "autoname": "hash",
+ "creation": "2026-08-11 10:00:00.000000",
+ "doctype": "DocType",
+ "document_type": "Document",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "note_date",
+  "note_by",
+  "note"
+ ],
+ "fields": [
+  {
+   "default": "Now",
+   "fieldname": "note_date",
+   "fieldtype": "Datetime",
+   "in_list_view": 1,
+   "label": "Note Date",
+   "read_only": 1
+  },
+  {
+   "fieldname": "note_by",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Note By",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "note",
+   "fieldtype": "Small Text",
+   "in_list_view": 1,
+   "label": "Note",
+   "reqd": 1
+  }
+ ],
+ "istable": 1,
+ "links": [],
+ "modified": "2026-08-11 10:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Sales Demo",
+ "name": "Follow Up Note",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 0
+}

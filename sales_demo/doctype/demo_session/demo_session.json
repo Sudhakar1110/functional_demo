@@ -1,0 +1,440 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "autoname": "DEMO-SS-.YYYY.-.#####",
+ "creation": "2026-08-11 10:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "party_section",
+  "demo_request",
+  "customer",
+  "lead",
+  "company",
+  "contact_person",
+  "contact_number",
+  "email",
+  "team_section",
+  "sales_person",
+  "functional_consultant",
+  "consultant_user",
+  "demo_template",
+  "template_snapshot_date",
+  "template_source_modified",
+  "schedule_section",
+  "scheduled_date",
+  "start_time",
+  "end_time",
+  "meeting_link",
+  "demo_type",
+  "demo_status",
+  "content_section",
+  "agenda",
+  "customer_requirements",
+  "template_sections",
+  "template_preview",
+  "execution_section",
+  "demo_notes",
+  "overall_feedback",
+  "interested",
+  "requirements_met",
+  "additional_requirements",
+  "requested_changes",
+  "demo_feedback_items",
+  "additional_demo_required",
+  "follow_up_section",
+  "follow_up_required",
+  "follow_up_date",
+  "next_action",
+  "consultant_remarks",
+  "final_result",
+  "timestamps_section",
+  "started_on",
+  "completed_on",
+  "reschedule_count"
+ ],
+ "fields": [
+  {
+   "fieldname": "party_section",
+   "fieldtype": "Section Break",
+   "label": "Customer Information"
+  },
+  {
+   "fieldname": "demo_request",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Demo Request",
+   "options": "Demo Request",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "demo_request.customer",
+   "fetch_if_empty": 1,
+   "fieldname": "customer",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Customer",
+   "options": "Customer",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "demo_request.lead",
+   "fetch_if_empty": 1,
+   "fieldname": "lead",
+   "fieldtype": "Link",
+   "label": "Lead",
+   "options": "Lead",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "demo_request.company",
+   "fetch_if_empty": 1,
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company",
+   "options": "Company",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "demo_request.contact_person",
+   "fetch_if_empty": 1,
+   "fieldname": "contact_person",
+   "fieldtype": "Link",
+   "ignore_user_permissions": 1,
+   "label": "Contact Person",
+   "options": "Contact",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "demo_request.contact_number",
+   "fetch_if_empty": 1,
+   "fieldname": "contact_number",
+   "fieldtype": "Data",
+   "label": "Contact Number",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "demo_request.email",
+   "fetch_if_empty": 1,
+   "fieldname": "email",
+   "fieldtype": "Data",
+   "label": "Email",
+   "options": "Email",
+   "read_only": 1
+  },
+  {
+   "fieldname": "team_section",
+   "fieldtype": "Section Break",
+   "label": "Demo Information"
+  },
+  {
+   "fetch_from": "demo_request.sales_person",
+   "fetch_if_empty": 1,
+   "fieldname": "sales_person",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Sales Person",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "demo_request.functional_consultant",
+   "fetch_if_empty": 1,
+   "fieldname": "functional_consultant",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Functional Consultant",
+   "options": "Functional Consultant",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "functional_consultant.user",
+   "fieldname": "consultant_user",
+   "fieldtype": "Link",
+   "hidden": 1,
+   "label": "Consultant User",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "demo_template",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Demo Template",
+   "options": "Functional Demo Template"
+  },
+  {
+   "fieldname": "template_snapshot_date",
+   "fieldtype": "Datetime",
+   "label": "Template Snapshot Date",
+   "read_only": 1
+  },
+  {
+   "fieldname": "template_source_modified",
+   "fieldtype": "Datetime",
+   "label": "Template Source Modified",
+   "read_only": 1
+  },
+  {
+   "fieldname": "schedule_section",
+   "fieldtype": "Section Break",
+   "label": "Schedule"
+  },
+  {
+   "fieldname": "scheduled_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Scheduled Date",
+   "reqd": 1
+  },
+  {
+   "fieldname": "start_time",
+   "fieldtype": "Time",
+   "label": "Start Time"
+  },
+  {
+   "fieldname": "end_time",
+   "fieldtype": "Time",
+   "label": "End Time"
+  },
+  {
+   "fieldname": "meeting_link",
+   "fieldtype": "Data",
+   "label": "Meeting Link"
+  },
+  {
+   "fetch_from": "demo_request.demo_type",
+   "fetch_if_empty": 1,
+   "fieldname": "demo_type",
+   "fieldtype": "Select",
+   "label": "Demo Type",
+   "options": "Standard Demo\nCustomized Demo\nWalkthrough\nDeep Dive\nFollow-up Demo"
+  },
+  {
+   "default": "Scheduled",
+   "fieldname": "demo_status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Demo Status",
+   "options": "Scheduled\nIn Progress\nCompleted\nRescheduled\nCancelled\nFollow-up Required\nClosed",
+   "reqd": 1
+  },
+  {
+   "fieldname": "content_section",
+   "fieldtype": "Section Break",
+   "label": "Demo Content"
+  },
+  {
+   "fieldname": "agenda",
+   "fieldtype": "Text",
+   "label": "Agenda"
+  },
+  {
+   "fetch_from": "demo_request.customer_requirements",
+   "fetch_if_empty": 1,
+   "fieldname": "customer_requirements",
+   "fieldtype": "Text",
+   "label": "Customer Requirements",
+   "read_only": 1
+  },
+  {
+   "collapsible": 1,
+   "collapsible_depends_on": "eval:doc.template_sections.length",
+   "fieldname": "template_sections",
+   "fieldtype": "Table",
+   "label": "Demo Template Content (Snapshot)",
+   "options": "Demo Session Section",
+   "read_only": 1
+  },
+  {
+   "depends_on": "eval:doc.template_preview",
+   "fieldname": "template_preview",
+   "fieldtype": "HTML",
+   "label": "Template Preview"
+  },
+  {
+   "fieldname": "execution_section",
+   "fieldtype": "Section Break",
+   "label": "Demo Notes & Feedback"
+  },
+  {
+   "fieldname": "demo_notes",
+   "fieldtype": "Text",
+   "label": "Demo Notes"
+  },
+  {
+   "fieldname": "overall_feedback",
+   "fieldtype": "Small Text",
+   "label": "Overall Feedback"
+  },
+  {
+   "fieldname": "interested",
+   "fieldtype": "Select",
+   "label": "Interested?",
+   "options": "\nInterested\nNot Interested\nUndecided"
+  },
+  {
+   "fieldname": "requirements_met",
+   "fieldtype": "Select",
+   "label": "Requirements Met",
+   "options": "\nFully Met\nPartially Met\nNot Met"
+  },
+  {
+   "fieldname": "additional_requirements",
+   "fieldtype": "Small Text",
+   "label": "Additional Requirements"
+  },
+  {
+   "fieldname": "requested_changes",
+   "fieldtype": "Small Text",
+   "label": "Requested Changes"
+  },
+  {
+   "fieldname": "demo_feedback_items",
+   "fieldtype": "Table",
+   "label": "Customer Questions & Requests",
+   "options": "Demo Feedback Item"
+  },
+  {
+   "default": "0",
+   "fieldname": "additional_demo_required",
+   "fieldtype": "Check",
+   "label": "Additional Demo Required"
+  },
+  {
+   "fieldname": "follow_up_section",
+   "fieldtype": "Section Break",
+   "label": "Follow-up & Result"
+  },
+  {
+   "default": "0",
+   "fieldname": "follow_up_required",
+   "fieldtype": "Check",
+   "label": "Follow-up Required"
+  },
+  {
+   "fieldname": "follow_up_date",
+   "fieldtype": "Date",
+   "label": "Follow-up Date"
+  },
+  {
+   "fieldname": "next_action",
+   "fieldtype": "Small Text",
+   "label": "Next Action"
+  },
+  {
+   "fieldname": "consultant_remarks",
+   "fieldtype": "Small Text",
+   "label": "Consultant Remarks"
+  },
+  {
+   "default": "Pending",
+   "fieldname": "final_result",
+   "fieldtype": "Select",
+   "in_standard_filter": 1,
+   "label": "Final Result",
+   "options": "Pending\nConverted\nNot Interested\nClosed"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "timestamps_section",
+   "fieldtype": "Section Break",
+   "label": "Timestamps"
+  },
+  {
+   "fieldname": "started_on",
+   "fieldtype": "Datetime",
+   "label": "Started On",
+   "read_only": 1
+  },
+  {
+   "fieldname": "completed_on",
+   "fieldtype": "Datetime",
+   "label": "Completed On",
+   "read_only": 1
+  },
+  {
+   "fieldname": "reschedule_count",
+   "fieldtype": "Int",
+   "label": "Reschedule Count",
+   "read_only": 1
+  }
+ ],
+ "links": [
+  {
+   "group": "Demo Management",
+   "link_doctype": "Demo Follow Up",
+   "link_fieldname": "demo_session"
+  }
+ ],
+ "modified": "2026-08-11 10:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Sales Demo",
+ "name": "Demo Session",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Functional Consultant",
+   "write": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Sales User",
+   "write": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Sales Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Functional Team Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "quick_entry": 0,
+ "search_fields": "customer, demo_request, functional_consultant, demo_status",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "status_field": "demo_status",
+ "track_changes": 1
+}

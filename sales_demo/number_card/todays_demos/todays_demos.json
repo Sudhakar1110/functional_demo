@@ -1,0 +1,21 @@
+{
+ "creation": "2026-08-11 10:00:00.000000",
+ "docstatus": 0,
+ "doctype": "Number Card",
+ "document_type": "Demo Session",
+ "dynamic_filters_json": "[[\"Demo Session\",\"scheduled_date\",\"Between\",[frappe.datetime.get_today(),frappe.datetime.add_days(frappe.datetime.get_today(),1)]]]",
+ "filters_json": "[[\"Demo Session\",\"demo_status\",\"in\",[\"Scheduled\",\"In Progress\"],false]]",
+ "function": "Count",
+ "idx": 0,
+ "is_public": 1,
+ "is_standard": 1,
+ "label": "Today's Demos",
+ "modified": "2026-08-11 10:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Sales Demo",
+ "name": "Today's Demos",
+ "owner": "Administrator",
+ "show_percentage_stats": 1,
+ "stats_time_interval": "Daily",
+ "type": "Document Type"
+}

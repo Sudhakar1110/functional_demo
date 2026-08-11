@@ -1,0 +1,30 @@
+{
+ "attach_print": 0,
+ "channel": "Email",
+ "condition": "doc.functional_consultant and doc.consultant_reassigned == 0",
+ "creation": "2026-08-11 10:00:00.000000",
+ "days_in_advance": 0,
+ "docstatus": 0,
+ "doctype": "Notification",
+ "document_type": "Demo Request",
+ "enabled": 1,
+ "event": "Value Change",
+ "idx": 0,
+ "is_standard": 1,
+ "message": "<h4>{{ _(\"Demo Request Assigned to You\") }}</h4><p>{{ _(\"Demo Request {0} for\") }} <b>{{ doc.customer or doc.lead }}</b> {{ _(\"has been assigned to you.\") }}</p><ul><li>{{ _(\"Interested Module\") }}: {{ doc.interested_module or \"-\" }}</li><li>{{ _(\"Priority\") }}: {{ doc.priority }}</li><li>{{ _(\"Preferred Demo Date\") }}: {{ doc.preferred_demo_date or \"-\" }}</li></ul><p>{{ _(\"Please review the customer requirements and confirm your availability.\") }}</p><p>{{ frappe.utils.get_link_to_form(\"Demo Request\", doc.name, _(\"Open Demo Request\")) }}</p>",
+ "message_type": "HTML",
+ "modified": "2026-08-11 10:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Sales Demo",
+ "name": "Consultant Assigned",
+ "owner": "Administrator",
+ "recipients": [
+  {
+   "receiver_by_document_field": "consultant_user"
+  }
+ ],
+ "send_system_notification": 1,
+ "send_to_all_assignees": 0,
+ "subject": "{{ _(\"You have been assigned Demo Request {0}\").format(doc.name) }}",
+ "value_changed": "functional_consultant"
+}

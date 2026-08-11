@@ -1,0 +1,1 @@
+recursive-include functional_demo *.py *.json *.js *.css *.md *.txt *.toml *.png *.svg

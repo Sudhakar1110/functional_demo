@@ -1,0 +1,214 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "autoname": "CONS-.#####",
+ "creation": "2026-08-11 10:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "consultant_name",
+  "user",
+  "employee",
+  "department",
+  "section_break_skills",
+  "specialization",
+  "erpnext_modules",
+  "skills",
+  "experience_years",
+  "section_break_availability",
+  "availability",
+  "available_from",
+  "available_to",
+  "status",
+  "contact_section",
+  "phone",
+  "email",
+  "notes"
+ ],
+ "fields": [
+  {
+   "fieldname": "consultant_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Consultant Name",
+   "reqd": 1
+  },
+  {
+   "fieldname": "user",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "User",
+   "options": "User",
+   "reqd": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "employee",
+   "fieldtype": "Link",
+   "label": "Employee",
+   "options": "Employee"
+  },
+  {
+   "fieldname": "department",
+   "fieldtype": "Link",
+   "label": "Department",
+   "options": "Department"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "section_break_skills",
+   "fieldtype": "Section Break",
+   "label": "Specialization & Skills"
+  },
+  {
+   "fieldname": "specialization",
+   "fieldtype": "Select",
+   "in_standard_filter": 1,
+   "in_list_view": 1,
+   "label": "Specialization",
+   "options": "\nAccounting\nCRM\nSelling\nBuying\nStock\nManufacturing\nHR & Payroll\nProjects\nHealthcare\nEducation\nAgriculture\nCustom Application"
+  },
+  {
+   "fieldname": "erpnext_modules",
+   "fieldtype": "Table",
+   "label": "ERPNext Modules",
+   "options": "Consultant Module"
+  },
+  {
+   "fieldname": "skills",
+   "fieldtype": "Table",
+   "label": "Skills",
+   "options": "Consultant Skill"
+  },
+  {
+   "fieldname": "experience_years",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Experience (Years)"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "section_break_availability",
+   "fieldtype": "Section Break",
+   "label": "Availability"
+  },
+  {
+   "default": "Available",
+   "fieldname": "availability",
+   "fieldtype": "Select",
+   "in_standard_filter": 1,
+   "label": "Availability",
+   "options": "Available\nBusy\nOn Leave\nUnavailable"
+  },
+  {
+   "fieldname": "available_from",
+   "fieldtype": "Time",
+   "label": "Available From"
+  },
+  {
+   "fieldname": "available_to",
+   "fieldtype": "Time",
+   "label": "Available To"
+  },
+  {
+   "default": "Active",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_standard_filter": 1,
+   "label": "Status",
+   "options": "Active\nInactive"
+  },
+  {
+   "fieldname": "contact_section",
+   "fieldtype": "Section Break",
+   "label": "Contact"
+  },
+  {
+   "fetch_from": "user.mobile_no",
+   "fetch_if_empty": 1,
+   "fieldname": "phone",
+   "fieldtype": "Data",
+   "label": "Phone"
+  },
+  {
+   "fetch_from": "user.email",
+   "fetch_if_empty": 1,
+   "fieldname": "email",
+   "fieldtype": "Data",
+   "label": "Email",
+   "options": "Email"
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Small Text",
+   "label": "Notes"
+  }
+ ],
+ "links": [],
+ "modified": "2026-08-11 10:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Sales Demo",
+ "name": "Functional Consultant",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Functional Team Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "if_owner": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Functional Consultant",
+   "write": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Sales User"
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Sales Manager"
+  }
+ ],
+ "quick_entry": 1,
+ "search_fields": "consultant_name, specialization, user",
+ "show_title_field_in_link": 1,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "consultant_name",
+ "track_changes": 1
+}
