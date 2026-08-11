@@ -192,6 +192,45 @@ Row-level filters (`permission_query_conditions`) and doc-level checks
 bench --site your-site run-tests --app functional_demo
 ```
 
+## Troubleshooting
+
+### `No module named 'functional_demo'` when running `bench install-app`
+
+This means the app folder exists in `apps/` but was never **registered in the
+bench's Python virtualenv** (the editable pip-install step). This app uses the
+standard nested layout (`functional_demo/functional_demo/`), which is what
+`bench get-app` expects, but a manual `git clone` / copy skips the pip step.
+
+Fix it with one command (run from the bench root):
+
+```bash
+bench pip install -e apps/functional_demo
+```
+
+or use the bundled one-shot installer, which also handles the pip step, falls
+back to a `.pth` entry when needed, installs the app and builds assets:
+
+```bash
+cd ~/frappe-bench-v15
+bash apps/functional_demo/install.sh fd.bizaxl.local
+```
+
+### Clean re-install (recommended when the folder was cloned manually)
+
+```bash
+cd ~/frappe-bench-v15
+rm -rf apps/functional_demo
+bench get-app https://github.com/Sudhakar1110/functional_demo   # clones AND pip-installs
+bench --site your-site install-app functional_demo
+bench build
+```
+
+### `erpnext` must be installed first
+
+`functional_demo` requires ERPNext on the same site (`required_apps = ["erpnext"]`).
+Verify with `bench --site your-site list-apps`; if missing, run
+`bench --site your-site install-app erpnext` first.
+
 Project layout (Frappe v15 conventions — nested app package):
 
 ```
