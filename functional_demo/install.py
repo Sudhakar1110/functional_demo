@@ -78,7 +78,7 @@ def import_module_docs():
 
 
 def fix_dashboard_charts():
-	"""Directly set group_by_field on the Group By charts (belt & braces).
+	"""Directly set group_by_based_on on the Group By charts (belt & braces).
 
 	Frappe v15 requires `group_by_based_on` for 'Group By' charts. This sets it
 directly so an already-installed site is fixed without waiting for a JSON
