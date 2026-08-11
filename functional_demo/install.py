@@ -65,14 +65,27 @@ def import_module_docs():
 			continue
 		for fname in sorted(os.listdir(folder_path)):
 			doc_path = os.path.join(folder_path, fname, f"{fname}.json")
-			if os.path.isfile(doc_path):
-				try:
-					import_file_by_path(doc_path, force=True)
-				except Exception:
-					frappe.log_error(
-						title=_("functional_demo: failed to import {0}").format(fname),
-						message=frappe.get_traceback(),
-					)
+			if os.path.isfile(doc_path):					try:
+						import_file_by_path(doc_path, force=True)
+					except Exception:
+						frappe.log_error(
+							title=_("functional_demo: failed to import {0}").format(fname),
+							message=frappe.get_traceback(),
+						)
+
+
+def fix_workspace_parents():
+	"""Put both app workspaces under the Home workspace in the sidebar.
+
+	Frappe v15 places a workspace according to its `parent_page`; an empty value
+	leaves placement to module defaults (workspaces can end up under unrelated
+	modules). This makes the placement explicit: both under Home.
+	"""
+	for ws in ("Sales Demo Workspace", "Functional Demo Workspace"):
+		if frappe.db.exists("Workspace", ws):
+			frappe.db.set_value("Workspace", ws, "parent_page", "Home")
+	frappe.db.commit()
+
 
 
 def mark_overdue_follow_ups():

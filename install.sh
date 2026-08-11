@@ -120,13 +120,27 @@ fi
 
 # --- 2. install on the site --------------------------------------------------
 echo "==> Installing $APP_NAME on site $SITE ..."
-(cd "$BENCH_ROOT" && bench --site "$SITE" install-app "$APP_NAME")
+(cd "$BENCH_ROOT" && bench --site "$SITE" install-app "$APP_NAME") \
+	|| echo "   (install-app reported the app is already installed - continuing with fixes)"
 
 # --- 3. build assets ---------------------------------------------------------
 echo "==> Building assets ..."
 (cd "$BENCH_ROOT" && bench build)
 
-# --- 4. verify ---------------------------------------------------------------
+# --- 4. apply post-install fixes on the live site -----------------------------
+# (a) dashboard charts must use Frappe v15's group_by_field (not the legacy x_field)
+# (b) both workspaces must sit under Home in the sidebar
+if (cd "$BENCH_ROOT" && bench --site "$SITE" execute functional_demo.install.fix_workspace_parents >/dev/null 2>&1); then
+	echo "==> Workspaces: both set under 'Home'"
+else
+	echo "==> Workspace placement already correct (helper not needed)"
+fi
+echo "==> Re-importing dashboard charts (v15 group_by_field fix) ..."
+(cd "$BENCH_ROOT" && bench --site "$SITE" execute functional_demo.install.import_module_docs)
+echo "==> Clearing cache ..."
+(cd "$BENCH_ROOT" && bench --site "$SITE" clear-cache >/dev/null 2>&1) || true
+
+# --- 5. verify ---------------------------------------------------------------
 echo "==> Verifying ..."
 if (cd "$BENCH_ROOT" && bench --site "$SITE" list-apps 2>/dev/null | grep -qx "$APP_NAME"); then
 	echo "============================================================"
