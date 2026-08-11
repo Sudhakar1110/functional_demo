@@ -25,6 +25,6 @@
  "type": "Donut",
  "use_report_chart": 0,
  "value_based_on": "",
- "x_field": "priority",
+ "group_by_field": "priority",
  "y_axis": []
 }

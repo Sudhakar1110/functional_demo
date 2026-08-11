@@ -25,6 +25,6 @@
  "type": "Donut",
  "use_report_chart": 0,
  "value_based_on": "",
- "x_field": "status",
+ "group_by_field": "status",
  "y_axis": []
 }

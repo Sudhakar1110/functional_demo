@@ -67,7 +67,7 @@ def import_module_docs():
 			doc_path = os.path.join(folder_path, fname, f"{fname}.json")
 			if os.path.isfile(doc_path):
 				try:
-					import_file_by_path(doc_path)
+					import_file_by_path(doc_path, force=True)
 				except Exception:
 					frappe.log_error(
 						title=_("functional_demo: failed to import {0}").format(fname),
