@@ -40,10 +40,6 @@ frappe.pages["demo-execution"].on_page_load = function (wrapper) {
 		},
 	});
 
-	function set_session_field(name) {
-		if (name) session_field.set_value(name);
-	}
-
 	function load_session(name) {
 		if (!name) {
 			render_empty();
@@ -83,11 +79,14 @@ frappe.pages["demo-execution"].on_page_load = function (wrapper) {
 				my_sessions_field.set_options([""].concat(sessions.map((s) => s.name)));
 				if (selected) return; // already loading the session passed via URL
 				const active = sessions.find((s) => ["Scheduled", "In Progress"].includes(s.demo_status));
-				const to_load = active ? active.name : sessions.length ? sessions[0].name : null;
-				if (to_load) {
-					load_session(to_load);
+				if (active) {
+					load_session(active.name);
 				} else {
-					render_empty(__("No demo sessions found for you yet."));
+					render_empty(
+						sessions.length
+							? __("No active demo session. Pick one from 'My Sessions' above.")
+							: __("No demo sessions found for you yet.")
+					);
 				}
 			},
 		});
