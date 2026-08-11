@@ -74,6 +74,30 @@ def import_module_docs():
 						message=frappe.get_traceback(),
 					)
 
+	fix_dashboard_charts()
+
+
+def fix_dashboard_charts():
+	"""Directly set group_by_field on the Group By charts (belt & braces).
+
+	Frappe v15 requires `group_by_field` for 'Group By' charts; the legacy
+	`x_field` key is ignored, leaving the value empty and crashing the chart
+	renderer. This sets it directly so an already-installed site is fixed
+	without waiting for a JSON re-import.
+	"""
+	chart_fields = {
+		"Demo Requests by Module": "interested_module",
+		"Demo Requests by Priority": "priority",
+		"Demo Requests by Status": "status",
+		"Demo Sessions by Consultant": "functional_consultant",
+	}
+	for chart_name, field in chart_fields.items():
+		if frappe.db.exists("Dashboard Chart", chart_name):
+			cur = frappe.db.get_value("Dashboard Chart", chart_name, "group_by_field")
+			if cur != field:
+				frappe.db.set_value("Dashboard Chart", chart_name, "group_by_field", field)
+	frappe.db.commit()
+
 
 def fix_workspace_parents():
 	"""Put both app workspaces under the Home workspace in the sidebar.
