@@ -30,6 +30,16 @@ frappe.pages["demo-execution"].on_page_load = function (wrapper) {
 		},
 	});
 
+	const my_sessions_field = page.add_field({
+		label: __("My Sessions"),
+		fieldtype: "Select",
+		options: [""],
+		change() {
+			const name = my_sessions_field.get_value();
+			if (name) load_session(name);
+		},
+	});
+
 	function set_session_field(name) {
 		if (name) session_field.set_value(name);
 	}
@@ -60,8 +70,27 @@ frappe.pages["demo-execution"].on_page_load = function (wrapper) {
 		page.main.empty().append(`
 			<div class="demo-exec-empty">
 				<h3>${frappe.utils.escape_html(message || __("No demo session selected"))}</h3>
-				<p>${__("Select a Demo Session above, or open a session from the Demo Session form using the 'Open Execution Screen' button.")}</p>
+				<p>${__("Pick a session from 'My Sessions' or search the Demo Session field above. If you have no sessions yet, create a Demo Request, assign a consultant and schedule a demo - it will appear here automatically.")}</p>
 			</div>`);
+	}
+
+	function populate_my_sessions(selected) {
+		frappe.call({
+			method: "functional_demo.api.get_my_demo_sessions",
+			args: {},
+			callback(r) {
+				const sessions = r.message || [];
+				my_sessions_field.set_options([""].concat(sessions.map((s) => s.name)));
+				if (selected) return; // already loading the session passed via URL
+				const active = sessions.find((s) => ["Scheduled", "In Progress"].includes(s.demo_status));
+				const to_load = active ? active.name : sessions.length ? sessions[0].name : null;
+				if (to_load) {
+					load_session(to_load);
+				} else {
+					render_empty(__("No demo sessions found for you yet."));
+				}
+			},
+		});
 	}
 
 	function render(data) {
@@ -299,19 +328,6 @@ frappe.pages["demo-execution"].on_page_load = function (wrapper) {
 	const initial = read_session_from_url();
 	if (initial) {
 		load_session(initial);
-	} else {
-		// prefill with the user's next scheduled demo, if any
-		frappe.call({
-			method: "functional_demo.api.get_my_demo_sessions",
-			args: { demo_status: "Scheduled" },
-			callback(r) {
-				const sessions = r.message || [];
-				if (sessions.length) {
-					load_session(sessions[0].name);
-				} else {
-					render_empty();
-				}
-			},
-		});
 	}
+	populate_my_sessions(initial);
 };
