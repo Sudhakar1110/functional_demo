@@ -40,9 +40,18 @@ fi
 echo "==> Bench root : $BENCH_ROOT"
 echo "==> Site       : $SITE"
 
-if [ ! -f "$APP_DIR/hooks.py" ]; then
-	echo "ERROR: App folder not found at $APP_DIR"
-	echo "       Expected layout: <bench>/apps/functional_demo/hooks.py"
+if [ ! -f "$APP_DIR/functional_demo/hooks.py" ]; then
+	echo "ERROR: app package not found at $APP_DIR/functional_demo/hooks.py"
+	echo ""
+	echo "Contents of $BENCH_ROOT/apps:"
+	ls -1 "$BENCH_ROOT/apps" 2>/dev/null || echo "   <empty>"
+	echo ""
+	echo "If the app folder has a different name (e.g. functional_demo-main from a GitHub ZIP),"
+	echo "rename it to exactly 'functional_demo':"
+	echo "  cd $BENCH_ROOT/apps && mv functional_demo-main functional_demo"
+	echo ""
+	echo "If it is missing entirely, clone it:"
+	echo "  cd $BENCH_ROOT && bench get-app https://github.com/Sudhakar1110/functional_demo"
 	exit 1
 fi
 
