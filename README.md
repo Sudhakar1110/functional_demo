@@ -192,21 +192,27 @@ Row-level filters (`permission_query_conditions`) and doc-level checks
 bench --site your-site run-tests --app functional_demo
 ```
 
-Project layout (Frappe v15 conventions):
+Project layout (Frappe v15 conventions — nested app package):
 
 ```
 functional_demo/
-├── fixtures/            # Role + Workflow fixtures (synced on install/migrate)
-├── sales_demo/
-│   ├── doctype/         # DocTypes + controllers + tests
-│   ├── report/          # 13 script reports
-│   ├── notification/    # 10 standard notifications
-│   ├── workspace/       # 2 workspaces
-│   ├── dashboard_chart/ # charts
-│   └── number_card/     # number cards
-├── public/js/           # client scripts + Demo Execution page
-├── api.py               # whitelisted quick-action endpoints
-└── install.py           # install hooks + daily scheduler job
+├── functional_demo/     # the importable app package
+│   ├── hooks.py         # app hooks (doctype_js, permissions, scheduler, fixtures)
+│   ├── api.py           # whitelisted quick-action endpoints
+│   ├── install.py       # install hooks + daily scheduler job
+│   ├── setup_demo_data.py
+│   ├── fixtures/        # Role + Workflow fixtures (synced on install/migrate)
+│   ├── sales_demo/
+│   │   ├── doctype/     # DocTypes + controllers + tests
+│   │   ├── report/      # 13 script reports
+│   │   ├── notification/# 10 standard notifications
+│   │   ├── workspace/   # 2 workspaces
+│   │   ├── dashboard_chart/  # charts
+│   │   └── number_card/ # number cards
+│   ├── public/js/       # client scripts + Demo Execution page
+│   └── modules.txt, patches.txt
+├── pyproject.toml       # pip packaging (bench installs the app editable)
+└── setup.py
 ```
 
 ## License
