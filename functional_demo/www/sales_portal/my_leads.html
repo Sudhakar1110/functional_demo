@@ -1,0 +1,111 @@
+{% extends "templates/web.html" %}
+{% block page_content %}
+<div class="portal-layout">
+	<aside class="portal-sidebar" id="portal-sidebar">
+		<a class="sidebar-brand" href="/demo_portal">
+			<div>
+				<span class="brand-dot"></span> Demo Portal
+				<span class="brand-sub">Sales &amp; Functional</span>
+			</div>
+		</a>
+		<div class="sidebar-menu">
+			{% for item in sidebar_items %}
+			<a class="sidebar-item {% if item.active %}active{% endif %}" href="{{ item.route }}">
+				<span class="sidebar-icon">{{ item.icon }}</span>{{ item.label }}
+			</a>
+			{% endfor %}
+		</div>
+		<div class="sidebar-footer">
+			<a class="sidebar-desk" href="/app" target="_blank" rel="noopener">Open ERPNext &nearr;</a>
+		</div>
+	</aside>
+	<div class="sidebar-overlay"></div>
+	<div class="portal-main">
+		<header class="portal-topbar">
+			<button class="sidebar-toggle" id="sidebar-toggle" aria-label="Menu">&#9776;</button>
+			<div class="topbar-title">
+				<h1>{{ title }}</h1>
+				<p>{{ subtitle }}</p>
+			</div>
+			<div class="topbar-user">
+				<span class="portal-avatar">{{ full_name[:1] }}</span>
+				<span class="portal-user-name">{{ full_name }}</span>
+			</div>
+		</header>
+		<div class="portal-content">
+			<div class="portal-card">
+				<div class="card-head">
+					<h2>Search Leads</h2>
+					<a class="btn-portal secondary sm" href="/app/lead/new" target="_blank" rel="noopener">+ New Lead (ERPNext)</a>
+				</div>
+				<div class="card-body">
+					<form method="get" class="portal-form" style="display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap;">
+						<div style="flex: 1; min-width: 240px;">
+							<label>Search by name or company</label>
+							<input type="text" name="q" value="{{ q }}" placeholder="Type to search leads...">
+						</div>
+						<div style="min-width: 180px;">
+							<label>Status</label>
+							<select name="status">
+								<option value="">All statuses</option>
+								{% for s in status_options %}
+								<option value="{{ s }}" {% if status == s %}selected{% endif %}>{{ s }}</option>
+								{% endfor %}
+							</select>
+						</div>
+						<button class="btn-portal" type="submit">Search</button>
+						{% if q or status %}
+						<a class="btn-portal secondary" href="/sales_portal/my_leads">Clear</a>
+						{% endif %}
+					</form>
+				</div>
+			</div>
+
+			<div class="portal-card">
+				<div class="card-head">
+					<h2>Leads ({{ leads|length }})</h2>
+				</div>
+				{% if leads %}
+				<div class="card-body flush">
+					<table class="table-portal">
+						<thead>
+							<tr>
+								<th>Lead</th>
+								<th>Name</th>
+								<th>Company</th>
+								<th>Email</th>
+								<th>Source</th>
+								<th>Status</th>
+								<th>Created</th>
+								<th></th>
+							</tr>
+						</thead>
+						<tbody>
+							{% for lead in leads %}
+							<tr>
+								<td><a href="/app/lead/{{ lead.name }}" target="_blank" rel="noopener">{{ lead.name }}</a></td>
+								<td>{{ lead.lead_name }}</td>
+								<td>{{ lead.company_name or "-" }}</td>
+								<td>{{ lead.email_id or "-" }}</td>
+								<td>{{ lead.source or "-" }}</td>
+								<td><span class="badge b-{{ lead.status|lower|replace(' ', '-') }}">{{ lead.status }}</span></td>
+								<td class="muted">{{ lead.created_display }}</td>
+								<td><a class="btn-portal sm" href="/sales_portal/demo_request?new=1&lead={{ lead.name }}">Demo Request &rarr;</a></td>
+							</tr>
+							{% endfor %}
+						</tbody>
+					</table>
+				</div>
+				{% else %}
+				<div class="empty-state">
+					<div class="empty-icon">🧲</div>
+					<h3>No leads found</h3>
+					<p>Try a different search, or create a new lead in ERPNext.</p>
+					<a class="btn-portal" href="/app/lead/new" target="_blank" rel="noopener">+ New Lead</a>
+				</div>
+				{% endif %}
+			</div>
+		</div>
+	</div>
+</div>
+{% endblock %}

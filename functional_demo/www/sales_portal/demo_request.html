@@ -1,0 +1,405 @@
+{% extends "templates/web.html" %}
+{% block page_content %}
+<div class="portal-layout">
+	<aside class="portal-sidebar" id="portal-sidebar">
+		<a class="sidebar-brand" href="/demo_portal">
+			<div>
+				<span class="brand-dot"></span> Demo Portal
+				<span class="brand-sub">Sales &amp; Functional</span>
+			</div>
+		</a>
+		<div class="sidebar-menu">
+			{% for item in sidebar_items %}
+			<a class="sidebar-item {% if item.active %}active{% endif %}" href="{{ item.route }}">
+				<span class="sidebar-icon">{{ item.icon }}</span>{{ item.label }}
+			</a>
+			{% endfor %}
+		</div>
+		<div class="sidebar-footer">
+			<a class="sidebar-desk" href="/app" target="_blank" rel="noopener">Open ERPNext &nearr;</a>
+		</div>
+	</aside>
+	<div class="sidebar-overlay"></div>
+	<div class="portal-main">
+		<header class="portal-topbar">
+			<button class="sidebar-toggle" id="sidebar-toggle" aria-label="Menu">&#9776;</button>
+			<div class="topbar-title">
+				<h1>{{ title }}</h1>
+				<p>{{ subtitle }}</p>
+			</div>
+			<div class="topbar-user">
+				<span class="portal-avatar">{{ full_name[:1] }}</span>
+				<span class="portal-user-name">{{ full_name }}</span>
+			</div>
+		</header>
+		<div class="portal-content">
+
+		{% if create_mode %}
+			<!-- ================= CREATE MODE ================= -->
+			<div class="portal-card">
+				<div class="card-head">
+					<h2>New Demo Request</h2>
+					<a class="btn-portal secondary sm" href="/sales_portal/demo_requests">&larr; Back</a>
+				</div>
+				<div class="card-body">
+					<form class="portal-form" id="dr-form">
+						<div class="form-row">
+							<div>
+								<label>Customer <span class="form-hint">(choose one)</span></label>
+								<input type="text" id="customer" name="customer" list="customers-list" placeholder="Type to search customers...">
+								<datalist id="customers-list">
+									{% for c in customers %}<option value="{{ c.name }}">{{ c.customer_name }}</option>{% endfor %}
+								</datalist>
+							</div>
+							<div>
+								<label>Lead <span class="form-hint">(or choose a lead instead)</span></label>
+								<input type="text" id="lead" name="lead" list="leads-list" placeholder="Type to search leads..." value="{{ lead_param }}">
+								<datalist id="leads-list">
+									{% for l in leads %}<option value="{{ l.name }}">{{ l.lead_name }} ({{ l.company_name or 'no company' }})</option>{% endfor %}
+								</datalist>
+							</div>
+						</div>
+						<div class="form-row">
+							<div><label>Contact Person</label><input type="text" id="contact_person" name="contact_person"></div>
+							<div><label>Contact Number</label><input type="text" id="contact_number" name="contact_number"></div>
+						</div>
+						<div class="form-row">
+							<div><label>Email</label><input type="email" id="email" name="email"></div>
+							<div><label>Interested Product / Module</label>
+								<select id="interested_module" name="interested_module">
+									{% for m in modules %}<option value="{{ m }}">{{ m or "— Select —" }}</option>{% endfor %}
+								</select>
+							</div>
+						</div>
+						<div class="form-row">
+							<div><label>Priority</label>
+								<select id="priority" name="priority">
+									{% for p in priorities %}<option value="{{ p }}">{{ p }}</option>{% endfor %}
+								</select>
+							</div>
+							<div><label>Demo Type</label>
+								<select id="demo_type" name="demo_type">
+									{% for t in demo_types %}<option value="{{ t }}">{{ t }}</option>{% endfor %}
+								</select>
+							</div>
+						</div>
+						<div class="form-row">
+							<div><label>Preferred Demo Date</label><input type="date" id="preferred_demo_date" name="preferred_demo_date"></div>
+							<div><label>Preferred Demo Time</label><input type="time" id="preferred_demo_time" name="preferred_demo_time"></div>
+						</div>
+						<label>Customer Requirements</label>
+						<textarea id="customer_requirements" name="customer_requirements" placeholder="What does the customer need?"></textarea>
+						<label>Business Process Requirements</label>
+						<textarea id="business_process_requirements" name="business_process_requirements" placeholder="Which business processes should be demonstrated?"></textarea>
+						<label>Sales Remarks</label>
+						<textarea id="sales_remarks" name="sales_remarks"></textarea>
+						<div class="form-actions">
+							<button class="btn-portal" type="submit" id="btn-create">Create Demo Request</button>
+							<a class="btn-portal secondary" href="/sales_portal/demo_requests">Cancel</a>
+						</div>
+					</form>
+				</div>
+			</div>
+		{% else %}
+			<!-- ================= DETAIL MODE ================= -->
+			<div class="portal-card">
+				<div class="card-head" style="align-items: flex-start;">
+					<div>
+						<h2>{{ doc.name }}</h2>
+						<div style="margin-top: 8px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+							<span class="badge b-{{ doc.status|lower|replace(' ', '-') }}">{{ doc.status }}</span>
+							{% if doc.priority %}<span class="chip {{ doc.priority|lower }}">{{ doc.priority }} priority</span>{% endif %}
+							<span class="muted">Created: {{ doc.creation.strftime('%d %b %Y, %H:%M') if doc.creation else '-' }}</span>
+						</div>
+					</div>
+					<div style="display: flex; gap: 8px; flex-wrap: wrap;">
+						<a class="btn-portal secondary sm" href="/sales_portal/demo_requests">&larr; List</a>
+						<a class="btn-portal secondary sm" href="/app/demo_request/{{ doc.name }}" target="_blank" rel="noopener">Open in ERPNext</a>
+						{% if session_name %}
+						<a class="btn-portal sm" href="/app/demo-session/{{ session_name }}" target="_blank" rel="noopener">Open Demo Session</a>
+						{% endif %}
+					</div>
+				</div>
+			</div>
+
+			{% if not doc.functional_consultant and doc.status in ["Draft", "Requested"] %}
+			<div class="portal-card" id="card-assign">
+				<div class="card-head"><h2>Assign Functional Consultant</h2></div>
+				<div class="card-body">
+					<p class="text-muted" style="margin-top: 0;">Pick the consultant for this demo. Only active consultants are shown, with their specialization and current workload.</p>
+					<div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end;">
+						<div style="flex: 1; min-width: 280px;">
+							<select id="assign-consultant">
+								<option value="">— Select consultant —</option>
+								{% for c in consultants %}
+								<option value="{{ c.name }}">{{ c.consultant_name }} · {{ c.specialization or 'Generalist' }} · Availability: {{ c.availability }}{% if c.experience_years %} · {{ c.experience_years }} yrs exp{% endif %}</option>
+								{% endfor %}
+							</select>
+						</div>
+						<button class="btn-portal" id="btn-assign">Assign &amp; Notify</button>
+					</div>
+				</div>
+			</div>
+			{% endif %}
+
+			{% if doc.functional_consultant and doc.status in ["Requested", "Assigned", "Scheduled", "Demo In Progress", "Demo Completed", "Follow-up Required"] %}
+			<div class="portal-card">
+				<div class="card-head">
+					<h2>Quick Actions</h2>
+				</div>
+				<div class="card-body">
+					<div style="display: flex; gap: 10px; flex-wrap: wrap;">
+						<button class="btn-portal" id="btn-toggle-schedule">📅 Schedule Demo</button>
+						{% if doc.status in ["Demo Completed", "Follow-up Required"] %}
+						<button class="btn-portal warning" id="btn-toggle-followup">🔔 Create Follow-up</button>
+						<button class="btn-portal success" id="btn-toggle-result">🏆 Set Result</button>
+						{% endif %}
+					</div>
+
+					<div id="form-schedule" style="display: none;" class="portal-form">
+						<div class="divider"></div>
+						<div class="form-row">
+							<div><label>Scheduled Date <span class="req">*</span></label><input type="date" id="sch-date" value="{{ doc.preferred_demo_date or '' }}"></div>
+							<div><label>Start Time</label><input type="time" id="sch-start" value="{{ doc.preferred_demo_time or '' }}"></div>
+						</div>
+						<div class="form-row">
+							<div><label>End Time</label><input type="time" id="sch-end"></div>
+							<div><label>Meeting Link</label><input type="text" id="sch-link" placeholder="https://meet.google.com/..."></div>
+						</div>
+						<div class="form-actions">
+							<button class="btn-portal" id="btn-schedule">Schedule Demo</button>
+						</div>
+					</div>
+
+					<div id="form-followup" style="display: none;" class="portal-form">
+						<div class="divider"></div>
+						<div class="form-row">
+							<div><label>Follow-up Date <span class="req">*</span></label><input type="date" id="fu-date"></div>
+							<div><label>Assigned To</label><input type="text" id="fu-assignee" value="{{ doc.sales_person }}"></div>
+						</div>
+						<label>Next Action</label>
+						<textarea id="fu-next"></textarea>
+						<div class="form-actions">
+							<button class="btn-portal" id="btn-followup">Create Follow-up</button>
+						</div>
+					</div>
+
+					<div id="form-result" style="display: none;" class="portal-form">
+						<div class="divider"></div>
+						<label>Final Result <span class="req">*</span></label>
+						<select id="result-value">
+							<option value="Converted">Converted</option>
+							<option value="Not Interested">Not Interested</option>
+							<option value="Closed">Closed</option>
+						</select>
+						<div class="form-actions">
+							<button class="btn-portal success" id="btn-result">Set Result</button>
+						</div>
+					</div>
+				</div>
+			</div>
+			{% endif %}
+
+			<div class="portal-card">
+				<div class="card-head"><h2>Customer &amp; Contact</h2></div>
+				<div class="card-body">
+					<div class="detail-grid">
+						<div class="detail-item"><div class="d-label">Customer</div><div class="d-value">{{ doc.customer or "-" }}</div></div>
+						<div class="detail-item"><div class="d-label">Lead</div><div class="d-value">{{ doc.lead or "-" }}</div></div>
+						<div class="detail-item"><div class="d-label">Company</div><div class="d-value">{{ doc.company or "-" }}</div></div>
+						<div class="detail-item"><div class="d-label">Contact Person</div><div class="d-value">{{ doc.contact_person or "-" }}</div></div>
+						<div class="detail-item"><div class="d-label">Contact Number</div><div class="d-value">{{ doc.contact_number or "-" }}</div></div>
+						<div class="detail-item"><div class="d-label">Email</div><div class="d-value">{{ doc.email or "-" }}</div></div>
+					</div>
+				</div>
+			</div>
+
+			<div class="portal-card">
+				<div class="card-head"><h2>Requirements &amp; Demo Planning</h2></div>
+				<div class="card-body">
+					<div class="detail-grid">
+						<div class="detail-item"><div class="d-label">Interested Module</div><div class="d-value">{{ doc.interested_module or "-" }}</div></div>
+						<div class="detail-item"><div class="d-label">Demo Type</div><div class="d-value">{{ doc.demo_type or "-" }}</div></div>
+						<div class="detail-item"><div class="d-label">Preferred Date</div><div class="d-value">{{ doc.preferred_demo_date or "-" }}</div></div>
+						<div class="detail-item"><div class="d-label">Preferred Time</div><div class="d-value">{{ doc.preferred_demo_time or "-" }}</div></div>
+					</div>
+					<div class="detail-grid" style="margin-top: 16px;">
+						<div class="detail-item"><div class="d-label">Customer Requirements</div><div class="d-value wrap">{{ doc.customer_requirements or "-" }}</div></div>
+						<div class="detail-item"><div class="d-label">Business Process Requirements</div><div class="d-value wrap">{{ doc.business_process_requirements or "-" }}</div></div>
+					</div>
+				</div>
+			</div>
+
+			<div class="portal-card">
+				<div class="card-head"><h2>Team</h2></div>
+				<div class="card-body">
+					<div class="detail-grid">
+						<div class="detail-item"><div class="d-label">Sales Person</div><div class="d-value">{{ doc.sales_person or "-" }}</div></div>
+						<div class="detail-item"><div class="d-label">Functional Consultant</div><div class="d-value">{{ doc.functional_consultant or "-" }}{% if doc.functional_consultant and consultant_names.get(doc.functional_consultant) %} <span class="muted">({{ consultant_names.get(doc.functional_consultant) }})</span>{% endif %}</div></div>
+					</div>
+				</div>
+			</div>
+
+			<div class="portal-card">
+				<div class="card-head"><h2>Remarks &amp; Follow-up</h2></div>
+				<div class="card-body">
+					<div class="detail-grid">
+						<div class="detail-item"><div class="d-label">Sales Remarks</div><div class="d-value wrap">{{ doc.sales_remarks or "-" }}</div></div>
+						<div class="detail-item"><div class="d-label">Functional Remarks</div><div class="d-value wrap">{{ doc.functional_remarks or "-" }}</div></div>
+						<div class="detail-item"><div class="d-label">Follow-up Date</div><div class="d-value">{{ doc.follow_up_date or "-" }}</div></div>
+						<div class="detail-item"><div class="d-label">Next Action</div><div class="d-value wrap">{{ doc.next_action or "-" }}</div></div>
+					</div>
+				</div>
+			</div>
+
+			<div class="portal-card">
+				<div class="card-head"><h2>Activity Timeline</h2></div>
+				<div class="card-body">
+					{% if activity %}
+					<ul class="timeline">
+						{% for a in activity %}
+						<li>
+							<div class="t-title">{{ a.activity_type }}</div>
+							<div class="t-meta">{{ a.user }} · {{ a.activity_date.strftime('%d %b %Y, %H:%M') if a.activity_date else '-' }}{% if a.status %} · {{ a.status }}{% endif %}</div>
+							{% if a.remarks %}<div class="t-remarks">{{ a.remarks }}</div>{% endif %}
+						</li>
+						{% endfor %}
+					</ul>
+					{% else %}
+					<p class="text-muted">No activity recorded yet.</p>
+					{% endif %}
+				</div>
+			</div>
+		{% endif %}
+		</div>
+	</div>
+</div>
+{% endblock %}
+
+{% block script %}
+<script>
+(function () {
+	"use strict";
+	{% if create_mode %}
+	function fillContact(kind, value) {
+		if (!value) return;
+		portalCall(kind === "customer" ? "functional_demo.api.get_customer_details" : "functional_demo.api.get_lead_details",
+			kind === "customer" ? { customer: value } : { lead: value })
+			.then(function (data) {
+				if (!data) return;
+				if (data.contact_person && !document.getElementById("contact_person").value) {
+					document.getElementById("contact_person").value = data.contact_person;
+				}
+				if (data.contact_number && !document.getElementById("contact_number").value) {
+					document.getElementById("contact_number").value = data.contact_number;
+				}
+				if (data.email && !document.getElementById("email").value) {
+					document.getElementById("email").value = data.email;
+				}
+			});
+	}
+
+	document.getElementById("customer").addEventListener("change", function () {
+		fillContact("customer", this.value);
+	});
+	document.getElementById("lead").addEventListener("change", function () {
+		fillContact("lead", this.value);
+	});
+
+	document.getElementById("dr-form").addEventListener("submit", function (e) {
+		e.preventDefault();
+		var customer = document.getElementById("customer").value.trim();
+		var lead = document.getElementById("lead").value.trim();
+		if (!customer && !lead) {
+			portalAlert("Please select a Customer or a Lead.", "err");
+			return;
+		}
+		var btn = document.getElementById("btn-create");
+		btn.disabled = true; btn.textContent = "Creating...";
+		portalCall("functional_demo.api.create_demo_request", {
+			customer: customer || null,
+			lead: lead || null,
+			contact_person: document.getElementById("contact_person").value,
+			contact_number: document.getElementById("contact_number").value,
+			email: document.getElementById("email").value,
+			interested_module: document.getElementById("interested_module").value,
+			priority: document.getElementById("priority").value,
+			demo_type: document.getElementById("demo_type").value,
+			preferred_demo_date: document.getElementById("preferred_demo_date").value,
+			preferred_demo_time: document.getElementById("preferred_demo_time").value,
+			customer_requirements: document.getElementById("customer_requirements").value,
+			business_process_requirements: document.getElementById("business_process_requirements").value,
+			sales_remarks: document.getElementById("sales_remarks").value,
+		}).then(function (res) {
+			if (res && res.name) {
+				window.location.href = "/sales_portal/demo_request?name=" + res.name;
+			} else {
+				btn.disabled = false; btn.textContent = "Create Demo Request";
+			}
+		}).catch(function () {
+			btn.disabled = false; btn.textContent = "Create Demo Request";
+		});
+	});
+	{% else %}
+	var DOC_NAME = "{{ doc.name }}";
+
+	function toggle(id) {
+		var el = document.getElementById(id);
+		if (el) el.style.display = el.style.display === "none" ? "block" : "none";
+	}
+
+	{% if not doc.functional_consultant and doc.status in ["Draft", "Requested"] %}
+	document.getElementById("btn-assign").addEventListener("click", function () {
+		var consultant = document.getElementById("assign-consultant").value;
+		if (!consultant) { portalAlert("Please select a consultant.", "err"); return; }
+		var btn = this; btn.disabled = true;
+		portalCall("functional_demo.api.assign_consultant", { demo_request: DOC_NAME, consultant: consultant })
+			.then(function () { window.location.reload(); })
+			.catch(function () { btn.disabled = false; });
+	});
+	{% endif %}
+
+	{% if doc.functional_consultant and doc.status in ["Requested", "Assigned", "Scheduled", "Demo In Progress", "Demo Completed", "Follow-up Required"] %}
+	var btnScheduleToggle = document.getElementById("btn-toggle-schedule");
+	var btnSchedule = document.getElementById("btn-schedule");
+	if (btnScheduleToggle) btnScheduleToggle.addEventListener("click", function () { toggle("form-schedule"); });
+	if (btnSchedule) btnSchedule.addEventListener("click", function () {
+		var date = document.getElementById("sch-date").value;
+		if (!date) { portalAlert("Please pick a scheduled date.", "err"); return; }
+		var btn = this; btn.disabled = true;
+		portalCall("functional_demo.api.schedule_demo", {
+			demo_request: DOC_NAME,
+			scheduled_date: date,
+			start_time: document.getElementById("sch-start").value,
+			end_time: document.getElementById("sch-end").value,
+			meeting_link: document.getElementById("sch-link").value,
+		}).then(function () { window.location.reload(); }).catch(function () { btn.disabled = false; });
+	});
+	{% endif %}
+
+	{% if doc.status in ["Demo Completed", "Follow-up Required"] %}
+	document.getElementById("btn-toggle-followup").addEventListener("click", function () { toggle("form-followup"); });
+	document.getElementById("btn-followup").addEventListener("click", function () {
+		var date = document.getElementById("fu-date").value;
+		if (!date) { portalAlert("Please pick a follow-up date.", "err"); return; }
+		var btn = this; btn.disabled = true;
+		portalCall("functional_demo.api.create_demo_follow_up", {
+			demo_request: DOC_NAME,
+			follow_up_date: date,
+			next_action: document.getElementById("fu-next").value,
+			assigned_to: document.getElementById("fu-assignee").value,
+		}).then(function () { window.location.reload(); }).catch(function () { btn.disabled = false; });
+	});
+
+	document.getElementById("btn-toggle-result").addEventListener("click", function () { toggle("form-result"); });
+	document.getElementById("btn-result").addEventListener("click", function () {
+		var result = document.getElementById("result-value").value;
+		var btn = this; btn.disabled = true;
+		portalCall("functional_demo.api.set_demo_result", { demo_request: DOC_NAME, result: result })
+			.then(function () { window.location.reload(); }).catch(function () { btn.disabled = false; });
+	});
+	{% endif %}
+	{% endif %}
+})();
+</script>
+{% endblock %}

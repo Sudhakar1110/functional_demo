@@ -1,0 +1,88 @@
+{% extends "templates/web.html" %}
+{% block page_content %}
+<div class="portal-layout">
+	<aside class="portal-sidebar" id="portal-sidebar">
+		<a class="sidebar-brand" href="/demo_portal">
+			<div>
+				<span class="brand-dot"></span> Demo Portal
+				<span class="brand-sub">Sales &amp; Functional</span>
+			</div>
+		</a>
+		<div class="sidebar-menu">
+			{% for item in sidebar_items %}
+			<a class="sidebar-item {% if item.active %}active{% endif %}" href="{{ item.route }}">
+				<span class="sidebar-icon">{{ item.icon }}</span>{{ item.label }}
+			</a>
+			{% endfor %}
+		</div>
+		<div class="sidebar-footer">
+			<a class="sidebar-desk" href="/app" target="_blank" rel="noopener">Open ERPNext &nearr;</a>
+		</div>
+	</aside>
+	<div class="sidebar-overlay"></div>
+	<div class="portal-main">
+		<header class="portal-topbar">
+			<button class="sidebar-toggle" id="sidebar-toggle" aria-label="Menu">&#9776;</button>
+			<div class="topbar-title">
+				<h1>{{ title }}</h1>
+				<p>{{ subtitle }}</p>
+			</div>
+			<div class="topbar-user">
+				<span class="portal-avatar">{{ full_name[:1] }}</span>
+				<span class="portal-user-name">{{ full_name }}</span>
+			</div>
+		</header>
+		<div class="portal-content">
+			<h2 style="margin: 0 0 16px; font-size: 20px; font-weight: 800; color: #1F4E79;">My Sessions ({{ sessions|length }})</h2>
+
+			<div class="filter-chips">
+				<a class="filter-chip {% if not status %}active{% endif %}" href="/functional_portal/my_sessions">All</a>
+				{% for s in status_options %}
+				<a class="filter-chip {% if status == s %}active{% endif %}" href="/functional_portal/my_sessions?status={{ s|urlencode }}">{{ s }}</a>
+				{% endfor %}
+			</div>
+
+			<div class="portal-card">
+				{% if sessions %}
+				<div class="card-body flush">
+					<table class="table-portal">
+						<thead>
+							<tr>
+								<th>Session</th>
+								<th>Customer</th>
+								<th>Date</th>
+								<th>Time</th>
+								<th>Demo Type</th>
+								<th>Status</th>
+								<th>Final Result</th>
+								<th></th>
+							</tr>
+						</thead>
+						<tbody>
+							{% for s in sessions %}
+							<tr>
+								<td><a href="/functional_portal/session?name={{ s.name }}">{{ s.name }}</a></td>
+								<td>{{ s.customer or s.lead or "-" }}</td>
+								<td>{{ s.scheduled_date or "-" }}</td>
+								<td>{% if s.start_time %}{{ s.start_time }}{% if s.end_time %} – {{ s.end_time }}{% endif %}{% else %}-{% endif %}</td>
+								<td>{{ s.demo_type or "-" }}</td>
+								<td><span class="badge b-{{ s.demo_status|lower|replace(' ', '-') }}">{{ s.demo_status }}</span></td>
+								<td>{{ s.final_result or "-" }}</td>
+								<td><a class="btn-portal sm" href="/functional_portal/session?name={{ s.name }}">Conduct Demo &rarr;</a></td>
+							</tr>
+							{% endfor %}
+						</tbody>
+					</table>
+				</div>
+				{% else %}
+				<div class="empty-state">
+					<div class="empty-icon">📅</div>
+					<h3>No sessions found</h3>
+					<p>Sessions scheduled for you will appear here. When one is ready, open it to conduct the demo.</p>
+				</div>
+				{% endif %}
+			</div>
+		</div>
+	</div>
+</div>
+{% endblock %}

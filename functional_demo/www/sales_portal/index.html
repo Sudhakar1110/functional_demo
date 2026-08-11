@@ -1,0 +1,138 @@
+{% extends "templates/web.html" %}
+{% block page_content %}
+<div class="portal-layout">
+	<aside class="portal-sidebar" id="portal-sidebar">
+		<a class="sidebar-brand" href="/demo_portal">
+			<div>
+				<span class="brand-dot"></span> Demo Portal
+				<span class="brand-sub">Sales &amp; Functional</span>
+			</div>
+		</a>
+		<div class="sidebar-menu">
+			{% for item in sidebar_items %}
+			<a class="sidebar-item {% if item.active %}active{% endif %}" href="{{ item.route }}">
+				<span class="sidebar-icon">{{ item.icon }}</span>{{ item.label }}
+			</a>
+			{% endfor %}
+		</div>
+		<div class="sidebar-footer">
+			<a class="sidebar-desk" href="/app" target="_blank" rel="noopener">Open ERPNext &nearr;</a>
+		</div>
+	</aside>
+	<div class="sidebar-overlay"></div>
+	<div class="portal-main">
+		<header class="portal-topbar">
+			<button class="sidebar-toggle" id="sidebar-toggle" aria-label="Menu">&#9776;</button>
+			<div class="topbar-title">
+				<h1>{{ title }}</h1>
+				<p>{{ subtitle }}</p>
+			</div>
+			<div class="topbar-user">
+				<span class="portal-avatar">{{ full_name[:1] }}</span>
+				<span class="portal-user-name">{{ full_name }}</span>
+			</div>
+		</header>
+		<div class="portal-content">
+			<div class="flex-between mb-16">
+				<div>
+					<h1 style="font-size: 22px; font-weight: 800; color: #1F4E79; margin: 0;">Welcome back, {{ full_name }} 👋</h1>
+					<p class="text-muted" style="margin: 4px 0 0;">Here's what's happening with your demo pipeline.</p>
+				</div>
+				<div style="display: flex; gap: 10px; flex-wrap: wrap;">
+					<a class="btn-portal" href="/sales_portal/demo_request?new=1">+ New Demo Request</a>
+					<a class="btn-portal secondary" href="/app/lead/new" target="_blank" rel="noopener">+ New Lead</a>
+				</div>
+			</div>
+
+			<div class="kpi-grid">
+				<div class="kpi-card">
+					<span class="kpi-icon">🗂️</span>
+					<div class="kpi-label">Demo Requests</div>
+					<div class="kpi-value">{{ stats.total_requests }}</div>
+					<div class="kpi-note">All my requests</div>
+				</div>
+				<div class="kpi-card kpi-amber">
+					<span class="kpi-icon">⏳</span>
+					<div class="kpi-label">Pending</div>
+					<div class="kpi-value">{{ stats.pending }}</div>
+					<div class="kpi-note">Draft / Requested / Assigned</div>
+				</div>
+				<div class="kpi-card kpi-blue">
+					<span class="kpi-icon">📅</span>
+					<div class="kpi-label">Scheduled</div>
+					<div class="kpi-value">{{ stats.scheduled }}</div>
+					<div class="kpi-note">Scheduled / In progress</div>
+				</div>
+				<div class="kpi-card kpi-teal">
+					<span class="kpi-icon">🎥</span>
+					<div class="kpi-label">Today's Demos</div>
+					<div class="kpi-value">{{ stats.todays_demos }}</div>
+					<div class="kpi-note">Happening today</div>
+				</div>
+				<div class="kpi-card kpi-green">
+					<span class="kpi-icon">✅</span>
+					<div class="kpi-label">Completed</div>
+					<div class="kpi-value">{{ stats.completed }}</div>
+					<div class="kpi-note">Demo completed / follow-up</div>
+				</div>
+				<div class="kpi-card kpi-red">
+					<span class="kpi-icon">🔔</span>
+					<div class="kpi-label">Follow-ups Due</div>
+					<div class="kpi-value">{{ stats.follow_ups_due }}</div>
+					<div class="kpi-note">Open and due today or earlier</div>
+				</div>
+				<div class="kpi-card kpi-green">
+					<span class="kpi-icon">🏆</span>
+					<div class="kpi-label">Conversion Rate</div>
+					<div class="kpi-value">{{ stats.conversion_rate }}%</div>
+					<div class="kpi-note">{{ stats.converted }} converted</div>
+				</div>
+			</div>
+
+			<div class="portal-card">
+				<div class="card-head">
+					<h2>Recent Demo Requests</h2>
+					<a class="btn-portal secondary sm" href="/sales_portal/demo_requests">View all &rarr;</a>
+				</div>
+				{% if stats.recent_requests %}
+				<div class="card-body flush">
+					<table class="table-portal">
+						<thead>
+							<tr>
+								<th>Request</th>
+								<th>Party</th>
+								<th>Module</th>
+								<th>Priority</th>
+								<th>Consultant</th>
+								<th>Preferred Date</th>
+								<th>Status</th>
+							</tr>
+						</thead>
+						<tbody>
+							{% for r in stats.recent_requests %}
+							<tr>
+								<td><a href="/sales_portal/demo_request?name={{ r.name }}">{{ r.name }}</a></td>
+								<td>{{ r.customer or r.lead or "-" }}</td>
+								<td>{{ r.interested_module or "-" }}</td>
+								<td>{% if r.priority %}<span class="chip {{ r.priority|lower }}">{{ r.priority }}</span>{% else %}-{% endif %}</td>
+								<td>{{ r.functional_consultant or "-" }}</td>
+								<td>{{ r.preferred_demo_date or "-" }}</td>
+								<td><span class="badge b-{{ r.status|lower|replace(' ', '-') }}">{{ r.status }}</span></td>
+							</tr>
+							{% endfor %}
+						</tbody>
+					</table>
+				</div>
+				{% else %}
+				<div class="empty-state">
+					<div class="empty-icon">🗂️</div>
+					<h3>No demo requests yet</h3>
+					<p>Create your first demo request and start the workflow.</p>
+					<a class="btn-portal" href="/sales_portal/demo_request?new=1">+ New Demo Request</a>
+				</div>
+				{% endif %}
+			</div>
+		</div>
+	</div>
+</div>
+{% endblock %}

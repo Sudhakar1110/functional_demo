@@ -26,6 +26,11 @@ after_install = "functional_demo.install.after_install"
 # Only the shared CSS is included globally so the styling also applies in other views.
 app_include_css = ["/assets/functional_demo/css/demo_execution.css"]
 
+# Portal (website) pages: shared styles + the role-based portal menu items
+web_include_css = ["/assets/functional_demo/css/portal.css"]
+web_include_js = ["/assets/functional_demo/js/portal.js"]
+get_standard_portal_menu_items = "functional_demo.portal.get_standard_portal_menu_items"
+
 # Per-doctype form customizations
 doctype_js = {
 	"Demo Request": "public/js/demo_request.js",

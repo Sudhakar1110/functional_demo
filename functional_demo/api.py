@@ -382,3 +382,91 @@ def get_my_demo_sessions(demo_status=None):
 		order_by="scheduled_date desc",
 		limit_page_length=50,
 	)
+
+
+# ---------------------------------------------------------------------------
+# Portal actions (used by the Sales / Functional / Manager portal pages)
+# ---------------------------------------------------------------------------
+
+@frappe.whitelist()
+def create_demo_request(customer=None, lead=None, company=None, contact_person=None, contact_number=None, email=None, interested_module=None, customer_requirements=None, business_process_requirements=None, priority="Medium", preferred_demo_date=None, preferred_demo_time=None, demo_type=None, sales_remarks=None):
+	"""Create a Demo Request from the Sales Portal web form."""
+	from functional_demo.sales_demo.doctype.demo_request.demo_request import change_status
+
+	if not customer and not lead:
+		frappe.throw(_("Please select a Customer or a Lead."), title=_("Missing Party"))
+
+	doc = frappe.new_doc("Demo Request")
+	doc.customer = customer
+	doc.lead = lead
+	doc.company = company
+	doc.contact_person = contact_person
+	doc.contact_number = contact_number
+	doc.email = email
+	doc.interested_module = interested_module
+	doc.customer_requirements = customer_requirements
+	doc.business_process_requirements = business_process_requirements
+	doc.priority = priority or "Medium"
+	doc.preferred_demo_date = preferred_demo_date
+	doc.preferred_demo_time = preferred_demo_time
+	doc.demo_type = demo_type
+	doc.sales_remarks = sales_remarks
+	doc.insert()  # respects role permissions; sales_person defaults to the session user
+
+	# move the new request from Draft to Requested
+	try:
+		change_status(doc, "Requested")
+	except Exception:
+		# the request is still created; the sales team can move it from the desk
+		frappe.log_error(
+			title=_("Portal: Demo Request could not be moved to Requested"),
+			message=frappe.get_traceback(),
+		)
+
+	frappe.msgprint(_("Demo Request {0} created.").format(doc.name))
+	return {"name": doc.name}
+
+
+@frappe.whitelist()
+def assign_consultant(demo_request, consultant):
+	"""Assign (or reassign) a Functional Consultant on a Demo Request and move
+	the workflow to 'Assigned' when the request is still in its early stages."""
+	if not consultant:
+		frappe.throw(_("Please select a Functional Consultant."))
+
+	doc = frappe.get_doc("Demo Request", demo_request)
+	frappe.has_permission("Demo Request", "write", doc=doc, throw=True)
+
+	doc.functional_consultant = consultant
+	doc.save()  # validate runs: only Active consultants, reassignment flag, ToDo + notifications
+
+	if doc.workflow_state in (None, "", "Draft", "Requested"):
+		from functional_demo.sales_demo.doctype.demo_request.demo_request import change_status
+
+		doc = change_status(doc, "Assigned")
+
+	frappe.msgprint(_("Functional Consultant assigned to {0}.").format(demo_request))
+	return {"status": doc.get("status") or doc.get("workflow_state")}
+
+
+@frappe.whitelist()
+def update_follow_up(follow_up, status=None, outcome=None, remarks=None, next_action=None, discussion_note=None):
+	"""Update a Demo Follow Up from the portal: complete it, record the outcome,
+	and optionally append a discussion note (creates a Follow Up Note row)."""
+	doc = frappe.get_doc("Demo Follow Up", follow_up)
+	frappe.has_permission("Demo Follow Up", "write", doc=doc, throw=True)
+
+	if status:
+		doc.status = status
+	if outcome:
+		doc.outcome = outcome
+	if remarks:
+		doc.remarks = remarks
+	if next_action:
+		doc.next_action = next_action
+	if discussion_note:
+		doc.add_discussion_note(discussion_note)
+	doc.save()
+
+	frappe.msgprint(_("Follow-up {0} updated.").format(follow_up))
+	return {"status": doc.status, "outcome": doc.outcome}

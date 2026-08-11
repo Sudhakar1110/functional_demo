@@ -1,0 +1,296 @@
+{% extends "templates/web.html" %}
+{% block page_content %}
+{% macro repeater_item(rid, fields, child_doctype, rows, add_label) %}
+	<div class="repeater" id="{{ rid }}">
+		{% if rows %}
+			{% for row in rows %}
+			<div class="rep-row">
+				<div class="rep-fields {{ 'three' if fields|length == 3 else 'two' }}">
+					{% for f in fields %}
+					<input type="{{ 'number' if f.type == 'number' else 'text' }}" data-f="{{ f.name }}" placeholder="{{ f.label }}" value="{{ row.get(f.name) or '' }}">
+					{% endfor %}
+				</div>
+				<button type="button" class="rep-del">×</button>
+			</div>
+			{% endfor %}
+		{% else %}
+		<div class="rep-row">
+			<div class="rep-fields {{ 'three' if fields|length == 3 else 'two' }}">
+				{% for f in fields %}
+				<input type="{{ 'number' if f.type == 'number' else 'text' }}" data-f="{{ f.name }}" placeholder="{{ f.label }}">
+				{% endfor %}
+			</div>
+			<button type="button" class="rep-del">×</button>
+		</div>
+		{% endif %}
+	</div>
+	<button type="button" class="btn-add-row" data-rep="{{ rid }}">+ {{ add_label }}</button>
+{% endmacro %}
+
+<div class="portal-layout">
+	<aside class="portal-sidebar" id="portal-sidebar">
+		<a class="sidebar-brand" href="/demo_portal">
+			<div>
+				<span class="brand-dot"></span> Demo Portal
+				<span class="brand-sub">Sales &amp; Functional</span>
+			</div>
+		</a>
+		<div class="sidebar-menu">
+			{% for item in sidebar_items %}
+			<a class="sidebar-item {% if item.active %}active{% endif %}" href="{{ item.route }}">
+				<span class="sidebar-icon">{{ item.icon }}</span>{{ item.label }}
+			</a>
+			{% endfor %}
+		</div>
+		<div class="sidebar-footer">
+			<a class="sidebar-desk" href="/app" target="_blank" rel="noopener">Open ERPNext &nearr;</a>
+		</div>
+	</aside>
+	<div class="sidebar-overlay"></div>
+	<div class="portal-main">
+		<header class="portal-topbar">
+			<button class="sidebar-toggle" id="sidebar-toggle" aria-label="Menu">&#9776;</button>
+			<div class="topbar-title">
+				<h1>{{ title }}</h1>
+				<p>{{ subtitle }}</p>
+			</div>
+			<div class="topbar-user">
+				<span class="portal-avatar">{{ full_name[:1] }}</span>
+				<span class="portal-user-name">{{ full_name }}</span>
+			</div>
+		</header>
+		<div class="portal-content">
+			{% if not my_consultant %}
+			<div class="portal-card">
+				<div class="empty-state">
+					<div class="empty-icon">⚠️</div>
+					<h3>No consultant profile linked to your user</h3>
+					<p>Templates belong to a Functional Consultant. Ask your manager to link a consultant profile to your user in ERPNext, then reload this page.</p>
+				</div>
+			</div>
+			{% else %}
+			<form class="portal-form" id="template-form">
+				<div class="portal-card">
+					<div class="card-head">
+						<h2>{{ "New Demo Template" if create_mode else "Edit Template: " + doc.name }}</h2>
+						<a class="btn-portal secondary sm" href="/functional_portal/my_templates">&larr; My Templates</a>
+					</div>
+					<div class="card-body">
+						<div class="form-row">
+							<div>
+								<label>Template Name <span class="req">*</span></label>
+								<input type="text" id="template_name" value="{{ doc.template_name if not create_mode else '' }}" placeholder="e.g. GST Accounting Demo">
+							</div>
+							<div>
+								<label>ERPNext Module</label>
+								<select id="erpnext_module">
+									{% for m in modules %}<option value="{{ m }}" {% if not create_mode and doc.erpnext_module == m %}selected{% endif %}>{{ m or "— Select —" }}</option>{% endfor %}
+								</select>
+							</div>
+						</div>
+						<div class="form-row">
+							<div><label>Business Area</label><input type="text" id="business_area" value="{{ doc.business_area if not create_mode else '' }}" placeholder="e.g. GST filing & returns"></div>
+							<div><label>Owner Consultant</label><input type="text" value="{{ consultant_name }}" disabled></div>
+						</div>
+						<label>Demo Objective</label>
+						<textarea id="demo_objective" placeholder="What this demo should achieve...">{{ doc.demo_objective if not create_mode else '' }}</textarea>
+						<label>Introduction</label>
+						<textarea id="introduction">{{ doc.introduction if not create_mode else '' }}</textarea>
+						<label>Customer Business Scenario</label>
+						<textarea id="customer_business_scenario">{{ doc.customer_business_scenario if not create_mode else '' }}</textarea>
+						<label>Demo Agenda</label>
+						<textarea id="demo_agenda">{{ doc.demo_agenda if not create_mode else '' }}</textarea>
+					</div>
+				</div>
+
+				<div class="portal-card">
+					<div class="card-head"><h2>Demo Steps</h2></div>
+					<div class="card-body">
+						{{ repeater_item("steps-rep", [
+							{"name": "step_no", "label": "Step No", "type": "number"},
+							{"name": "description", "label": "Step description *"},
+							{"name": "doctype_to_demo", "label": "DocType / Screen"},
+						], "Template Step", doc.demo_steps if not create_mode else [], "Add step") }}
+					</div>
+				</div>
+
+				<div class="portal-card">
+					<div class="card-head"><h2>Key Features</h2></div>
+					<div class="card-body">
+						{{ repeater_item("features-rep", [
+							{"name": "item", "label": "Feature *"},
+							{"name": "description", "label": "Description"},
+						], "Template Item", doc.key_features if not create_mode else [], "Add feature") }}
+					</div>
+				</div>
+
+				<div class="portal-card">
+					<div class="card-head"><h2>Configuration Points</h2></div>
+					<div class="card-body">
+						{{ repeater_item("config-rep", [
+							{"name": "item", "label": "Configuration *"},
+							{"name": "description", "label": "Description"},
+						], "Template Item", doc.configuration_points if not create_mode else [], "Add configuration point") }}
+					</div>
+				</div>
+
+				<div class="portal-card">
+					<div class="card-head"><h2>Business Benefits</h2></div>
+					<div class="card-body">
+						{{ repeater_item("benefits-rep", [
+							{"name": "item", "label": "Benefit *"},
+							{"name": "description", "label": "Description"},
+						], "Template Item", doc.business_benefits if not create_mode else [], "Add benefit") }}
+					</div>
+				</div>
+
+				<div class="portal-card">
+					<div class="card-head"><h2>Questions to Ask the Customer</h2></div>
+					<div class="card-body">
+						{{ repeater_item("ask-rep", [
+							{"name": "question", "label": "Question *"},
+							{"name": "answer", "label": "Suggested Answer"},
+						], "Template Question", doc.questions_to_ask if not create_mode else [], "Add question") }}
+					</div>
+				</div>
+
+				<div class="portal-card">
+					<div class="card-head"><h2>Common Customer Questions</h2></div>
+					<div class="card-body">
+						{{ repeater_item("cq-rep", [
+							{"name": "question", "label": "Question *"},
+							{"name": "answer", "label": "Suggested Answer"},
+						], "Template Question", doc.customer_questions if not create_mode else [], "Add question") }}
+					</div>
+				</div>
+
+				<div class="portal-card">
+					<div class="card-head"><h2>FAQs</h2></div>
+					<div class="card-body">
+						{{ repeater_item("faqs-rep", [
+							{"name": "question", "label": "Question *"},
+							{"name": "answer", "label": "Answer"},
+						], "Template Question", doc.faqs if not create_mode else [], "Add FAQ") }}
+					</div>
+				</div>
+
+				<div class="portal-card">
+					<div class="card-head"><h2>Notes &amp; Follow-up</h2></div>
+					<div class="card-body">
+						<label>Demo Notes</label>
+						<textarea id="demo_notes">{{ doc.demo_notes if not create_mode else '' }}</textarea>
+						<label>Follow-up Points</label>
+						{{ repeater_item("followup-rep", [
+							{"name": "item", "label": "Follow-up point *"},
+							{"name": "description", "label": "Description"},
+						], "Template Item", doc.follow_up_points if not create_mode else [], "Add follow-up point") }}
+						<label style="display: flex; align-items: center; gap: 8px; margin-top: 16px;">
+							<input type="checkbox" id="is_active" style="width: auto;" {% if not create_mode and doc.is_active %}checked{% endif %}> Active (available for demos)
+						</label>
+						<div class="form-actions">
+							<button class="btn-portal" type="submit" id="btn-save">{{ "Create Template" if create_mode else "Save Changes" }}</button>
+							<a class="btn-portal secondary" href="/functional_portal/my_templates">Cancel</a>
+						</div>
+					</div>
+				</div>
+			</form>
+			{% endif %}
+		</div>
+	</div>
+</div>
+{% endblock %}
+
+{% block script %}
+<script>
+(function () {
+	"use strict";
+	{% if my_consultant %}
+
+	function initRepeaters() {
+		document.querySelectorAll(".btn-add-row").forEach(function (btn) {
+			btn.addEventListener("click", function () {
+				var container = document.getElementById(btn.getAttribute("data-rep"));
+				if (!container) return;
+				var first = container.querySelector(".rep-row");
+				var clone = first.cloneNode(true);
+				clone.querySelectorAll("[data-f]").forEach(function (el) { el.value = ""; });
+				container.appendChild(clone);
+			});
+		});
+		document.querySelectorAll(".repeater").forEach(function (container) {
+			container.addEventListener("click", function (e) {
+				if (!e.target.classList.contains("rep-del")) return;
+				var rows = container.querySelectorAll(".rep-row");
+				if (rows.length > 1) {
+					e.target.closest(".rep-row").remove();
+				} else {
+					rows[0].querySelectorAll("[data-f]").forEach(function (el) { el.value = ""; });
+				}
+			});
+		});
+	}
+
+	function collectRows(containerId, childDoctype) {
+		var rows = [];
+		document.querySelectorAll("#" + containerId + " .rep-row").forEach(function (row) {
+			var obj = { doctype: childDoctype };
+			var hasValue = false;
+			row.querySelectorAll("[data-f]").forEach(function (el) {
+				var f = el.getAttribute("data-f");
+				var v = el.value.trim();
+				if (f === "step_no" || f === "duration_min") v = v ? parseInt(v, 10) : "";
+				obj[f] = v;
+				if (v !== "" && v !== null && v !== undefined) hasValue = true;
+			});
+			if (hasValue) rows.push(obj);
+		});
+		return rows;
+	}
+
+	function val(id) { var el = document.getElementById(id); return el ? el.value.trim() : ""; }
+
+	document.getElementById("template-form").addEventListener("submit", function (e) {
+		e.preventDefault();
+		if (!val("template_name")) { portalAlert("Template Name is required.", "err"); return; }
+		var doc = {
+			doctype: "Functional Demo Template",
+			{% if create_mode %}
+			functional_consultant: "{{ my_consultant }}",
+			{% else %}
+			name: "{{ doc.name }}",
+			{% endif %}
+			template_name: val("template_name"),
+			erpnext_module: val("erpnext_module"),
+			business_area: val("business_area"),
+			demo_objective: val("demo_objective"),
+			introduction: val("introduction"),
+			customer_business_scenario: val("customer_business_scenario"),
+			demo_agenda: val("demo_agenda"),
+			demo_notes: val("demo_notes"),
+			is_active: document.getElementById("is_active").checked ? 1 : 0,
+			demo_steps: collectRows("steps-rep", "Template Step"),
+			key_features: collectRows("features-rep", "Template Item"),
+			configuration_points: collectRows("config-rep", "Template Item"),
+			business_benefits: collectRows("benefits-rep", "Template Item"),
+			questions_to_ask: collectRows("ask-rep", "Template Question"),
+			customer_questions: collectRows("cq-rep", "Template Question"),
+			faqs: collectRows("faqs-rep", "Template Question"),
+			follow_up_points: collectRows("followup-rep", "Template Item"),
+		};
+		var btn = document.getElementById("btn-save");
+		btn.disabled = true; btn.textContent = "Saving...";
+		var method = {% if create_mode %}"frappe.client.insert"{% else %}"frappe.client.save"{% endif %};
+		portalCall(method, { doc: doc })
+			.then(function (res) {
+				var saved = res && res.name;
+				if (!saved && res && res.docs && res.docs.length) saved = res.docs[0].name;
+				window.location.href = "/functional_portal/my_templates" + (saved ? "?saved=" + saved : "");
+			})
+			.catch(function () { btn.disabled = false; btn.textContent = "Save"; });
+	});
+
+	initRepeaters();
+	{% endif %}
+})();
+</script>
+{% endblock %}

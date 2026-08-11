@@ -1,0 +1,133 @@
+{% extends "templates/web.html" %}
+{% block page_content %}
+<div class="portal-layout">
+	<aside class="portal-sidebar" id="portal-sidebar">
+		<a class="sidebar-brand" href="/demo_portal">
+			<div>
+				<span class="brand-dot"></span> Demo Portal
+				<span class="brand-sub">Sales &amp; Functional</span>
+			</div>
+		</a>
+		<div class="sidebar-menu">
+			{% for item in sidebar_items %}
+			<a class="sidebar-item {% if item.active %}active{% endif %}" href="{{ item.route }}">
+				<span class="sidebar-icon">{{ item.icon }}</span>{{ item.label }}
+			</a>
+			{% endfor %}
+		</div>
+		<div class="sidebar-footer">
+			<a class="sidebar-desk" href="/app" target="_blank" rel="noopener">Open ERPNext &nearr;</a>
+		</div>
+	</aside>
+	<div class="sidebar-overlay"></div>
+	<div class="portal-main">
+		<header class="portal-topbar">
+			<button class="sidebar-toggle" id="sidebar-toggle" aria-label="Menu">&#9776;</button>
+			<div class="topbar-title">
+				<h1>{{ title }}</h1>
+				<p>{{ subtitle }}</p>
+			</div>
+			<div class="topbar-user">
+				<span class="portal-avatar">{{ full_name[:1] }}</span>
+				<span class="portal-user-name">{{ full_name }}</span>
+			</div>
+		</header>
+		<div class="portal-content">
+			<div class="flex-between mb-16">
+				<div>
+					<h1 style="font-size: 22px; font-weight: 800; color: #1F4E79; margin: 0;">
+						Welcome, {{ consultant_name or full_name }} 🎯
+					</h1>
+					<p class="text-muted" style="margin: 4px 0 0;">Here's your demo day at a glance.</p>
+				</div>
+				<div style="display: flex; gap: 10px; flex-wrap: wrap;">
+					<a class="btn-portal" href="/functional_portal/template?new=1">+ New Template</a>
+					<a class="btn-portal secondary" href="/functional_portal/my_sessions">My Sessions</a>
+				</div>
+			</div>
+
+			<div class="kpi-grid">
+				<div class="kpi-card kpi-teal">
+					<span class="kpi-icon">🎥</span>
+					<div class="kpi-label">Today's Demos</div>
+					<div class="kpi-value">{{ stats.todays_demos }}</div>
+					<div class="kpi-note">Yours, today</div>
+				</div>
+				<div class="kpi-card kpi-amber">
+					<span class="kpi-icon">⏱️</span>
+					<div class="kpi-label">In Progress</div>
+					<div class="kpi-value">{{ stats.in_progress }}</div>
+					<div class="kpi-note">Currently running</div>
+				</div>
+				<div class="kpi-card kpi-blue">
+					<span class="kpi-icon">📅</span>
+					<div class="kpi-label">Upcoming</div>
+					<div class="kpi-value">{{ stats.upcoming }}</div>
+					<div class="kpi-note">Scheduled ahead</div>
+				</div>
+				<div class="kpi-card kpi-green">
+					<span class="kpi-icon">✅</span>
+					<div class="kpi-label">Completed</div>
+					<div class="kpi-value">{{ stats.completed }}</div>
+					<div class="kpi-note">Demos delivered</div>
+				</div>
+				<div class="kpi-card kpi-purple">
+					<span class="kpi-icon">📋</span>
+					<div class="kpi-label">My Templates</div>
+					<div class="kpi-value">{{ stats.templates }}</div>
+					<div class="kpi-note">Reusable demos</div>
+				</div>
+				<div class="kpi-card kpi-red">
+					<span class="kpi-icon">🔔</span>
+					<div class="kpi-label">Follow-ups Open</div>
+					<div class="kpi-value">{{ stats.follow_ups }}</div>
+					<div class="kpi-note">On my demos</div>
+				</div>
+			</div>
+
+			<div class="portal-card">
+				<div class="card-head">
+					<h2>Recent Sessions</h2>
+					<a class="btn-portal secondary sm" href="/functional_portal/my_sessions">View all &rarr;</a>
+				</div>
+				{% if stats.recent_sessions %}
+				<div class="card-body flush">
+					<table class="table-portal">
+						<thead>
+							<tr>
+								<th>Session</th>
+								<th>Customer</th>
+								<th>Date</th>
+								<th>Start</th>
+								<th>Status</th>
+								<th>Final Result</th>
+								<th></th>
+							</tr>
+						</thead>
+						<tbody>
+							{% for s in stats.recent_sessions %}
+							<tr>
+								<td><a href="/functional_portal/session?name={{ s.name }}">{{ s.name }}</a></td>
+								<td>{{ s.customer or "-" }}</td>
+								<td>{{ s.scheduled_date or "-" }}</td>
+								<td>{{ s.start_time or "-" }}</td>
+								<td><span class="badge b-{{ s.demo_status|lower|replace(' ', '-') }}">{{ s.demo_status }}</span></td>
+								<td>{{ s.final_result or "-" }}</td>
+								<td><a class="btn-portal sm" href="/functional_portal/session?name={{ s.name }}">Conduct &rarr;</a></td>
+							</tr>
+							{% endfor %}
+						</tbody>
+					</table>
+				</div>
+				{% else %}
+				<div class="empty-state">
+					<div class="empty-icon">📅</div>
+					<h3>No sessions assigned yet</h3>
+					<p>When the sales team schedules a demo for you, it shows up here.</p>
+				</div>
+				{% endif %}
+			</div>
+		</div>
+	</div>
+</div>
+{% endblock %}

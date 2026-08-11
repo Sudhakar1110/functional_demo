@@ -1,0 +1,150 @@
+{% extends "templates/web.html" %}
+{% block page_content %}
+<div class="portal-layout">
+	<aside class="portal-sidebar" id="portal-sidebar">
+		<a class="sidebar-brand" href="/demo_portal">
+			<div>
+				<span class="brand-dot"></span> Demo Portal
+				<span class="brand-sub">Sales &amp; Functional</span>
+			</div>
+		</a>
+		<div class="sidebar-menu">
+			{% for item in sidebar_items %}
+			<a class="sidebar-item {% if item.active %}active{% endif %}" href="{{ item.route }}">
+				<span class="sidebar-icon">{{ item.icon }}</span>{{ item.label }}
+			</a>
+			{% endfor %}
+		</div>
+		<div class="sidebar-footer">
+			<a class="sidebar-desk" href="/app" target="_blank" rel="noopener">Open ERPNext &nearr;</a>
+		</div>
+	</aside>
+	<div class="sidebar-overlay"></div>
+	<div class="portal-main">
+		<header class="portal-topbar">
+			<button class="sidebar-toggle" id="sidebar-toggle" aria-label="Menu">&#9776;</button>
+			<div class="topbar-title">
+				<h1>{{ title }}</h1>
+				<p>{{ subtitle }}</p>
+			</div>
+			<div class="topbar-user">
+				<span class="portal-avatar">{{ full_name[:1] }}</span>
+				<span class="portal-user-name">{{ full_name }}</span>
+			</div>
+		</header>
+		<div class="portal-content">
+			<div class="kpi-grid">
+				<div class="kpi-card kpi-green">
+					<span class="kpi-icon">✅</span>
+					<div class="kpi-label">Completed / Follow-up</div>
+					<div class="kpi-value">{{ stats.completed }}</div>
+					<div class="kpi-note">Demos delivered</div>
+				</div>
+				<div class="kpi-card kpi-green">
+					<span class="kpi-icon">🏆</span>
+					<div class="kpi-label">Converted</div>
+					<div class="kpi-value">{{ stats.converted }}</div>
+					<div class="kpi-note">Won opportunities</div>
+				</div>
+				<div class="kpi-card">
+					<span class="kpi-icon">📊</span>
+					<div class="kpi-label">Conversion Rate</div>
+					<div class="kpi-value">{{ stats.conversion_rate }}%</div>
+					<div class="kpi-note">Of all my requests</div>
+				</div>
+				<div class="kpi-card kpi-red">
+					<span class="kpi-icon">🔔</span>
+					<div class="kpi-label">Follow-ups Due</div>
+					<div class="kpi-value">{{ stats.follow_ups_due }}</div>
+					<div class="kpi-note">Open &amp; due today or earlier</div>
+				</div>
+			</div>
+
+			<div class="portal-card">
+				<div class="card-head"><h2>Converted Demo Requests</h2></div>
+				{% if converted %}
+				<div class="card-body flush">
+					<table class="table-portal">
+						<thead>
+							<tr>
+								<th>Request</th>
+								<th>Party</th>
+								<th>Consultant</th>
+								<th>Priority</th>
+								<th>Created</th>
+							</tr>
+						</thead>
+						<tbody>
+							{% for c in converted %}
+							<tr>
+								<td><a href="/sales_portal/demo_request?name={{ c.name }}">{{ c.name }}</a></td>
+								<td>{{ c.customer or c.lead }}</td>
+								<td>{{ c.functional_consultant or "-" }}</td>
+								<td>{% if c.priority %}<span class="chip {{ c.priority|lower }}">{{ c.priority }}</span>{% else %}-{% endif %}</td>
+								<td>{{ c.creation_display }}</td>
+							</tr>
+							{% endfor %}
+						</tbody>
+					</table>
+				</div>
+				{% else %}
+				<div class="empty-state">
+					<div class="empty-icon">🏆</div>
+					<h3>No conversions yet</h3>
+					<p>When a demo converts, the customer shows up here and an Opportunity is created automatically in ERPNext.</p>
+				</div>
+				{% endif %}
+			</div>
+
+			<div class="portal-card">
+				<div class="card-head"><h2>Completed Demos &amp; Feedback</h2></div>
+				{% if results %}
+				<div class="card-body flush">
+					<table class="table-portal">
+						<thead>
+							<tr>
+								<th>Session</th>
+								<th>Customer</th>
+								<th>Date</th>
+								<th>Consultant</th>
+								<th>Interested</th>
+								<th>Requirements</th>
+								<th>Follow-up</th>
+								<th>Final Result</th>
+								<th>Status</th>
+							</tr>
+						</thead>
+						<tbody>
+							{% for r in results %}
+							<tr>
+								<td><a href="/app/demo-session/{{ r.name }}" target="_blank" rel="noopener">{{ r.name }}</a></td>
+								<td>{{ r.customer or "-" }}</td>
+								<td>{{ r.scheduled_date or "-" }}</td>
+								<td>{{ r.functional_consultant or "-" }}</td>
+								<td>{{ r.interested or "-" }}</td>
+								<td>{{ r.requirements_met or "-" }}</td>
+								<td>{% if r.follow_up_required %}<span class="badge b-followup-required">Yes</span>{% else %}No{% endif %}</td>
+								<td>{{ r.final_result or "-" }}</td>
+								<td><span class="badge b-{{ r.demo_status|lower|replace(' ', '-') }}">{{ r.demo_status }}</span></td>
+							</tr>
+							{% if r.overall_feedback %}
+							<tr>
+								<td colspan="9" class="muted"><strong>Feedback:</strong> {{ r.overall_feedback }}</td>
+							</tr>
+							{% endif %}
+							{% endfor %}
+						</tbody>
+					</table>
+				</div>
+				{% else %}
+				<div class="empty-state">
+					<div class="empty-icon">📈</div>
+					<h3>No completed demos yet</h3>
+					<p>Completed sessions with customer feedback will appear here.</p>
+				</div>
+				{% endif %}
+			</div>
+		</div>
+	</div>
+</div>
+{% endblock %}

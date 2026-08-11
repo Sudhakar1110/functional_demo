@@ -1,0 +1,406 @@
+{% extends "templates/web.html" %}
+{% block page_content %}
+<div class="portal-layout">
+	<aside class="portal-sidebar" id="portal-sidebar">
+		<a class="sidebar-brand" href="/demo_portal">
+			<div>
+				<span class="brand-dot"></span> Demo Portal
+				<span class="brand-sub">Sales &amp; Functional</span>
+			</div>
+		</a>
+		<div class="sidebar-menu">
+			{% for item in sidebar_items %}
+			<a class="sidebar-item {% if item.active %}active{% endif %}" href="{{ item.route }}">
+				<span class="sidebar-icon">{{ item.icon }}</span>{{ item.label }}
+			</a>
+			{% endfor %}
+		</div>
+		<div class="sidebar-footer">
+			<a class="sidebar-desk" href="/app" target="_blank" rel="noopener">Open ERPNext &nearr;</a>
+		</div>
+	</aside>
+	<div class="sidebar-overlay"></div>
+	<div class="portal-main">
+		<header class="portal-topbar">
+			<button class="sidebar-toggle" id="sidebar-toggle" aria-label="Menu">&#9776;</button>
+			<div class="topbar-title">
+				<h1>{{ title }}</h1>
+				<p>{{ subtitle }}</p>
+			</div>
+			<div class="topbar-user">
+				<span class="portal-avatar">{{ full_name[:1] }}</span>
+				<span class="portal-user-name">{{ full_name }}</span>
+			</div>
+		</header>
+		<div class="portal-content">
+
+		{% if missing %}
+			<div class="portal-card">
+				<div class="empty-state">
+					<div class="empty-icon">🎥</div>
+					<h3>No demo session selected</h3>
+					<p>Open a session from <a href="/functional_portal/my_sessions">My Sessions</a> to conduct the demo.</p>
+					<a class="btn-portal" href="/functional_portal/my_sessions">Go to My Sessions</a>
+				</div>
+			</div>
+		{% else %}
+			{% set s = data.session %}
+			{% set r = data.request %}
+			{% set c = data.customer %}
+			{% set t = data.team %}
+			{% set tpl = data.template %}
+
+			<div class="portal-card">
+				<div class="card-head" style="align-items: flex-start;">
+					<div>
+						<h2>{{ s.name }}</h2>
+						<div style="margin-top: 8px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+							<span class="badge b-{{ s.demo_status|lower|replace(' ', '-') }}">{{ s.demo_status }}</span>
+							{% if r.status %}<span class="badge b-{{ r.status|lower|replace(' ', '-') }}">Request: {{ r.status }}</span>{% endif %}
+							{% if s.final_result %}<span class="badge b-{{ s.final_result|lower|replace(' ', '-') }}">Result: {{ s.final_result }}</span>{% endif %}
+						</div>
+					</div>
+					<div style="display: flex; gap: 8px; flex-wrap: wrap;">
+						<a class="btn-portal secondary sm" href="/functional_portal/my_sessions">&larr; My Sessions</a>
+						{% if s.meeting_link %}
+						<a class="btn-portal sm" href="{{ s.meeting_link }}" target="_blank" rel="noopener">🎥 Join Meeting</a>
+						{% endif %}
+					</div>
+				</div>
+				{% if data.can_write %}
+				<div class="card-body">
+					<div style="display: flex; gap: 10px; flex-wrap: wrap;">
+						{% if s.demo_status == "Scheduled" %}
+						<button class="btn-portal success" id="btn-start">▶ Start Demo</button>
+						<button class="btn-portal warning" id="btn-toggle-reschedule">🔄 Reschedule</button>
+						<button class="btn-portal danger" id="btn-toggle-cancel">✕ Cancel</button>
+						{% endif %}
+						{% if s.demo_status == "In Progress" %}
+						<button class="btn-portal success" id="btn-toggle-complete">✅ Complete Demo</button>
+						<button class="btn-portal danger" id="btn-toggle-cancel">✕ Cancel</button>
+						{% endif %}
+						{% if s.demo_status in ["Completed", "Follow-up Required"] %}
+						<button class="btn-portal warning" id="btn-toggle-followup">🔔 Create Follow-up</button>
+						<button class="btn-portal" id="btn-toggle-result">🏆 Set Final Result</button>
+						{% endif %}
+					</div>
+
+					<div id="form-reschedule" style="display: none;" class="portal-form">
+						<div class="divider"></div>
+						<div class="form-row">
+							<div><label>New Date <span class="req">*</span></label><input type="date" id="rs-date" value="{{ s.scheduled_date }}"></div>
+							<div><label>Start Time</label><input type="time" id="rs-start" value="{{ s.start_time }}"></div>
+						</div>
+						<div class="form-row">
+							<div><label>End Time</label><input type="time" id="rs-end" value="{{ s.end_time }}"></div>
+							<div><label>Meeting Link</label><input type="text" id="rs-link" value="{{ s.meeting_link }}"></div>
+						</div>
+						<div class="form-actions"><button class="btn-portal warning" id="btn-reschedule">Reschedule</button></div>
+					</div>
+
+					<div id="form-cancel" style="display: none;" class="portal-form">
+						<div class="divider"></div>
+						<label>Reason for cancelling</label>
+						<textarea id="cancel-reason" placeholder="Optional reason..."></textarea>
+						<div class="form-actions"><button class="btn-portal danger" id="btn-cancel">Cancel Demo</button></div>
+					</div>
+
+					<div id="form-complete" style="display: none;" class="portal-form">
+						<div class="divider"></div>
+						<label>Overall Feedback</label>
+						<textarea id="fb-overall" placeholder="How did the demo go?"></textarea>
+						<div class="form-row">
+							<div>
+								<label>Interested?</label>
+								<select id="fb-interested">
+									<option value="">—</option>
+									<option>Interested</option>
+									<option>Not Interested</option>
+									<option>Undecided</option>
+								</select>
+							</div>
+							<div>
+								<label>Requirements Met</label>
+								<select id="fb-reqmet">
+									<option value="">—</option>
+									<option>Fully Met</option>
+									<option>Partially Met</option>
+									<option>Not Met</option>
+								</select>
+							</div>
+						</div>
+						<label>Additional Requirements</label>
+						<textarea id="fb-additional"></textarea>
+						<label>Customer Questions (one per line)</label>
+						<textarea id="fb-questions" placeholder="Question 1&#10;Question 2"></textarea>
+						<label>Requested Changes</label>
+						<textarea id="fb-changes"></textarea>
+						<label style="display: flex; align-items: center; gap: 8px; margin-top: 16px;">
+							<input type="checkbox" id="fb-followup" style="width: auto;"> Follow-up required
+						</label>
+						<div id="fb-followup-fields" style="display: none;">
+							<div class="form-row">
+								<div><label>Follow-up Date</label><input type="date" id="fb-fudate"></div>
+								<div><label>Next Action</label><input type="text" id="fb-next"></div>
+							</div>
+						</div>
+						<label>Consultant Remarks</label>
+						<textarea id="fb-remarks"></textarea>
+						<div class="form-actions"><button class="btn-portal success" id="btn-complete">Complete Demo</button></div>
+					</div>
+
+					<div id="form-followup" style="display: none;" class="portal-form">
+						<div class="divider"></div>
+						<div class="form-row">
+							<div><label>Follow-up Date <span class="req">*</span></label><input type="date" id="fu-date"></div>
+							<div><label>Assigned To</label><input type="text" id="fu-assignee" value="{{ t.sales_person }}"></div>
+						</div>
+						<label>Next Action</label>
+						<textarea id="fu-next"></textarea>
+						<div class="form-actions"><button class="btn-portal warning" id="btn-followup">Create Follow-up</button></div>
+					</div>
+
+					<div id="form-result" style="display: none;" class="portal-form">
+						<div class="divider"></div>
+						<label>Final Result <span class="req">*</span></label>
+						<select id="result-value">
+							<option value="Converted">Converted</option>
+							<option value="Not Interested">Not Interested</option>
+							<option value="Closed">Closed</option>
+							<option value="Pending">Pending</option>
+						</select>
+						<div class="form-actions"><button class="btn-portal" id="btn-result">Set Final Result</button></div>
+					</div>
+				</div>
+				{% endif %}
+			</div>
+
+			<div class="portal-card">
+				<div class="card-head"><h2>Customer Information</h2></div>
+				<div class="card-body">
+					<div class="detail-grid">
+						<div class="detail-item"><div class="d-label">Customer</div><div class="d-value">{{ c.customer or c.lead or "-" }}</div></div>
+						<div class="detail-item"><div class="d-label">Contact Person</div><div class="d-value">{{ c.contact_person or "-" }}</div></div>
+						<div class="detail-item"><div class="d-label">Contact Number</div><div class="d-value">{{ c.contact_number or "-" }}</div></div>
+						<div class="detail-item"><div class="d-label">Email</div><div class="d-value">{{ c.email or "-" }}</div></div>
+						<div class="detail-item"><div class="d-label">Company</div><div class="d-value">{{ c.company or "-" }}</div></div>
+					</div>
+				</div>
+			</div>
+
+			<div class="portal-card">
+				<div class="card-head"><h2>Demo Information</h2></div>
+				<div class="card-body">
+					<div class="detail-grid">
+						<div class="detail-item"><div class="d-label">Date</div><div class="d-value">{{ s.scheduled_date or "-" }}</div></div>
+						<div class="detail-item"><div class="d-label">Time</div><div class="d-value">{% if s.start_time %}{{ s.start_time }}{% if s.end_time %} – {{ s.end_time }}{% endif %}{% else %}-{% endif %}</div></div>
+						<div class="detail-item"><div class="d-label">Demo Type</div><div class="d-value">{{ s.demo_type or "-" }}</div></div>
+						<div class="detail-item"><div class="d-label">Sales Person</div><div class="d-value">{{ t.sales_person or "-" }}</div></div>
+						<div class="detail-item"><div class="d-label">Consultant</div><div class="d-value">{{ t.consultant_name or t.functional_consultant or "-" }}{% if t.consultant_specialization %} <span class="muted">({{ t.consultant_specialization }})</span>{% endif %}</div></div>
+						{% if r.priority %}<div class="detail-item"><div class="d-label">Priority</div><div class="d-value"><span class="chip {{ r.priority|lower }}">{{ r.priority }}</span></div></div>{% endif %}
+					</div>
+				</div>
+			</div>
+
+			<div class="portal-card">
+				<div class="card-head"><h2>Customer Requirements</h2></div>
+				<div class="card-body">
+					<div class="detail-grid">
+						<div class="detail-item"><div class="d-label">Requirements</div><div class="d-value wrap">{{ r.customer_requirements or "-" }}</div></div>
+						<div class="detail-item"><div class="d-label">Business Processes</div><div class="d-value wrap">{{ r.business_process_requirements or "-" }}</div></div>
+					</div>
+				</div>
+			</div>
+
+			<div class="portal-card">
+				<div class="card-head">
+					<h2>Demo Template</h2>
+					{% if data.can_write %}
+					<div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+						<select id="template-select" style="min-width: 240px; padding: 8px 10px; border: 1px solid #D1D9E6; border-radius: 8px;">
+							<option value="">— Select my template —</option>
+						</select>
+						<button class="btn-portal sm" id="btn-load-template">Load Template</button>
+					</div>
+					{% endif %}
+				</div>
+				<div class="card-body">
+					{% if tpl.sections %}
+						{% if tpl.name and data.can_write %}<p class="text-muted" style="margin-top: 0;">Snapshot of <strong>{{ tpl.template_name }}</strong> taken {{ tpl.snapshot_date or '' }}. Edits to the master template will never change this session.</p>{% endif %}
+						{% for sec in tpl.sections %}
+						{% if sec.content %}
+						<div class="tpl-section">
+							<h4>{{ sec.section }}</h4>
+							<div class="tpl-content">{{ sec.content }}</div>
+						</div>
+						{% endif %}
+						{% endfor %}
+					{% else %}
+						<div class="empty-state" style="padding: 24px;">
+							<div class="empty-icon">📋</div>
+							<h3>No template loaded yet</h3>
+							<p>Pick one of your templates above and click <strong>Load Template</strong> — it will be copied into this session (your master template is never changed).</p>
+						</div>
+					{% endif %}
+				</div>
+			</div>
+
+			<div class="portal-card">
+				<div class="card-head"><h2>Notes, Feedback &amp; Result</h2></div>
+				<div class="card-body">
+					<div class="detail-grid">
+						<div class="detail-item"><div class="d-label">Demo Notes</div><div class="d-value wrap">{{ s.demo_notes or "-" }}</div></div>
+						<div class="detail-item"><div class="d-label">Overall Feedback</div><div class="d-value wrap">{{ s.overall_feedback or "-" }}</div></div>
+						<div class="detail-item"><div class="d-label">Interested</div><div class="d-value">{{ s.interested or "-" }}</div></div>
+						<div class="detail-item"><div class="d-label">Requirements Met</div><div class="d-value">{{ s.requirements_met or "-" }}</div></div>
+						<div class="detail-item"><div class="d-label">Follow-up Required</div><div class="d-value">{% if s.follow_up_required %}Yes{% else %}No{% endif %}</div></div>
+						<div class="detail-item"><div class="d-label">Follow-up Date</div><div class="d-value">{{ s.follow_up_date or "-" }}</div></div>
+						<div class="detail-item"><div class="d-label">Next Action</div><div class="d-value wrap">{{ s.next_action or "-" }}</div></div>
+						<div class="detail-item"><div class="d-label">Consultant Remarks</div><div class="d-value wrap">{{ s.consultant_remarks or "-" }}</div></div>
+						<div class="detail-item"><div class="d-label">Started</div><div class="d-value">{{ s.started_on or "-" }}</div></div>
+						<div class="detail-item"><div class="d-label">Completed</div><div class="d-value">{{ s.completed_on or "-" }}</div></div>
+					</div>
+				</div>
+			</div>
+		{% endif %}
+		</div>
+	</div>
+</div>
+{% endblock %}
+
+{% block script %}
+<script>
+(function () {
+	"use strict";
+	{% if not missing and data.can_write %}
+	var SESSION = "{{ s.name }}";
+
+	function toggle(id) {
+		var el = document.getElementById(id);
+		if (el) el.style.display = el.style.display === "none" ? "block" : "none";
+	}
+	function val(id) { var el = document.getElementById(id); return el ? el.value : ""; }
+
+	/* ---- template loader ---- */
+	{% if t.functional_consultant %}
+	portalCall("functional_demo.api.get_consultant_templates", { consultant: "{{ t.functional_consultant }}" })
+		.then(function (list) {
+			var sel = document.getElementById("template-select");
+			if (!sel) return;
+			(list || []).forEach(function (tpl) {
+				var o = document.createElement("option");
+				o.value = tpl.name;
+				o.textContent = tpl.template_name + (tpl.erpnext_module ? " (" + tpl.erpnext_module + ")" : "");
+				sel.appendChild(o);
+			});
+		});
+	{% endif %}
+	document.getElementById("btn-load-template").addEventListener("click", function () {
+		var tpl = val("template-select");
+		if (!tpl) { portalAlert("Please select a template first.", "err"); return; }
+		var btn = this; btn.disabled = true;
+		portalCall("frappe.client.set_value", {
+			doctype: "Demo Session", name: SESSION, fieldname: "demo_template", value: tpl
+		}).then(function () { window.location.reload(); }).catch(function () { btn.disabled = false; });
+	});
+
+	/* ---- start ---- */
+	var btnStart = document.getElementById("btn-start");
+	if (btnStart) {
+		btnStart.addEventListener("click", function () {
+			if (!window.confirm("Start this demo session?")) return;
+			var btn = this; btn.disabled = true;
+			portalCall("functional_demo.api.start_demo_session", { demo_session: SESSION })
+				.then(function () { window.location.reload(); })
+				.catch(function () { btn.disabled = false; });
+		});
+	}
+
+	/* ---- reschedule ---- */
+	if (document.getElementById("btn-toggle-reschedule")) {
+		document.getElementById("btn-toggle-reschedule").addEventListener("click", function () { toggle("form-reschedule"); });
+		document.getElementById("btn-reschedule").addEventListener("click", function () {
+			if (!val("rs-date")) { portalAlert("Please pick a new date.", "err"); return; }
+			var btn = this; btn.disabled = true;
+			portalCall("functional_demo.api.reschedule_demo_session", {
+				demo_session: SESSION,
+				scheduled_date: val("rs-date"),
+				start_time: val("rs-start"),
+				end_time: val("rs-end"),
+				meeting_link: val("rs-link"),
+			}).then(function () { window.location.reload(); }).catch(function () { btn.disabled = false; });
+		});
+	}
+
+	/* ---- cancel ---- */
+	if (document.getElementById("btn-toggle-cancel")) {
+		document.getElementById("btn-toggle-cancel").addEventListener("click", function () { toggle("form-cancel"); });
+		document.getElementById("btn-cancel").addEventListener("click", function () {
+			if (!window.confirm("Cancel this demo session?")) return;
+			var btn = this; btn.disabled = true;
+			portalCall("functional_demo.api.cancel_demo_session", {
+				demo_session: SESSION,
+				reason: val("cancel-reason") || "Cancelled from portal",
+			}).then(function () { window.location.reload(); }).catch(function () { btn.disabled = false; });
+		});
+	}
+
+	/* ---- complete + feedback ---- */
+	if (document.getElementById("btn-toggle-complete")) {
+		document.getElementById("btn-toggle-complete").addEventListener("click", function () { toggle("form-complete"); });
+		document.getElementById("fb-followup").addEventListener("change", function () {
+			document.getElementById("fb-followup-fields").style.display = this.checked ? "block" : "none";
+		});
+		document.getElementById("btn-complete").addEventListener("click", function () {
+			var btn = this; btn.disabled = true;
+			var questions = val("fb-questions").split("\n").map(function (x) { return x.trim(); }).filter(Boolean);
+			var changes = val("fb-changes").split("\n").map(function (x) { return x.trim(); }).filter(Boolean);
+			var items = [];
+			questions.forEach(function (q) { items.push({ item_type: "Question", description: q }); });
+			changes.forEach(function (c) { items.push({ item_type: "Change Request", description: c }); });
+			var feedback = {
+				overall_feedback: val("fb-overall"),
+				interested: val("fb-interested"),
+				requirements_met: val("fb-reqmet"),
+				additional_requirements: val("fb-additional"),
+				consultant_remarks: val("fb-remarks"),
+				follow_up_required: document.getElementById("fb-followup").checked ? 1 : 0,
+				follow_up_date: val("fb-fudate"),
+				next_action: val("fb-next"),
+				demo_feedback_items: items,
+			};
+			portalCall("functional_demo.api.complete_demo_session", { demo_session: SESSION, feedback: feedback })
+				.then(function () { window.location.reload(); }).catch(function () { btn.disabled = false; });
+		});
+	}
+
+	/* ---- follow-up ---- */
+	if (document.getElementById("btn-toggle-followup")) {
+		document.getElementById("btn-toggle-followup").addEventListener("click", function () { toggle("form-followup"); });
+		document.getElementById("btn-followup").addEventListener("click", function () {
+			if (!val("fu-date")) { portalAlert("Please pick a follow-up date.", "err"); return; }
+			var btn = this; btn.disabled = true;
+			portalCall("functional_demo.api.create_follow_up_from_session", {
+				demo_session: SESSION,
+				follow_up_date: val("fu-date"),
+				next_action: val("fu-next"),
+				assigned_to: val("fu-assignee"),
+			}).then(function () { window.location.reload(); }).catch(function () { btn.disabled = false; });
+		});
+	}
+
+	/* ---- final result ---- */
+	if (document.getElementById("btn-toggle-result")) {
+		document.getElementById("btn-toggle-result").addEventListener("click", function () { toggle("form-result"); });
+		document.getElementById("btn-result").addEventListener("click", function () {
+			var result = val("result-value");
+			if (!window.confirm("Close this demo with result '" + result + "'? The Demo Request will also be updated.")) return;
+			var btn = this; btn.disabled = true;
+			portalCall("functional_demo.api.set_session_final_result", { demo_session: SESSION, result: result })
+				.then(function () { window.location.reload(); }).catch(function () { btn.disabled = false; });
+		});
+	}
+	{% endif %}
+})();
+</script>
+{% endblock %}

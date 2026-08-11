@@ -1,0 +1,199 @@
+{% extends "templates/web.html" %}
+{% block page_content %}
+<div class="portal-layout">
+	<aside class="portal-sidebar" id="portal-sidebar">
+		<a class="sidebar-brand" href="/demo_portal">
+			<div>
+				<span class="brand-dot"></span> Demo Portal
+				<span class="brand-sub">Sales &amp; Functional</span>
+			</div>
+		</a>
+		<div class="sidebar-menu">
+			{% for item in sidebar_items %}
+			<a class="sidebar-item {% if item.active %}active{% endif %}" href="{{ item.route }}">
+				<span class="sidebar-icon">{{ item.icon }}</span>{{ item.label }}
+			</a>
+			{% endfor %}
+		</div>
+		<div class="sidebar-footer">
+			<a class="sidebar-desk" href="/app" target="_blank" rel="noopener">Open ERPNext &nearr;</a>
+		</div>
+	</aside>
+	<div class="sidebar-overlay"></div>
+	<div class="portal-main">
+		<header class="portal-topbar">
+			<button class="sidebar-toggle" id="sidebar-toggle" aria-label="Menu">&#9776;</button>
+			<div class="topbar-title">
+				<h1>{{ title }}</h1>
+				<p>{{ subtitle }}</p>
+			</div>
+			<div class="topbar-user">
+				<span class="portal-avatar">{{ full_name[:1] }}</span>
+				<span class="portal-user-name">{{ full_name }}</span>
+			</div>
+		</header>
+		<div class="portal-content">
+			<div class="kpi-grid">
+				<div class="kpi-card">
+					<span class="kpi-icon">🗂️</span>
+					<div class="kpi-label">Demo Requests</div>
+					<div class="kpi-value">{{ stats.total }}</div>
+					<div class="kpi-note">All teams</div>
+				</div>
+				<div class="kpi-card kpi-amber">
+					<span class="kpi-icon">⏳</span>
+					<div class="kpi-label">Pending</div>
+					<div class="kpi-value">{{ stats.pending }}</div>
+					<div class="kpi-note">Draft / Requested / Assigned</div>
+				</div>
+				<div class="kpi-card kpi-blue">
+					<span class="kpi-icon">📅</span>
+					<div class="kpi-label">Scheduled</div>
+					<div class="kpi-value">{{ stats.scheduled }}</div>
+					<div class="kpi-note">Scheduled / In progress</div>
+				</div>
+				<div class="kpi-card kpi-teal">
+					<span class="kpi-icon">🎥</span>
+					<div class="kpi-label">Today's Demos</div>
+					<div class="kpi-value">{{ stats.todays_demos }}</div>
+					<div class="kpi-note">Across the team</div>
+				</div>
+				<div class="kpi-card kpi-green">
+					<span class="kpi-icon">✅</span>
+					<div class="kpi-label">Completed</div>
+					<div class="kpi-value">{{ stats.completed }}</div>
+					<div class="kpi-note">Delivered / follow-up</div>
+				</div>
+				<div class="kpi-card kpi-green">
+					<span class="kpi-icon">🏆</span>
+					<div class="kpi-label">Converted</div>
+					<div class="kpi-value">{{ stats.converted }}</div>
+					<div class="kpi-note">{{ stats.conversion_rate }}% conversion</div>
+				</div>
+				<div class="kpi-card kpi-red">
+					<span class="kpi-icon">✕</span>
+					<div class="kpi-label">Cancelled</div>
+					<div class="kpi-value">{{ stats.cancelled }}</div>
+					<div class="kpi-note">Requests cancelled</div>
+				</div>
+				<div class="kpi-card kpi-red">
+					<span class="kpi-icon">🔔</span>
+					<div class="kpi-label">Open Follow-ups</div>
+					<div class="kpi-value">{{ stats.open_follow_ups }}</div>
+					<div class="kpi-note">Across the team</div>
+				</div>
+			</div>
+
+			<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 22px;">
+				<div class="portal-card">
+					<div class="card-head"><h2>Consultant Workload</h2></div>
+					{% if stats.consultant_workload %}
+					<div class="card-body">
+						<table class="table-portal">
+							<thead>
+								<tr>
+									<th>Consultant</th>
+									<th>Specialization</th>
+									<th>Availability</th>
+									<th>Active Demos</th>
+								</tr>
+							</thead>
+							<tbody>
+								{% for row in stats.consultant_workload %}
+								<tr>
+									<td>{{ row[1] }}</td>
+									<td>{{ row[2] or "-" }}</td>
+									<td>{{ row[3] or "-" }}</td>
+									<td>
+										{% if row[4] %}<span class="badge b-scheduled">{{ row[4] }}</span>
+										{% else %}<span class="badge b-draft">0</span>{% endif %}
+									</td>
+								</tr>
+								{% endfor %}
+							</tbody>
+						</table>
+					</div>
+					{% else %}
+					<div class="empty-state"><div class="empty-icon">👥</div><h3>No active consultants</h3><p>Add consultants in ERPNext to see workload here.</p></div>
+					{% endif %}
+				</div>
+
+				<div class="portal-card">
+					<div class="card-head"><h2>Sales Person Performance</h2></div>
+					{% if stats.sales_performance %}
+					<div class="card-body">
+						<table class="table-portal">
+							<thead>
+								<tr>
+									<th>Sales Person</th>
+									<th>Requests</th>
+									<th>Scheduled</th>
+									<th>Converted</th>
+								</tr>
+							</thead>
+							<tbody>
+								{% for row in stats.sales_performance %}
+								<tr>
+									<td>{{ row[0] }}</td>
+									<td>{{ row[1] }}</td>
+									<td>{{ row[3] }}</td>
+									<td>{% if row[2] %}<span class="badge b-converted">{{ row[2] }}</span>{% else %}0{% endif %}</td>
+								</tr>
+								{% endfor %}
+							</tbody>
+						</table>
+					</div>
+					{% else %}
+					<div class="empty-state"><div class="empty-icon">👤</div><h3>No requests yet</h3><p>Demo requests will appear here by sales person.</p></div>
+					{% endif %}
+				</div>
+			</div>
+
+			<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 22px;">
+				<div class="portal-card">
+					<div class="card-head"><h2>Module-wise Demo Requests</h2></div>
+					<div class="card-body">
+						{% if stats.module_wise %}
+							{% set maxv = stats.module_wise[0][1] if stats.module_wise else 1 %}
+							{% for row in stats.module_wise %}
+							{% if row[0] %}
+							<div class="bar-row">
+								<div class="bar-label">{{ row[0] }}</div>
+								<div class="bar-track">
+									<div class="progress-track">
+										<div class="progress-fill" style="width: {{ (row[1] / maxv * 100)|int }}%;"></div>
+									</div>
+								</div>
+								<div class="bar-val">{{ row[1] }}</div>
+							</div>
+							{% endif %}
+							{% endfor %}
+						{% else %}
+						<p class="text-muted">No requests recorded yet.</p>
+						{% endif %}
+					</div>
+				</div>
+
+				<div class="portal-card">
+					<div class="card-head"><h2>Recent Activity</h2></div>
+					<div class="card-body">
+						{% if stats.recent_activity %}
+						<ul class="timeline">
+							{% for a in stats.recent_activity %}
+							<li>
+								<div class="t-title">{{ a.activity_type }} · {{ a.parent }}</div>
+								<div class="t-meta">{{ a.user }} · {{ a.activity_display }}</div>
+								{% if a.remarks %}<div class="t-remarks">{{ a.remarks }}</div>{% endif %}
+							</li>
+							{% endfor %}
+						</ul>
+						{% else %}
+						<p class="text-muted">No activity yet. It builds up as your team works on demo requests.</p>
+						{% endif %}
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+{% endblock %}

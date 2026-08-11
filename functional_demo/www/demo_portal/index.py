@@ -1,0 +1,31 @@
+# Copyright (c) 2026, Functional Demo Team and Contributors
+# License: GNU General Public License (v3). See LICENSE
+
+import frappe
+from frappe import _
+
+from functional_demo.portal import (
+	functional_stats,
+	is_functional,
+	is_manager,
+	is_sales,
+	portal_context,
+	sales_stats,
+)
+
+
+def get_context(context):
+	portal_context(
+		context,
+		_("Demo Portal"),
+		["Sales User", "Sales Manager", "Functional Consultant", "Functional Team Manager"],
+		active="home",
+		subtitle=_("One simple workspace for the complete demo workflow"),
+	)
+	context.show_sales = is_sales()
+	context.show_functional = is_functional()
+	context.show_manager = is_manager()
+	if context.show_sales:
+		context.sales = sales_stats()
+	if context.show_functional:
+		context.functional = functional_stats()

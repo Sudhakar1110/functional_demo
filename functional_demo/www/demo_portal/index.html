@@ -1,0 +1,147 @@
+{% extends "templates/web.html" %}
+{% block page_content %}
+<div class="portal-layout">
+	<aside class="portal-sidebar" id="portal-sidebar">
+		<a class="sidebar-brand" href="/demo_portal">
+			<div>
+				<span class="brand-dot"></span> Demo Portal
+				<span class="brand-sub">Sales &amp; Functional</span>
+			</div>
+		</a>
+		<div class="sidebar-menu">
+			{% for item in sidebar_items %}
+			<a class="sidebar-item {% if item.active %}active{% endif %}" href="{{ item.route }}">
+				<span class="sidebar-icon">{{ item.icon }}</span>{{ item.label }}
+			</a>
+			{% endfor %}
+		</div>
+		<div class="sidebar-footer">
+			<a class="sidebar-desk" href="/app" target="_blank" rel="noopener">Open ERPNext &nearr;</a>
+		</div>
+	</aside>
+	<div class="sidebar-overlay"></div>
+	<div class="portal-main">
+		<header class="portal-topbar">
+			<button class="sidebar-toggle" id="sidebar-toggle" aria-label="Menu">&#9776;</button>
+			<div class="topbar-title">
+				<h1>{{ title }}</h1>
+				<p>{{ subtitle }}</p>
+			</div>
+			<div class="topbar-user">
+				<span class="portal-avatar">{{ full_name[:1] }}</span>
+				<span class="portal-user-name">{{ full_name }}</span>
+			</div>
+		</header>
+		<div class="portal-content">
+			<div class="portal-hero">
+				<h1>Welcome, {{ full_name }} 👋</h1>
+				<p>
+					This portal brings your whole demo workflow into one place — capture leads and
+					requirements, assign consultants, schedule and run demos, record feedback,
+					and follow up until conversion. Everything you see is filtered to what you're
+					allowed to see.
+				</p>
+			</div>
+
+			<div class="role-cards">
+				{% if show_sales %}
+				<a class="role-card" href="/sales_portal">
+					<div class="role-icon">📊</div>
+					<h3>Sales Portal</h3>
+					<p>Manage leads, demo requests, scheduling and results.</p>
+					<ul>
+						<li>My Leads &amp; Demo Requests</li>
+						<li>Assign consultants &amp; schedule demos</li>
+						<li>Results, follow_ups &amp; conversion</li>
+					</ul>
+					<span class="go">Open Sales Portal &rarr;</span>
+				</a>
+				{% endif %}
+
+				{% if show_functional %}
+				<a class="role-card" href="/functional_portal">
+					<div class="role-icon">🎯</div>
+					<h3>Functional Portal</h3>
+					<p>Run your demos and manage your reusable templates.</p>
+					<ul>
+						<li>My sessions, today &amp; upcoming</li>
+						<li>Conduct demo with my template</li>
+						<li>My templates &amp; follow_ups</li>
+					</ul>
+					<span class="go">Open Functional Portal &rarr;</span>
+				</a>
+				{% endif %}
+
+				{% if show_manager %}
+				<a class="role-card" href="/manager_portal">
+					<div class="role-icon">📉</div>
+					<h3>Manager Dashboard</h3>
+					<p>Monitor the whole pipeline at a glance.</p>
+					<ul>
+						<li>Conversion funnel &amp; workload</li>
+						<li>Sales performance &amp; module-wise demos</li>
+						<li>Recent activity across the team</li>
+					</ul>
+					<span class="go">Open Manager Dashboard &rarr;</span>
+				</a>
+				{% endif %}
+			</div>
+
+			{% if show_sales and not show_functional %}
+			<div class="kpi-grid" style="margin-top: 26px;">
+				<div class="kpi-card">
+					<div class="kpi-label">My Demo Requests</div>
+					<div class="kpi-value">{{ sales.total_requests }}</div>
+					<div class="kpi-note">Across all statuses</div>
+				</div>
+				<div class="kpi-card">
+					<div class="kpi-label">Pending</div>
+					<div class="kpi-value">{{ sales.pending }}</div>
+					<div class="kpi-note">Draft / Requested / Assigned</div>
+				</div>
+				<div class="kpi-card kpi-teal">
+					<div class="kpi-label">Today's Demos</div>
+					<div class="kpi-value">{{ sales.todays_demos }}</div>
+					<div class="kpi-note">Scheduled or in progress</div>
+				</div>
+				<div class="kpi-card kpi-green">
+					<div class="kpi-label">Conversion</div>
+					<div class="kpi-value">{{ sales.conversion_rate }}%</div>
+					<div class="kpi-note">{{ sales.converted }} converted</div>
+				</div>
+			</div>
+			{% endif %}
+
+			{% if show_functional and not show_sales %}
+			<div class="kpi-grid" style="margin-top: 26px;">
+				<div class="kpi-card kpi-teal">
+					<div class="kpi-label">Today's Demos</div>
+					<div class="kpi-value">{{ functional.todays_demos }}</div>
+					<div class="kpi-note">Yours, today</div>
+				</div>
+				<div class="kpi-card kpi-amber">
+					<div class="kpi-label">In Progress</div>
+					<div class="kpi-value">{{ functional.in_progress }}</div>
+					<div class="kpi-note">Currently running</div>
+				</div>
+				<div class="kpi-card kpi-blue">
+					<div class="kpi-label">Upcoming</div>
+					<div class="kpi-value">{{ functional.upcoming }}</div>
+					<div class="kpi-note">Scheduled ahead</div>
+				</div>
+				<div class="kpi-card kpi-green">
+					<div class="kpi-label">Completed</div>
+					<div class="kpi-value">{{ functional.completed }}</div>
+					<div class="kpi-note">Demos delivered</div>
+				</div>
+				<div class="kpi-card kpi-purple">
+					<div class="kpi-label">My Templates</div>
+					<div class="kpi-value">{{ functional.templates }}</div>
+					<div class="kpi-note">Reusable demo templates</div>
+				</div>
+			</div>
+			{% endif %}
+		</div>
+	</div>
+</div>
+{% endblock %}

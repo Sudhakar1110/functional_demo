@@ -1,0 +1,90 @@
+{% extends "templates/web.html" %}
+{% block page_content %}
+<div class="portal-layout">
+	<aside class="portal-sidebar" id="portal-sidebar">
+		<a class="sidebar-brand" href="/demo_portal">
+			<div>
+				<span class="brand-dot"></span> Demo Portal
+				<span class="brand-sub">Sales &amp; Functional</span>
+			</div>
+		</a>
+		<div class="sidebar-menu">
+			{% for item in sidebar_items %}
+			<a class="sidebar-item {% if item.active %}active{% endif %}" href="{{ item.route }}">
+				<span class="sidebar-icon">{{ item.icon }}</span>{{ item.label }}
+			</a>
+			{% endfor %}
+		</div>
+		<div class="sidebar-footer">
+			<a class="sidebar-desk" href="/app" target="_blank" rel="noopener">Open ERPNext &nearr;</a>
+		</div>
+	</aside>
+	<div class="sidebar-overlay"></div>
+	<div class="portal-main">
+		<header class="portal-topbar">
+			<button class="sidebar-toggle" id="sidebar-toggle" aria-label="Menu">&#9776;</button>
+			<div class="topbar-title">
+				<h1>{{ title }}</h1>
+				<p>{{ subtitle }}</p>
+			</div>
+			<div class="topbar-user">
+				<span class="portal-avatar">{{ full_name[:1] }}</span>
+				<span class="portal-user-name">{{ full_name }}</span>
+			</div>
+		</header>
+		<div class="portal-content">
+			<div class="flex-between mb-16">
+				<h2 style="margin: 0; font-size: 20px; font-weight: 800; color: #1F4E79;">Demo Requests ({{ requests|length }})</h2>
+				<a class="btn-portal" href="/sales_portal/demo_request?new=1">+ New Demo Request</a>
+			</div>
+
+			<div class="filter-chips">
+				<a class="filter-chip {% if not status %}active{% endif %}" href="/sales_portal/demo_requests">All</a>
+				{% for s in status_options %}
+				<a class="filter-chip {% if status == s %}active{% endif %}" href="/sales_portal/demo_requests?status={{ s|urlencode }}">{{ s }}</a>
+				{% endfor %}
+			</div>
+
+			<div class="portal-card">
+				{% if requests %}
+				<div class="card-body flush">
+					<table class="table-portal">
+						<thead>
+							<tr>
+								<th>Request</th>
+								<th>Party</th>
+								<th>Module</th>
+								<th>Priority</th>
+								<th>Consultant</th>
+								<th>Preferred Date</th>
+								<th>Status</th>
+							</tr>
+						</thead>
+						<tbody>
+							{% for r in requests %}
+							<tr>
+								<td><a href="/sales_portal/demo_request?name={{ r.name }}">{{ r.name }}</a></td>
+								<td>{{ r.customer or r.lead or "-" }}</td>
+								<td>{{ r.interested_module or "-" }}</td>
+								<td>{% if r.priority %}<span class="chip {{ r.priority|lower }}">{{ r.priority }}</span>{% else %}-{% endif %}</td>
+								<td>{{ r.functional_consultant or "-" }}</td>
+								<td>{{ r.preferred_demo_date or "-" }}</td>
+								<td><span class="badge b-{{ r.status|lower|replace(' ', '-') }}">{{ r.status }}</span></td>
+							</tr>
+							{% endfor %}
+						</tbody>
+					</table>
+				</div>
+				{% else %}
+				<div class="empty-state">
+					<div class="empty-icon">🗂️</div>
+					<h3>No demo requests{% if status %} with status "{{ status }}"{% endif %}</h3>
+					<p>Create a demo request to start the workflow with your team.</p>
+					<a class="btn-portal" href="/sales_portal/demo_request?new=1">+ New Demo Request</a>
+				</div>
+				{% endif %}
+			</div>
+		</div>
+	</div>
+</div>
+{% endblock %}
