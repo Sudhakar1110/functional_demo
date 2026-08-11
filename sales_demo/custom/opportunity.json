@@ -1,0 +1,21 @@
+{
+	"custom_fields": [
+		{
+			"dt": "Opportunity",
+			"fieldname": "custom_demo_request",
+			"fieldtype": "Link",
+			"insert_after": "source",
+			"label": "Demo Request",
+			"no_copy": 1,
+			"options": "Demo Request",
+			"owner": "Administrator",
+			"print_hide": 1,
+			"read_only": 1
+		}
+	],
+	"custom_perms": [],
+	"doctype": "Opportunity",
+	"links": [],
+	"property_setters": [],
+	"sync_on_migrate": 1
+}

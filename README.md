@@ -1,5 +1,7 @@
 # functional_demo — Sales & Functional Demo Management
 
+[![CI](https://github.com/Sudhakar1110/functional_demo/actions/workflows/ci.yml/badge.svg)](https://github.com/Sudhakar1110/functional_demo/actions/workflows/ci.yml)
+
 A production-ready **Frappe v15 / ERPNext v15** application that manages the complete
 business process between the **Sales Team** and the **Functional / Demo Team**:
 
@@ -35,6 +37,9 @@ indicators — while the backend follows proper Frappe v15 / ERPNext v15 standar
   (`/app/demo-execution`).
 - **Follow-up management** using standard ERPNext **ToDo** assignments + a
   **Demo Follow Up** doc (open/in-progress/completed/overdue).
+- **Converted → Opportunity** — marking a Demo Request *Converted* automatically
+  creates an ERPNext **Opportunity** (linked via a custom field) so the win flows
+  into the standard sales pipeline.
 - **Role-based access** (row-level permission filters + doc-level checks).
 - **Workspaces** — dedicated **Sales Demo Workspace** and **Functional Demo
   Workspace** with shortcuts, cards, number cards and charts.
@@ -84,6 +89,23 @@ The install automatically creates:
 - The **Demo Request Workflow** (active by default).
 - Doctypes, Reports, Notifications, Workspaces, Number Cards, Dashboard Charts.
 - A daily scheduled job that marks overdue follow-ups.
+
+## Sample data
+
+Populate the app with realistic demo records — consultant users & profiles,
+customers/leads with contacts, reusable demo templates, and demo requests/sessions
+spanning the whole workflow (including a converted one that auto-creates an
+Opportunity):
+
+```bash
+bench --site your-site execute functional_demo.setup_demo_data.setup_demo_data
+```
+
+The script is **idempotent** — re-running it skips records that already exist.
+The three sample consultant logins (`rahul.kumar@example.com`, `priya.sharma@example.com`,
+`arun.patel@example.com`) get the *Functional Consultant* role and are listed at
+run time; set their passwords via *Settings → Users* to log in and try the demo
+execution screen.
 
 ## Setup (first time)
 

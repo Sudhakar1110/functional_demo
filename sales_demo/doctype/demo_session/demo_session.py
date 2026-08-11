@@ -130,7 +130,10 @@ class DemoSession(Document):
 	# ------------------------------------------------------------------
 
 	def log_session_status_activity(self):
-		old_status = self.db_get("demo_status")
+		# on_update runs AFTER the db write in v15, so the pre-save value
+		# must come from get_doc_before_save() (db_get returns the new value)
+		before = self.get_doc_before_save()
+		old_status = before.get("demo_status") if before else None
 		if old_status and old_status != self.demo_status:
 			self.log_request_activity(
 				"Note",
@@ -149,7 +152,10 @@ class DemoSession(Document):
 
 	def sync_request_status(self):
 		"""Keep the Demo Request workflow in sync with the session status."""
-		old_status = self.db_get("demo_status")
+		# on_update runs AFTER the db write in v15, so the pre-save value
+		# must come from get_doc_before_save() (db_get returns the new value)
+		before = self.get_doc_before_save()
+		old_status = before.get("demo_status") if before else None
 		if old_status == self.demo_status or not self.demo_request:
 			return
 

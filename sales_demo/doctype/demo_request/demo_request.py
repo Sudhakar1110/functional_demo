@@ -23,6 +23,7 @@ class DemoRequest(Document):
 	def on_update(self):
 		self.log_status_and_assignment_activity()
 		self.assign_consultant_todo()
+		self.create_opportunity_on_conversion()
 
 	# ------------------------------------------------------------------
 	# validation
@@ -137,8 +138,11 @@ class DemoRequest(Document):
 	# ------------------------------------------------------------------
 
 	def log_status_and_assignment_activity(self):
-		old_status = self.db_get("status")
-		old_consultant = self.db_get("functional_consultant")
+		# on_update runs AFTER the db write in v15, so the pre-save values
+		# must come from get_doc_before_save() (db_get would return the new value)
+		before = self.get_doc_before_save()
+		old_status = before.get("status") if before else None
+		old_consultant = before.get("functional_consultant") if before else None
 
 		if old_status and old_status != self.status:
 			self.log_activity(
@@ -172,9 +176,64 @@ class DemoRequest(Document):
 		)
 		row.db_insert()
 
+	def create_opportunity_on_conversion(self):
+		"""Business rule: when a Demo Request is marked Converted, automatically
+		create an ERPNext Opportunity so the win flows into the standard sales
+		pipeline. The link is kept via the custom_demo_request custom field; the
+		opportunity is created exactly once (guarded against re-runs)."""
+		if self.workflow_state != "Converted":
+			return
+		# on_update runs AFTER the db write in v15, so the pre-save workflow
+		# state must come from get_doc_before_save() to detect the transition.
+		before = self.get_doc_before_save()
+		if before and before.get("workflow_state") == "Converted":
+			return  # already converted before this save
+		if not (self.customer or self.lead):
+			return
+
+		try:
+			if frappe.db.exists("Opportunity", {"custom_demo_request": self.name}):
+				return
+			company = (
+				frappe.db.get_single_value("Global Defaults", "default_company")
+				or frappe.defaults.get_user_default("company")
+				or frappe.db.get_value("Company", {}, "name")
+			)
+			if not company:
+				return
+
+			opportunity = frappe.new_doc("Opportunity")
+			opportunity.opportunity_from = "Customer" if self.customer else "Lead"
+			opportunity.party_name = self.customer or self.lead
+			if self.customer:
+				opportunity.customer_name = frappe.db.get_value(
+					"Customer", self.customer, "customer_name"
+				) or self.customer
+			opportunity.title = _("Demo: {0}").format(self.customer or self.lead)
+			opportunity.transaction_date = today()
+			opportunity.company = company
+			opportunity.source = _ensure_lead_source("Demo")
+			opportunity.opportunity_owner = self.sales_person
+			if self.contact_person:
+				opportunity.contact_person = self.contact_person
+			opportunity.custom_demo_request = self.name
+			opportunity.insert(ignore_permissions=True)
+
+			self.add_comment(
+				"Comment",
+				_("Opportunity {0} was created from this converted demo.").format(opportunity.name),
+			)
+		except Exception:
+			# never block the conversion because the Opportunity could not be created
+			frappe.log_error(
+				title=_("Demo conversion -> Opportunity creation failed"),
+				message=frappe.get_traceback(),
+			)
+
 	def assign_consultant_todo(self):
 		"""Create a ToDo for the assigned consultant (standard ERPNext assignment)."""
-		old = self.db_get("functional_consultant")
+		before = self.get_doc_before_save()
+		old = before.get("functional_consultant") if before else None
 		if not self.functional_consultant or old == self.functional_consultant:
 			return
 		user = frappe.db.get_value("Functional Consultant", self.functional_consultant, "user")
@@ -232,6 +291,16 @@ def get_primary_contact(party_type, party_name):
 	if not names:
 		return None
 	return frappe.get_doc("Contact", names[0].name)
+
+
+def _ensure_lead_source(source_name):
+	"""Return the Lead Source matching source_name, creating it if missing."""
+	if frappe.db.exists("Lead Source", source_name):
+		return source_name
+	doc = frappe.new_doc("Lead Source")
+	doc.source_name = source_name
+	doc.insert(ignore_permissions=True)
+	return doc.name
 
 
 def change_status(doc, new_status, ignore_permissions=False):

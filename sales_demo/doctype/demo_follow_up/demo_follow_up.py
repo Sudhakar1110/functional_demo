@@ -18,7 +18,10 @@ class DemoFollowUp(Document):
 		self.assign_todo()
 
 	def on_update(self):
-		old_status = self.db_get("status")
+		# on_update runs AFTER the db write in v15, so the pre-save value
+		# must come from get_doc_before_save() (db_get returns the new value)
+		before = self.get_doc_before_save()
+		old_status = before.get("status") if before else None
 		if old_status and old_status != self.status:
 			if self.status == "Completed":
 				self.close_open_todos()
