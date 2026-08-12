@@ -20,8 +20,9 @@ required_apps = ["erpnext"]
 
 before_install = "functional_demo.install.before_install"
 after_install = "functional_demo.install.after_install"
-# Keep already-installed sites in sync (e.g. the new 'Approved' Workflow State)
-# - create_workflow_states is idempotent, so this is safe to run on every migrate.
+# Keep already-installed sites in sync - the migrate hooks below (workflow
+# states, consultant statuses, approval removal) are all idempotent, so this
+# is safe to run on every migrate.
 after_migrate = "functional_demo.install.after_migrate"
 
 # Demo Execution screen: ships as a standard Page doctype (Sales Demo > Page >

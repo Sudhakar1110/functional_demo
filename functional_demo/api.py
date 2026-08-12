@@ -270,15 +270,6 @@ def schedule_demo(demo_request=None, scheduled_date=None, start_time=None, end_t
 			title=_("Consultant Required"),
 		)
 
-	# Approval workflow: a request must be approved by a manager before it can
-	# be scheduled (Requested requests are still waiting for approval).
-	current_state = dr.get("workflow_state") or dr.get("status") or "Draft"
-	if current_state in ("Draft", "Requested"):
-		frappe.throw(
-			_("This demo request needs manager approval before it can be scheduled."),
-			title=_("Approval Required"),
-		)
-
 	try:
 		session_name = frappe.db.get_value(
 			"Demo Session",
@@ -393,51 +384,6 @@ def set_demo_result(demo_request=None, result=None):
 
 
 @frappe.whitelist()
-def approve_demo_request(demo_request=None, approve=1, notes=None):
-	"""Manager approval step of the workflow: approve a Requested Demo Request
-	(so it can be assigned and scheduled) or reject it (returns it to Requested
-	with a note). Only roles allowed by the workflow can approve.
-
-	The arguments are optional so a client that fires the call without a value
-	gets a clear popup instead of a TypeError 500."""
-	if not demo_request:
-		frappe.throw(
-			_("Demo Request is missing. Please refresh the page and try again."),
-			title=_("Missing Request"),
-		)
-
-	doc = frappe.get_doc("Demo Request", demo_request)
-	frappe.has_permission("Demo Request", "write", doc=doc, throw=True)
-
-	current = doc.get("workflow_state") or doc.get("status") or "Draft"
-	if current != "Requested":
-		frappe.throw(
-			_("Only a Requested demo request can be approved. This request is {0}.").format(current),
-			title=_("Cannot Approve"),
-		)
-
-	approved = int(approve) == 1
-	change_status(doc, "Approved" if approved else "Requested", ignore_permissions=True)
-
-	# record who approved / rejected and any notes (the workflow move reloads the doc)
-	doc = frappe.get_doc("Demo Request", demo_request)
-	doc.approved_by = frappe.session.user
-	doc.approval_date = frappe.utils.today()
-	note = (notes or "").strip()
-	doc.approval_notes = (
-		(doc.approval_notes + "\n" + note) if (doc.approval_notes and note) else (note or doc.approval_notes or "")
-	)
-	doc.save(ignore_permissions=True)
-
-	frappe.msgprint(
-		_("Demo Request {0} {1}.").format(
-			demo_request, _("approved") if approved else _("returned to Requested (rejected)")
-		)
-	)
-	return {"status": doc.status}
-
-
-@frappe.whitelist()
 def cancel_demo_request(demo_request=None, reason=None):
 	"""Cancel a Demo Request from the portal: close its open demo sessions and
 	move the request to Cancelled (the workflow's role rules apply, so only
@@ -536,8 +482,8 @@ def bulk_assign_consultant(requests=None, consultant=None):
 
 	Each request is checked individually - requests that fail (permission, rule,
 	scheduling) are reported in the response instead of aborting the whole batch.
-	Approved requests move to Assigned; earlier requests keep their state (they
-	still need manager approval before the consultant takes over)."""
+	A consultant assignment is direct: the request moves straight to Assigned
+	(no manager approval step)."""
 	names = _as_list(requests)
 	if not names:
 		frappe.throw(_("Please select at least one demo request."), title=_("Nothing Selected"))
@@ -556,7 +502,7 @@ def bulk_assign_consultant(requests=None, consultant=None):
 			doc.consultant_user = consultant_user
 			doc.save()
 			state = doc.get("workflow_state") or doc.get("status") or "Draft"
-			if state == "Approved":
+			if state in ("Draft", "Requested"):
 				change_status(doc, "Assigned")
 			done.append(name)
 		except Exception:
@@ -967,13 +913,15 @@ def create_demo_request(customer=None, lead=None, company=None, contact_person=N
 	)
 	doc.insert()  # respects role permissions; sales_person defaults to the session user
 
-	# move the new request from Draft to Requested
+	# move the new request straight to Assigned - the consultant is mandatory
+	# at creation, so there is no separate approval step (Draft -> Requested ->
+	# Assigned is walked automatically by change_status).
 	try:
-		change_status(doc, "Requested")
+		change_status(doc, "Assigned")
 	except Exception:
 		# the request is still created; the sales team can move it from the desk
 		frappe.log_error(
-			title=_("Portal: Demo Request could not be moved to Requested"),
+			title=_("Portal: Demo Request could not be moved to Assigned"),
 			message=frappe.get_traceback(),
 		)
 
@@ -998,21 +946,16 @@ def assign_consultant(demo_request=None, consultant=None):
 	doc = frappe.get_doc("Demo Request", demo_request)
 	frappe.has_permission("Demo Request", "write", doc=doc, throw=True)
 
-	# Approval workflow: only an approved request can move to Assigned.
 	current_state = doc.get("workflow_state") or doc.get("status") or "Draft"
-	if current_state in (None, "", "Draft", "Requested"):
-		frappe.throw(
-			_("This demo request must be approved by a manager before a consultant can be assigned."),
-			title=_("Approval Required"),
-		)
-
 	doc.functional_consultant = consultant
 	# fetch_from does NOT run on API saves - keep consultant_user in sync so the
 	# 'Consultant Assigned' / 'Consultant Reassigned' notifications can reach them
 	doc.consultant_user = frappe.db.get_value("Functional Consultant", consultant, "user")
 	doc.save()  # validate runs: only Active consultants, reassignment flag, ToDo + notifications
 
-	if current_state == "Approved":
+	# Assignment is direct (no manager approval): move the request to Assigned
+	# when it is still in its early stages.
+	if current_state in (None, "", "Draft", "Requested"):
 		from functional_demo.sales_demo.doctype.demo_request.demo_request import change_status
 
 		doc = change_status(doc, "Assigned")
@@ -1197,8 +1140,8 @@ def book_demo_slot(customer_name=None, email=None, contact_number=None, company_
 	"""Create a Demo Request from the public booking page (no login needed).
 
 	The request is created with the chosen consultant and preferred slot and
-	enters the normal workflow (Requested -> manager approval) so the sales team
-	can review and confirm it."""
+	goes straight to Assigned (assignment is direct - no manager approval
+	step), so the sales team can confirm and schedule it."""
 	if not customer_name:
 		frappe.throw(_("Please enter your name."))
 	if not email and not contact_number:
@@ -1231,10 +1174,11 @@ def book_demo_slot(customer_name=None, email=None, contact_number=None, company_
 	)
 	doc.insert(ignore_permissions=True)
 
-	# move to Requested - the workflow action buttons are not available to
-	# guests, so set the state directly (it still needs manager approval)
+	# move straight to Assigned - the customer always picks a consultant at
+	# booking, and assignment is direct (no approval step). The workflow action
+	# buttons are not available to guests, so set the state directly.
 	frappe.db.set_value(
-		"Demo Request", doc.name, {"status": "Requested", "workflow_state": "Requested"}
+		"Demo Request", doc.name, {"status": "Assigned", "workflow_state": "Assigned"}
 	)
 
 	row = frappe.new_doc("Demo Request Activity")
@@ -1246,7 +1190,7 @@ def book_demo_slot(customer_name=None, email=None, contact_number=None, company_
 			"activity_type": "Booked via Customer Portal",
 			"activity_date": frappe.utils.now_datetime(),
 			"user": "Guest",
-			"status": "Requested",
+			"status": "Assigned",
 			"remarks": _("Customer booked a demo slot from the public booking page."),
 		}
 	)
@@ -1258,4 +1202,4 @@ def book_demo_slot(customer_name=None, email=None, contact_number=None, company_
 			doc.name
 		)
 	)
-	return {"name": doc.name, "status": "Requested"}
+	return {"name": doc.name, "status": "Assigned"}

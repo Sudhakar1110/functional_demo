@@ -7,7 +7,7 @@ from frappe import _
 from functional_demo.portal import portal_context
 
 STATUS_OPTIONS = [
-	"Draft", "Requested", "Approved", "Assigned", "Scheduled", "Demo In Progress",
+	"Draft", "Requested", "Assigned", "Scheduled", "Demo In Progress",
 	"Demo Completed", "Follow-up Required", "Converted", "Not Interested",
 	"Cancelled", "Closed",
 ]

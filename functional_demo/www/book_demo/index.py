@@ -4,7 +4,7 @@
 
 Customers pick a module, an available consultant, a date and a free time slot
 and submit their details. A Demo Request is created in the normal workflow
-(Requested -> manager approval) so the sales team can confirm the slot.
+(Requested -> Assigned) so the sales team can confirm and schedule it.
 """
 
 import frappe

@@ -173,7 +173,7 @@
 				</div>
 			</div>
 
-			{% if not doc.functional_consultant and doc.status in ["Draft", "Requested", "Approved"] %}
+			{% if not doc.functional_consultant and doc.status in ["Draft", "Requested"] %}
 			<div class="portal-card" id="card-assign">
 				<div class="card-head"><h2>Assign Functional Consultant</h2></div>
 				<div class="card-body">
@@ -193,32 +193,7 @@
 			</div>
 			{% endif %}
 
-			{% if doc.status == "Requested" %}
-			<div class="portal-card" id="card-approval">
-				<div class="card-head"><h2>Manager Approval</h2></div>
-				<div class="card-body">
-					{% if is_manager %}
-					<p class="text-muted" style="margin-top: 0;">Approve this request so the team can assign the consultant and schedule the demo. Rejecting it returns it to Requested with your note.</p>
-					<label>Approval / Rejection Notes</label>
-					<textarea id="approval-notes" placeholder="Optional notes..."></textarea>
-					<div class="form-actions">
-						<button class="btn-portal success" id="btn-approve"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> Approve Demo Request</button>
-						<button class="btn-portal danger" id="btn-reject"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="15" x2="9" y1="9" y2="15"/><line x1="9" x2="15" y1="9" y2="15"/></svg> Reject</button>
-					</div>
-					{% else %}
-					<div style="display: flex; gap: 14px; align-items: flex-start;">
-						<span class="kpi-icon" style="background: #FEF6D8; color: #A16207;"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span>
-						<div>
-							<p style="margin: 0 0 4px; font-weight: 700;">Waiting for manager approval</p>
-							<p class="text-muted" style="margin: 0;">A Sales Manager or Functional Team Manager must approve this request before it can be assigned and scheduled.</p>
-						</div>
-					</div>
-					{% endif %}
-				</div>
-			</div>
-			{% endif %}
-
-			{% if doc.status in ["Requested", "Approved", "Assigned", "Scheduled", "Demo In Progress"] %}
+			{% if doc.status in ["Requested", "Assigned", "Scheduled", "Demo In Progress"] %}
 			<div class="portal-card">
 				<div class="card-head"><h2>Manage</h2></div>
 				<div class="card-body">
@@ -252,7 +227,7 @@
 			</div>
 			{% endif %}
 
-			{% if doc.functional_consultant and doc.status in ["Approved", "Assigned", "Scheduled", "Demo In Progress", "Demo Completed", "Follow-up Required"] %}
+			{% if doc.functional_consultant and doc.status in ["Assigned", "Scheduled", "Demo In Progress", "Demo Completed", "Follow-up Required"] %}
 			<div class="portal-card">
 				<div class="card-head">
 					<h2>Quick Actions</h2>
@@ -347,13 +322,6 @@
 						<div class="detail-item"><div class="d-label">Sales Person</div><div class="d-value">{{ doc.sales_person or "-" }}</div></div>
 						<div class="detail-item"><div class="d-label">Functional Consultant</div><div class="d-value">{{ doc.functional_consultant or "-" }}{% if doc.functional_consultant and consultant_names.get(doc.functional_consultant) %} <span class="muted">({{ consultant_names.get(doc.functional_consultant) }})</span>{% endif %}</div></div>
 					</div>
-					{% if doc.approved_by or doc.approval_date or doc.approval_notes %}
-					<div class="detail-grid" style="margin-top: 16px;">
-						<div class="detail-item"><div class="d-label">Approved By</div><div class="d-value">{{ doc.approved_by or "-" }}</div></div>
-						<div class="detail-item"><div class="d-label">Approval Date</div><div class="d-value">{{ doc.approval_date or "-" }}</div></div>
-						<div class="detail-item" style="grid-column: 1 / -1;"><div class="d-label">Approval Notes</div><div class="d-value wrap">{{ doc.approval_notes or "-" }}</div></div>
-					</div>
-					{% endif %}
 				</div>
 			</div>
 
@@ -535,23 +503,7 @@
 		if (el) el.style.display = el.style.display === "none" ? "block" : "none";
 	}
 
-	{% if doc.status == "Requested" %}
-	var btnApprove = document.getElementById("btn-approve");
-	var btnReject = document.getElementById("btn-reject");
-	function doApproval(approved) {
-		var btn = approved ? btnApprove : btnReject;
-		btn.disabled = true;
-		portalCall("functional_demo.api.approve_demo_request", {
-			demo_request: DOC_NAME,
-			approve: approved ? 1 : 0,
-			notes: document.getElementById("approval-notes") ? document.getElementById("approval-notes").value : "",
-		}).then(function () { window.location.reload(); }).catch(function () { btn.disabled = false; });
-	}
-	if (btnApprove) btnApprove.addEventListener("click", function () { doApproval(true); });
-	if (btnReject) btnReject.addEventListener("click", function () { doApproval(false); });
-	{% endif %}
-
-	{% if not doc.functional_consultant and doc.status in ["Draft", "Requested", "Approved"] %}
+	{% if not doc.functional_consultant and doc.status in ["Draft", "Requested"] %}
 	document.getElementById("btn-assign").addEventListener("click", function () {
 		var consultant = document.getElementById("assign-consultant").value;
 		if (!consultant) { portalAlert("Please select a consultant.", "err"); return; }
@@ -562,7 +514,7 @@
 	});
 	{% endif %}
 
-	{% if doc.functional_consultant and doc.status in ["Approved", "Assigned", "Scheduled", "Demo In Progress", "Demo Completed", "Follow-up Required"] %}
+	{% if doc.functional_consultant and doc.status in ["Assigned", "Scheduled", "Demo In Progress", "Demo Completed", "Follow-up Required"] %}
 	var btnScheduleToggle = document.getElementById("btn-toggle-schedule");
 	var btnSchedule = document.getElementById("btn-schedule");
 	if (btnScheduleToggle) btnScheduleToggle.addEventListener("click", function () { toggle("form-schedule"); });

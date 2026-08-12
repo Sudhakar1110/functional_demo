@@ -31,10 +31,10 @@ def after_install():
 
 def after_migrate():
 	"""Run after every `bench migrate` so already-installed sites pick up
-	records introduced by later versions of the app (e.g. the 'Approved'
-	Workflow State). All steps are idempotent."""
+	records introduced by later versions of the app. All steps are idempotent."""
 	create_workflow_states()
 	backfill_consultant_statuses()
+	move_approved_requests_forward()
 
 
 def backfill_consultant_statuses():
@@ -147,7 +147,6 @@ def create_workflow_states():
 	workflow_states = [
 		("Draft", "Inverse"),
 		("Requested", "Info"),
-		("Approved", "Primary"),
 		("Assigned", "Primary"),
 		("Scheduled", "Primary"),
 		("Demo In Progress", "Info"),
@@ -164,6 +163,26 @@ def create_workflow_states():
 			doc.workflow_state_name = state
 			doc.style = style
 			doc.insert(ignore_permissions=True)
+	frappe.db.commit()
+
+
+def move_approved_requests_forward():
+	"""Data migration for the approval removal: any Demo Request still sitting
+	in the removed 'Approved' workflow state is moved forward to Assigned (it
+	has a consultant - every request is created with one) so it can be
+	scheduled directly. Requests without a consultant go back to Requested."""
+	if not frappe.db.exists("DocType", "Demo Request"):
+		return
+	frappe.db.sql(
+		"""update `tabDemo Request`
+		set workflow_state = 'Assigned', status = 'Assigned'
+		where workflow_state = 'Approved' and ifnull(functional_consultant, '') != ''"""
+	)
+	frappe.db.sql(
+		"""update `tabDemo Request`
+		set workflow_state = 'Requested', status = 'Requested'
+		where workflow_state = 'Approved'"""
+	)
 	frappe.db.commit()
 
 

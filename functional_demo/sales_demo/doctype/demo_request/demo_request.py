@@ -314,7 +314,7 @@ def run_sla_escalation_checks():
 	overdue = frappe.get_all(
 		"Demo Request",
 		filters=[
-			["workflow_state", "in", ["Requested", "Approved", "Assigned"]],
+			["workflow_state", "in", ["Requested", "Assigned"]],
 			["sla_due_date", "<", frappe.utils.today()],
 			["sla_breached", "=", 0],
 		],

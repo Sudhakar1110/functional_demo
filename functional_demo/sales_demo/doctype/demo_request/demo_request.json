@@ -186,7 +186,7 @@
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Status",
-   "options": "Draft\nRequested\nApproved\nAssigned\nScheduled\nDemo In Progress\nDemo Completed\nFollow-up Required\nConverted\nNot Interested\nCancelled\nClosed",
+   "options": "Draft\nRequested\nAssigned\nScheduled\nDemo In Progress\nDemo Completed\nFollow-up Required\nConverted\nNot Interested\nCancelled\nClosed",
    "read_only": 1,
    "reqd": 1
   },
@@ -195,7 +195,7 @@
    "fieldtype": "Select",
    "hidden": 1,
    "label": "Workflow State",
-   "options": "Draft\nRequested\nApproved\nAssigned\nScheduled\nDemo In Progress\nDemo Completed\nFollow-up Required\nConverted\nNot Interested\nCancelled\nClosed",
+   "options": "Draft\nRequested\nAssigned\nScheduled\nDemo In Progress\nDemo Completed\nFollow-up Required\nConverted\nNot Interested\nCancelled\nClosed",
    "read_only": 1
   },
   {
