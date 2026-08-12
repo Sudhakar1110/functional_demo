@@ -10,8 +10,51 @@
 		return window.csrf_token || (window.frappe && frappe.csrf_token) || "";
 	}
 
-	/* Show a toast-style alert (auto-hides after 6s). */
+	/* Show a centered modal popup (used for errors / attention messages). */
+	window.portalModal = function (title, message, type) {
+		type = type || "err";
+		var old = document.getElementById("portal-modal");
+		if (old) old.remove();
+		var overlay = document.createElement("div");
+		overlay.id = "portal-modal";
+		overlay.className = "portal-modal show";
+		var card = document.createElement("div");
+		card.className = "pm-card pm-" + type;
+		var icon = document.createElement("div");
+		icon.className = "pm-icon";
+		icon.textContent = type === "ok" ? "\u2713" : "!";
+		var h = document.createElement("h3");
+		h.className = "pm-title";
+		h.textContent = title || (type === "ok" ? "Done" : "Something went wrong");
+		var p = document.createElement("p");
+		p.className = "pm-msg";
+		p.textContent = message || "";
+		var btn = document.createElement("button");
+		btn.type = "button";
+		btn.className = "btn-portal pm-btn";
+		btn.textContent = "Got it";
+		card.appendChild(icon);
+		card.appendChild(h);
+		card.appendChild(p);
+		card.appendChild(btn);
+		overlay.appendChild(card);
+		document.body.appendChild(overlay);
+		function close() {
+			overlay.remove();
+			document.removeEventListener("keydown", onKey, true);
+		}
+		function onKey(e) { if (e.key === "Escape") close(); }
+		overlay.addEventListener("click", function (e) { if (e.target === overlay) close(); });
+		btn.addEventListener("click", close);
+		document.addEventListener("keydown", onKey, true);
+	};
+
+	/* Show a toast-style alert (auto-hides after 6s); errors open the modal popup. */
 	window.portalAlert = function (msg, type) {
+		if (type === "err") {
+			window.portalModal("Please check your input", msg, "err");
+			return;
+		}
 		var el = document.getElementById("portal-alert");
 		if (!el) {
 			el = document.createElement("div");
@@ -36,34 +79,45 @@
 			body: JSON.stringify({ args: args || {} }),
 			credentials: "same-origin",
 		})
-			.then(function (r) { return r.json(); })
-			.then(function (data) {
+			.then(function (r) {
+				return r
+					.json()
+					.catch(function () { return {}; })
+					.then(function (data) {
+						return { ok: r.ok, data: data || {} };
+					});
+			})
+			.then(function (res) {
+				var data = res.data;
 				var serverMsgs = [];
 				try {
 					serverMsgs = JSON.parse(data._server_messages || "[]");
 				} catch (e) { serverMsgs = []; }
-				serverMsgs.forEach(function (s) {
+				var plain = function (html) {
 					var d = document.createElement("div");
-					d.innerHTML = s;
-					window.portalAlert(d.textContent || d.innerText || "", "ok");
-				});
-				if (data.exc_type) {
-					var errMsg = "Something went wrong. Please try again.";
-					if (serverMsgs.length) {
-						var d = document.createElement("div");
-						d.innerHTML = serverMsgs[0];
-						errMsg = d.textContent || d.innerText || errMsg;
-					}
-					window.portalAlert(errMsg, "err");
+					d.innerHTML = html || "";
+					return d.textContent || d.innerText || "";
+				};
+				var isError = !res.ok || data.exc_type || data.raise_exception;
+				if (isError) {
+					var errMsg =
+						data.message ||
+						(serverMsgs.length ? plain(serverMsgs[0]) : "") ||
+						"Something went wrong. Please try again.";
+					window.portalModal(data.title || "Something went wrong", errMsg, "err");
 					var err = new Error(errMsg);
 					err.exc_type = data.exc_type;
 					throw err;
 				}
+				serverMsgs.forEach(function (s) {
+					var t = plain(s);
+					if (t) window.portalAlert(t, "ok");
+				});
 				return data.message;
 			})
 			.catch(function (err) {
 				if (err instanceof TypeError) {
-					window.portalAlert("Network error. Please check your connection and try again.", "err");
+					window.portalModal("Network error", "Please check your connection and try again.", "err");
 				}
 				throw err;
 			});
