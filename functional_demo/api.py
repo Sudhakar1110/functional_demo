@@ -888,10 +888,23 @@ def create_demo_request(customer=None, lead=None, company=None, contact_person=N
 			title=_("Lead Not Found"),
 		)
 
-	# Business rule: every demo must be allocated to a Functional Consultant at creation
+	# Business rule: every demo must be allocated to a Functional Consultant at
+	# creation. If the value is missing (e.g. a stale cached page submits
+	# without it), auto-assign the first available consultant instead of
+	# failing - the request always gets a consultant and it can be changed
+	# from the request page afterwards.
+	auto_assigned_consultant = ""
+	if not functional_consultant:
+		auto_assigned_consultant = frappe.db.get_value(
+			"Functional Consultant",
+			filters=[["status", "not in", ["Inactive", None]]],
+			fieldname="name",
+			order_by="consultant_name asc",
+		) or ""
+		functional_consultant = auto_assigned_consultant or None
 	if not functional_consultant:
 		frappe.throw(
-			_("Please select a Functional Consultant to run this demo. If you picked one and still see this message, close this tab and open a fresh one (Ctrl+Shift+R) - a stale page can submit without the consultant value."),
+			_("No consultants are available yet. Ask your Functional Team Manager to create a consultant profile (Functional Portal → My Templates → Link profile) or add one in ERPNext, then try again."),
 			title=_("Consultant Required"),
 		)
 
@@ -899,6 +912,14 @@ def create_demo_request(customer=None, lead=None, company=None, contact_person=N
 	# a real record. A free-typed name (e.g. when no CRM data exists yet) is
 	# preserved in the remarks instead of crashing Link validation.
 	extra_remarks = []
+	if auto_assigned_consultant:
+		extra_remarks.append(_("Consultant auto-assigned: {0}").format(auto_assigned_consultant))
+		frappe.msgprint(
+			_("No consultant was selected, so {0} was auto-assigned to this demo. You can change it from the request page if needed.").format(
+				frappe.db.get_value("Functional Consultant", auto_assigned_consultant, "consultant_name")
+				or auto_assigned_consultant
+			)
+		)
 	if contact_person and not frappe.db.exists("Contact", contact_person):
 		extra_remarks.append(_("Contact person: {0}").format(contact_person))
 		contact_person = ""
