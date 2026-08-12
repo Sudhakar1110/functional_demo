@@ -537,11 +537,24 @@
 		document.getElementById("btn-toggle-cancel-request").addEventListener("click", function () { toggle("form-cancel-request"); });
 		document.getElementById("btn-cancel-request").addEventListener("click", function () {
 			if (!window.confirm("Cancel Demo Request " + DOC_NAME + "? Open demo sessions will also be cancelled.")) return;
+			if (!DOC_NAME) {
+				portalAlert("The page is stale - please refresh it (Ctrl+Shift+R) and try again.", "err");
+				return;
+			}
 			var btn = this; btn.disabled = true;
 			portalCall("functional_demo.api.cancel_demo_request", {
 				demo_request: DOC_NAME,
 				reason: document.getElementById("cancel-request-reason").value,
-			}).then(function () { window.location.reload(); }).catch(function () { btn.disabled = false; });
+			}).then(function (res) {
+				if (res && res.already) {
+					/* Already in a final state - show the toast, then reload
+					   after a short delay so the message is actually visible. */
+					portalAlert("This request is already " + res.status + ".", "ok");
+					setTimeout(function () { window.location.reload(); }, 1400);
+				} else {
+					window.location.reload();
+				}
+			}).catch(function () { btn.disabled = false; });
 		});
 	}
 	{% if doc.status == "Assigned" and doc.functional_consultant %}

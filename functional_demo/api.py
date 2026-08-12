@@ -384,13 +384,20 @@ def set_demo_result(demo_request=None, result=None):
 
 
 @frappe.whitelist()
-def cancel_demo_request(demo_request=None, reason=None):
+def cancel_demo_request(demo_request=None, reason=None, name=None):
 	"""Cancel a Demo Request from the portal: close its open demo sessions and
-	move the request to Cancelled (the workflow's role rules apply, so only
-	users whose role allows the cancel transition can do this).
+	move the request to Cancelled (the workflow's role rules apply).
 
-	The arguments are optional so a client that fires the call without a value
-	gets a clear popup instead of a TypeError 500."""
+	Cancelling is idempotent: a request that is already Cancelled / Closed /
+	Converted / Not Interested returns its current status quietly (no error
+	popup), so a stale page or a double click can never scare the user.
+
+	The argument is optional so a client that fires the call without a value
+	(a stale cached page) gets a clear popup instead of a TypeError 500."""
+	# Belt & braces for stale portal bundles: older pages posted the request
+	# under the key 'name' - accept it too so the framework does not raise
+	# 'unexpected keyword argument' before this function even runs.
+	demo_request = demo_request or name
 	if not demo_request:
 		frappe.throw(
 			_("Demo Request is missing. Please refresh the page and try again."),
@@ -402,10 +409,9 @@ def cancel_demo_request(demo_request=None, reason=None):
 
 	current = doc.get("workflow_state") or doc.get("status") or "Draft"
 	if current in ("Cancelled", "Closed", "Converted", "Not Interested"):
-		frappe.throw(
-			_("Demo Request {0} is already {1} and cannot be cancelled.").format(doc.name, current),
-			title=_("Cannot Cancel"),
-		)
+		# Already in a final state - nothing to cancel. Return quietly so a
+		# stale page or a second click shows a confirmation, not an error.
+		return {"status": current, "already": True}
 
 	# Move the request to Cancelled FIRST - if the user's role does not allow
 	# the cancel transition, nothing is changed (no partial state).
