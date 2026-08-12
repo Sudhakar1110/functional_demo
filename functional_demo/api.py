@@ -165,7 +165,10 @@ def get_lead_details(lead=None):
 def get_available_consultants(module=None, include_inactive=0):
 	"""List Functional Consultants (active by default), optionally filtered by
 	an ERPNext module they specialize in. Also returns their current workload."""
-	filters = {"status": "Active"} if not include_inactive else {}
+	# exclude only explicitly-Inactive consultants (records with an unset/NULL
+	# status still count as available - the old 'status = Active' filter hid
+	# them; 'not in' with None is NULL-safe, unlike '!=')
+	filters = [["status", "not in", ["Inactive", None]]] if not include_inactive else []
 	consultants = frappe.get_all(
 		"Functional Consultant",
 		filters=filters,

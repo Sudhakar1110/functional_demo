@@ -76,9 +76,9 @@ class DemoRequest(Document):
 				frappe.throw(
 					_("Functional Consultant {0} was not found.").format(self.functional_consultant)
 				)
-			if consultant.status != "Active":
+			if consultant.status == "Inactive":
 				frappe.throw(
-					_("Functional Consultant {0} is not active. Only active consultants can be assigned.").format(
+					_("Functional Consultant {0} is inactive. Only active consultants can be assigned.").format(
 						self.functional_consultant
 					),
 					title=_("Consultant Not Active"),

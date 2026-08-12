@@ -46,7 +46,9 @@ frappe.ui.form.on("Demo Request", {
 
 function set_consultant_query(frm) {
 	frm.set_query("functional_consultant", () => {
-		return { filters: { status: "Active" } };
+		// exclude only explicitly-Inactive records (an unset/NULL status is fine
+		// - the old Active-only filter hid valid consultants from the dropdown)
+		return { filters: [["status", "not in", ["Inactive", null]]] };
 	});
 }
 

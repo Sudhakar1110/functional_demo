@@ -308,7 +308,7 @@ def manager_stats():
 		from `tabFunctional Consultant` fc
 		left join `tabDemo Session` ds
 			on ds.functional_consultant = fc.name and ds.demo_status in ('Scheduled', 'In Progress')
-		where fc.status = 'Active'
+		where ifnull(fc.status, '') != 'Inactive'
 		group by fc.name
 		order by active_demos desc
 		"""

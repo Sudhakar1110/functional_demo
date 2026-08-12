@@ -48,7 +48,7 @@ def get_context(context):
 		# Functional Consultant is mandatory when creating a demo request
 		context.consultants = frappe.get_all(
 			"Functional Consultant",
-			filters={"status": "Active"},
+			filters=[["status", "not in", ["Inactive", None]]],
 			fields=["name", "consultant_name", "specialization", "availability", "experience_years"],
 			order_by="consultant_name asc",
 		) or []
@@ -76,7 +76,7 @@ def get_context(context):
 	)
 	context.consultants = frappe.get_all(
 		"Functional Consultant",
-		filters={"status": "Active"},
+		filters=[["status", "not in", ["Inactive", None]]],
 		fields=["name", "consultant_name", "specialization", "availability", "experience_years"],
 		order_by="consultant_name asc",
 	) or []

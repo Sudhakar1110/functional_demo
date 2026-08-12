@@ -41,10 +41,12 @@ def get_context(context):
 		r["created_display"] = frappe.utils.format_date(r.get("creation"), "medium") if r.get("creation") else "-"
 	context.status = status
 	context.status_options = STATUS_OPTIONS
-	# active consultants for the bulk-assign action
+	# consultants for the bulk-assign action (excludes only Inactive records,
+	# so consultants with an unset/NULL status still appear - 'not in' with
+	# None is NULL-safe, unlike '!=')
 	context.consultants = frappe.get_all(
 		"Functional Consultant",
-		filters={"status": "Active"},
+		filters=[["status", "not in", ["Inactive", None]]],
 		fields=["name", "consultant_name", "specialization"],
 		order_by="consultant_name asc",
 	) or []

@@ -520,7 +520,7 @@ def _make_request(created, customer=None, lead=None, module=None, priority="Medi
 		# fall back to the first active consultant for seed records that don't
 		# specify one (the request still starts in Draft status).
 		fallback = frappe.db.get_value(
-			"Functional Consultant", {"status": "Active"}, "name"
+			"Functional Consultant", [["status", "not in", ["Inactive", None]]], "name"
 		)
 		if fallback:
 			doc.functional_consultant = fallback
