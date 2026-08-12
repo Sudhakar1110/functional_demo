@@ -46,10 +46,16 @@
 /* ==========================================================================
    Layout shell — full viewport column: dark topbar on top, body below
    ========================================================================== */
+body {
+	margin: 0;
+}
+
 .portal-layout {
 	display: flex;
 	flex-direction: column;
-	min-height: 100vh;
+	height: 100vh;
+	height: 100dvh;
+	overflow: hidden;
 	font-family: "DM Sans", "Inter", "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
 	background:
 		radial-gradient(1200px 500px at 85% -10%, rgba(17, 78, 255, 0.07), transparent 60%),
@@ -70,8 +76,6 @@
 	background: linear-gradient(90deg, #05133C 0%, #091526 100%);
 	border-bottom: 1px solid rgba(20, 241, 177, 0.28);
 	box-shadow: 0 6px 24px rgba(5, 19, 60, 0.35);
-	position: sticky;
-	top: 0;
 	z-index: 130;
 }
 .portal-topbar::after {
@@ -203,6 +207,7 @@
 	display: flex;
 	flex: 1;
 	min-height: 0;
+	overflow: hidden;
 }
 
 .portal-sidebar {
@@ -214,13 +219,8 @@
 	flex-direction: column;
 	box-shadow: 4px 0 24px rgba(5, 19, 60, 0.24);
 	z-index: 120;
-	position: sticky;
-	top: 65px;
-	/* stretch to the full height of the body so the sidebar can never be
-	   cut off on tall pages (e.g. Manager Dashboard) while scrolling */
-	align-self: stretch;
-	height: auto;
-	min-height: calc(100vh - 65px);
+	/* sidebar lives inside the locked (non-scrolling) page, so it is always
+	   fully visible; only its own menu scrolls if the viewport is short */
 	overflow-y: auto;
 }
 
@@ -346,8 +346,11 @@
 .portal-main {
 	flex: 1;
 	min-width: 0;
+	min-height: 0;
 	display: flex;
 	flex-direction: column;
+	/* only the right-hand content scrolls; sidebar + topbar stay fixed */
+	overflow-y: auto;
 }
 
 .sidebar-toggle {
