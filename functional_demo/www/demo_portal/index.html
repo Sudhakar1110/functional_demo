@@ -30,7 +30,7 @@
 			<div class="sidebar-menu">
 			{% for item in sidebar_items %}
 			<a class="sidebar-item {% if item.active %}active{% endif %}" href="{{ item.route }}">
-				<span class="sidebar-icon">{{ item.icon }}</span>{{ item.label }}
+				<span class="sidebar-icon">{{ item.icon | safe }}</span>{{ item.label }}
 			</a>
 			{% endfor %}
 		</div>
@@ -44,7 +44,7 @@
 			<div class="dash-greet">
 				<div>
 					<span class="greet-eyebrow">● {{ today_pretty }}</span>
-					<h1>{{ greeting }}, {{ full_name }} 👋</h1>
+					<h1>{{ greeting }}, {{ full_name }}</h1>
 					<p>
 						This portal brings your whole demo workflow into one place — capture leads and
 						requirements, assign consultants, schedule and run demos, record feedback,
@@ -57,7 +57,7 @@
 			<div class="role-cards">
 				{% if show_sales %}
 				<a class="role-card" href="/sales_portal">
-					<div class="role-icon">📊</div>
+					<div class="role-icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" x2="18" y1="20" y2="10"/><line x1="12" x2="12" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="14"/></svg></div>
 					<h3>Sales Portal</h3>
 					<p>Manage leads, demo requests, scheduling and results.</p>
 					<ul>
@@ -71,7 +71,7 @@
 
 				{% if show_functional %}
 				<a class="role-card" href="/functional_portal">
-					<div class="role-icon">🎯</div>
+					<div class="role-icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="22" x2="18" y1="12" y2="12"/><line x1="6" x2="2" y1="12" y2="12"/><line x1="12" x2="12" y1="6" y2="2"/><line x1="12" x2="12" y1="22" y2="18"/></svg></div>
 					<h3>Functional Portal</h3>
 					<p>Run your demos and manage your reusable templates.</p>
 					<ul>
@@ -85,7 +85,7 @@
 
 				{% if show_manager %}
 				<a class="role-card" href="/manager_portal">
-					<div class="role-icon">📉</div>
+					<div class="role-icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="22 17 13.5 8.5 8.5 13.5 2 7"/><polyline points="16 17 22 17 22 11"/></svg></div>
 					<h3>Manager Dashboard</h3>
 					<p>Monitor the whole pipeline at a glance.</p>
 					<ul>

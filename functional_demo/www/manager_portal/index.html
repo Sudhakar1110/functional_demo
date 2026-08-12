@@ -30,7 +30,7 @@
 			<div class="sidebar-menu">
 			{% for item in sidebar_items %}
 			<a class="sidebar-item {% if item.active %}active{% endif %}" href="{{ item.route }}">
-				<span class="sidebar-icon">{{ item.icon }}</span>{{ item.label }}
+				<span class="sidebar-icon">{{ item.icon | safe }}</span>{{ item.label }}
 			</a>
 			{% endfor %}
 		</div>
@@ -44,56 +44,56 @@
 			<div class="dash-greet">
 				<div>
 					<span class="greet-eyebrow">● {{ today_pretty }}</span>
-					<h1>{{ greeting }}, {{ full_name }} 📉</h1>
+					<h1>{{ greeting }}, {{ full_name }}</h1>
 					<p>The whole demo pipeline at a glance — conversion, workload and team activity.</p>
 				</div>
 			</div>
 
 			<div class="kpi-grid">
 				<div class="kpi-card">
-					<span class="kpi-icon">🗂️</span>
+					<span class="kpi-icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg></span>
 					<div class="kpi-label">Demo Requests</div>
 					<div class="kpi-value">{{ stats.total }}</div>
 					<div class="kpi-note">All teams</div>
 				</div>
 				<div class="kpi-card kpi-amber">
-					<span class="kpi-icon">⏳</span>
+					<span class="kpi-icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span>
 					<div class="kpi-label">Pending</div>
 					<div class="kpi-value">{{ stats.pending }}</div>
 					<div class="kpi-note">Draft / Requested / Assigned</div>
 				</div>
 				<div class="kpi-card kpi-blue">
-					<span class="kpi-icon">📅</span>
+					<span class="kpi-icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg></span>
 					<div class="kpi-label">Scheduled</div>
 					<div class="kpi-value">{{ stats.scheduled }}</div>
 					<div class="kpi-note">Scheduled / In progress</div>
 				</div>
 				<div class="kpi-card kpi-teal">
-					<span class="kpi-icon">🎥</span>
+					<span class="kpi-icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg></span>
 					<div class="kpi-label">Today's Demos</div>
 					<div class="kpi-value">{{ stats.todays_demos }}</div>
 					<div class="kpi-note">Across the team</div>
 				</div>
 				<div class="kpi-card kpi-green">
-					<span class="kpi-icon">✅</span>
+					<span class="kpi-icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></span>
 					<div class="kpi-label">Completed</div>
 					<div class="kpi-value">{{ stats.completed }}</div>
 					<div class="kpi-note">Delivered / follow-up</div>
 				</div>
 				<div class="kpi-card kpi-green">
-					<span class="kpi-icon">🏆</span>
+					<span class="kpi-icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg></span>
 					<div class="kpi-label">Converted</div>
 					<div class="kpi-value">{{ stats.converted }}</div>
 					<div class="kpi-note">{{ stats.conversion_rate }}% conversion</div>
 				</div>
 				<div class="kpi-card kpi-red">
-					<span class="kpi-icon">✕</span>
+					<span class="kpi-icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" x2="6" y1="6" y2="18"/><line x1="6" x2="18" y1="6" y2="18"/></svg></span>
 					<div class="kpi-label">Cancelled</div>
 					<div class="kpi-value">{{ stats.cancelled }}</div>
 					<div class="kpi-note">Requests cancelled</div>
 				</div>
 				<div class="kpi-card kpi-red">
-					<span class="kpi-icon">🔔</span>
+					<span class="kpi-icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></span>
 					<div class="kpi-label">Open Follow-ups</div>
 					<div class="kpi-value">{{ stats.open_follow_ups }}</div>
 					<div class="kpi-note">Across the team</div>
@@ -130,7 +130,7 @@
 						</table>
 					</div>
 					{% else %}
-					<div class="empty-state"><div class="empty-icon">👥</div><h3>No active consultants</h3><p>Add consultants in ERPNext to see workload here.</p></div>
+					<div class="empty-state"><div class="empty-icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div><h3>No active consultants</h3><p>Add consultants in ERPNext to see workload here.</p></div>
 					{% endif %}
 				</div>
 
@@ -160,7 +160,7 @@
 						</table>
 					</div>
 					{% else %}
-					<div class="empty-state"><div class="empty-icon">👤</div><h3>No requests yet</h3><p>Demo requests will appear here by sales person.</p></div>
+					<div class="empty-state"><div class="empty-icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div><h3>No requests yet</h3><p>Demo requests will appear here by sales person.</p></div>
 					{% endif %}
 				</div>
 			</div>

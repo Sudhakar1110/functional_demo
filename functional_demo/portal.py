@@ -55,28 +55,50 @@ def guard(required_roles):
 # sidebar navigation (left-hand menu, role aware)
 # ---------------------------------------------------------------------------
 
+def _icon(paths):
+	"""Wrap SVG paths into a small line-style icon (inherits currentColor)."""
+	return (
+		'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" '
+		'stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+		+ paths
+		+ "</svg>"
+	)
+
+
+ICON_HOME = _icon('<path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>')
+ICON_SALES = _icon('<line x1="18" x2="18" y1="20" y2="10"/><line x1="12" x2="12" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="14"/>')
+ICON_LEADS = _icon('<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>')
+ICON_REQUESTS = _icon('<path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>')
+ICON_RESULTS = _icon('<polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/>')
+ICON_FUNCTIONAL = _icon('<circle cx="12" cy="12" r="10"/><line x1="22" x2="18" y1="12" y2="12"/><line x1="6" x2="2" y1="12" y2="12"/><line x1="12" x2="12" y1="6" y2="2"/><line x1="12" x2="12" y1="22" y2="18"/>')
+ICON_SESSIONS = _icon('<rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/>')
+ICON_TEMPLATES = _icon('<rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/>')
+ICON_FOLLOWUPS = _icon('<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>')
+ICON_MANAGER = _icon('<path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/>')
+
+
 def sidebar_items(active):
 	"""Sidebar menu for the current user. Managers see all sections."""
-	items = [{"label": _("Home"), "route": "/demo_portal", "icon": "🏠", "active": active == "home"}]
+	items = [{"label": _("Home"), "route": "/demo_portal", "icon": ICON_HOME, "active": active == "home"}]
 
 	if is_sales() or is_manager():
 		items += [
-			{"label": _("Sales Home"), "route": "/sales_portal", "icon": "📊", "active": active == "sales"},
-			{"label": _("My Leads"), "route": "/sales_portal/my_leads", "icon": "🧲", "active": active == "leads"},
-			{"label": _("Demo Requests"), "route": "/sales_portal/demo_requests", "icon": "🗂️", "active": active == "requests"},
-			{"label": _("Results"), "route": "/sales_portal/results", "icon": "📈", "active": active == "results"},
+			{"label": _("Sales Home"), "route": "/sales_portal", "icon": ICON_SALES, "active": active == "sales"},
+			{"label": _("My Leads"), "route": "/sales_portal/my_leads", "icon": ICON_LEADS, "active": active == "leads"},
+			{"label": _("Demo Requests"), "route": "/sales_portal/demo_requests", "icon": ICON_REQUESTS, "active": active == "requests"},
+			{"label": _("Results"), "route": "/sales_portal/results", "icon": ICON_RESULTS, "active": active == "results"},
 		]
 
 	if is_functional() or is_manager():
 		items += [
-			{"label": _("Functional Home"), "route": "/functional_portal", "icon": "🎯", "active": active == "functional"},
-			{"label": _("My Sessions"), "route": "/functional_portal/my_sessions", "icon": "📅", "active": active == "sessions"},
-			{"label": _("My Templates"), "route": "/functional_portal/my_templates", "icon": "📋", "active": active == "templates"},
-			{"label": _("Follow-ups"), "route": "/functional_portal/follow_ups", "icon": "🔔", "active": active == "follow_ups"},
+			{"label": _("Functional Home"), "route": "/functional_portal", "icon": ICON_FUNCTIONAL, "active": active == "functional"},
+			{"label": _("My Sessions"), "route": "/functional_portal/my_sessions", "icon": ICON_SESSIONS, "active": active == "sessions"},
+			{"label": _("My Templates"), "route": "/functional_portal/my_templates", "icon": ICON_TEMPLATES, "active": active == "templates"},
+			{"label": _("Follow-ups"), "route": "/functional_portal/follow_ups", "icon": ICON_FOLLOWUPS, "active": active == "follow_ups"},
 		]
 
 	if is_manager():
-		items += [{"label": _("Manager Dashboard"), "route": "/manager_portal", "icon": "📉", "active": active == "manager"}]
+		items += [{"label": _("Manager Dashboard"), "route": "/manager_portal", "icon": ICON_MANAGER, "active": active == "manager"}]
 
 	return items
 

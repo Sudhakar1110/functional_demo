@@ -30,7 +30,7 @@
 			<div class="sidebar-menu">
 			{% for item in sidebar_items %}
 			<a class="sidebar-item {% if item.active %}active{% endif %}" href="{{ item.route }}">
-				<span class="sidebar-icon">{{ item.icon }}</span>{{ item.label }}
+				<span class="sidebar-icon">{{ item.icon | safe }}</span>{{ item.label }}
 			</a>
 			{% endfor %}
 		</div>
@@ -83,7 +83,7 @@
 				</div>
 				{% else %}
 				<div class="empty-state">
-					<div class="empty-icon">📋</div>
+					<div class="empty-icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></svg></div>
 					<h3>No templates yet</h3>
 					<p>Create your first demo template so you can run demos with your own structure and content.</p>
 					<a class="btn-portal" href="/functional_portal/template?new=1">+ New Template</a>

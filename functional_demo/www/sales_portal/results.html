@@ -30,7 +30,7 @@
 			<div class="sidebar-menu">
 			{% for item in sidebar_items %}
 			<a class="sidebar-item {% if item.active %}active{% endif %}" href="{{ item.route }}">
-				<span class="sidebar-icon">{{ item.icon }}</span>{{ item.label }}
+				<span class="sidebar-icon">{{ item.icon | safe }}</span>{{ item.label }}
 			</a>
 			{% endfor %}
 		</div>
@@ -43,25 +43,25 @@
 		<div class="portal-content">
 			<div class="kpi-grid">
 				<div class="kpi-card kpi-green">
-					<span class="kpi-icon">✅</span>
+					<span class="kpi-icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></span>
 					<div class="kpi-label">Completed / Follow-up</div>
 					<div class="kpi-value">{{ stats.completed }}</div>
 					<div class="kpi-note">Demos delivered</div>
 				</div>
 				<div class="kpi-card kpi-green">
-					<span class="kpi-icon">🏆</span>
+					<span class="kpi-icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg></span>
 					<div class="kpi-label">Converted</div>
 					<div class="kpi-value">{{ stats.converted }}</div>
 					<div class="kpi-note">Won opportunities</div>
 				</div>
 				<div class="kpi-card">
-					<span class="kpi-icon">📊</span>
+					<span class="kpi-icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" x2="18" y1="20" y2="10"/><line x1="12" x2="12" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="14"/></svg></span>
 					<div class="kpi-label">Conversion Rate</div>
 					<div class="kpi-value">{{ stats.conversion_rate }}%</div>
 					<div class="kpi-note">Of all my requests</div>
 				</div>
 				<div class="kpi-card kpi-red">
-					<span class="kpi-icon">🔔</span>
+					<span class="kpi-icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></span>
 					<div class="kpi-label">Follow-ups Due</div>
 					<div class="kpi-value">{{ stats.follow_ups_due }}</div>
 					<div class="kpi-note">Open &amp; due today or earlier</div>
@@ -97,7 +97,7 @@
 				</div>
 				{% else %}
 				<div class="empty-state">
-					<div class="empty-icon">🏆</div>
+					<div class="empty-icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg></div>
 					<h3>No conversions yet</h3>
 					<p>When a demo converts, the customer shows up here and an Opportunity is created automatically in ERPNext.</p>
 				</div>
@@ -146,7 +146,7 @@
 				</div>
 				{% else %}
 				<div class="empty-state">
-					<div class="empty-icon">📈</div>
+					<div class="empty-icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg></div>
 					<h3>No completed demos yet</h3>
 					<p>Completed sessions with customer feedback will appear here.</p>
 				</div>

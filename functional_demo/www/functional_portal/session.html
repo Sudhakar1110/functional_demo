@@ -3,7 +3,6 @@
 {% block navbar %}{% endblock %}
 {% block footer %}{% endblock %}
 {% block style %}{% include "functional_demo/templates/includes/portal_style.html" %}{% endblock %}
-{% block script %}{% include "functional_demo/templates/includes/portal_script.html" %}{% endblock %}
 {% block content %}
 <div class="portal-layout">
 	<header class="portal-topbar">
@@ -30,7 +29,7 @@
 			<div class="sidebar-menu">
 			{% for item in sidebar_items %}
 			<a class="sidebar-item {% if item.active %}active{% endif %}" href="{{ item.route }}">
-				<span class="sidebar-icon">{{ item.icon }}</span>{{ item.label }}
+				<span class="sidebar-icon">{{ item.icon | safe }}</span>{{ item.label }}
 			</a>
 			{% endfor %}
 		</div>
@@ -45,7 +44,7 @@
 		{% if missing %}
 			<div class="portal-card">
 				<div class="empty-state">
-					<div class="empty-icon">🎥</div>
+					<div class="empty-icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg></div>
 					<h3>No demo session selected</h3>
 					<p>Open a session from <a href="/functional_portal/my_sessions">My Sessions</a> to conduct the demo.</p>
 					<a class="btn-portal" href="/functional_portal/my_sessions">Go to My Sessions</a>
@@ -71,7 +70,7 @@
 					<div style="display: flex; gap: 8px; flex-wrap: wrap;">
 						<a class="btn-portal secondary sm" href="/functional_portal/my_sessions">&larr; My Sessions</a>
 						{% if s.meeting_link %}
-						<a class="btn-portal sm" href="{{ s.meeting_link }}" target="_blank" rel="noopener">🎥 Join Meeting</a>
+						<a class="btn-portal sm" href="{{ s.meeting_link }}" target="_blank" rel="noopener"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg> Join Meeting</a>
 						{% endif %}
 					</div>
 				</div>
@@ -79,17 +78,17 @@
 				<div class="card-body">
 					<div style="display: flex; gap: 10px; flex-wrap: wrap;">
 						{% if s.demo_status == "Scheduled" %}
-						<button class="btn-portal success" id="btn-start">▶ Start Demo</button>
-						<button class="btn-portal warning" id="btn-toggle-reschedule">🔄 Reschedule</button>
-						<button class="btn-portal danger" id="btn-toggle-cancel">✕ Cancel</button>
+						<button class="btn-portal success" id="btn-start"><svg class="ic" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><polygon points="6 3 20 12 6 21 6 3"/></svg> Start Demo</button>
+						<button class="btn-portal warning" id="btn-toggle-reschedule"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> Reschedule</button>
+						<button class="btn-portal danger" id="btn-toggle-cancel"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" x2="6" y1="6" y2="18"/><line x1="6" x2="18" y1="6" y2="18"/></svg> Cancel</button>
 						{% endif %}
 						{% if s.demo_status == "In Progress" %}
-						<button class="btn-portal success" id="btn-toggle-complete">✅ Complete Demo</button>
-						<button class="btn-portal danger" id="btn-toggle-cancel">✕ Cancel</button>
+						<button class="btn-portal success" id="btn-toggle-complete"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Complete Demo</button>
+						<button class="btn-portal danger" id="btn-toggle-cancel"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" x2="6" y1="6" y2="18"/><line x1="6" x2="18" y1="6" y2="18"/></svg> Cancel</button>
 						{% endif %}
 						{% if s.demo_status in ["Completed", "Follow-up Required"] %}
-						<button class="btn-portal warning" id="btn-toggle-followup">🔔 Create Follow-up</button>
-						<button class="btn-portal" id="btn-toggle-result">🏆 Set Final Result</button>
+						<button class="btn-portal warning" id="btn-toggle-followup"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg> Create Follow-up</button>
+						<button class="btn-portal" id="btn-toggle-result"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg> Set Final Result</button>
 						{% endif %}
 					</div>
 
@@ -245,7 +244,7 @@
 						{% endfor %}
 					{% else %}
 						<div class="empty-state" style="padding: 24px;">
-							<div class="empty-icon">📋</div>
+							<div class="empty-icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></svg></div>
 							<h3>No template loaded yet</h3>
 							<p>Pick one of your templates above and click <strong>Load Template</strong> — it will be copied into this session (your master template is never changed).</p>
 						</div>
@@ -278,6 +277,7 @@
 {% endblock %}
 
 {% block script %}
+{% include "functional_demo/templates/includes/portal_script.html" %}
 <script>
 (function () {
 	"use strict";

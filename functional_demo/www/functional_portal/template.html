@@ -3,7 +3,6 @@
 {% block navbar %}{% endblock %}
 {% block footer %}{% endblock %}
 {% block style %}{% include "functional_demo/templates/includes/portal_style.html" %}{% endblock %}
-{% block script %}{% include "functional_demo/templates/includes/portal_script.html" %}{% endblock %}
 {% block content %}
 {% macro repeater_item(rid, fields, child_doctype, rows, add_label) %}
 	<div class="repeater" id="{{ rid }}">
@@ -57,7 +56,7 @@
 			<div class="sidebar-menu">
 			{% for item in sidebar_items %}
 			<a class="sidebar-item {% if item.active %}active{% endif %}" href="{{ item.route }}">
-				<span class="sidebar-icon">{{ item.icon }}</span>{{ item.label }}
+				<span class="sidebar-icon">{{ item.icon | safe }}</span>{{ item.label }}
 			</a>
 			{% endfor %}
 		</div>
@@ -71,7 +70,7 @@
 			{% if not my_consultant %}
 			<div class="portal-card">
 				<div class="empty-state">
-					<div class="empty-icon">⚠️</div>
+					<div class="empty-icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12.01" y1="17" y2="17"/></svg></div>
 					<h3>No consultant profile linked to your user</h3>
 					<p>Templates belong to a Functional Consultant. Ask your manager to link a consultant profile to your user in ERPNext, then reload this page.</p>
 				</div>
@@ -210,6 +209,7 @@
 {% endblock %}
 
 {% block script %}
+{% include "functional_demo/templates/includes/portal_script.html" %}
 <script>
 (function () {
 	"use strict";
