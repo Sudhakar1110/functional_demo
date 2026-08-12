@@ -81,6 +81,16 @@ def sidebar_items(active):
 	return items
 
 
+def greeting():
+	"""Time-of-day greeting, e.g. 'Good morning'."""
+	hour = frappe.utils.now_datetime().hour
+	if hour < 12:
+		return _("Good morning")
+	if hour < 17:
+		return _("Good afternoon")
+	return _("Good evening")
+
+
 def portal_context(context, title, required_roles, active, subtitle=""):
 	"""Standard context setup for login-required, role-guarded portal pages."""
 	context.login_required = True
@@ -98,7 +108,12 @@ def portal_context(context, title, required_roles, active, subtitle=""):
 	context.is_functional = is_functional()
 	context.is_manager = is_manager()
 	context.full_name = frappe.utils.get_fullname(frappe.session.user)
+	context.greeting = greeting()
+	context.today_pretty = frappe.utils.now_datetime().strftime("%A, %d %B %Y")
 	context.sidebar_items = sidebar_items(active)
+	# Full-bleed dashboard layout: skip the standard website container
+	# (web.html renders <main class="container my-4"> unless full_width is set)
+	context.full_width = True
 	guard(required_roles)
 	return context
 
