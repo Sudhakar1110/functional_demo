@@ -61,8 +61,8 @@
 					</div>
 					<div class="form-row">
 						<div>
-							<label>Customer <span class="form-hint">(optional - pick from suggestions)</span></label>
-							<input type="text" id="customer" name="customer" list="customers-list" placeholder="Type &amp; pick a customer..." value="{{ prefill.customer }}" autocomplete="off">
+							<label>Customer <span class="form-hint">(optional - pick one, or type a new name to auto-create)</span></label>
+							<input type="text" id="customer" name="customer" list="customers-list" placeholder="Type &amp; pick a customer, or type a new one..." value="{{ prefill.customer }}" autocomplete="off">
 							<datalist id="customers-list">
 								{% for c in customers %}<option value="{{ c.name }}">{{ c.customer_name }}</option>{% endfor %}
 							</datalist>
@@ -466,9 +466,13 @@
 				return;
 			}
 		}
+		/* A free-typed customer name is fine: the server auto-creates the
+		   Customer record (it appears in the desk too). Just confirm first so
+		   a typo never creates a junk customer. */
 		if (customer && !isKnown("customers-list", customer)) {
-			portalAlert("Customer \"" + customer + "\" was not found. Please pick a customer from the suggestions list.", "err");
-			return;
+			if (!window.confirm("\"" + customer + "\" is not a saved customer yet. Create it automatically and continue?")) {
+				return;
+			}
 		}
 		if (lead && lead !== preLead && !isKnown("leads-list", lead)) {
 			portalAlert("Lead \"" + lead + "\" was not found. Please pick a lead from the suggestions list.", "err");

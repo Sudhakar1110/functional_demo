@@ -61,6 +61,52 @@ def _default_sales_person():
 	return user[0][0] if user else "Administrator"
 
 
+def _ensure_customer(customer_name, contact_person=None, contact_number=None, email=None):
+	"""Return an existing Customer matching the name, or create it (with a
+	linked Contact carrying the provided details) so the portal can auto-create
+	a customer from a free-typed name - the record then appears in the desk too.
+
+	Returns (customer_name, contact_name) where contact_name is the linked
+	Contact created (or None)."""
+	name = (customer_name or "").strip()
+	if not name:
+		return "", None
+	existing = frappe.db.get_value("Customer", {"customer_name": name}, "name")
+	if existing:
+		return existing, None
+	if frappe.db.exists("Customer", name):
+		return name, None
+
+	cust = frappe.new_doc("Customer")
+	cust.customer_name = name
+	cust.insert(ignore_permissions=True)
+
+	contact_name = None
+	person = (contact_person or "").strip() or name
+	try:
+		contact = frappe.new_doc("Contact")
+		contact.first_name = person
+		contact.is_primary_contact = 1
+		contact.append(
+			"links",
+			{"link_doctype": "Customer", "link_name": cust.name, "link_title": name},
+		)
+		if email:
+			contact.email_id = email
+		if contact_number:
+			contact.mobile_no = contact_number
+		contact.insert(ignore_permissions=True)
+		contact_name = contact.name
+	except Exception:
+		# the customer is already created - a missing Contact must never
+		# block the demo request
+		frappe.log_error(
+			title=_("Could not create Contact for new customer {0}").format(name),
+			message=frappe.get_traceback(),
+		)
+	return cust.name, contact_name
+
+
 # ---------------------------------------------------------------------------
 # Lookup helpers (auto-fetch customer / lead / consultant / template details)
 # ---------------------------------------------------------------------------
@@ -822,14 +868,23 @@ def create_demo_request(customer=None, lead=None, company=None, contact_person=N
 			title=_("Who is the demo for?"),
 		)
 
-	# The party must be a real record - a free-typed name is not enough.
+	# Free-typed customer names are auto-created as real Customer records (they
+	# then appear in the desk too); if that fails for any reason we fall back to
+	# a contact-only request instead of blocking the sales user.
 	if customer and not frappe.db.exists("Customer", customer):
-		frappe.throw(
-			_("Customer \"{0}\" was not found. Please pick a customer from the suggestions list.").format(
-				customer
-			),
-			title=_("Customer Not Found"),
-		)
+		try:
+			customer, created_contact = _ensure_customer(
+				customer, contact_person, contact_number, email
+			)
+			if created_contact:
+				contact_person = created_contact
+		except Exception:
+			frappe.log_error(
+				title=_("Auto-create Customer failed: {0}").format(customer),
+				message=frappe.get_traceback(),
+			)
+			customer = ""
+
 	if lead and not frappe.db.exists("Lead", lead):
 		frappe.throw(
 			_("Lead \"{0}\" was not found. Please pick a lead from the suggestions list.").format(lead),
