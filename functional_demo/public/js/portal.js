@@ -79,36 +79,70 @@
 			body: JSON.stringify({ args: args || {} }),
 			credentials: "same-origin",
 		})
-			.then(function (r) {
-				return r
-					.json()
-					.catch(function () { return {}; })
-					.then(function (data) {
-						return { ok: r.ok, data: data || {} };
-					});
-			})
-			.then(function (res) {
-				var data = res.data;
-				var serverMsgs = [];
+		.then(function (r) {
+			return r.text().then(function (txt) {
+				var data = {};
 				try {
-					serverMsgs = JSON.parse(data._server_messages || "[]");
-				} catch (e) { serverMsgs = []; }
-				var plain = function (html) {
-					var d = document.createElement("div");
-					d.innerHTML = html || "";
-					return d.textContent || d.innerText || "";
-				};
-				var isError = !res.ok || data.exc_type || data.raise_exception;
-				if (isError) {
-					var errMsg =
-						data.message ||
-						(serverMsgs.length ? plain(serverMsgs[0]) : "") ||
-						"Something went wrong. Please try again.";
-					window.portalModal(data.title || "Something went wrong", errMsg, "err");
-					var err = new Error(errMsg);
-					err.exc_type = data.exc_type;
-					throw err;
+					data = JSON.parse(txt) || {};
+				} catch (e) {
+					// not JSON (e.g. an HTML 500 page) - keep the raw text for diagnosis
+					data = { __raw: txt || "" };
 				}
+				return { ok: r.ok, data: data };
+			});
+		})
+		.then(function (res) {
+			var data = res.data;
+			var serverMsgs = [];
+			try {
+				serverMsgs = JSON.parse(data._server_messages || "[]");
+			} catch (e) { serverMsgs = []; }
+			var plain = function (html) {
+				var d = document.createElement("div");
+				d.innerHTML = html || "";
+				return d.textContent || d.innerText || "";
+			};
+			/* Frappe puts the real traceback in data.exc on unhandled exceptions.
+			   Pull the last meaningful line ("ErrorType: message") so the popup
+			   shows the actual cause instead of a generic message. */
+			var realError = function () {
+				if (data.message) return "";
+				var exc = String(data.exc || "").split("\n").filter(Boolean);
+				for (var i = exc.length - 1; i >= 0; i--) {
+					var line = exc[i].trim();
+					if (!/^(File |Traceback|During handling|The above|\s*\^)/.test(line) && line.length > 2) {
+						return line;
+					}
+				}
+				return "";
+			};
+			/* For non-JSON error pages (HTML 500s) grab the first readable line
+			   so the real failure is never hidden behind a generic message. */
+			var rawHint = function () {
+				if (!data.__raw) return "";
+				var txt = String(data.__raw);
+				var lines = txt.split("\n").map(function (l) { return l.trim(); }).filter(Boolean);
+				for (var i = 0; i < lines.length; i++) {
+					var line = lines[i].replace(/<[^>]+>/g, "").trim();
+					if (line && line.length > 3 && !/^(<!|DOCTYPE|html|head|body|meta|script)/i.test(line)) {
+						return line.slice(0, 300);
+					}
+				}
+				return txt.slice(0, 300);
+			};
+			var isError = !res.ok || data.exc_type || data.raise_exception;
+			if (isError) {
+				var errMsg =
+					data.message ||
+					(serverMsgs.length ? plain(serverMsgs[0]) : "") ||
+					realError() ||
+					rawHint() ||
+					"Something went wrong. Please try again.";
+				window.portalModal(data.title || "Something went wrong", errMsg, "err");
+				var err = new Error(errMsg);
+				err.exc_type = data.exc_type;
+				throw err;
+			}
 				serverMsgs.forEach(function (s) {
 					var t = plain(s);
 					if (t) window.portalAlert(t, "ok");

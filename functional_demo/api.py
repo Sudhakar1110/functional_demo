@@ -149,41 +149,57 @@ def schedule_demo(demo_request, scheduled_date, start_time=None, end_time=None, 
 			title=_("Consultant Required"),
 		)
 
-	session_name = frappe.db.get_value(
-		"Demo Session",
-		{"demo_request": dr.name, "demo_status": ["in", ["Scheduled", "In Progress"]]},
-		"name",
-	)
+	try:
+		session_name = frappe.db.get_value(
+			"Demo Session",
+			{"demo_request": dr.name, "demo_status": ["in", ["Scheduled", "In Progress"]]},
+			"name",
+		)
 
-	if session_name:
-		ds = frappe.get_doc("Demo Session", session_name)
-		frappe.has_permission("Demo Session", "write", doc=ds, throw=True)
-		ds.scheduled_date = scheduled_date
-		ds.start_time = start_time
-		ds.end_time = end_time
-		ds.meeting_link = meeting_link
-		ds.reschedule_count = int(ds.reschedule_count or 0) + 1
-		ds.flags.rescheduling = True
-		ds.save(ignore_permissions=True)
-		frappe.msgprint(_("Demo Session {0} rescheduled to {1}.").format(ds.name, scheduled_date))
-	else:
-		ds = frappe.new_doc("Demo Session")
-		ds.demo_request = dr.name
-		ds.scheduled_date = scheduled_date
-		ds.start_time = start_time
-		ds.end_time = end_time
-		ds.meeting_link = meeting_link
-		ds.insert(ignore_permissions=True)
-		frappe.msgprint(_("Demo Session {0} scheduled for {1}.").format(ds.name, scheduled_date))
+		if session_name:
+			ds = frappe.get_doc("Demo Session", session_name)
+			frappe.has_permission("Demo Session", "write", doc=ds, throw=True)
+			ds.scheduled_date = scheduled_date
+			ds.start_time = start_time
+			ds.end_time = end_time
+			ds.meeting_link = meeting_link
+			ds.reschedule_count = int(ds.reschedule_count or 0) + 1
+			ds.flags.rescheduling = True
+			ds.save(ignore_permissions=True)
+			frappe.msgprint(_("Demo Session {0} rescheduled to {1}.").format(ds.name, scheduled_date))
+		else:
+			ds = frappe.new_doc("Demo Session")
+			ds.demo_request = dr.name
+			ds.scheduled_date = scheduled_date
+			ds.start_time = start_time
+			ds.end_time = end_time
+			ds.meeting_link = meeting_link
+			ds.insert(ignore_permissions=True)
+			frappe.msgprint(_("Demo Session {0} scheduled for {1}.").format(ds.name, scheduled_date))
 
-	# keep the Demo Request in sync (fields first, then the workflow move)
-	dr.preferred_demo_date = scheduled_date
-	dr.preferred_demo_time = start_time or dr.preferred_demo_time
-	dr.save(ignore_permissions=True)
-	change_status(dr, "Scheduled", ignore_permissions=True)
+		# keep the Demo Request in sync (fields first, then the workflow move)
+		dr.preferred_demo_date = scheduled_date
+		dr.preferred_demo_time = start_time or dr.preferred_demo_time
+		dr.save(ignore_permissions=True)
+		change_status(dr, "Scheduled", ignore_permissions=True)
 
-	create_calendar_event(ds)
-	return {"demo_session": ds.name, "demo_request": dr.name}
+		create_calendar_event(ds)
+		return {"demo_session": ds.name, "demo_request": dr.name}
+	except frappe.exceptions.ValidationError:
+		# known validation failures (schedule conflict, missing date, permissions) -
+		# the framework already raised a clean message for these
+		raise
+	except Exception:
+		traceback = frappe.get_traceback()
+		frappe.log_error(title=_("Demo scheduling failed"), message=traceback)
+		last_line = next(
+			(l.strip() for l in reversed(traceback.splitlines()) if l.strip() and not l.strip().startswith("File ")),
+			_("unknown error"),
+		)
+		frappe.throw(
+			_("The demo could not be scheduled because of a technical error: {0}").format(last_line),
+			title=_("Scheduling Failed"),
+		)
 
 
 @frappe.whitelist()
@@ -419,6 +435,11 @@ def create_demo_request(customer=None, lead=None, company=None, contact_person=N
 	doc.demo_type = demo_type
 	doc.sales_remarks = sales_remarks
 	doc.functional_consultant = functional_consultant
+	# fetch_from does NOT run on API inserts - resolve the consultant's user so
+	# the 'Consultant Assigned' / 'Demo Scheduled' notifications can reach them
+	doc.consultant_user = frappe.db.get_value(
+		"Functional Consultant", functional_consultant, "user"
+	)
 	doc.insert()  # respects role permissions; sales_person defaults to the session user
 
 	# move the new request from Draft to Requested
@@ -446,6 +467,9 @@ def assign_consultant(demo_request, consultant):
 	frappe.has_permission("Demo Request", "write", doc=doc, throw=True)
 
 	doc.functional_consultant = consultant
+	# fetch_from does NOT run on API saves - keep consultant_user in sync so the
+	# 'Consultant Assigned' / 'Consultant Reassigned' notifications can reach them
+	doc.consultant_user = frappe.db.get_value("Functional Consultant", consultant, "user")
 	doc.save()  # validate runs: only Active consultants, reassignment flag, ToDo + notifications
 
 	if doc.workflow_state in (None, "", "Draft", "Requested"):
