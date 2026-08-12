@@ -217,8 +217,11 @@
 	z-index: 120;
 	position: sticky;
 	top: 65px;
-	align-self: flex-start;
-	height: calc(100vh - 65px);
+	/* stretch to the full height of the body so the sidebar can never be
+	   cut off on tall pages (e.g. Manager Dashboard) while scrolling */
+	align-self: stretch;
+	height: auto;
+	min-height: calc(100vh - 65px);
 	overflow-y: auto;
 }
 
@@ -297,6 +300,11 @@
 .sidebar-footer {
 	padding: 14px 16px;
 	border-top: 1px solid rgba(255, 255, 255, 0.08);
+	/* keep the footer reachable even when the sidebar stretches tall */
+	position: sticky;
+	bottom: 0;
+	background: linear-gradient(180deg, rgba(9, 21, 38, 0.85), #091526 90%);
+	backdrop-filter: blur(3px);
 }
 .sidebar-desk {
 	display: flex;
@@ -332,10 +340,6 @@
 .sidebar-overlay.show { display: block; }
 
 /* desktop sidebar sticks below the fixed-height topbar (40px logo + 24px padding + 1px border) */
-.portal-sidebar {
-	top: 65px;
-	height: calc(100vh - 65px);
-}
 
 /* ==========================================================================
    Main column
