@@ -454,18 +454,9 @@
 		var lead = document.getElementById("lead").value.trim();
 		var consultant = document.getElementById("functional_consultant").value;
 
-		/* A Customer/Lead is NOT required any more - a request can be created
-		   for a prospect using just name / email / phone. Only block when the
-		   user gave no party AND no contact details at all. */
-		if (!customer && !lead) {
-			var pName = document.getElementById("contact_person").value.trim();
-			var pPhone = document.getElementById("contact_number").value.trim();
-			var pEmail = document.getElementById("email").value.trim();
-			if (!pName && !pPhone && !pEmail) {
-				portalAlert("Tell us who the demo is for - pick a Customer or a Lead from the suggestions, or enter at least a contact name / email / phone.", "err");
-				return;
-			}
-		}
+		/* A Customer/Lead and contact details are all optional - the workflow is
+		   consultant-first, so the request can be created with just a
+		   Functional Consultant (customer details can be filled in later). */
 		/* A free-typed customer name is fine: the server auto-creates the
 		   Customer record (it appears in the desk too). Just confirm first so
 		   a typo never creates a junk customer. */

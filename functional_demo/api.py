@@ -857,16 +857,10 @@ def create_demo_request(customer=None, lead=None, company=None, contact_person=N
 	"""Create a Demo Request from the Sales Portal web form."""
 	from functional_demo.sales_demo.doctype.demo_request.demo_request import change_status
 
-	# A party (customer/lead) OR at least one contact detail is required - the
-	# demo is for someone. The message tells the user exactly what to do so the
-	# popup is never cryptic. (Party-less requests with contact details are
-	# allowed - e.g. prospects or customer self-bookings - the sales team can
-	# link the CRM record later.)
-	if not customer and not lead and not (contact_person or contact_number or email):
-		frappe.throw(
-			_("Tell us who the demo is for - pick a Customer or a Lead from the suggestions, or enter at least a contact name / email / phone, then try again."),
-			title=_("Who is the demo for?"),
-		)
+	# A party (Customer/Lead) and contact details are OPTIONAL - the sales team
+	# can create a request with only a Functional Consultant and fill in the
+	# customer details later (their workflow is consultant-first and the site
+	# may have no CRM records yet).
 
 	# Free-typed customer names are auto-created as real Customer records (they
 	# then appear in the desk too); if that fails for any reason we fall back to
