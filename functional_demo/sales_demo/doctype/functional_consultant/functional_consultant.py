@@ -8,6 +8,10 @@ from frappe.model.document import Document
 
 class FunctionalConsultant(Document):
 	def validate(self):
+		if not self.status:
+			# a consultant without an explicit status is Active by default, so
+			# records created before the field had a default are still usable
+			self.status = "Active"
 		self.validate_user()
 		self.validate_availability_times()
 

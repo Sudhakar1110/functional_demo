@@ -419,6 +419,7 @@ def _get_or_create_consultant(spec, created):
 	doc.user = spec["user"]
 	doc.specialization = spec["specialization"]
 	doc.experience_years = spec["experience_years"]
+	doc.status = "Active"
 	doc.availability = "Available"
 	for module, level in spec["modules"]:
 		doc.append("erpnext_modules", {"module": module, "experience_level": level})

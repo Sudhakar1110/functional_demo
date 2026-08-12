@@ -77,13 +77,19 @@
 					</div>
 					<div class="form-row">
 						<div style="grid-column: 1 / -1;">
-							<label>Functional Consultant <span class="req">*</span></label>
+							<label>Functional Consultant <span class="req">*</span> <span class="form-hint">(required)</span></label>
 							<select id="functional_consultant" name="functional_consultant">
 								<option value="">— Select consultant —</option>
 								{% for c in consultants %}
 								<option value="{{ c.name }}">{{ c.consultant_name }} · {{ c.specialization or 'Generalist' }} · {{ c.availability }}{% if c.experience_years %} · {{ c.experience_years }} yrs exp{% endif %}</option>
 								{% endfor %}
 							</select>
+							{% if not consultants %}
+							<div style="margin-top: 10px; padding: 12px 14px; border-radius: 10px; background: #FEF2F2; border: 1px solid #FECACA; color: #B91C1C; font-size: 13px; line-height: 1.5;">
+								<strong>No active consultants found.</strong> A Functional Consultant is required to create a demo request.
+								Ask your Functional Team Manager to create consultant profiles (Functional Portal → My Templates → Link profile) or add one in ERPNext, then reload this page.
+							</div>
+							{% endif %}
 						</div>
 					</div>
 					<div class="form-row">
@@ -470,7 +476,7 @@
 			return;
 		}
 		if (!consultant) {
-			portalAlert("Please select a Functional Consultant to run this demo.", "err");
+			window.portalModal("Consultant Required", "Please select a Functional Consultant to run this demo. Pick one from the list above - a consultant is mandatory before the request can be created.", "err");
 			return;
 		}
 		/* Company is optional - if the typed name is not a saved Company record
