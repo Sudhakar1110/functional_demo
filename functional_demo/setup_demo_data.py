@@ -514,6 +514,15 @@ def _make_request(created, customer=None, lead=None, module=None, priority="Medi
 	doc.preferred_demo_date = add_days(today(), preferred_days)
 	if consultant:
 		doc.functional_consultant = consultant.name
+	else:
+		# Business rule: every Demo Request needs a Functional Consultant, so
+		# fall back to the first active consultant for seed records that don't
+		# specify one (the request still starts in Draft status).
+		fallback = frappe.db.get_value(
+			"Functional Consultant", {"status": "Active"}, "name"
+		)
+		if fallback:
+			doc.functional_consultant = fallback
 	doc.insert(ignore_permissions=True)
 	created["requests"].append(doc.name)
 	return doc

@@ -22,6 +22,9 @@ class DemoSession(Document):
 
 	def after_insert(self):
 		self.log_request_activity("Demo Scheduled")
+		# Every scheduled demo gets a calendar Event - including sessions that
+		# were created manually from the desk form (not just via Schedule Demo).
+		create_calendar_event(self)
 
 	def on_update(self):
 		self.log_session_status_activity()
@@ -152,6 +155,8 @@ class DemoSession(Document):
 
 	def sync_request_status(self):
 		"""Keep the Demo Request workflow in sync with the session status."""
+		if self.flags.get("skip_request_sync"):
+			return
 		# on_update runs AFTER the db write in v15, so the pre-save value
 		# must come from get_doc_before_save() (db_get returns the new value)
 		before = self.get_doc_before_save()
@@ -420,15 +425,37 @@ def _to_seconds(value):
 
 
 def create_calendar_event(session):
-	"""Create an ERPNext Event (calendar) for the scheduled demo."""
+	"""Create (or update) the ERPNext Event (calendar) for a scheduled demo.
+
+	Upserts on the existing Event for the session so re-scheduling and the
+	after_insert hook can never create duplicate calendar entries."""
 	if not session or not session.scheduled_date:
 		return
 	try:
 		start = frappe.utils.get_datetime(
 			"{0} {1}".format(session.scheduled_date, session.start_time or "10:00:00")
 		)
+		subject = _("Demo: {0} ({1})").format(session.customer or session.demo_request, session.name)
+
+		existing = frappe.db.get_value(
+			"Event",
+			{"reference_type": "Demo Session", "reference_name": session.name},
+			"name",
+		)
+		if existing:
+			event = frappe.get_doc("Event", existing)
+			event.subject = subject
+			event.starts_on = start
+			event.ends_on = (
+				frappe.utils.get_datetime("{0} {1}".format(session.scheduled_date, session.end_time))
+				if session.end_time
+				else None
+			)
+			event.save(ignore_permissions=True)
+			return
+
 		event = frappe.new_doc("Event")
-		event.subject = _("Demo: {0} ({1})").format(session.customer or session.demo_request, session.name)
+		event.subject = subject
 		event.starts_on = start
 		if session.end_time:
 			event.ends_on = frappe.utils.get_datetime(

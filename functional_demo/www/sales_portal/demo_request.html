@@ -160,6 +160,40 @@
 			</div>
 			{% endif %}
 
+			{% if doc.status in ["Requested", "Assigned", "Scheduled", "Demo In Progress"] %}
+			<div class="portal-card">
+				<div class="card-head"><h2>Manage</h2></div>
+				<div class="card-body">
+					<div style="display: flex; gap: 10px; flex-wrap: wrap;">
+						{% if doc.status == "Assigned" and doc.functional_consultant %}
+						<button class="btn-portal secondary" id="btn-toggle-unassign"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="17" x2="22" y1="8" y2="13"/><line x1="22" x2="17" y1="8" y2="13"/></svg> Unassign Consultant</button>
+						{% endif %}
+						<button class="btn-portal danger" id="btn-toggle-cancel-request"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="15" x2="9" y1="9" y2="15"/><line x1="9" x2="15" y1="9" y2="15"/></svg> Cancel Demo Request</button>
+					</div>
+
+					{% if doc.status == "Assigned" and doc.functional_consultant %}
+					<div id="form-unassign" style="display: none;" class="portal-form">
+						<div class="divider"></div>
+						<p class="text-muted" style="margin-top: 0;">The request will return to <strong>Requested</strong> and the consultant will be released. Only managers can unassign.</p>
+						<div class="form-actions">
+							<button class="btn-portal secondary" id="btn-unassign">Unassign Consultant</button>
+						</div>
+					</div>
+					{% endif %}
+
+					<div id="form-cancel-request" style="display: none;" class="portal-form">
+						<div class="divider"></div>
+						<label>Reason for cancelling</label>
+						<textarea id="cancel-request-reason" placeholder="Optional reason..."></textarea>
+						<p class="text-muted" style="margin-top: 6px;">Open demo sessions (if any) will also be cancelled.</p>
+						<div class="form-actions">
+							<button class="btn-portal danger" id="btn-cancel-request">Cancel Demo Request</button>
+						</div>
+					</div>
+				</div>
+			</div>
+			{% endif %}
+
 			{% if doc.functional_consultant and doc.status in ["Requested", "Assigned", "Scheduled", "Demo In Progress", "Demo Completed", "Follow-up Required"] %}
 			<div class="portal-card">
 				<div class="card-head">
@@ -437,6 +471,31 @@
 			meeting_link: document.getElementById("sch-link").value,
 		}).then(function () { window.location.reload(); }).catch(function () { btn.disabled = false; });
 	});
+	{% endif %}
+
+	{% if doc.status in ["Requested", "Assigned", "Scheduled", "Demo In Progress"] %}
+	if (document.getElementById("btn-toggle-cancel-request")) {
+		document.getElementById("btn-toggle-cancel-request").addEventListener("click", function () { toggle("form-cancel-request"); });
+		document.getElementById("btn-cancel-request").addEventListener("click", function () {
+			if (!window.confirm("Cancel Demo Request " + DOC_NAME + "? Open demo sessions will also be cancelled.")) return;
+			var btn = this; btn.disabled = true;
+			portalCall("functional_demo.api.cancel_demo_request", {
+				demo_request: DOC_NAME,
+				reason: document.getElementById("cancel-request-reason").value,
+			}).then(function () { window.location.reload(); }).catch(function () { btn.disabled = false; });
+		});
+	}
+	{% if doc.status == "Assigned" and doc.functional_consultant %}
+	if (document.getElementById("btn-toggle-unassign")) {
+		document.getElementById("btn-toggle-unassign").addEventListener("click", function () { toggle("form-unassign"); });
+		document.getElementById("btn-unassign").addEventListener("click", function () {
+			if (!window.confirm("Unassign the Functional Consultant from " + DOC_NAME + "? The request returns to Requested.")) return;
+			var btn = this; btn.disabled = true;
+			portalCall("functional_demo.api.unassign_consultant", { demo_request: DOC_NAME })
+				.then(function () { window.location.reload(); }).catch(function () { btn.disabled = false; });
+		});
+	}
+	{% endif %}
 	{% endif %}
 
 	{% if doc.status in ["Demo Completed", "Follow-up Required"] %}

@@ -10,8 +10,11 @@ from functional_demo.sales_demo.doctype.functional_consultant.test_functional_co
 from functional_demo.sales_demo.doctype.demo_request.demo_request import change_status
 
 
-def make_demo_request(customer=None, lead=None, **kwargs):
-	"""Create a Demo Request; creates a Customer automatically if none is given."""
+def make_demo_request(customer=None, lead=None, consultant=None, **kwargs):
+	"""Create a Demo Request; creates a Customer automatically if none is given.
+
+	A Functional Consultant is mandatory for every new request (same rule as the
+	portal), so tests pass one explicitly."""
 	if not customer and not lead:
 		customer = frappe.new_doc("Customer", customer_name="Test Customer").insert(ignore_permissions=True).name
 	doc = frappe.new_doc("Demo Request")
@@ -19,6 +22,8 @@ def make_demo_request(customer=None, lead=None, **kwargs):
 		doc.customer = customer
 	if lead:
 		doc.lead = lead
+	if consultant:
+		doc.functional_consultant = consultant
 	doc.interested_module = "Law Management"
 	doc.priority = "High"
 	doc.update(kwargs)
@@ -31,25 +36,23 @@ class TestDemoRequest(FrappeTestCase):
 		self.consultant = make_consultant()
 
 	def test_create_request_with_default_sales_person(self):
-		doc = make_demo_request()
+		doc = make_demo_request(consultant=self.consultant.name)
 		self.assertEqual(doc.sales_person, frappe.session.user)
 		self.assertEqual(doc.status, "Draft")
 
 	def test_workflow_transition(self):
-		doc = make_demo_request()
-		doc.functional_consultant = self.consultant.name
-		doc.save(ignore_permissions=True)
+		doc = make_demo_request(consultant=self.consultant.name)
 		doc = change_status(doc, "Requested", ignore_permissions=True)
 		doc = change_status(doc, "Assigned", ignore_permissions=True)
 		self.assertEqual(doc.status, "Assigned")
 
 	def test_invalid_transition_is_blocked(self):
-		doc = make_demo_request()
+		doc = make_demo_request(consultant=self.consultant.name)
 		with self.assertRaises(frappe.ValidationError):
 			change_status(doc, "Converted", ignore_permissions=True)
 
-	def test_consultant_required_before_scheduling(self):
-		doc = make_demo_request()
-		change_status(doc, "Requested", ignore_permissions=True)
+	def test_consultant_required_at_creation(self):
+		# the business rule matches the portal: a new Demo Request must have
+		# a Functional Consultant from the very first save
 		with self.assertRaises(frappe.ValidationError):
-			change_status(doc, "Assigned", ignore_permissions=True)
+			make_demo_request()

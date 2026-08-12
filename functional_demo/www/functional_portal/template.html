@@ -233,12 +233,17 @@
 	if (linkBtn) {
 		linkBtn.addEventListener("click", function () {
 			var btn = this;
+			var me = "{{ frappe.session.user }}";
+			if (!me) {
+				portalAlert("Could not read your user. Please refresh the page (Ctrl+Shift+R) and try again.", "err");
+				return;
+			}
 			var name = (document.getElementById("link-consultant-name").value || "").trim();
 			var spec = document.getElementById("link-specialization").value;
 			btn.disabled = true;
 			btn.textContent = "Linking...";
 			portalCall("functional_demo.api.create_consultant_profile", {
-				user: "{{ frappe.session.user }}",
+				user: me,
 				consultant_name: name || null,
 				specialization: spec || null,
 			}).then(function () {

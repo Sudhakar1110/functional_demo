@@ -2,7 +2,9 @@ frappe.ui.form.on("Demo Follow Up", {
 	refresh(frm) {
 		frm.page.remove_inner_button("Add Note");
 		frm.page.remove_inner_button("Mark Complete");
+		frm.page.remove_inner_button("Set Outcome");
 		frm.page.add_inner_button(__("Add Note"), () => add_note_dialog(frm), __("Actions"));
+		frm.page.add_inner_button(__("Set Outcome"), () => outcome_dialog(frm), __("Actions"));
 
 		if (["Open", "In Progress"].includes(frm.doc.status)) {
 			frm.page.add_inner_button(__("Mark Complete"), () => {
@@ -12,6 +14,32 @@ frappe.ui.form.on("Demo Follow Up", {
 		}
 	},
 });
+
+function outcome_dialog(frm) {
+	// Same outcome options as the portal's update_follow_up quick action.
+	const dialog = new frappe.ui.Dialog({
+		title: __("Set Follow-up Outcome"),
+		fields: [
+			{
+				fieldname: "outcome",
+				label: __("Outcome"),
+				fieldtype: "Select",
+				reqd: 1,
+				options: ["Pending", "Additional Discussion", "Additional Demo Required", "Converted", "Not Interested", "Closed"],
+				default: frm.doc.outcome || "Pending",
+			},
+			{ fieldname: "remarks", label: __("Remarks"), fieldtype: "Small Text", default: frm.doc.remarks },
+		],
+		primary_action_label: __("Set Outcome"),
+		primary_action(values) {
+			dialog.hide();
+			frm.set_value("outcome", values.outcome);
+			if (values.remarks !== frm.doc.remarks) frm.set_value("remarks", values.remarks);
+			frm.save();
+		},
+	});
+	dialog.show();
+}
 
 function add_note_dialog(frm) {
 	const dialog = new frappe.ui.Dialog({

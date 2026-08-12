@@ -11,6 +11,13 @@ class FunctionalDemoTemplate(Document):
 		self.validate_consultant()
 
 	def validate_consultant(self):
+		if not self.functional_consultant and frappe.session.user == "Administrator":
+			# same behaviour as the portal: Administrator gets a consultant
+			# profile auto-created on first use, so desk template creation works
+			# out of the box without manual ERPNext setup
+			from functional_demo.portal import _ensure_admin_consultant
+
+			self.functional_consultant = _ensure_admin_consultant()
 		if not self.functional_consultant:
 			frappe.throw(_("Please select the Functional Consultant who owns this template."))
 		status = frappe.db.get_value(
@@ -87,7 +94,9 @@ def get_template_snapshot(template_name):
 # ------------------------------------------------------------------
 
 def get_permission_query_conditions(user=None):
-	"""Consultants see only templates they own; everyone else sees all."""
+	"""Consultants see the templates assigned to their consultant profile
+	(matches the portal, which lists templates by functional_consultant);
+	everyone else sees all."""
 	user = user or frappe.session.user
 	if not user or user == "Administrator":
 		return ""
@@ -95,7 +104,11 @@ def get_permission_query_conditions(user=None):
 	if any(r in roles for r in ("System Manager", "Functional Team Manager", "Sales User", "Sales Manager")):
 		return ""
 	if "Functional Consultant" in roles:
-		return "(`tabFunctional Demo Template`.`owner` = {0})".format(frappe.db.escape(user))
+		return (
+			"(`tabFunctional Demo Template`.`functional_consultant` in "
+			"(select `tabFunctional Consultant`.`name` from `tabFunctional Consultant` "
+			"where `tabFunctional Consultant`.`user` = {0}))"
+		).format(frappe.db.escape(user))
 	return ""
 
 
@@ -107,5 +120,6 @@ def has_permission(doc, ptype="read", user=None):
 	if any(r in roles for r in ("System Manager", "Functional Team Manager", "Sales User", "Sales Manager")):
 		return True
 	if "Functional Consultant" in roles:
-		return doc.get("owner") == user
+		consultant = frappe.db.get_value("Functional Consultant", {"user": user}, "name")
+		return bool(consultant and doc.get("functional_consultant") == consultant)
 	return False

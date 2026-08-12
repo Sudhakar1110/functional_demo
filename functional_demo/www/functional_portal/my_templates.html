@@ -33,7 +33,8 @@
 		listEl.innerHTML = html;
 		listEl.querySelectorAll("button[data-link]").forEach(function (btn) {
 			btn.addEventListener("click", function () {
-				var user = btn.getAttribute("data-link");
+				var row = btn.closest("tr");
+				var user = btn.getAttribute("data-link") || (row ? row.getAttribute("data-user") : "");
 				if (!user) {
 					portalAlert("Could not read the selected user. Please refresh the page (Ctrl+Shift+R) and try again.", "err");
 					return;

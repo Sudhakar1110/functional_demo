@@ -89,6 +89,14 @@ class DemoRequest(Document):
 					),
 					title=_("Consultant Not Active"),
 				)
+		elif self.is_new():
+			# Same business rule as the portal: a new Demo Request must already
+			# be allocated to a Functional Consultant (the desk form previously
+			# allowed creating a consultant-less Draft, which the portal blocked).
+			frappe.throw(
+				_("Please select a Functional Consultant to run this demo. Every demo request needs a consultant."),
+				title=_("Consultant Required"),
+			)
 		elif self.workflow_state in ("Assigned", "Scheduled", "Demo In Progress", "Demo Completed", "Follow-up Required"):
 			frappe.throw(
 				_("Please assign a Functional Consultant before the demo moves forward."),

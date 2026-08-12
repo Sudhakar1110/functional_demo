@@ -28,9 +28,7 @@ def make_session(demo_request, scheduled_date=None, template=None):
 class TestDemoSession(FrappeTestCase):
 	def setUp(self):
 		self.consultant = make_consultant()
-		self.request = make_demo_request()
-		self.request.functional_consultant = self.consultant.name
-		self.request.save(ignore_permissions=True)
+		self.request = make_demo_request(consultant=self.consultant.name)
 		change_status(self.request, "Requested", ignore_permissions=True)
 		change_status(self.request, "Assigned", ignore_permissions=True)
 		self.template = make_template(self.consultant, name="Session Test Template")

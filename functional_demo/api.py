@@ -273,10 +273,98 @@ def set_demo_result(demo_request=None, result=None):
 		frappe.throw(_("Invalid result. Choose from {0}.").format(", ".join(allowed)))
 
 	dr = frappe.get_doc("Demo Request", demo_request)
-	frappe.has_permission("Demo Request", "write", doc=dr, throw=True)
-	dr = change_status(dr, result, ignore_permissions=True)
+	frappe.has_permission("Demo Request", "write", doc=dr, throw=True)    dr = change_status(dr, result, ignore_permissions=True)
 	frappe.msgprint(_("Demo Request {0} marked as {1}.").format(dr.name, result))
 	return dr.status
+
+
+@frappe.whitelist()
+def cancel_demo_request(demo_request=None, reason=None):
+	"""Cancel a Demo Request from the portal: close its open demo sessions and
+	move the request to Cancelled (the workflow's role rules apply, so only
+	users whose role allows the cancel transition can do this).
+
+	The arguments are optional so a client that fires the call without a value
+	gets a clear popup instead of a TypeError 500."""
+	if not demo_request:
+		frappe.throw(
+			_("Demo Request is missing. Please refresh the page and try again."),
+			title=_("Missing Request"),
+		)
+
+	doc = frappe.get_doc("Demo Request", demo_request)
+	frappe.has_permission("Demo Request", "write", doc=doc, throw=True)
+
+	current = doc.get("workflow_state") or doc.get("status") or "Draft"
+	if current in ("Cancelled", "Closed", "Converted", "Not Interested"):
+		frappe.throw(
+			_("Demo Request {0} is already {1} and cannot be cancelled.").format(doc.name, current),
+			title=_("Cannot Cancel"),
+		)
+
+	# Move the request to Cancelled FIRST - if the user's role does not allow
+	# the cancel transition, nothing is changed (no partial state).
+	change_status(doc, "Cancelled", ignore_permissions=True)
+
+	# Now close any open demo sessions (without re-triggering the session ->
+	# request sync; the request is already Cancelled).
+	for session_name in frappe.get_all(
+		"Demo Session",
+		filters={"demo_request": doc.name, "demo_status": ["in", ["Scheduled", "In Progress"]]},
+		pluck="name",
+	):
+		session = frappe.get_doc("Demo Session", session_name)
+		session.flags.skip_request_sync = True
+		session.demo_status = "Cancelled"
+		if reason:
+			session.consultant_remarks = (
+				session.consultant_remarks + "\n" + reason
+				if session.consultant_remarks
+				else reason
+			)
+		session.save(ignore_permissions=True)
+
+	frappe.msgprint(_("Demo Request {0} cancelled.").format(doc.name))
+	return {"status": doc.get("status") or doc.get("workflow_state")}
+
+
+@frappe.whitelist()
+def unassign_consultant(demo_request=None):
+	"""Unassign the Functional Consultant from an Assigned Demo Request and move
+	it back to Requested (the workflow's role rules apply).
+
+	The argument is optional so a client that fires the call without a value
+	gets a clear popup instead of a TypeError 500."""
+	if not demo_request:
+		frappe.throw(
+			_("Demo Request is missing. Please refresh the page and try again."),
+			title=_("Missing Request"),
+		)
+
+	doc = frappe.get_doc("Demo Request", demo_request)
+	frappe.has_permission("Demo Request", "write", doc=doc, throw=True)
+
+	if (doc.get("workflow_state") or doc.get("status")) != "Assigned":
+		frappe.throw(
+			_("Only an Assigned Demo Request can be unassigned. This request is {0}.").format(
+				doc.get("workflow_state") or doc.get("status") or "Draft"
+			),
+			title=_("Cannot Unassign"),
+		)
+
+	# move Assigned -> Requested (the workflow's 'Unassign Consultant' transition)
+	change_status(doc, "Requested", ignore_permissions=True)
+
+	# now clear the consultant (allowed in Requested state) and log the change
+	doc = frappe.get_doc("Demo Request", demo_request)
+	doc.functional_consultant = None
+	doc.consultant_user = None
+	doc.save(ignore_permissions=True)
+
+	frappe.msgprint(
+		_("Consultant unassigned from {0}. The request is back to Requested.").format(demo_request)
+	)
+	return {"status": doc.status}
 
 
 # ---------------------------------------------------------------------------
