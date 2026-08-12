@@ -20,6 +20,9 @@ required_apps = ["erpnext"]
 
 before_install = "functional_demo.install.before_install"
 after_install = "functional_demo.install.after_install"
+# Keep already-installed sites in sync (e.g. the new 'Approved' Workflow State)
+# - create_workflow_states is idempotent, so this is safe to run on every migrate.
+after_migrate = "functional_demo.install.after_migrate"
 
 # Demo Execution screen: ships as a standard Page doctype (Sales Demo > Page >
 # demo-execution) - its JS is loaded by Frappe for the /app/demo-execution route.
@@ -68,6 +71,7 @@ has_permission = {
 scheduler_events = {
 	"daily": [
 		"functional_demo.install.mark_overdue_follow_ups",
+		"functional_demo.sales_demo.doctype.demo_request.demo_request.run_sla_escalation_checks",
 	],
 }
 

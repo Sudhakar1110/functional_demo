@@ -31,6 +31,16 @@
   "follow_up_date",
   "next_action",
   "consultant_reassigned",
+  "approval_section",
+  "approved_by",
+  "approval_date",
+  "approval_notes",
+  "sla_days",
+  "sla_due_date",
+  "sla_breached",
+  "escalated",
+  "escalated_on",
+  "escalation_notes",
   "remarks_section",
   "sales_remarks",
   "functional_remarks",
@@ -176,7 +186,7 @@
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Status",
-   "options": "Draft\nRequested\nAssigned\nScheduled\nDemo In Progress\nDemo Completed\nFollow-up Required\nConverted\nNot Interested\nCancelled\nClosed",
+   "options": "Draft\nRequested\nApproved\nAssigned\nScheduled\nDemo In Progress\nDemo Completed\nFollow-up Required\nConverted\nNot Interested\nCancelled\nClosed",
    "read_only": 1,
    "reqd": 1
   },
@@ -185,7 +195,7 @@
    "fieldtype": "Select",
    "hidden": 1,
    "label": "Workflow State",
-   "options": "Draft\nRequested\nAssigned\nScheduled\nDemo In Progress\nDemo Completed\nFollow-up Required\nConverted\nNot Interested\nCancelled\nClosed",
+   "options": "Draft\nRequested\nApproved\nAssigned\nScheduled\nDemo In Progress\nDemo Completed\nFollow-up Required\nConverted\nNot Interested\nCancelled\nClosed",
    "read_only": 1
   },
   {
@@ -204,6 +214,66 @@
    "fieldtype": "Check",
    "hidden": 1,
    "label": "Consultant Reassigned"
+  },
+  {
+   "fieldname": "approval_section",
+   "fieldtype": "Section Break",
+   "label": "Approval & SLA"
+  },
+  {
+   "fieldname": "approved_by",
+   "fieldtype": "Link",
+   "label": "Approved By",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "approval_date",
+   "fieldtype": "Date",
+   "label": "Approval Date",
+   "read_only": 1
+  },
+  {
+   "fieldname": "approval_notes",
+   "fieldtype": "Small Text",
+   "label": "Approval Notes"
+  },
+  {
+   "default": "2",
+   "description": "Days allowed to schedule this demo before it is flagged as SLA breached and escalated to managers.",
+   "fieldname": "sla_days",
+   "fieldtype": "Int",
+   "label": "SLA (days to schedule)"
+  },
+  {
+   "fieldname": "sla_due_date",
+   "fieldtype": "Date",
+   "label": "SLA Due Date",
+   "read_only": 1
+  },
+  {
+   "fieldname": "sla_breached",
+   "fieldtype": "Check",
+   "label": "SLA Breached",
+   "read_only": 1
+  },
+  {
+   "fieldname": "escalated",
+   "fieldtype": "Check",
+   "label": "Escalated to Manager",
+   "read_only": 1
+  },
+  {
+   "fieldname": "escalated_on",
+   "fieldtype": "Date",
+   "label": "Escalated On",
+   "read_only": 1
+  },
+  {
+   "fieldname": "escalation_notes",
+   "fieldtype": "Small Text",
+   "label": "Escalation Notes",
+   "read_only": 1
   },
   {
    "fieldname": "remarks_section",

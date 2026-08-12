@@ -9,10 +9,56 @@ from functional_demo.portal import can_manage_consultants
 from functional_demo.sales_demo.doctype.demo_request.demo_request import (
 	change_status,
 	get_primary_contact,
+	suggested_priority,
 )
 from functional_demo.sales_demo.doctype.demo_session.demo_session import (
 	create_calendar_event,
 )
+
+
+# ---------------------------------------------------------------------------
+# small shared helpers
+# ---------------------------------------------------------------------------
+
+def _as_list(value):
+	"""Normalize a JSON array / comma separated string / list into a Python list."""
+	if not value:
+		return []
+	if isinstance(value, str):
+		import json
+
+		try:
+			parsed = json.loads(value)
+			return parsed if isinstance(parsed, list) else []
+		except Exception:
+			return [v.strip() for v in value.split(",") if v.strip()]
+	return list(value)
+
+
+def _clean_error():
+	"""Return the last meaningful line of the current traceback."""
+	tb = frappe.get_traceback()
+	return next(
+		(
+			line.strip()
+			for line in reversed(tb.splitlines())
+			if line.strip() and not line.strip().startswith("File ")
+		),
+		_("unknown error"),
+	)
+
+
+def _default_sales_person():
+	"""First enabled Sales User - used for customer self-bookings where the
+	caller (a guest) has no sales role of their own."""
+	user = frappe.db.sql(
+		"""select u.name from `tabUser` u
+		join `tabHas Role` hr on hr.parent = u.name
+		where hr.role = 'Sales User' and u.enabled = 1
+			and u.name not in ('Guest', 'Administrator')
+		order by u.name asc limit 1"""
+	)
+	return user[0][0] if user else "Administrator"
 
 
 # ---------------------------------------------------------------------------
@@ -58,8 +104,12 @@ def get_lead_details(lead=None):
 	)
 	if not lead_doc:
 		return {}
+	# contact_person must be a real Contact document (the field is a Link) -
+	# resolve the lead's primary contact exactly like customers do, and only
+	# fall back to the lead name when no contact exists yet.
+	contact = get_primary_contact("Lead", lead)
 	return {
-		"contact_person": lead_doc.lead_name or "",
+		"contact_person": contact.name if contact else "",
 		"contact_number": lead_doc.mobile_no or lead_doc.phone or "",
 		"email": lead_doc.email_id or "",
 	}
@@ -164,6 +214,15 @@ def schedule_demo(demo_request=None, scheduled_date=None, start_time=None, end_t
 		frappe.throw(
 			_("Please assign a Functional Consultant before scheduling the demo."),
 			title=_("Consultant Required"),
+		)
+
+	# Approval workflow: a request must be approved by a manager before it can
+	# be scheduled (Requested requests are still waiting for approval).
+	current_state = dr.get("workflow_state") or dr.get("status") or "Draft"
+	if current_state in ("Draft", "Requested"):
+		frappe.throw(
+			_("This demo request needs manager approval before it can be scheduled."),
+			title=_("Approval Required"),
 		)
 
 	try:
@@ -273,9 +332,55 @@ def set_demo_result(demo_request=None, result=None):
 		frappe.throw(_("Invalid result. Choose from {0}.").format(", ".join(allowed)))
 
 	dr = frappe.get_doc("Demo Request", demo_request)
-	frappe.has_permission("Demo Request", "write", doc=dr, throw=True)    dr = change_status(dr, result, ignore_permissions=True)
+	frappe.has_permission("Demo Request", "write", doc=dr, throw=True)
+	dr = change_status(dr, result, ignore_permissions=True)
 	frappe.msgprint(_("Demo Request {0} marked as {1}.").format(dr.name, result))
 	return dr.status
+
+
+@frappe.whitelist()
+def approve_demo_request(demo_request=None, approve=1, notes=None):
+	"""Manager approval step of the workflow: approve a Requested Demo Request
+	(so it can be assigned and scheduled) or reject it (returns it to Requested
+	with a note). Only roles allowed by the workflow can approve.
+
+	The arguments are optional so a client that fires the call without a value
+	gets a clear popup instead of a TypeError 500."""
+	if not demo_request:
+		frappe.throw(
+			_("Demo Request is missing. Please refresh the page and try again."),
+			title=_("Missing Request"),
+		)
+
+	doc = frappe.get_doc("Demo Request", demo_request)
+	frappe.has_permission("Demo Request", "write", doc=doc, throw=True)
+
+	current = doc.get("workflow_state") or doc.get("status") or "Draft"
+	if current != "Requested":
+		frappe.throw(
+			_("Only a Requested demo request can be approved. This request is {0}.").format(current),
+			title=_("Cannot Approve"),
+		)
+
+	approved = int(approve) == 1
+	change_status(doc, "Approved" if approved else "Requested", ignore_permissions=True)
+
+	# record who approved / rejected and any notes (the workflow move reloads the doc)
+	doc = frappe.get_doc("Demo Request", demo_request)
+	doc.approved_by = frappe.session.user
+	doc.approval_date = frappe.utils.today()
+	note = (notes or "").strip()
+	doc.approval_notes = (
+		(doc.approval_notes + "\n" + note) if (doc.approval_notes and note) else (note or doc.approval_notes or "")
+	)
+	doc.save(ignore_permissions=True)
+
+	frappe.msgprint(
+		_("Demo Request {0} {1}.").format(
+			demo_request, _("approved") if approved else _("returned to Requested (rejected)")
+		)
+	)
+	return {"status": doc.status}
 
 
 @frappe.whitelist()
@@ -365,6 +470,160 @@ def unassign_consultant(demo_request=None):
 		_("Consultant unassigned from {0}. The request is back to Requested.").format(demo_request)
 	)
 	return {"status": doc.status}
+
+
+# ---------------------------------------------------------------------------
+# Bulk actions (Demo Requests list page)
+# ---------------------------------------------------------------------------
+
+@frappe.whitelist()
+def bulk_assign_consultant(requests=None, consultant=None):
+	"""Assign one Functional Consultant to many Demo Requests at once.
+
+	Each request is checked individually - requests that fail (permission, rule,
+	scheduling) are reported in the response instead of aborting the whole batch.
+	Approved requests move to Assigned; earlier requests keep their state (they
+	still need manager approval before the consultant takes over)."""
+	names = _as_list(requests)
+	if not names:
+		frappe.throw(_("Please select at least one demo request."), title=_("Nothing Selected"))
+	if not consultant:
+		frappe.throw(_("Please select a Functional Consultant."))
+	if not frappe.db.exists("Functional Consultant", consultant):
+		frappe.throw(_("Functional Consultant {0} was not found.").format(consultant))
+
+	consultant_user = frappe.db.get_value("Functional Consultant", consultant, "user")
+	done, errors = [], []
+	for name in names:
+		try:
+			doc = frappe.get_doc("Demo Request", name)
+			frappe.has_permission("Demo Request", "write", doc=doc, throw=True)
+			doc.functional_consultant = consultant
+			doc.consultant_user = consultant_user
+			doc.save()
+			state = doc.get("workflow_state") or doc.get("status") or "Draft"
+			if state == "Approved":
+				change_status(doc, "Assigned")
+			done.append(name)
+		except Exception:
+			errors.append("{0}: {1}".format(name, _clean_error()))
+
+	msg = _("Consultant assigned to {0} request(s).").format(len(done))
+	if errors:
+		msg += " " + _("{0} failed: {1}").format(len(errors), "; ".join(errors))
+	frappe.msgprint(msg)
+	return {"done": done, "errors": errors}
+
+
+@frappe.whitelist()
+def bulk_reschedule_demo(requests=None, scheduled_date=None, start_time=None, end_time=None):
+	"""Move many Demo Requests to a new preferred date (and time) in one go,
+	updating any open Demo Session for each request as well."""
+	names = _as_list(requests)
+	if not names:
+		frappe.throw(_("Please select at least one demo request."), title=_("Nothing Selected"))
+	if not scheduled_date:
+		frappe.throw(_("Please select a new date."))
+
+	done, errors = [], []
+	for name in names:
+		try:
+			doc = frappe.get_doc("Demo Request", name)
+			frappe.has_permission("Demo Request", "write", doc=doc, throw=True)
+			doc.preferred_demo_date = scheduled_date
+			if start_time:
+				doc.preferred_demo_time = start_time
+			doc.save()
+
+			session_name = frappe.db.get_value(
+				"Demo Session",
+				{"demo_request": name, "demo_status": ["in", ["Scheduled", "In Progress"]]},
+				"name",
+			)
+			if session_name:
+				session = frappe.get_doc("Demo Session", session_name)
+				session.scheduled_date = scheduled_date
+				if start_time:
+					session.start_time = start_time
+				if end_time:
+					session.end_time = end_time
+				session.save(ignore_permissions=True)
+				create_calendar_event(session)
+			done.append(name)
+		except Exception:
+			errors.append("{0}: {1}".format(name, _clean_error()))
+
+	msg = _("{0} request(s) rescheduled to {1}.").format(len(done), scheduled_date)
+	if errors:
+		msg += " " + _("{0} failed: {1}").format(len(errors), "; ".join(errors))
+	frappe.msgprint(msg)
+	return {"done": done, "errors": errors}
+
+
+@frappe.whitelist()
+def export_demo_requests(status=None):
+	"""Export the visible Demo Requests (honouring the current status filter)
+	as CSV text - the portal downloads it as a file."""
+	import csv
+	import io
+
+	filters = {}
+	if status:
+		filters["status"] = status
+
+	rows = frappe.get_all(
+		"Demo Request",
+		filters=filters,
+		fields=[
+			"name", "customer", "lead", "company", "contact_person", "email",
+			"interested_module", "priority", "functional_consultant", "sales_person",
+			"preferred_demo_date", "preferred_demo_time", "demo_type", "status",
+			"sla_due_date", "sla_breached", "creation",
+		],
+		order_by="creation desc",
+		limit_page_length=500,
+	) or []
+
+	buf = io.StringIO()
+	writer = csv.writer(buf)
+	writer.writerow(
+		["Request", "Customer", "Lead", "Company", "Contact Person", "Email",
+		 "Interested Template", "Priority", "Functional Consultant", "Sales Person",
+		 "Preferred Date", "Preferred Time", "Demo Type", "Status", "SLA Due Date",
+		 "SLA Breached", "Created"]
+	)
+	for r in rows:
+		writer.writerow(
+			[r.get("name"), r.get("customer"), r.get("lead"), r.get("company"),
+			 r.get("contact_person"), r.get("email"), r.get("interested_module"),
+			 r.get("priority"), r.get("functional_consultant"), r.get("sales_person"),
+			 r.get("preferred_demo_date"), r.get("preferred_demo_time"), r.get("demo_type"),
+			 r.get("status"), r.get("sla_due_date"), "Yes" if r.get("sla_breached") else "",
+			 (r.get("creation") or "")[:10]]
+		)
+	return buf.getvalue()
+
+
+# ---------------------------------------------------------------------------
+# Request templates (reusable pre-filled requirement templates)
+# ---------------------------------------------------------------------------
+
+@frappe.whitelist()
+def get_request_template(template=None):
+	"""Return the fields of a Demo Request Template so the create form can
+	pre-fill module, priority, demo type and requirements in one click."""
+	if not template:
+		return {}
+	if not frappe.db.exists("Demo Request Template", template):
+		frappe.throw(_("Template {0} was not found.").format(template))
+	doc = frappe.get_doc("Demo Request Template", template)
+	return {
+		"interested_module": doc.interested_module or "",
+		"priority": doc.priority or "",
+		"demo_type": doc.demo_type or "",
+		"customer_requirements": doc.customer_requirements or "",
+		"business_process_requirements": doc.business_process_requirements or "",
+	}
 
 
 # ---------------------------------------------------------------------------
@@ -592,7 +851,9 @@ def create_demo_request(customer=None, lead=None, company=None, contact_person=N
 	doc.interested_module = interested_module
 	doc.customer_requirements = customer_requirements
 	doc.business_process_requirements = business_process_requirements
-	doc.priority = priority or "Medium"
+	# Priority rule: "Auto" (the portal default) computes the priority from the
+	# lead value / customer tier; an explicit choice is always respected.
+	doc.priority = suggested_priority(lead, customer) if priority in (None, "", "Auto") else priority
 	doc.preferred_demo_date = preferred_demo_date
 	doc.preferred_demo_time = preferred_demo_time
 	doc.demo_type = demo_type
@@ -637,13 +898,21 @@ def assign_consultant(demo_request=None, consultant=None):
 	doc = frappe.get_doc("Demo Request", demo_request)
 	frappe.has_permission("Demo Request", "write", doc=doc, throw=True)
 
+	# Approval workflow: only an approved request can move to Assigned.
+	current_state = doc.get("workflow_state") or doc.get("status") or "Draft"
+	if current_state in (None, "", "Draft", "Requested"):
+		frappe.throw(
+			_("This demo request must be approved by a manager before a consultant can be assigned."),
+			title=_("Approval Required"),
+		)
+
 	doc.functional_consultant = consultant
 	# fetch_from does NOT run on API saves - keep consultant_user in sync so the
 	# 'Consultant Assigned' / 'Consultant Reassigned' notifications can reach them
 	doc.consultant_user = frappe.db.get_value("Functional Consultant", consultant, "user")
 	doc.save()  # validate runs: only Active consultants, reassignment flag, ToDo + notifications
 
-	if doc.workflow_state in (None, "", "Draft", "Requested"):
+	if current_state == "Approved":
 		from functional_demo.sales_demo.doctype.demo_request.demo_request import change_status
 
 		doc = change_status(doc, "Assigned")
@@ -784,3 +1053,104 @@ def update_follow_up(follow_up=None, status=None, outcome=None, remarks=None, ne
 
 	frappe.msgprint(_("Follow-up {0} updated.").format(follow_up))
 	return {"status": doc.status, "outcome": doc.outcome}
+
+
+# ---------------------------------------------------------------------------
+# Customer self-service booking (public, no login required)
+# ---------------------------------------------------------------------------
+
+BOOKING_SLOTS = ["10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00"]
+
+
+@frappe.whitelist(allow_guest=True)
+def get_available_slots(consultant=None, date=None):
+	"""Time slots still free for a consultant on a date (hourly slots between
+	10:00 and 16:00, minus already-scheduled sessions and past times)."""
+	if not consultant or not date:
+		return BOOKING_SLOTS
+	booked = {
+		row[0]
+		for row in frappe.db.sql(
+			"""select ifnull(start_time, '') from `tabDemo Session`
+			where functional_consultant = %s and scheduled_date = %s
+				and demo_status in ('Scheduled', 'In Progress')""",
+			(consultant, date),
+		)
+	}
+	slots = [s for s in BOOKING_SLOTS if s not in booked]
+	if str(date) == frappe.utils.today():
+		now = frappe.utils.now_datetime().strftime("%H:%M")
+		slots = [s for s in slots if s >= now]
+	return slots
+
+
+@frappe.whitelist(allow_guest=True)
+def book_demo_slot(customer_name=None, email=None, contact_number=None, company_name=None,
+				   interested_module=None, functional_consultant=None,
+				   preferred_demo_date=None, preferred_demo_time=None,
+				   customer_requirements=None, business_process_requirements=None):
+	"""Create a Demo Request from the public booking page (no login needed).
+
+	The request is created with the chosen consultant and preferred slot and
+	enters the normal workflow (Requested -> manager approval) so the sales team
+	can review and confirm it."""
+	if not customer_name:
+		frappe.throw(_("Please enter your name."))
+	if not email and not contact_number:
+		frappe.throw(_("Please enter an email address or phone number so we can reach you."))
+	if not interested_module:
+		frappe.throw(_("Please choose the template / module you are interested in."))
+	if not functional_consultant:
+		frappe.throw(_("Please choose a consultant."))
+	if not preferred_demo_date or not preferred_demo_time:
+		frappe.throw(_("Please pick a date and a time slot."))
+	if not frappe.db.exists("Functional Consultant", functional_consultant):
+		frappe.throw(_("Consultant {0} was not found.").format(functional_consultant))
+
+	doc = frappe.new_doc("Demo Request")
+	doc.contact_number = contact_number
+	doc.email = email
+	doc.interested_module = interested_module
+	doc.customer_requirements = customer_requirements
+	doc.business_process_requirements = business_process_requirements
+	doc.functional_consultant = functional_consultant
+	doc.consultant_user = frappe.db.get_value("Functional Consultant", functional_consultant, "user")
+	doc.preferred_demo_date = preferred_demo_date
+	doc.preferred_demo_time = preferred_demo_time
+	doc.sales_person = _default_sales_person()
+	doc.priority = "Medium"
+	doc.sales_remarks = _("Customer booked this demo from the public booking page.") + (
+		" " + _("Name: {0}").format(customer_name) if customer_name else ""
+	) + (
+		" " + _("Company: {0}").format(company_name) if company_name else ""
+	)
+	doc.insert(ignore_permissions=True)
+
+	# move to Requested - the workflow action buttons are not available to
+	# guests, so set the state directly (it still needs manager approval)
+	frappe.db.set_value(
+		"Demo Request", doc.name, {"status": "Requested", "workflow_state": "Requested"}
+	)
+
+	row = frappe.new_doc("Demo Request Activity")
+	row.update(
+		{
+			"parent": doc.name,
+			"parentfield": "demo_request_activity",
+			"parenttype": "Demo Request",
+			"activity_type": "Booked via Customer Portal",
+			"activity_date": frappe.utils.now_datetime(),
+			"user": "Guest",
+			"status": "Requested",
+			"remarks": _("Customer booked a demo slot from the public booking page."),
+		}
+	)
+	row.db_insert()
+	frappe.db.commit()
+
+	frappe.msgprint(
+		_("Your demo request {0} has been received. Our team will review it and confirm your slot shortly.").format(
+			doc.name
+		)
+	)
+	return {"name": doc.name, "status": "Requested"}

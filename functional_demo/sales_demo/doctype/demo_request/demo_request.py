@@ -4,7 +4,7 @@
 import frappe
 from frappe import _
 from frappe.model.document import Document
-from frappe.utils import now_datetime, today
+from frappe.utils import add_days, now_datetime, today
 
 
 class DemoRequest(Document):
@@ -16,6 +16,8 @@ class DemoRequest(Document):
 		self.validate_schedule_conflict()
 		self.validate_follow_up_date()
 		self.set_reassignment_flag()
+		self.set_sla_due_date()
+		self.apply_priority_rule()
 
 	def after_insert(self):
 		self.log_activity("Created", remarks="Demo Request created")
@@ -140,6 +142,20 @@ class DemoRequest(Document):
 	def set_reassignment_flag(self):
 		old = self.db_get("functional_consultant")
 		self.consultant_reassigned = 1 if (old and old != self.functional_consultant) else 0
+
+	def set_sla_due_date(self):
+		"""Every new request gets an SLA target: the date by which it should be
+		scheduled (default 2 days, configurable per request). The daily job
+		flags requests that miss it and escalates them to the managers."""
+		if self.is_new() and not self.sla_due_date:
+			self.sla_due_date = add_days(today(), int(self.sla_days or 2))
+
+	def apply_priority_rule(self):
+		"""Auto-set the priority from the lead value / customer tier when the
+		priority was not explicitly chosen (still the default 'Medium')."""
+		if not self.is_new() or self.priority != "Medium" or not (self.lead or self.customer):
+			return
+		self.priority = suggested_priority(self.lead, self.customer)
 
 	# ------------------------------------------------------------------
 	# activity history (audit trail)
@@ -271,6 +287,104 @@ class DemoRequest(Document):
 # ------------------------------------------------------------------
 # helpers used across the app
 # ------------------------------------------------------------------
+
+def suggested_priority(lead=None, customer=None):
+	"""Priority rule shared by the desk form, the portal and the booking page:
+
+	- Leads with an opportunity amount >= 1,00,000  -> High
+	- Leads with an amount below 10,000              -> Low
+	- Platinum / Gold customers                      -> High
+	- everything else                                -> Medium
+	"""
+	amount = 0
+	if lead:
+		value = frappe.db.get_value("Lead", lead, "opportunity_amount")
+		try:
+			amount = float(value or 0)
+		except Exception:
+			amount = 0
+	if amount >= 100000:
+		return "High"
+	if lead and 0 < amount < 10000:
+		return "Low"
+	if customer:
+		group = frappe.db.get_value("Customer", customer, "customer_group")
+		if group in ("Platinum", "Gold"):
+			return "High"
+	return "Medium"
+
+
+def run_sla_escalation_checks():
+	"""Daily scheduled job: flag Demo Requests whose SLA window has passed
+	without being scheduled, and escalate them to the managers."""
+	if not frappe.db.exists("DocType", "Demo Request"):
+		return
+	overdue = frappe.get_all(
+		"Demo Request",
+		filters=[
+			["workflow_state", "in", ["Requested", "Approved", "Assigned"]],
+			["sla_due_date", "<", frappe.utils.today()],
+			["sla_breached", "=", 0],
+		],
+		fields=["name", "sla_due_date", "escalated"],
+		limit_page_length=100,
+	) or []
+	changed = False
+	for row in overdue:
+		frappe.db.set_value("Demo Request", row.name, "sla_breached", 1)
+		if not row.get("escalated"):
+			frappe.db.set_value(
+				"Demo Request", row.name, {"escalated": 1, "escalated_on": frappe.utils.today()}
+			)
+			_escalate_to_managers(row.name, row.get("sla_due_date"))
+			_log_sla_activity(row.name, row.get("sla_due_date"))
+		changed = True
+	if changed:
+		frappe.db.commit()
+
+
+def _escalate_to_managers(request_name, sla_due_date):
+	"""Notify every Sales / Functional manager about the breached request."""
+	managers = {
+		r[0]
+		for r in frappe.db.sql(
+			"""select distinct u.name from `tabUser` u
+			join `tabHas Role` hr on hr.parent = u.name
+			where hr.role in ('Sales Manager', 'Functional Team Manager')
+				and u.enabled = 1 and u.name != 'Guest'"""
+		)
+	}
+	for user in managers:
+		note = frappe.new_doc("Notification Log")
+		note.for_user = user
+		note.type = "Alert"
+		note.document_type = "Demo Request"
+		note.document_name = request_name
+		note.subject = _(
+			"SLA breached: {0} was due to be scheduled by {1} but has no demo yet."
+		).format(request_name, sla_due_date)
+		note.insert(ignore_permissions=True)
+
+
+def _log_sla_activity(request_name, sla_due_date):
+	"""Append an audit entry to the request's activity timeline."""
+	row = frappe.new_doc("Demo Request Activity")
+	row.update(
+		{
+			"parent": request_name,
+			"parentfield": "demo_request_activity",
+			"parenttype": "Demo Request",
+			"activity_type": "SLA Breached",
+			"activity_date": frappe.utils.now_datetime(),
+			"user": frappe.session.user or "Administrator",
+			"status": "Escalated",
+			"remarks": _("Not scheduled by the SLA due date {0}. Escalated to managers.").format(
+				sla_due_date
+			),
+		}
+	)
+	row.db_insert()
+
 
 def get_primary_contact(party_type, party_name):
 	"""Return the primary (or first) Contact linked to a Customer/Lead."""

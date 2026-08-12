@@ -29,6 +29,13 @@ def after_install():
 	create_workflow_states()
 
 
+def after_migrate():
+	"""Run after every `bench migrate` so already-installed sites pick up
+	records introduced by later versions of the app (e.g. the 'Approved'
+	Workflow State). All steps are idempotent."""
+	create_workflow_states()
+
+
 def create_roles():
 	"""Create the custom roles used by this app (idempotent).
 
@@ -123,6 +130,7 @@ def create_workflow_states():
 	workflow_states = [
 		("Draft", "Inverse"),
 		("Requested", "Info"),
+		("Approved", "Primary"),
 		("Assigned", "Primary"),
 		("Scheduled", "Primary"),
 		("Demo In Progress", "Info"),

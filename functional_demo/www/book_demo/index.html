@@ -1,0 +1,299 @@
+{% extends "templates/web.html" %}
+{% block banner %}{% endblock %}
+{% block navbar %}{% endblock %}
+{% block footer %}{% endblock %}
+{% block style %}
+<style>
+	:root {
+		--bx-navy: #0B1B4D;
+		--bx-ink: #05133C;
+		--bx-blue: #114EFF;
+		--bx-bg: #EEF2FB;
+		--bx-line: #E3E8F5;
+		--bx-muted: #6B7A99;
+	}
+	* { box-sizing: border-box; }
+	body {
+		margin: 0;
+		font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+		background: linear-gradient(160deg, #0B1B4D 0%, #14307E 45%, #1B4FB8 100%);
+		min-height: 100vh;
+		color: var(--bx-ink);
+	}
+	.bk-wrap { max-width: 820px; margin: 0 auto; padding: 40px 20px 64px; }
+	.bk-brand {
+		display: flex; align-items: center; gap: 12px; margin-bottom: 28px;
+	}
+	.bk-brand img { width: 46px; height: 46px; border-radius: 12px; object-fit: cover; box-shadow: 0 6px 18px rgba(0,0,0,0.25); }
+	.bk-brand .t1 { color: #fff; font-weight: 800; font-size: 20px; letter-spacing: -0.3px; }
+	.bk-brand .t2 { color: rgba(255,255,255,0.65); font-size: 13px; margin-top: 2px; }
+	.bk-card {
+		background: #fff; border-radius: 18px; padding: 32px;
+		box-shadow: 0 24px 60px rgba(3, 10, 40, 0.35);
+		animation: bk-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+	}
+	@keyframes bk-in { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+	.bk-card h1 { margin: 0 0 6px; font-size: 24px; font-weight: 800; letter-spacing: -0.4px; }
+	.bk-card .sub { margin: 0 0 26px; color: var(--bx-muted); font-size: 14px; line-height: 1.5; }
+	.bk-step { display: flex; gap: 10px; align-items: center; margin: 26px 0 14px; }
+	.bk-step:first-of-type { margin-top: 0; }
+	.bk-step .n {
+		width: 26px; height: 26px; border-radius: 50%; background: var(--bx-blue); color: #fff;
+		display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; flex: none;
+	}
+	.bk-step .l { font-weight: 800; font-size: 15px; }
+	.bk-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+	.bk-grid .full { grid-column: 1 / -1; }
+	.bk label { display: block; font-size: 12.5px; font-weight: 700; color: #33406B; margin-bottom: 6px; }
+	.bk label .req { color: #E11D48; }
+	.bk input, .bk select, .bk textarea {
+		width: 100%; padding: 10px 12px; border: 1px solid var(--bx-line); border-radius: 10px;
+		font-size: 14px; font-family: inherit; color: var(--bx-ink); background: #FBFCFE;
+		transition: border-color 0.15s, box-shadow 0.15s;
+	}
+	.bk input:focus, .bk select:focus, .bk textarea:focus {
+		outline: none; border-color: var(--bx-blue); box-shadow: 0 0 0 3px rgba(17, 78, 255, 0.12); background: #fff;
+	}
+	.bk textarea { min-height: 72px; resize: vertical; }
+	.bk .slot-hint { font-size: 12.5px; color: var(--bx-muted); margin: 6px 0 0; }
+	.bk-slots { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+	.bk-slots button {
+		padding: 8px 14px; border: 1px solid var(--bx-line); border-radius: 10px; background: #FBFCFE;
+		font-size: 13.5px; font-weight: 700; color: #33406B; cursor: pointer; font-family: inherit;
+		transition: all 0.15s;
+	}
+	.bk-slots button:hover { border-color: var(--bx-blue); color: var(--bx-blue); }
+	.bk-slots button.on { background: var(--bx-blue); border-color: var(--bx-blue); color: #fff; }
+	.bk-slots .none { color: var(--bx-muted); font-size: 13px; }
+	.bk-actions { margin-top: 26px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+	.bk-btn {
+		background: var(--bx-navy); color: #fff; border: 0; border-radius: 12px; padding: 13px 26px;
+		font-size: 15px; font-weight: 800; cursor: pointer; font-family: inherit;
+		box-shadow: 0 8px 20px rgba(11, 27, 77, 0.28); transition: transform 0.15s, box-shadow 0.15s;
+	}
+	.bk-btn:hover { transform: translateY(-1px); box-shadow: 0 12px 26px rgba(11, 27, 77, 0.34); }
+	.bk-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+	.bk-btn.ghost { background: #EEF2FB; color: var(--bx-ink); box-shadow: none; }
+	.bk-ok { text-align: center; padding: 30px 10px 10px; }
+	.bk-ok .tick {
+		width: 64px; height: 64px; border-radius: 50%; background: #DCFBEA; color: #009A52;
+		display: flex; align-items: center; justify-content: center; margin: 0 auto 18px; font-size: 30px;
+	}
+	.bk-ok h2 { margin: 0 0 8px; font-size: 22px; font-weight: 800; }
+	.bk-ok p { color: var(--bx-muted); margin: 0 auto; max-width: 420px; line-height: 1.6; font-size: 14px; }
+	.bk-ok .ref { color: var(--bx-blue); font-weight: 800; }
+	.bk-note { margin-top: 22px; font-size: 12.5px; color: var(--bx-muted); text-align: center; }
+	.bk-note a { color: #fff; text-decoration: underline; }
+	@media (max-width: 640px) { .bk-grid { grid-template-columns: 1fr; } .bk-card { padding: 22px; } }
+</style>
+{% endblock %}
+{% block content %}
+<div class="bk-wrap">
+	<div class="bk-brand">
+		<img src="/images/brand_logo.jpg" alt="Brand Logo" />
+		<div>
+			<div class="t1">Demo Portal</div>
+			<div class="t2">Book a live product demo - it takes under a minute</div>
+		</div>
+	</div>
+
+	<div class="bk-card">
+		<div id="bk-form" class="bk">
+			<h1>Book your demo</h1>
+			<p class="sub">Tell us a little about yourself, pick the module and consultant you would like to see, and choose a time that suits you. Our team confirms the slot right away.</p>
+
+			<div class="bk-step"><span class="n">1</span><span class="l">Your details</span></div>
+			<div class="bk-grid">
+				<div class="full">
+					<label>Your name <span class="req">*</span></label>
+					<input type="text" id="bk-name" placeholder="e.g. Rajesh Kumar">
+				</div>
+				<div>
+					<label>Email <span class="req">*</span></label>
+					<input type="email" id="bk-email" placeholder="you@company.com">
+				</div>
+				<div>
+					<label>Phone</label>
+					<input type="tel" id="bk-phone" placeholder="+91 ...">
+				</div>
+				<div class="full">
+					<label>Company</label>
+					<input type="text" id="bk-company" placeholder="Your company (optional)">
+				</div>
+			</div>
+
+			<div class="bk-step"><span class="n">2</span><span class="l">What would you like to see?</span></div>
+			<div class="bk-grid">
+				<div>
+					<label>Module / Template <span class="req">*</span></label>
+					<select id="bk-module">
+						<option value="">— Select a module —</option>
+						{% for m in modules %}<option value="{{ m }}">{{ m }}</option>{% endfor %}
+					</select>
+				</div>
+				<div>
+					<label>Consultant <span class="req">*</span></label>
+					<select id="bk-consultant">
+						<option value="">— Select a consultant —</option>
+						{% for c in consultants %}
+						<option value="{{ c.name }}">{{ c.consultant_name }} · {{ c.specialization or 'Generalist' }}</option>
+						{% endfor %}
+					</select>
+				</div>
+			</div>
+
+			<div class="bk-step"><span class="n">3</span><span class="l">Pick a date &amp; time</span></div>
+			<div class="bk-grid">
+				<div>
+					<label>Date <span class="req">*</span></label>
+					<input type="date" id="bk-date" min="{{ today }}">
+				</div>
+				<div>
+					<label>Available slots</label>
+					<div class="bk-slots" id="bk-slots">
+						<span class="none">Choose a consultant and date to see free slots.</span>
+					</div>
+					<p class="slot-hint" id="bk-slot-hint"></p>
+				</div>
+			</div>
+
+			<div class="bk-step"><span class="n">4</span><span class="l">Your requirements</span></div>
+			<div class="bk-grid">
+				<div class="full">
+					<label>What would you like the demo to cover?</label>
+					<textarea id="bk-requirements" placeholder="e.g. Purchase to Pay cycle, inventory control, reports..."></textarea>
+				</div>
+			</div>
+
+			<div class="bk-actions">
+				<button class="bk-btn" id="bk-submit">Book my demo</button>
+				<span class="bk-note" style="margin-top:0;">Free · no commitment · we confirm by email or phone</span>
+			</div>
+		</div>
+
+		<div id="bk-done" class="bk-ok" style="display: none;">
+			<div class="tick">✓</div>
+			<h2>Request received!</h2>
+			<p>Your demo request <span class="ref" id="bk-ref"></span> has been booked. Our team will review it and confirm your slot by email or phone shortly.</p>
+			<div class="bk-actions" style="justify-content: center;">
+				<button class="bk-btn ghost" id="bk-again">Book another demo</button>
+			</div>
+		</div>
+	</div>
+
+	<p class="bk-note">Powered by <a href="/demo_portal">Demo Portal</a> · Sales &amp; Functional</p>
+</div>
+{% endblock %}
+{% block script %}
+<script>
+(function () {
+	"use strict";
+	var SLOT = null;
+	var $ = function (id) { return document.getElementById(id); };
+
+	function api(method, args) {
+		return fetch("/api/method/" + method, {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ args: args || {} }),
+			credentials: "same-origin",
+		}).then(function (r) { return r.json(); })
+		.then(function (data) {
+			if (!data || data.exc_type || data.raise_exception || typeof data.message === "undefined") {
+				throw new Error((data && data.message) || "Request failed");
+			}
+			return data.message;
+		});
+	}
+
+	function loadSlots() {
+		var consultant = $("bk-consultant").value;
+		var date = $("bk-date").value;
+		var box = $("bk-slots");
+		var hint = $("bk-slot-hint");
+		SLOT = null;
+		if (!consultant || !date) {
+			box.innerHTML = '<span class="none">Choose a consultant and date to see free slots.</span>';
+			hint.textContent = "";
+			return;
+		}
+		box.innerHTML = '<span class="none">Loading slots…</span>';
+		api("functional_demo.api.get_available_slots", { consultant: consultant, date: date })
+			.then(function (slots) {
+				if (!slots || !slots.length) {
+					box.innerHTML = '<span class="none">No free slots on this date - please pick another date.</span>';
+					return;
+				}
+				box.innerHTML = "";
+				slots.forEach(function (s) {
+					var b = document.createElement("button");
+					b.type = "button";
+					b.textContent = s;
+					b.addEventListener("click", function () {
+						box.querySelectorAll("button").forEach(function (x) { x.classList.remove("on"); });
+						b.classList.add("on");
+						SLOT = s;
+						hint.textContent = "Selected slot: " + s;
+					});
+					box.appendChild(b);
+				});
+			})
+			.catch(function (e) {
+				box.innerHTML = '<span class="none">Could not load slots. Please try again.</span>';
+			});
+	}
+	$("bk-consultant").addEventListener("change", loadSlots);
+	$("bk-date").addEventListener("change", loadSlots);
+
+	$("bk-submit").addEventListener("click", function () {
+		var name = $("bk-name").value.trim();
+		var email = $("bk-email").value.trim();
+		var phone = $("bk-phone").value.trim();
+		var company = $("bk-company").value.trim();
+		var module = $("bk-module").value;
+		var consultant = $("bk-consultant").value;
+		var date = $("bk-date").value;
+		var requirements = $("bk-requirements").value.trim();
+
+		if (!name) { alert("Please enter your name."); return; }
+		if (!email && !phone) { alert("Please enter an email or phone number so we can reach you."); return; }
+		if (!module) { alert("Please choose the module you are interested in."); return; }
+		if (!consultant) { alert("Please choose a consultant."); return; }
+		if (!date || !SLOT) { alert("Please pick a date and a time slot."); return; }
+
+		var btn = $("bk-submit");
+		btn.disabled = true; btn.textContent = "Booking…";
+		api("functional_demo.api.book_demo_slot", {
+			customer_name: name,
+			email: email || null,
+			contact_number: phone || null,
+			company_name: company || null,
+			interested_module: module,
+			functional_consultant: consultant,
+			preferred_demo_date: date,
+			preferred_demo_time: SLOT,
+			customer_requirements: requirements || null,
+		}).then(function (res) {
+			$("bk-ref").textContent = res && res.name ? res.name : "";
+			$("bk-form").style.display = "none";
+			$("bk-done").style.display = "block";
+		}).catch(function () {
+			btn.disabled = false; btn.textContent = "Book my demo";
+		});
+	});
+
+	$("bk-again").addEventListener("click", function () {
+		$("bk-form").style.display = "block";
+		$("bk-done").style.display = "none";
+		["bk-name", "bk-email", "bk-phone", "bk-company", "bk-requirements"].forEach(function (id) { $(id).value = ""; });
+		$("bk-module").value = "";
+		$("bk-consultant").value = "";
+		$("bk-date").value = "";
+		$("bk-slots").innerHTML = '<span class="none">Choose a consultant and date to see free slots.</span>';
+		$("bk-slot-hint").textContent = "";
+		SLOT = null;
+		$("bk-submit").disabled = false; $("bk-submit").textContent = "Book my demo";
+	});
+})();
+</script>
+{% endblock %}

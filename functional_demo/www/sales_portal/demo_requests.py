@@ -7,7 +7,7 @@ from frappe import _
 from functional_demo.portal import portal_context
 
 STATUS_OPTIONS = [
-	"Draft", "Requested", "Assigned", "Scheduled", "Demo In Progress",
+	"Draft", "Requested", "Approved", "Assigned", "Scheduled", "Demo In Progress",
 	"Demo Completed", "Follow-up Required", "Converted", "Not Interested",
 	"Cancelled", "Closed",
 ]
@@ -32,7 +32,7 @@ def get_context(context):
 		fields=[
 			"name", "customer", "lead", "status", "priority", "interested_module",
 			"preferred_demo_date", "functional_consultant", "sales_person",
-			"follow_up_date", "creation",
+			"follow_up_date", "creation", "sla_due_date", "sla_breached",
 		],
 		order_by="creation desc",
 		limit_page_length=200,
@@ -41,3 +41,10 @@ def get_context(context):
 		r["created_display"] = frappe.utils.format_date(r.get("creation"), "medium") if r.get("creation") else "-"
 	context.status = status
 	context.status_options = STATUS_OPTIONS
+	# active consultants for the bulk-assign action
+	context.consultants = frappe.get_all(
+		"Functional Consultant",
+		filters={"status": "Active"},
+		fields=["name", "consultant_name", "specialization"],
+		order_by="consultant_name asc",
+	) or []

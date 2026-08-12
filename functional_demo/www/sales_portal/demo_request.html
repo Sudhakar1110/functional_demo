@@ -51,16 +51,25 @@
 				<div class="card-body">
 					<form class="portal-form" id="dr-form">
 					<div class="form-row">
+						<div style="grid-column: 1 / -1;">
+							<label>Start from a Request Template <span class="form-hint">(optional - pre-fills the form)</span></label>
+							<select id="request-template">
+								<option value="">— Select a template —</option>
+								{% for t in request_templates %}<option value="{{ t.name }}">{{ t.template_name }}</option>{% endfor %}
+							</select>
+						</div>
+					</div>
+					<div class="form-row">
 						<div>
 							<label>Customer <span class="req">*</span> <span class="form-hint">(pick from suggestions)</span></label>
-							<input type="text" id="customer" name="customer" list="customers-list" placeholder="Type &amp; pick a customer..." autocomplete="off">
+							<input type="text" id="customer" name="customer" list="customers-list" placeholder="Type &amp; pick a customer..." value="{{ prefill.customer }}" autocomplete="off">
 							<datalist id="customers-list">
 								{% for c in customers %}<option value="{{ c.name }}">{{ c.customer_name }}</option>{% endfor %}
 							</datalist>
 						</div>
 						<div>
 							<label>Lead <span class="req">*</span> <span class="form-hint">(or pick a lead instead)</span></label>
-							<input type="text" id="lead" name="lead" list="leads-list" placeholder="Type &amp; pick a lead..." value="{{ lead_param }}" autocomplete="off">
+							<input type="text" id="lead" name="lead" list="leads-list" placeholder="Type &amp; pick a lead..." value="{{ prefill.lead }}" autocomplete="off">
 							<datalist id="leads-list">
 								{% for l in leads %}<option value="{{ l.name }}">{{ l.lead_name }} ({{ l.company_name or 'no company' }})</option>{% endfor %}
 							</datalist>
@@ -79,8 +88,18 @@
 						<div><label>Contact Person</label><input type="text" id="contact_person" name="contact_person"></div>
 					</div>
 					<div class="form-row">
-						<div><label>Contact Number</label><input type="text" id="contact_number" name="contact_number"></div>
-						<div><label>Email</label><input type="email" id="email" name="email"></div>
+						<div><label>Contact Person</label><input type="text" id="contact_person" name="contact_person" value="{{ prefill.contact_person }}"></div>
+						<div><label>Contact Number</label><input type="text" id="contact_number" name="contact_number" value="{{ prefill.contact_number }}"></div>
+						<div><label>Email</label><input type="email" id="email" name="email" value="{{ prefill.email }}"></div>
+					</div>
+					<div class="form-row">
+						<div style="grid-column: 1 / -1;">
+							<label>Company <span class="form-hint">(optional - pick from suggestions)</span></label>
+							<input type="text" id="company" name="company" list="companies-list" placeholder="Type &amp; pick a company..." value="{{ prefill.company }}" autocomplete="off">
+							<datalist id="companies-list">
+								{% for c in companies %}<option value="{{ c.name }}">{{ c.name }}</option>{% endfor %}
+							</datalist>
+						</div>
 					</div>
 						<div class="form-row">
 							<div style="grid-column: 1 / -1;"><label>Interested Template</label>
@@ -92,6 +111,7 @@
 						<div class="form-row">
 							<div><label>Priority</label>
 								<select id="priority" name="priority">
+									<option value="Auto" selected>Auto (lead value / customer tier)</option>
 									{% for p in priorities %}<option value="{{ p }}">{{ p }}</option>{% endfor %}
 								</select>
 							</div>
@@ -127,6 +147,7 @@
 						<div style="margin-top: 8px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
 							<span class="badge b-{{ doc.status|lower|replace(' ', '-') }}">{{ doc.status }}</span>
 							{% if doc.priority %}<span class="chip {{ doc.priority|lower }}">{{ doc.priority }} priority</span>{% endif %}
+							{% if doc.sla_breached %}<span class="badge b-sla-breached">SLA Breached</span>{% elif doc.sla_due_date %}<span class="chip">SLA due {{ doc.sla_due_date }}</span>{% endif %}
 							<span class="muted">Created: {{ doc.creation.strftime('%d %b %Y, %H:%M') if doc.creation else '-' }}</span>
 						</div>
 					</div>
@@ -140,7 +161,7 @@
 				</div>
 			</div>
 
-			{% if not doc.functional_consultant and doc.status in ["Draft", "Requested"] %}
+			{% if not doc.functional_consultant and doc.status in ["Draft", "Requested", "Approved"] %}
 			<div class="portal-card" id="card-assign">
 				<div class="card-head"><h2>Assign Functional Consultant</h2></div>
 				<div class="card-body">
@@ -160,7 +181,32 @@
 			</div>
 			{% endif %}
 
-			{% if doc.status in ["Requested", "Assigned", "Scheduled", "Demo In Progress"] %}
+			{% if doc.status == "Requested" %}
+			<div class="portal-card" id="card-approval">
+				<div class="card-head"><h2>Manager Approval</h2></div>
+				<div class="card-body">
+					{% if is_manager %}
+					<p class="text-muted" style="margin-top: 0;">Approve this request so the team can assign the consultant and schedule the demo. Rejecting it returns it to Requested with your note.</p>
+					<label>Approval / Rejection Notes</label>
+					<textarea id="approval-notes" placeholder="Optional notes..."></textarea>
+					<div class="form-actions">
+						<button class="btn-portal success" id="btn-approve"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> Approve Demo Request</button>
+						<button class="btn-portal danger" id="btn-reject"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="15" x2="9" y1="9" y2="15"/><line x1="9" x2="15" y1="9" y2="15"/></svg> Reject</button>
+					</div>
+					{% else %}
+					<div style="display: flex; gap: 14px; align-items: flex-start;">
+						<span class="kpi-icon" style="background: #FEF6D8; color: #A16207;"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span>
+						<div>
+							<p style="margin: 0 0 4px; font-weight: 700;">Waiting for manager approval</p>
+							<p class="text-muted" style="margin: 0;">A Sales Manager or Functional Team Manager must approve this request before it can be assigned and scheduled.</p>
+						</div>
+					</div>
+					{% endif %}
+				</div>
+			</div>
+			{% endif %}
+
+			{% if doc.status in ["Requested", "Approved", "Assigned", "Scheduled", "Demo In Progress"] %}
 			<div class="portal-card">
 				<div class="card-head"><h2>Manage</h2></div>
 				<div class="card-body">
@@ -194,7 +240,7 @@
 			</div>
 			{% endif %}
 
-			{% if doc.functional_consultant and doc.status in ["Requested", "Assigned", "Scheduled", "Demo In Progress", "Demo Completed", "Follow-up Required"] %}
+			{% if doc.functional_consultant and doc.status in ["Approved", "Assigned", "Scheduled", "Demo In Progress", "Demo Completed", "Follow-up Required"] %}
 			<div class="portal-card">
 				<div class="card-head">
 					<h2>Quick Actions</h2>
@@ -289,6 +335,13 @@
 						<div class="detail-item"><div class="d-label">Sales Person</div><div class="d-value">{{ doc.sales_person or "-" }}</div></div>
 						<div class="detail-item"><div class="d-label">Functional Consultant</div><div class="d-value">{{ doc.functional_consultant or "-" }}{% if doc.functional_consultant and consultant_names.get(doc.functional_consultant) %} <span class="muted">({{ consultant_names.get(doc.functional_consultant) }})</span>{% endif %}</div></div>
 					</div>
+					{% if doc.approved_by or doc.approval_date or doc.approval_notes %}
+					<div class="detail-grid" style="margin-top: 16px;">
+						<div class="detail-item"><div class="d-label">Approved By</div><div class="d-value">{{ doc.approved_by or "-" }}</div></div>
+						<div class="detail-item"><div class="d-label">Approval Date</div><div class="d-value">{{ doc.approval_date or "-" }}</div></div>
+						<div class="detail-item" style="grid-column: 1 / -1;"><div class="d-label">Approval Notes</div><div class="d-value wrap">{{ doc.approval_notes or "-" }}</div></div>
+					</div>
+					{% endif %}
 				</div>
 			</div>
 
@@ -365,6 +418,23 @@
 	var preLead = document.getElementById("lead").value.trim();
 	if (preLead) fillContact("lead", preLead);
 
+	/* Load a Request Template: pre-fills module, priority, demo type and the
+	   requirement text areas in one click. */
+	var tmplSel = document.getElementById("request-template");
+	if (tmplSel) tmplSel.addEventListener("change", function () {
+		var name = this.value;
+		if (!name) return;
+		portalCall("functional_demo.api.get_request_template", { template: name })
+			.then(function (t) {
+				if (!t) return;
+				if (t.interested_module) document.getElementById("interested_module").value = t.interested_module;
+				if (t.priority) document.getElementById("priority").value = t.priority;
+				if (t.demo_type) document.getElementById("demo_type").value = t.demo_type;
+				if (t.customer_requirements) document.getElementById("customer_requirements").value = t.customer_requirements;
+				if (t.business_process_requirements) document.getElementById("business_process_requirements").value = t.business_process_requirements;
+			});
+	});
+
 	/* The Customer / Lead boxes only accept real records: the value must be one
 	   of the datalist options (picked from the suggestions). A free-typed name
 	   can never match a record, so we check before submitting and explain the
@@ -409,11 +479,17 @@
 			portalAlert("Please select a Functional Consultant to run this demo.", "err");
 			return;
 		}
+		var company = document.getElementById("company") ? document.getElementById("company").value.trim() : "";
+		if (company && !isKnown("companies-list", company)) {
+			portalAlert("Company \"" + company + "\" was not found. Pick a company from the suggestions list, or leave the field empty.", "err");
+			return;
+		}
 		var btn = document.getElementById("btn-create");
 		btn.disabled = true; btn.textContent = "Creating...";
 		portalCall("functional_demo.api.create_demo_request", {
 			customer: customer || null,
 			lead: lead || null,
+			company: company || null,
 			functional_consultant: consultant,
 			contact_person: document.getElementById("contact_person").value,
 			contact_number: document.getElementById("contact_number").value,
@@ -444,7 +520,23 @@
 		if (el) el.style.display = el.style.display === "none" ? "block" : "none";
 	}
 
-	{% if not doc.functional_consultant and doc.status in ["Draft", "Requested"] %}
+	{% if doc.status == "Requested" %}
+	var btnApprove = document.getElementById("btn-approve");
+	var btnReject = document.getElementById("btn-reject");
+	function doApproval(approved) {
+		var btn = approved ? btnApprove : btnReject;
+		btn.disabled = true;
+		portalCall("functional_demo.api.approve_demo_request", {
+			demo_request: DOC_NAME,
+			approve: approved ? 1 : 0,
+			notes: document.getElementById("approval-notes") ? document.getElementById("approval-notes").value : "",
+		}).then(function () { window.location.reload(); }).catch(function () { btn.disabled = false; });
+	}
+	if (btnApprove) btnApprove.addEventListener("click", function () { doApproval(true); });
+	if (btnReject) btnReject.addEventListener("click", function () { doApproval(false); });
+	{% endif %}
+
+	{% if not doc.functional_consultant and doc.status in ["Draft", "Requested", "Approved"] %}
 	document.getElementById("btn-assign").addEventListener("click", function () {
 		var consultant = document.getElementById("assign-consultant").value;
 		if (!consultant) { portalAlert("Please select a consultant.", "err"); return; }
@@ -455,7 +547,7 @@
 	});
 	{% endif %}
 
-	{% if doc.functional_consultant and doc.status in ["Requested", "Assigned", "Scheduled", "Demo In Progress", "Demo Completed", "Follow-up Required"] %}
+	{% if doc.functional_consultant and doc.status in ["Approved", "Assigned", "Scheduled", "Demo In Progress", "Demo Completed", "Follow-up Required"] %}
 	var btnScheduleToggle = document.getElementById("btn-toggle-schedule");
 	var btnSchedule = document.getElementById("btn-schedule");
 	if (btnScheduleToggle) btnScheduleToggle.addEventListener("click", function () { toggle("form-schedule"); });

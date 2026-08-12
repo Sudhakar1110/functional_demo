@@ -44,12 +44,24 @@ def get_context(context):
 			order_by="creation desc",
 			limit_page_length=200,
 		) or []
+		context.companies = frappe.get_all("Company", fields=["name"], order_by="name asc") or []
 		# Functional Consultant is mandatory when creating a demo request
 		context.consultants = frappe.get_all(
 			"Functional Consultant",
 			filters={"status": "Active"},
 			fields=["name", "consultant_name", "specialization", "availability", "experience_years"],
 			order_by="consultant_name asc",
+		) or []
+		# One-click pre-fill: arriving from My Leads (?lead=), a customer
+		# (?customer=) or an ERPNext Opportunity (?opportunity=) pulls the
+		# contact / company details from the CRM record into the form.
+		context.prefill = _lead_opportunity_prefill()
+		# Reusable request templates (industry presets) - Feature: Request Templates
+		context.request_templates = frappe.get_all(
+			"Demo Request Template",
+			filters={"is_active": 1},
+			fields=["name", "template_name"],
+			order_by="template_name asc",
 		) or []
 		return context
 
@@ -70,3 +82,54 @@ def get_context(context):
 	) or []
 	context.consultant_names = {c["name"]: c["consultant_name"] for c in context.consultants}
 	return context
+
+
+def _lead_opportunity_prefill():
+	"""Resolve the party + contact details to pre-fill when the create form is
+	opened from a Lead, a Customer or an Opportunity."""
+	prefill = {
+		"customer": "",
+		"lead": "",
+		"company": "",
+		"contact_person": "",
+		"contact_number": "",
+		"email": "",
+	}
+	opportunity = frappe.form_dict.get("opportunity") or ""
+	lead = frappe.form_dict.get("lead") or ""
+	customer = frappe.form_dict.get("customer") or ""
+
+	if opportunity and frappe.db.exists("Opportunity", opportunity):
+		opp = frappe.db.get_value(
+			"Opportunity",
+			opportunity,
+			["opportunity_from", "party_name", "lead", "contact_person", "contact_email", "contact_mobile", "company"],
+			as_dict=True,
+		)
+		if opp:
+			if opp.get("opportunity_from") == "Lead" and opp.get("lead"):
+				prefill["lead"] = opp.get("lead")
+			elif opp.get("party_name"):
+				prefill["customer"] = opp.get("party_name")
+			if frappe.db.exists("Company", opp.get("company") or ""):
+				prefill["company"] = opp.get("company") or ""
+			if opp.get("contact_person"):
+				prefill["contact_person"] = opp.get("contact_person")
+			if opp.get("contact_email"):
+				prefill["email"] = opp.get("contact_email")
+			if opp.get("contact_mobile"):
+				prefill["contact_number"] = opp.get("contact_mobile")
+	elif lead and frappe.db.exists("Lead", lead):
+		ld = frappe.db.get_value(
+			"Lead", lead, ["lead_name", "email_id", "phone", "mobile_no", "company_name"], as_dict=True
+		)
+		prefill["lead"] = lead
+		if ld:
+			if frappe.db.exists("Company", ld.get("company_name") or ""):
+				prefill["company"] = ld.get("company_name") or ""
+			prefill["contact_number"] = ld.get("mobile_no") or ld.get("phone") or ""
+			prefill["email"] = ld.get("email_id") or ""
+	elif customer and frappe.db.exists("Customer", customer):
+		prefill["customer"] = customer
+
+	return prefill

@@ -3,7 +3,6 @@
 {% block navbar %}{% endblock %}
 {% block footer %}{% endblock %}
 {% block style %}{% include "functional_demo/templates/includes/portal_style.html" %}{% endblock %}
-{% block script %}{% include "functional_demo/templates/includes/portal_script.html" %}{% endblock %}
 {% block content %}
 <div class="portal-layout">
 	<header class="portal-topbar">
@@ -46,6 +45,18 @@
 				<a class="btn-portal" href="/sales_portal/demo_request?new=1">+ New Demo Request</a>
 			</div>
 
+			{% if requests %}
+			<div class="portal-card" style="margin-bottom: 16px;">
+				<div class="card-body" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap; padding: 12px 16px;">
+					<span class="muted" id="bulk-count" style="font-weight: 800;">0 selected</span>
+					<button class="btn-portal secondary sm" id="btn-bulk-assign" disabled>Bulk Assign Consultant</button>
+					<button class="btn-portal secondary sm" id="btn-bulk-reschedule" disabled>Bulk Reschedule</button>
+					<button class="btn-portal sm" id="btn-bulk-export">Export CSV</button>
+					<span class="muted" style="margin-left: auto;">Tick requests to bulk-assign or reschedule them.</span>
+				</div>
+			</div>
+			{% endif %}
+
 			<div class="filter-chips">
 				<a class="filter-chip {% if not status %}active{% endif %}" href="/sales_portal/demo_requests">All</a>
 				{% for s in status_options %}
@@ -59,6 +70,7 @@
 					<table class="table-portal">
 						<thead>
 							<tr>
+								<th style="width: 34px;"><input type="checkbox" id="check-all" title="Select all"></th>
 								<th>Request</th>
 								<th>Party</th>
 								<th>Template</th>
@@ -66,11 +78,13 @@
 								<th>Consultant</th>
 								<th>Preferred Date</th>
 								<th>Status</th>
+								<th>SLA</th>
 							</tr>
 						</thead>
 						<tbody>
 							{% for r in requests %}
 							<tr>
+								<td><input type="checkbox" class="row-check" value="{{ r.name }}"></td>
 								<td><a href="/sales_portal/demo_request?name={{ r.name }}">{{ r.name }}</a></td>
 								<td>{{ r.customer or r.lead or "-" }}</td>
 								<td>{{ r.interested_module or "-" }}</td>
@@ -78,6 +92,7 @@
 								<td>{{ r.functional_consultant or "-" }}</td>
 								<td>{{ r.preferred_demo_date or "-" }}</td>
 								<td><span class="badge b-{{ r.status|lower|replace(' ', '-') }}">{{ r.status }}</span></td>
+								<td>{% if r.sla_breached %}<span class="badge b-sla-breached">Breached</span>{% elif r.sla_due_date %}<span class="chip">{{ r.sla_due_date }}</span>{% else %}-{% endif %}</td>
 							</tr>
 							{% endfor %}
 						</tbody>
@@ -92,8 +107,138 @@
 				</div>
 				{% endif %}
 			</div>
+
+			<div class="portal-modal" id="bulk-assign-modal">
+				<div class="pm-card">
+					<div class="pm-title">Bulk Assign Consultant</div>
+					<p class="pm-msg" style="margin: 0 0 12px;">Assign one consultant to the <span id="bulk-assign-count">0</span> selected request(s). Requests still awaiting approval keep their state.</p>
+					<select id="bulk-consultant" style="width: 100%; margin-bottom: 14px;">
+						<option value="">— Select consultant —</option>
+						{% for c in consultants %}
+						<option value="{{ c.name }}">{{ c.consultant_name }} · {{ c.specialization or 'Generalist' }}</option>
+						{% endfor %}
+					</select>
+					<div style="display: flex; gap: 10px; justify-content: flex-end;">
+						<button class="btn-portal secondary pm-btn" id="bulk-assign-cancel">Cancel</button>
+						<button class="btn-portal pm-btn" id="bulk-assign-go">Assign</button>
+					</div>
+				</div>
+			</div>
+
+			<div class="portal-modal" id="bulk-reschedule-modal">
+				<div class="pm-card">
+					<div class="pm-title">Bulk Reschedule</div>
+					<p class="pm-msg" style="margin: 0 0 12px;">Move the <span id="bulk-resched-count">0</span> selected request(s) to a new preferred date. Any open demo sessions are updated too.</p>
+					<div class="form-row" style="margin-bottom: 14px;">
+						<div><label>New Date <span class="req">*</span></label><input type="date" id="bulk-date"></div>
+						<div><label>Start Time</label><input type="time" id="bulk-time"></div>
+					</div>
+					<div style="display: flex; gap: 10px; justify-content: flex-end;">
+						<button class="btn-portal secondary pm-btn" id="bulk-reschedule-cancel">Cancel</button>
+						<button class="btn-portal pm-btn" id="bulk-reschedule-go">Reschedule</button>
+					</div>
+				</div>
+			</div>
 		</div>
 	</div>
 	</div>
 </div>
+{% endblock %}
+
+{% block script %}
+{% include "functional_demo/templates/includes/portal_script.html" %}
+<script>
+(function () {
+	"use strict";
+	var CURRENT_STATUS = "{{ status }}";
+
+	function selectedNames() {
+		var out = [];
+		document.querySelectorAll(".row-check:checked").forEach(function (cb) { out.push(cb.value); });
+		return out;
+	}
+	function syncBulkBar() {
+		var n = selectedNames().length;
+		var count = document.getElementById("bulk-count");
+		if (count) count.textContent = n + " selected";
+		var assign = document.getElementById("btn-bulk-assign");
+		var resched = document.getElementById("btn-bulk-reschedule");
+		if (assign) assign.disabled = n === 0;
+		if (resched) resched.disabled = n === 0;
+		var aCount = document.getElementById("bulk-assign-count");
+		if (aCount) aCount.textContent = n;
+		var rCount = document.getElementById("bulk-resched-count");
+		if (rCount) rCount.textContent = n;
+	}
+	var checkAll = document.getElementById("check-all");
+	if (checkAll) checkAll.addEventListener("change", function () {
+		document.querySelectorAll(".row-check").forEach(function (cb) { cb.checked = checkAll.checked; });
+		syncBulkBar();
+	});
+	document.querySelectorAll(".row-check").forEach(function (cb) {
+		cb.addEventListener("change", syncBulkBar);
+	});
+	syncBulkBar();
+
+	function openModal(id) { var m = document.getElementById(id); if (m) m.classList.add("show"); }
+	function closeModal(id) { var m = document.getElementById(id); if (m) m.classList.remove("show"); }
+
+	var btnAssign = document.getElementById("btn-bulk-assign");
+	if (btnAssign) btnAssign.addEventListener("click", function () { openModal("bulk-assign-modal"); });
+	var btnResched = document.getElementById("btn-bulk-reschedule");
+	if (btnResched) btnResched.addEventListener("click", function () { openModal("bulk-reschedule-modal"); });
+	var cancelAssign = document.getElementById("bulk-assign-cancel");
+	if (cancelAssign) cancelAssign.addEventListener("click", function () { closeModal("bulk-assign-modal"); });
+	var cancelResched = document.getElementById("bulk-reschedule-cancel");
+	if (cancelResched) cancelResched.addEventListener("click", function () { closeModal("bulk-reschedule-modal"); });
+
+	var goAssign = document.getElementById("bulk-assign-go");
+	if (goAssign) goAssign.addEventListener("click", function () {
+		var consultant = document.getElementById("bulk-consultant").value;
+		var names = selectedNames();
+		if (!consultant) { portalAlert("Please select a consultant.", "err"); return; }
+		if (!names.length) { portalAlert("No demo requests selected.", "err"); return; }
+		goAssign.disabled = true;
+		portalCall("functional_demo.api.bulk_assign_consultant", {
+			requests: JSON.stringify(names),
+			consultant: consultant,
+		}).then(function () { window.location.reload(); })
+			.catch(function () { goAssign.disabled = false; closeModal("bulk-assign-modal"); });
+	});
+
+	var goResched = document.getElementById("bulk-reschedule-go");
+	if (goResched) goResched.addEventListener("click", function () {
+		var date = document.getElementById("bulk-date").value;
+		var names = selectedNames();
+		if (!date) { portalAlert("Please pick a new date.", "err"); return; }
+		if (!names.length) { portalAlert("No demo requests selected.", "err"); return; }
+		goResched.disabled = true;
+		portalCall("functional_demo.api.bulk_reschedule_demo", {
+			requests: JSON.stringify(names),
+			scheduled_date: date,
+			start_time: document.getElementById("bulk-time").value,
+		}).then(function () { window.location.reload(); })
+			.catch(function () { goResched.disabled = false; closeModal("bulk-reschedule-modal"); });
+	});
+
+	var btnExport = document.getElementById("btn-bulk-export");
+	if (btnExport) btnExport.addEventListener("click", function () {
+		btnExport.disabled = true;
+		portalCall("functional_demo.api.export_demo_requests", { status: CURRENT_STATUS })
+			.then(function (csv) {
+				btnExport.disabled = false;
+				if (!csv) { portalAlert("No data to export.", "err"); return; }
+				var blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+				var url = URL.createObjectURL(blob);
+				var a = document.createElement("a");
+				a.href = url;
+				a.download = "demo_requests.csv";
+				document.body.appendChild(a);
+				a.click();
+				setTimeout(function () { URL.revokeObjectURL(url); a.remove(); }, 500);
+			})
+			.catch(function () { btnExport.disabled = false; portalAlert("Export failed. Please try again.", "err"); });
+	});
+})();
+</script>
 {% endblock %}
