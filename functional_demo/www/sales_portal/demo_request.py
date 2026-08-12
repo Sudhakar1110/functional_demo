@@ -43,6 +43,13 @@ def get_context(context):
 			order_by="creation desc",
 			limit_page_length=200,
 		) or []
+		# Functional Consultant is mandatory when creating a demo request
+		context.consultants = frappe.get_all(
+			"Functional Consultant",
+			filters={"status": "Active"},
+			fields=["name", "consultant_name", "specialization", "availability", "experience_years"],
+			order_by="consultant_name asc",
+		) or []
 		return context
 
 	# get_doc applies the app's row-level + document-level permissions automatically

@@ -389,12 +389,19 @@ def get_my_demo_sessions(demo_status=None):
 # ---------------------------------------------------------------------------
 
 @frappe.whitelist()
-def create_demo_request(customer=None, lead=None, company=None, contact_person=None, contact_number=None, email=None, interested_module=None, customer_requirements=None, business_process_requirements=None, priority="Medium", preferred_demo_date=None, preferred_demo_time=None, demo_type=None, sales_remarks=None):
+def create_demo_request(customer=None, lead=None, company=None, contact_person=None, contact_number=None, email=None, interested_module=None, customer_requirements=None, business_process_requirements=None, priority="Medium", preferred_demo_date=None, preferred_demo_time=None, demo_type=None, sales_remarks=None, functional_consultant=None):
 	"""Create a Demo Request from the Sales Portal web form."""
 	from functional_demo.sales_demo.doctype.demo_request.demo_request import change_status
 
 	if not customer and not lead:
 		frappe.throw(_("Please select a Customer or a Lead."), title=_("Missing Party"))
+
+	# Business rule: every demo must be allocated to a Functional Consultant at creation
+	if not functional_consultant:
+		frappe.throw(
+			_("Please select a Functional Consultant to run this demo."),
+			title=_("Consultant Required"),
+		)
 
 	doc = frappe.new_doc("Demo Request")
 	doc.customer = customer
@@ -411,6 +418,7 @@ def create_demo_request(customer=None, lead=None, company=None, contact_person=N
 	doc.preferred_demo_time = preferred_demo_time
 	doc.demo_type = demo_type
 	doc.sales_remarks = sales_remarks
+	doc.functional_consultant = functional_consultant
 	doc.insert()  # respects role permissions; sales_person defaults to the session user
 
 	# move the new request from Draft to Requested

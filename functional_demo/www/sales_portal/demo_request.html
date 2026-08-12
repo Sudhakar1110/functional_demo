@@ -50,29 +50,40 @@
 				</div>
 				<div class="card-body">
 					<form class="portal-form" id="dr-form">
-						<div class="form-row">
-							<div>
-								<label>Customer <span class="form-hint">(choose one)</span></label>
-								<input type="text" id="customer" name="customer" list="customers-list" placeholder="Type to search customers...">
-								<datalist id="customers-list">
-									{% for c in customers %}<option value="{{ c.name }}">{{ c.customer_name }}</option>{% endfor %}
-								</datalist>
-							</div>
-							<div>
-								<label>Lead <span class="form-hint">(or choose a lead instead)</span></label>
-								<input type="text" id="lead" name="lead" list="leads-list" placeholder="Type to search leads..." value="{{ lead_param }}">
-								<datalist id="leads-list">
-									{% for l in leads %}<option value="{{ l.name }}">{{ l.lead_name }} ({{ l.company_name or 'no company' }})</option>{% endfor %}
-								</datalist>
-							</div>
+					<div class="form-row">
+						<div>
+							<label>Customer <span class="form-hint">(choose one)</span></label>
+							<input type="text" id="customer" name="customer" list="customers-list" placeholder="Type to search customers...">
+							<datalist id="customers-list">
+								{% for c in customers %}<option value="{{ c.name }}">{{ c.customer_name }}</option>{% endfor %}
+							</datalist>
 						</div>
-						<div class="form-row">
-							<div><label>Contact Person</label><input type="text" id="contact_person" name="contact_person"></div>
-							<div><label>Contact Number</label><input type="text" id="contact_number" name="contact_number"></div>
+						<div>
+							<label>Lead <span class="form-hint">(or choose a lead instead)</span></label>
+							<input type="text" id="lead" name="lead" list="leads-list" placeholder="Type to search leads..." value="{{ lead_param }}">
+							<datalist id="leads-list">
+								{% for l in leads %}<option value="{{ l.name }}">{{ l.lead_name }} ({{ l.company_name or 'no company' }})</option>{% endfor %}
+							</datalist>
 						</div>
+					</div>
+					<div class="form-row">
+						<div>
+							<label>Functional Consultant <span class="req">*</span></label>
+							<select id="functional_consultant" name="functional_consultant">
+								<option value="">— Select consultant —</option>
+								{% for c in consultants %}
+								<option value="{{ c.name }}">{{ c.consultant_name }} · {{ c.specialization or 'Generalist' }} · {{ c.availability }}{% if c.experience_years %} · {{ c.experience_years }} yrs exp{% endif %}</option>
+								{% endfor %}
+							</select>
+						</div>
+						<div><label>Contact Person</label><input type="text" id="contact_person" name="contact_person"></div>
+					</div>
+					<div class="form-row">
+						<div><label>Contact Number</label><input type="text" id="contact_number" name="contact_number"></div>
+						<div><label>Email</label><input type="email" id="email" name="email"></div>
+					</div>
 						<div class="form-row">
-							<div><label>Email</label><input type="email" id="email" name="email"></div>
-							<div><label>Interested Product / Module</label>
+							<div style="grid-column: 1 / -1;"><label>Interested Product / Module</label>
 								<select id="interested_module" name="interested_module">
 									{% for m in modules %}<option value="{{ m }}">{{ m or "— Select —" }}</option>{% endfor %}
 								</select>
@@ -319,8 +330,13 @@
 		e.preventDefault();
 		var customer = document.getElementById("customer").value.trim();
 		var lead = document.getElementById("lead").value.trim();
+		var consultant = document.getElementById("functional_consultant").value;
 		if (!customer && !lead) {
 			portalAlert("Please select a Customer or a Lead.", "err");
+			return;
+		}
+		if (!consultant) {
+			portalAlert("Please select a Functional Consultant to run this demo.", "err");
 			return;
 		}
 		var btn = document.getElementById("btn-create");
@@ -328,6 +344,7 @@
 		portalCall("functional_demo.api.create_demo_request", {
 			customer: customer || null,
 			lead: lead || null,
+			functional_consultant: consultant,
 			contact_person: document.getElementById("contact_person").value,
 			contact_number: document.getElementById("contact_number").value,
 			email: document.getElementById("email").value,
