@@ -34,6 +34,23 @@ def after_migrate():
 	records introduced by later versions of the app (e.g. the 'Approved'
 	Workflow State). All steps are idempotent."""
 	create_workflow_states()
+	backfill_consultant_statuses()
+
+
+def backfill_consultant_statuses():
+	"""One-time data fix: consultants created before the status field had a
+	default (or via a path that never set it) end up with an EMPTY status,
+	which hides them from every 'Active consultants' list in the portal (the
+	dropdown filters status = Active). Set empty statuses to Active so existing
+	consultants become selectable again."""
+	if not frappe.db.exists("DocType", "Functional Consultant"):
+		return
+	frappe.db.sql(
+		"""update `tabFunctional Consultant`
+		set status = 'Active'
+		where ifnull(status, '') = ''"""
+	)
+	frappe.db.commit()
 
 
 def create_roles():
