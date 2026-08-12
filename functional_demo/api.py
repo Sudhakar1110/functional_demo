@@ -20,8 +20,12 @@ from functional_demo.sales_demo.doctype.demo_session.demo_session import (
 # ---------------------------------------------------------------------------
 
 @frappe.whitelist()
-def get_customer_details(customer):
-	"""Auto-fetch primary contact details for a Customer."""
+def get_customer_details(customer=None):
+	"""Auto-fetch primary contact details for a Customer.
+
+	The argument is optional so a client that fires the call without a value
+	(e.g. a stale bundle or an empty field change) gets an empty dict instead
+	of a TypeError 500."""
 	if not customer:
 		return {}
 	contact = get_primary_contact("Customer", customer)
@@ -41,8 +45,12 @@ def get_customer_details(customer):
 
 
 @frappe.whitelist()
-def get_lead_details(lead):
-	"""Auto-fetch details for a Lead."""
+def get_lead_details(lead=None):
+	"""Auto-fetch details for a Lead.
+
+	The argument is optional so a client that fires the call without a value
+	(e.g. a stale bundle or an empty field change) gets an empty dict instead
+	of a TypeError 500."""
 	if not lead:
 		return {}
 	lead_doc = frappe.db.get_value(
@@ -119,7 +127,7 @@ def get_available_consultants(module=None, include_inactive=0):
 
 
 @frappe.whitelist()
-def get_consultant_templates(consultant):
+def get_consultant_templates(consultant=None):
 	"""List active demo templates belonging to a Functional Consultant."""
 	if not consultant:
 		return []

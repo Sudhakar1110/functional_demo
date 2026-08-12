@@ -326,6 +326,11 @@
 		fillContact("lead", this.value);
 	});
 
+	/* Arrived from My Leads with a lead pre-selected (?lead=...) - auto-fill
+	   the contact details right away instead of waiting for a change event. */
+	var preLead = document.getElementById("lead").value.trim();
+	if (preLead) fillContact("lead", preLead);
+
 	document.getElementById("dr-form").addEventListener("submit", function (e) {
 		e.preventDefault();
 		var customer = document.getElementById("customer").value.trim();
