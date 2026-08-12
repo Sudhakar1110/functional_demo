@@ -418,8 +418,28 @@ def create_demo_request(customer=None, lead=None, company=None, contact_person=N
 	"""Create a Demo Request from the Sales Portal web form."""
 	from functional_demo.sales_demo.doctype.demo_request.demo_request import change_status
 
+	# A party (customer or lead) is required - the demo is for someone.
+	# The message tells the user exactly what to do so the popup is never cryptic.
 	if not customer and not lead:
-		frappe.throw(_("Please select a Customer or a Lead."), title=_("Missing Party"))
+		frappe.throw(
+			_("Please select a Customer or a Lead before creating the demo request. "
+			  "Type in the Customer (or Lead) box and pick a suggestion from the list, then try again."),
+			title=_("Customer or Lead Required"),
+		)
+
+	# The party must be a real record - a free-typed name is not enough.
+	if customer and not frappe.db.exists("Customer", customer):
+		frappe.throw(
+			_("Customer \"{0}\" was not found. Please pick a customer from the suggestions list.").format(
+				customer
+			),
+			title=_("Customer Not Found"),
+		)
+	if lead and not frappe.db.exists("Lead", lead):
+		frappe.throw(
+			_("Lead \"{0}\" was not found. Please pick a lead from the suggestions list.").format(lead),
+			title=_("Lead Not Found"),
+		)
 
 	# Business rule: every demo must be allocated to a Functional Consultant at creation
 	if not functional_consultant:

@@ -52,15 +52,15 @@
 					<form class="portal-form" id="dr-form">
 					<div class="form-row">
 						<div>
-							<label>Customer <span class="form-hint">(choose one)</span></label>
-							<input type="text" id="customer" name="customer" list="customers-list" placeholder="Type to search customers...">
+							<label>Customer <span class="req">*</span> <span class="form-hint">(pick from suggestions)</span></label>
+							<input type="text" id="customer" name="customer" list="customers-list" placeholder="Type &amp; pick a customer..." autocomplete="off">
 							<datalist id="customers-list">
 								{% for c in customers %}<option value="{{ c.name }}">{{ c.customer_name }}</option>{% endfor %}
 							</datalist>
 						</div>
 						<div>
-							<label>Lead <span class="form-hint">(or choose a lead instead)</span></label>
-							<input type="text" id="lead" name="lead" list="leads-list" placeholder="Type to search leads..." value="{{ lead_param }}">
+							<label>Lead <span class="req">*</span> <span class="form-hint">(or pick a lead instead)</span></label>
+							<input type="text" id="lead" name="lead" list="leads-list" placeholder="Type &amp; pick a lead..." value="{{ lead_param }}" autocomplete="off">
 							<datalist id="leads-list">
 								{% for l in leads %}<option value="{{ l.name }}">{{ l.lead_name }} ({{ l.company_name or 'no company' }})</option>{% endfor %}
 							</datalist>
@@ -331,13 +331,44 @@
 	var preLead = document.getElementById("lead").value.trim();
 	if (preLead) fillContact("lead", preLead);
 
+	/* The Customer / Lead boxes only accept real records: the value must be one
+	   of the datalist options (picked from the suggestions). A free-typed name
+	   can never match a record, so we check before submitting and explain the
+	   exact problem in the popup instead of a cryptic server error. */
+	function hasOptions(listId) {
+		var dl = document.getElementById(listId);
+		return !!(dl && dl.querySelector("option"));
+	}
+	function isKnown(listId, value) {
+		var dl = document.getElementById(listId);
+		if (!dl) return false;
+		var opts = dl.querySelectorAll("option");
+		for (var i = 0; i < opts.length; i++) {
+			if (opts[i].value === value) return true;
+		}
+		return false;
+	}
+
 	document.getElementById("dr-form").addEventListener("submit", function (e) {
 		e.preventDefault();
 		var customer = document.getElementById("customer").value.trim();
 		var lead = document.getElementById("lead").value.trim();
 		var consultant = document.getElementById("functional_consultant").value;
+
+		if (!hasOptions("customers-list") && !hasOptions("leads-list")) {
+			portalAlert("No Customers or Leads exist in your system yet. Create at least one Customer (or Lead) in ERPNext first - or ask your administrator - before creating a demo request.", "err");
+			return;
+		}
 		if (!customer && !lead) {
-			portalAlert("Please select a Customer or a Lead.", "err");
+			portalAlert("Please select a Customer or a Lead before creating the demo request. Type in the Customer (or Lead) box and pick a suggestion from the list, then try again.", "err");
+			return;
+		}
+		if (customer && !isKnown("customers-list", customer)) {
+			portalAlert("Customer \"" + customer + "\" was not found. Please pick a customer from the suggestions list.", "err");
+			return;
+		}
+		if (lead && lead !== preLead && !isKnown("leads-list", lead)) {
+			portalAlert("Lead \"" + lead + "\" was not found. Please pick a lead from the suggestions list.", "err");
 			return;
 		}
 		if (!consultant) {
