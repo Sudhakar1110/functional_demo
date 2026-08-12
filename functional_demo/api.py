@@ -986,6 +986,11 @@ def create_consultant_profile(user=None, consultant_name=None, specialization=No
 	500 from the framework."""
 	_guard_consultant_manager()
 	if not user:
+		# Belt & braces: a stale cached page may fire this API without a value.
+		# The 'Link my user' button links the person who is clicking, so fall
+		# back to the session user instead of showing an error popup.
+		user = frappe.session.user
+	if not user:
 		frappe.throw(
 			_("Please select a user to link, then try again. If the page is stale, refresh it (Ctrl+Shift+R) and retry."),
 			title=_("User Required"),
