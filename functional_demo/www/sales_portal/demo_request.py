@@ -7,9 +7,10 @@ from frappe import _
 from functional_demo.portal import portal_context
 
 MODULES = [
-	"", "Accounting", "CRM", "Selling", "Buying", "Stock", "Manufacturing",
-	"HR & Payroll", "Projects", "Healthcare", "Education", "Agriculture",
-	"Custom Application",
+	"", "Law Management", "Hospitality", "Medical Store", "Retail & Supermarket",
+	"Manufacturing", "Education", "Healthcare", "Real Estate", "Logistics & Transport",
+	"Agriculture", "IT Services", "Banking & Finance", "Food & Beverage",
+	"Construction", "Energy & Utilities", "Other",
 ]
 PRIORITIES = ["Low", "Medium", "High", "Critical"]
 DEMO_TYPES = ["Standard Demo", "Customized Demo", "Walkthrough", "Deep Dive", "Follow-up Demo"]

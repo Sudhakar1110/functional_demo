@@ -192,7 +192,7 @@ def setup_demo_data(verbose=True):
 	req = _make_request(
 		created,
 		customer=customer_by_name["Aurora Foods"].name,
-		module="HR & Payroll",
+		module="Food & Beverage",
 		priority="Medium",
 		requirements="Evaluate payroll processing and leave management for ~120 employees.",
 		preferred_days=12,
@@ -213,7 +213,7 @@ def setup_demo_data(verbose=True):
 	req = _make_request(
 		created,
 		customer=customer_by_name["Acme Industries"].name,
-		module="Accounting",
+		module="Banking & Finance",
 		priority="High",
 		consultant=consultant_by_name["Rahul Kumar"],
 		requirements="Need a single system for invoicing, bank reconciliation and GST returns across 2 companies.",
@@ -226,7 +226,7 @@ def setup_demo_data(verbose=True):
 	req = _make_request(
 		created,
 		customer=customer_by_name["Globex Ltd"].name,
-		module="Selling",
+		module="Retail & Supermarket",
 		priority="Medium",
 		consultant=consultant_by_name["Priya Sharma"],
 		requirements="Looking for a full sales cycle solution - quotations, orders, delivery and billing.",
@@ -247,7 +247,7 @@ def setup_demo_data(verbose=True):
 	req = _make_request(
 		created,
 		customer=customer_by_name["Initech Corp"].name,
-		module="Stock",
+		module="Logistics & Transport",
 		priority="High",
 		consultant=consultant_by_name["Arun Patel"],
 		requirements="Inventory control across 3 warehouses with barcode scanning.",
@@ -278,7 +278,7 @@ def setup_demo_data(verbose=True):
 	req = _make_request(
 		created,
 		customer=customer_by_name["Umbrella Labs"].name,
-		module="Accounting",
+		module="Banking & Finance",
 		priority="Critical",
 		consultant=consultant_by_name["Rahul Kumar"],
 		requirements="Urgent: GST migration for the next quarter. Existing data in Tally needs to be migrated.",
@@ -313,7 +313,7 @@ def setup_demo_data(verbose=True):
 	req = _make_request(
 		created,
 		customer=customer_by_name["Stark Industries"].name,
-		module="CRM",
+		module="IT Services",
 		priority="Medium",
 		consultant=consultant_by_name["Priya Sharma"],
 		requirements="Central CRM to consolidate leads from marketing and sales.",

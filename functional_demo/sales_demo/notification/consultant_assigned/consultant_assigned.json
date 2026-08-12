@@ -11,7 +11,7 @@
  "event": "Value Change",
  "idx": 0,
  "is_standard": 1,
- "message": "<h4>{{ _(\"Demo Request Assigned to You\") }}</h4><p>{{ _(\"Demo Request {0} for\") }} <b>{{ doc.customer or doc.lead }}</b> {{ _(\"has been assigned to you.\") }}</p><ul><li>{{ _(\"Interested Module\") }}: {{ doc.interested_module or \"-\" }}</li><li>{{ _(\"Priority\") }}: {{ doc.priority }}</li><li>{{ _(\"Preferred Demo Date\") }}: {{ doc.preferred_demo_date or \"-\" }}</li></ul><p>{{ _(\"Please review the customer requirements and confirm your availability.\") }}</p><p>{{ frappe.utils.get_link_to_form(\"Demo Request\", doc.name, _(\"Open Demo Request\")) }}</p>",
+ "message": "<h4>{{ _(\"Demo Request Assigned to You\") }}</h4><p>{{ _(\"Demo Request {0} for\") }} <b>{{ doc.customer or doc.lead }}</b> {{ _(\"has been assigned to you.\") }}</p><ul><li>{{ _(\"Interested Template\") }}: {{ doc.interested_module or \"-\" }}</li><li>{{ _(\"Priority\") }}: {{ doc.priority }}</li><li>{{ _(\"Preferred Demo Date\") }}: {{ doc.preferred_demo_date or \"-\" }}</li></ul><p>{{ _(\"Please review the customer requirements and confirm your availability.\") }}</p><p>{{ frappe.utils.get_link_to_form(\"Demo Request\", doc.name, _(\"Open Demo Request\")) }}</p>",
  "message_type": "HTML",
  "modified": "2026-08-11 10:00:00.000000",
  "modified_by": "Administrator",

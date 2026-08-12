@@ -105,8 +105,8 @@
    "fieldname": "interested_module",
    "fieldtype": "Select",
    "in_standard_filter": 1,
-   "label": "Interested Product / Module",
-   "options": "\nAccounting\nCRM\nSelling\nBuying\nStock\nManufacturing\nHR & Payroll\nProjects\nHealthcare\nEducation\nAgriculture\nCustom Application"
+   "label": "Interested Template",
+   "options": "\nLaw Management\nHospitality\nMedical Store\nRetail & Supermarket\nManufacturing\nEducation\nHealthcare\nReal Estate\nLogistics & Transport\nAgriculture\nIT Services\nBanking & Finance\nFood & Beverage\nConstruction\nEnergy & Utilities\nOther"
   },
   {
    "fieldname": "customer_requirements",

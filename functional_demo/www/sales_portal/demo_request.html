@@ -83,7 +83,7 @@
 						<div><label>Email</label><input type="email" id="email" name="email"></div>
 					</div>
 						<div class="form-row">
-							<div style="grid-column: 1 / -1;"><label>Interested Product / Module</label>
+							<div style="grid-column: 1 / -1;"><label>Interested Template</label>
 								<select id="interested_module" name="interested_module">
 									{% for m in modules %}<option value="{{ m }}">{{ m or "— Select —" }}</option>{% endfor %}
 								</select>
@@ -236,7 +236,7 @@
 				<div class="card-head"><h2>Requirements &amp; Demo Planning</h2></div>
 				<div class="card-body">
 					<div class="detail-grid">
-						<div class="detail-item"><div class="d-label">Interested Module</div><div class="d-value">{{ doc.interested_module or "-" }}</div></div>
+						<div class="detail-item"><div class="d-label">Interested Template</div><div class="d-value">{{ doc.interested_module or "-" }}</div></div>
 						<div class="detail-item"><div class="d-label">Demo Type</div><div class="d-value">{{ doc.demo_type or "-" }}</div></div>
 						<div class="detail-item"><div class="d-label">Preferred Date</div><div class="d-value">{{ doc.preferred_demo_date or "-" }}</div></div>
 						<div class="detail-item"><div class="d-label">Preferred Time</div><div class="d-value">{{ doc.preferred_demo_time or "-" }}</div></div>

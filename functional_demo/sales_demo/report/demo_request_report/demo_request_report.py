@@ -12,7 +12,7 @@ def execute(filters=None):
 		{"label": _("Customer"), "fieldname": "customer", "fieldtype": "Link", "options": "Customer", "width": 160},
 		{"label": _("Lead"), "fieldname": "lead", "fieldtype": "Link", "options": "Lead", "width": 130},
 		{"label": _("Sales Person"), "fieldname": "sales_person", "fieldtype": "Link", "options": "User", "width": 130},
-		{"label": _("Module"), "fieldname": "interested_module", "fieldtype": "Data", "width": 120},
+		{"label": _("Template"), "fieldname": "interested_module", "fieldtype": "Data", "width": 140},
 		{"label": _("Priority"), "fieldname": "priority", "fieldtype": "Data", "width": 80},
 		{"label": _("Consultant"), "fieldname": "functional_consultant", "fieldtype": "Link", "options": "Functional Consultant", "width": 150},
 		{"label": _("Status"), "fieldname": "status", "fieldtype": "Data", "width": 120},

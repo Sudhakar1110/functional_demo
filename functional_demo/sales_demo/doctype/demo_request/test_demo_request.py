@@ -19,7 +19,7 @@ def make_demo_request(customer=None, lead=None, **kwargs):
 		doc.customer = customer
 	if lead:
 		doc.lead = lead
-	doc.interested_module = "Accounting"
+	doc.interested_module = "Law Management"
 	doc.priority = "High"
 	doc.update(kwargs)
 	doc.insert(ignore_permissions=True)
