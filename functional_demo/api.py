@@ -144,8 +144,16 @@ def get_consultant_templates(consultant=None):
 # ---------------------------------------------------------------------------
 
 @frappe.whitelist()
-def schedule_demo(demo_request, scheduled_date, start_time=None, end_time=None, meeting_link=None):
-	"""Schedule (or reschedule) a demo for a Demo Request and create a Demo Session."""
+def schedule_demo(demo_request=None, scheduled_date=None, start_time=None, end_time=None, meeting_link=None):
+	"""Schedule (or reschedule) a demo for a Demo Request and create a Demo Session.
+
+	Arguments are optional so a client that fires the call without a value gets
+	a clear popup instead of a TypeError 500."""
+	if not demo_request:
+		frappe.throw(
+			_("Demo Request is missing. Please refresh the page and try again."),
+			title=_("Missing Request"),
+		)
 	if not scheduled_date:
 		frappe.throw(_("Please select a scheduled date."))
 
@@ -212,8 +220,16 @@ def schedule_demo(demo_request, scheduled_date, start_time=None, end_time=None, 
 
 
 @frappe.whitelist()
-def create_demo_follow_up(demo_request, follow_up_date, next_action=None, assigned_to=None):
-	"""Create a Demo Follow Up record + ToDo for a Demo Request."""
+def create_demo_follow_up(demo_request=None, follow_up_date=None, next_action=None, assigned_to=None):
+	"""Create a Demo Follow Up record + ToDo for a Demo Request.
+
+	Arguments are optional so a client that fires the call without a value gets
+	a clear popup instead of a TypeError 500."""
+	if not demo_request:
+		frappe.throw(
+			_("Demo Request is missing. Please refresh the page and try again."),
+			title=_("Missing Request"),
+		)
 	if not follow_up_date:
 		frappe.throw(_("Please select a follow-up date."))
 
@@ -240,8 +256,18 @@ def create_demo_follow_up(demo_request, follow_up_date, next_action=None, assign
 
 
 @frappe.whitelist()
-def set_demo_result(demo_request, result):
-	"""Set the final result on a Demo Request (Converted / Not Interested / Closed)."""
+def set_demo_result(demo_request=None, result=None):
+	"""Set the final result on a Demo Request (Converted / Not Interested / Closed).
+
+	Arguments are optional so a client that fires the call without a value gets
+	a clear popup instead of a TypeError 500."""
+	if not demo_request:
+		frappe.throw(
+			_("Demo Request is missing. Please refresh the page and try again."),
+			title=_("Missing Request"),
+		)
+	if not result:
+		frappe.throw(_("Please choose a result (Converted / Not Interested / Closed)."))
 	allowed = ["Converted", "Not Interested", "Closed"]
 	if result not in allowed:
 		frappe.throw(_("Invalid result. Choose from {0}.").format(", ".join(allowed)))
@@ -258,14 +284,29 @@ def set_demo_result(demo_request, result):
 # ---------------------------------------------------------------------------
 
 def _get_session(name):
+	"""Fetch a Demo Session for a write action, with a friendly error when the
+	name is missing (so a stale client can never raise a TypeError 500)."""
+	if not name:
+		frappe.throw(
+			_("Demo Session is missing. Please refresh the page and try again."),
+			title=_("Missing Session"),
+		)
 	ds = frappe.get_doc("Demo Session", name)
 	frappe.has_permission("Demo Session", "write", doc=ds, throw=True)
 	return ds
 
 
 @frappe.whitelist()
-def get_demo_execution_data(demo_session):
-	"""Load everything the consultant needs for the demo on a single screen."""
+def get_demo_execution_data(demo_session=None):
+	"""Load everything the consultant needs for the demo on a single screen.
+
+	The argument is optional so a client that fires the call without a value
+	gets a clear popup instead of a TypeError 500."""
+	if not demo_session:
+		frappe.throw(
+			_("Demo Session is missing. Please refresh the page and try again."),
+			title=_("Missing Session"),
+		)
 	ds = frappe.get_doc("Demo Session", demo_session)
 	frappe.has_permission("Demo Session", "read", doc=ds, throw=True)
 
@@ -337,7 +378,7 @@ def get_demo_execution_data(demo_session):
 
 
 @frappe.whitelist()
-def start_demo_session(demo_session):
+def start_demo_session(demo_session=None):
 	ds = _get_session(demo_session)
 	ds.start_demo()
 	frappe.msgprint(_("Demo Session {0} started. Good luck!").format(ds.name))
@@ -345,7 +386,7 @@ def start_demo_session(demo_session):
 
 
 @frappe.whitelist()
-def complete_demo_session(demo_session, feedback=None):
+def complete_demo_session(demo_session=None, feedback=None):
 	"""Complete a demo and record customer feedback."""
 	ds = _get_session(demo_session)
 	ds.complete_demo(feedback or {})
@@ -357,7 +398,7 @@ def complete_demo_session(demo_session, feedback=None):
 
 
 @frappe.whitelist()
-def cancel_demo_session(demo_session, reason=None):
+def cancel_demo_session(demo_session=None, reason=None):
 	ds = _get_session(demo_session)
 	ds.cancel_demo(reason)
 	frappe.msgprint(_("Demo Session {0} cancelled.").format(ds.name))
@@ -365,7 +406,7 @@ def cancel_demo_session(demo_session, reason=None):
 
 
 @frappe.whitelist()
-def reschedule_demo_session(demo_session, scheduled_date, start_time=None, end_time=None, meeting_link=None):
+def reschedule_demo_session(demo_session=None, scheduled_date=None, start_time=None, end_time=None, meeting_link=None):
 	if not scheduled_date:
 		frappe.throw(_("Please select a new date."))
 	ds = _get_session(demo_session)
@@ -375,7 +416,7 @@ def reschedule_demo_session(demo_session, scheduled_date, start_time=None, end_t
 
 
 @frappe.whitelist()
-def create_follow_up_from_session(demo_session, follow_up_date, next_action=None, assigned_to=None):
+def create_follow_up_from_session(demo_session=None, follow_up_date=None, next_action=None, assigned_to=None):
 	"""Create a follow-up directly from a completed demo session."""
 	if not follow_up_date:
 		frappe.throw(_("Please select a follow-up date."))
@@ -386,8 +427,13 @@ def create_follow_up_from_session(demo_session, follow_up_date, next_action=None
 
 
 @frappe.whitelist()
-def set_session_final_result(demo_session, result):
-	"""Close a demo session with a final result (Converted / Not Interested / Closed / Pending)."""
+def set_session_final_result(demo_session=None, result=None):
+	"""Close a demo session with a final result (Converted / Not Interested / Closed / Pending).
+
+	Arguments are optional so a client that fires the call without a value gets
+	a clear popup instead of a TypeError 500."""
+	if not result:
+		frappe.throw(_("Please choose a final result."))
 	ds = _get_session(demo_session)
 	ds.set_final_result(result)
 	frappe.msgprint(_("Demo Session {0} marked as {1}.").format(ds.name, result))
@@ -486,9 +532,17 @@ def create_demo_request(customer=None, lead=None, company=None, contact_person=N
 
 
 @frappe.whitelist()
-def assign_consultant(demo_request, consultant):
+def assign_consultant(demo_request=None, consultant=None):
 	"""Assign (or reassign) a Functional Consultant on a Demo Request and move
-	the workflow to 'Assigned' when the request is still in its early stages."""
+	the workflow to 'Assigned' when the request is still in its early stages.
+
+	Both arguments are optional so a client that fires the call without a value
+	gets a clear popup instead of a TypeError 500."""
+	if not demo_request:
+		frappe.throw(
+			_("Demo Request is missing. Please refresh the page and try again."),
+			title=_("Missing Request"),
+		)
 	if not consultant:
 		frappe.throw(_("Please select a Functional Consultant."))
 
@@ -566,12 +620,19 @@ def get_unlinked_users():
 
 
 @frappe.whitelist()
-def create_consultant_profile(user, consultant_name=None, specialization=None):
+def create_consultant_profile(user=None, consultant_name=None, specialization=None):
 	"""One-click: create a Functional Consultant profile linked to a User.
-	The doctype's on_update hook grants the Functional Consultant role."""
+	The doctype's on_update hook grants the Functional Consultant role.
+
+	The user argument is optional so a client that fires the call without a
+	value (e.g. a stale cached page) gets a clear popup instead of a TypeError
+	500 from the framework."""
 	_guard_consultant_manager()
 	if not user:
-		frappe.throw(_("Please select a user to link."))
+		frappe.throw(
+			_("Please select a user to link, then try again. If the page is stale, refresh it (Ctrl+Shift+R) and retry."),
+			title=_("User Required"),
+		)
 	if user in ("Guest", "Administrator"):
 		frappe.throw(_("This user cannot be linked to a consultant profile."))
 	if not frappe.db.exists("User", user):
@@ -607,9 +668,17 @@ def create_consultant_profile(user, consultant_name=None, specialization=None):
 
 
 @frappe.whitelist()
-def update_follow_up(follow_up, status=None, outcome=None, remarks=None, next_action=None, discussion_note=None):
+def update_follow_up(follow_up=None, status=None, outcome=None, remarks=None, next_action=None, discussion_note=None):
 	"""Update a Demo Follow Up from the portal: complete it, record the outcome,
-	and optionally append a discussion note (creates a Follow Up Note row)."""
+	and optionally append a discussion note (creates a Follow Up Note row).
+
+	The argument is optional so a client that fires the call without a value
+	gets a clear popup instead of a TypeError 500."""
+	if not follow_up:
+		frappe.throw(
+			_("Follow-up is missing. Please refresh the page and try again."),
+			title=_("Missing Follow-up"),
+		)
 	doc = frappe.get_doc("Demo Follow Up", follow_up)
 	frappe.has_permission("Demo Follow Up", "write", doc=doc, throw=True)
 

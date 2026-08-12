@@ -34,6 +34,10 @@
 		listEl.querySelectorAll("button[data-link]").forEach(function (btn) {
 			btn.addEventListener("click", function () {
 				var user = btn.getAttribute("data-link");
+				if (!user) {
+					portalAlert("Could not read the selected user. Please refresh the page (Ctrl+Shift+R) and try again.", "err");
+					return;
+				}
 				var original = btn.textContent;
 				btn.disabled = true;
 				btn.textContent = "Linking...";
