@@ -891,7 +891,7 @@ def create_demo_request(customer=None, lead=None, company=None, contact_person=N
 	# Business rule: every demo must be allocated to a Functional Consultant at creation
 	if not functional_consultant:
 		frappe.throw(
-			_("Please select a Functional Consultant to run this demo."),
+			_("Please select a Functional Consultant to run this demo. If you picked one and still see this message, close this tab and open a fresh one (Ctrl+Shift+R) - a stale page can submit without the consultant value."),
 			title=_("Consultant Required"),
 		)
 

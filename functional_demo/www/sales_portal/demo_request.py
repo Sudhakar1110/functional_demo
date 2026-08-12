@@ -4,7 +4,7 @@
 import frappe
 from frappe import _
 
-from functional_demo.portal import portal_context
+from functional_demo.portal import consultant_of_user, portal_context
 
 MODULES = [
 	"", "Law Management", "Hospitality", "Medical Store", "Retail & Supermarket",
@@ -46,10 +46,23 @@ def get_context(context):
 		) or []
 		context.companies = frappe.get_all("Company", fields=["name"], order_by="name asc") or []
 		# Functional Consultant is mandatory when creating a demo request
+		# If the current user is Administrator, make sure at least one consultant
+		# record exists (the auto-created admin profile) so the dropdown is never
+		# empty for the site admin - a common cause of the recurring
+		# 'Consultant Required' error when testing the portal.
+		consultant_of_user()  # side effect: auto-creates the Administrator profile
+
 		context.consultants = frappe.get_all(
 			"Functional Consultant",
 			filters=[["status", "not in", ["Inactive", None]]],
 			fields=["name", "consultant_name", "specialization", "availability", "experience_years"],
+			order_by="consultant_name asc",
+		) or []
+		# Diagnostic: every consultant record (incl. Inactive / no status) so the
+		# form can show exactly what the portal sees when the dropdown is empty
+		context.consultant_diag = frappe.get_all(
+			"Functional Consultant",
+			fields=["name", "consultant_name", "status"],
 			order_by="consultant_name asc",
 		) or []
 		# One-click pre-fill: arriving from My Leads (?lead=), a customer
