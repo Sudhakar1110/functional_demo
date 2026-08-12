@@ -42,9 +42,42 @@ def can_manage_consultants(user=None):
 
 
 def consultant_of_user(user=None):
-	"""Functional Consultant record linked to the current user."""
+	"""Functional Consultant record linked to the current user.
+
+	Administrator gets a consultant profile auto-created on first access so the
+	whole portal (template editor, My Templates, My Sessions, …) works right
+	away for the site admin — no manual ERPNext setup needed to test."""
 	user = user or frappe.session.user
-	return frappe.db.get_value("Functional Consultant", {"user": user}, "name")
+	name = frappe.db.get_value("Functional Consultant", {"user": user}, "name")
+	if name:
+		return name
+	if user == "Administrator":
+		return _ensure_admin_consultant()
+	return None
+
+
+def _ensure_admin_consultant():
+	"""Idempotently create a Functional Consultant record for Administrator."""
+	existing = frappe.db.get_value("Functional Consultant", {"user": "Administrator"}, "name")
+	if existing:
+		return existing
+	try:
+		doc = frappe.new_doc("Functional Consultant")
+		doc.consultant_name = "Administrator"
+		doc.user = "Administrator"
+		doc.specialization = "Custom Application"
+		doc.status = "Active"
+		doc.availability = "Available"
+		doc.insert(ignore_permissions=True)
+		return doc.name
+	except Exception:
+		# never break the portal if auto-creation fails - fall back to the
+		# normal guard screen (with the one-click 'Link my user' button)
+		frappe.log_error(
+			title=_("Could not auto-create Administrator consultant profile"),
+			message=frappe.get_traceback(),
+		)
+		return None
 
 
 def guard(required_roles):
