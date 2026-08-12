@@ -5,11 +5,13 @@
 (function () {
 	"use strict";
 
-	/* Frappe injects the CSRF token as <script>frappe.csrf_token = "…"</script>
-	   near the END of the page body (after our portal scripts). If portalCall is
-	   invoked before that script runs, the token is empty and Frappe rejects the
-	   request with 'Invalid Request'. So: read the token synchronously when it
-	   exists, otherwise wait until the DOM (and the injected token) is ready. */
+	/* Frappe injects the CSRF token as a small inline script (frappe.csrf_token =
+	   "…") near the END of the page body, after our portal scripts. If portalCall
+	   is invoked before that script runs, the token is empty and Frappe rejects
+	   the request with 'Invalid Request'. So: read the token synchronously when
+	   it exists, otherwise wait until the DOM (and the injected token) is ready.
+	   NOTE: never write a literal closing script tag inside this comment - the
+	   browser would end this script block there and print the rest as text. */
 	function csrfToken() {
 		var m = document.querySelector('meta[name="csrf-token"]');
 		if (m && m.getAttribute("content")) return m.getAttribute("content");
