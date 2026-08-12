@@ -65,12 +65,12 @@ def get_context(context):
 		context.consultants = [c for c in _consultants if (c.get("status") or "") != "Inactive"]
 		# Diagnostic: every consultant record (incl. Inactive / no status) so the
 		# form can show exactly what the portal sees when the dropdown is empty
-	context.consultant_diag = frappe.get_all(
-		"Functional Consultant",
-		fields=["name", "consultant_name", "status"],
-		order_by="consultant_name asc",
-		ignore_permissions=True,
-	) or []
+		context.consultant_diag = frappe.get_all(
+			"Functional Consultant",
+			fields=["name", "consultant_name", "status"],
+			order_by="consultant_name asc",
+			ignore_permissions=True,
+		) or []
 		# One-click pre-fill: arriving from My Leads (?lead=), a customer
 		# (?customer=) or an ERPNext Opportunity (?opportunity=) pulls the
 		# contact / company details from the CRM record into the form.
