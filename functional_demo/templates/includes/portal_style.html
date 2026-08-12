@@ -459,7 +459,7 @@
 	box-shadow: 0 8px 20px rgba(20, 241, 177, 0.35);
 	text-decoration: none;
 }
-.btn-portal:active { transform: translateY(0); box-shadow: none; }
+.btn-portal:active { transform: translateY(0) scale(0.97); box-shadow: none; }
 
 /* navy secondary */
 .btn-portal.secondary {
@@ -957,6 +957,67 @@
 .timeline .t-title { font-size: 14px; font-weight: 600; color: var(--bx-navy); }
 .timeline .t-meta { font-size: 12px; color: var(--bx-gray-400); margin-top: 2px; }
 .timeline .t-remarks { font-size: 13px; color: var(--bx-gray-500); margin-top: 4px; }
+
+/* ==========================================================================
+   Soft entrance & press animations
+   ========================================================================== */
+@keyframes bx-fade-up {
+	from { opacity: 0; transform: translateY(14px); }
+	to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes bx-fade-in {
+	from { opacity: 0; }
+	to   { opacity: 1; }
+}
+@keyframes bx-slide-down {
+	from { opacity: 0; transform: translateY(-10px); }
+	to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes bx-pop {
+	from { opacity: 0; transform: scale(0.96); }
+	to   { opacity: 1; transform: scale(1); }
+}
+
+/* top bar eases in from above */
+.portal-topbar { animation: bx-slide-down 0.45s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+/* sidebar + its items cascade in */
+.portal-sidebar { animation: bx-fade-in 0.4s ease both; }
+.sidebar-item { animation: bx-fade-in 0.4s ease both; }
+
+/* main content fades up softly */
+.portal-main { animation: bx-fade-in 0.5s ease both; }
+.portal-content > * { animation: bx-fade-up 0.55s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.portal-content > *:nth-child(1) { animation-delay: 0.03s; }
+.portal-content > *:nth-child(2) { animation-delay: 0.08s; }
+.portal-content > *:nth-child(3) { animation-delay: 0.13s; }
+.portal-content > *:nth-child(4) { animation-delay: 0.18s; }
+.portal-content > *:nth-child(5) { animation-delay: 0.23s; }
+.portal-content > *:nth-child(6) { animation-delay: 0.28s; }
+.portal-content > *:nth-child(n+7) { animation-delay: 0.33s; }
+
+/* card-level pop inside grids (KPI + role cards) */
+.kpi-card, .role-card { animation: bx-pop 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.kpi-grid .kpi-card:nth-child(1), .role-cards .role-card:nth-child(1) { animation-delay: 0.05s; }
+.kpi-grid .kpi-card:nth-child(2), .role-cards .role-card:nth-child(2) { animation-delay: 0.12s; }
+.kpi-grid .kpi-card:nth-child(3), .role-cards .role-card:nth-child(3) { animation-delay: 0.19s; }
+.kpi-grid .kpi-card:nth-child(4), .role-cards .role-card:nth-child(4) { animation-delay: 0.26s; }
+.kpi-grid .kpi-card:nth-child(n+5), .role-cards .role-card:nth-child(n+5) { animation-delay: 0.33s; }
+
+/* table rows drift in gently */
+.table-portal tbody tr { animation: bx-fade-in 0.4s ease both; }
+
+/* press feedback on interactive cards */
+.kpi-card:active, .role-card:active, .filter-chip:active { transform: scale(0.97); }
+.sidebar-item:active { transform: translateX(0) scale(0.96); }
+
+/* respect users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+	*, *::before, *::after {
+		animation: none !important;
+		transition: none !important;
+	}
+}
 
 /* ==========================================================================
    Responsive
