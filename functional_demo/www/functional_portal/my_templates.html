@@ -49,8 +49,20 @@
 			});
 		});
 	}
-	portalCall("functional_demo.api.get_unlinked_users", {}).then(render).catch(function () {
-		listEl.innerHTML = '<p class="text-muted" style="margin:0;">Could not load users. Please refresh the page.</p>';
+	/* Defer until the DOM (and Frappe's injected frappe.csrf_token script)
+	   is fully parsed - calling portalCall earlier sends an empty CSRF token
+	   and Frappe rejects it with 'Invalid Request'. */
+	function whenReady(fn) {
+		if (document.readyState === "loading") {
+			document.addEventListener("DOMContentLoaded", fn);
+		} else {
+			fn();
+		}
+	}
+	whenReady(function () {
+		portalCall("functional_demo.api.get_unlinked_users", {}).then(render).catch(function () {
+			listEl.innerHTML = '<p class="text-muted" style="margin:0;">Could not load users. Please refresh the page.</p>';
+		});
 	});
 })();
 </script>

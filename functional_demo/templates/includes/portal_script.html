@@ -5,10 +5,25 @@
 (function () {
 	"use strict";
 
-	function csrf() {
+	/* Frappe injects the CSRF token as <script>frappe.csrf_token = "…"</script>
+	   near the END of the page body (after our portal scripts). If portalCall is
+	   invoked before that script runs, the token is empty and Frappe rejects the
+	   request with 'Invalid Request'. So: read the token synchronously when it
+	   exists, otherwise wait until the DOM (and the injected token) is ready. */
+	function csrfToken() {
 		var m = document.querySelector('meta[name="csrf-token"]');
-		if (m) return m.getAttribute("content") || "";
+		if (m && m.getAttribute("content")) return m.getAttribute("content");
 		return window.csrf_token || (window.frappe && frappe.csrf_token) || "";
+	}
+	function csrfReady() {
+		var t = csrfToken();
+		if (t) return Promise.resolve(t);
+		if (document.readyState !== "loading") return Promise.resolve("");
+		return new Promise(function (resolve) {
+			document.addEventListener("DOMContentLoaded", function () {
+				resolve(csrfToken());
+			});
+		});
 	}
 
 	/* Show a centered modal popup (used for errors / attention messages). */
@@ -71,14 +86,16 @@
 
 	/* Call a whitelisted API method: window.portalCall("functional_demo.api.x", {..}) */
 	window.portalCall = function (method, args) {
-		return fetch("/api/method/" + method, {
-			method: "POST",
-			headers: {
-				"Content-Type": "application/json",
-				"X-Frappe-CSRF-Token": csrf(),
-			},
-			body: JSON.stringify({ args: args || {} }),
-			credentials: "same-origin",
+		return csrfReady().then(function (token) {
+			return fetch("/api/method/" + method, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+					"X-Frappe-CSRF-Token": token,
+				},
+				body: JSON.stringify({ args: args || {} }),
+				credentials: "same-origin",
+			});
 		})
 		.then(function (r) {
 			return r.text().then(function (txt) {
