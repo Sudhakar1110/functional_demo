@@ -2,6 +2,8 @@
 {% block banner %}{% endblock %}
 {% block navbar %}{% endblock %}
 {% block footer %}{% endblock %}
+{% block style %}{% include "functional_demo/templates/includes/portal_style.html" %}{% endblock %}
+{% block script %}{% include "functional_demo/templates/includes/portal_script.html" %}{% endblock %}
 {% block content %}
 {% macro repeater_item(rid, fields, child_doctype, rows, add_label) %}
 	<div class="repeater" id="{{ rid }}">
@@ -34,7 +36,7 @@
 	<header class="portal-topbar">
 		<button class="sidebar-toggle" id="sidebar-toggle" aria-label="Menu">&#9776;</button>
 		<a class="topbar-brand" href="/demo_portal">
-			<img class="brand-logo" src="/assets/functional_demo/images/brand_logo.jpg" alt="Brand Logo" />
+			<img class="brand-logo" src="/images/brand_logo.jpg" alt="Brand Logo" />
 			<div class="brand-text">
 				<span class="brand-name">Demo Portal</span>
 				<span class="brand-sub">Sales &amp; Functional</span>
