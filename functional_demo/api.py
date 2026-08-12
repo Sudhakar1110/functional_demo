@@ -811,13 +811,15 @@ def create_demo_request(customer=None, lead=None, company=None, contact_person=N
 	"""Create a Demo Request from the Sales Portal web form."""
 	from functional_demo.sales_demo.doctype.demo_request.demo_request import change_status
 
-	# A party (customer or lead) is required - the demo is for someone.
-	# The message tells the user exactly what to do so the popup is never cryptic.
-	if not customer and not lead:
+	# A party (customer/lead) OR at least one contact detail is required - the
+	# demo is for someone. The message tells the user exactly what to do so the
+	# popup is never cryptic. (Party-less requests with contact details are
+	# allowed - e.g. prospects or customer self-bookings - the sales team can
+	# link the CRM record later.)
+	if not customer and not lead and not (contact_person or contact_number or email):
 		frappe.throw(
-			_("Please select a Customer or a Lead before creating the demo request. "
-			  "Type in the Customer (or Lead) box and pick a suggestion from the list, then try again."),
-			title=_("Customer or Lead Required"),
+			_("Tell us who the demo is for - pick a Customer or a Lead from the suggestions, or enter at least a contact name / email / phone, then try again."),
+			title=_("Who is the demo for?"),
 		)
 
 	# The party must be a real record - a free-typed name is not enough.
@@ -841,6 +843,17 @@ def create_demo_request(customer=None, lead=None, company=None, contact_person=N
 			title=_("Consultant Required"),
 		)
 
+	# Contact Person / Company are Link fields: only set them when the value is
+	# a real record. A free-typed name (e.g. when no CRM data exists yet) is
+	# preserved in the remarks instead of crashing Link validation.
+	extra_remarks = []
+	if contact_person and not frappe.db.exists("Contact", contact_person):
+		extra_remarks.append(_("Contact person: {0}").format(contact_person))
+		contact_person = ""
+	if company and not frappe.db.exists("Company", company):
+		extra_remarks.append(_("Company: {0}").format(company))
+		company = ""
+
 	doc = frappe.new_doc("Demo Request")
 	doc.customer = customer
 	doc.lead = lead
@@ -857,7 +870,7 @@ def create_demo_request(customer=None, lead=None, company=None, contact_person=N
 	doc.preferred_demo_date = preferred_demo_date
 	doc.preferred_demo_time = preferred_demo_time
 	doc.demo_type = demo_type
-	doc.sales_remarks = sales_remarks
+	doc.sales_remarks = "\n".join([r for r in [sales_remarks] + extra_remarks if r]) or None
 	doc.functional_consultant = functional_consultant
 	# fetch_from does NOT run on API inserts - resolve the consultant's user so
 	# the 'Consultant Assigned' / 'Demo Scheduled' notifications can reach them

@@ -61,14 +61,14 @@
 					</div>
 					<div class="form-row">
 						<div>
-							<label>Customer <span class="req">*</span> <span class="form-hint">(pick from suggestions)</span></label>
+							<label>Customer <span class="form-hint">(optional - pick from suggestions)</span></label>
 							<input type="text" id="customer" name="customer" list="customers-list" placeholder="Type &amp; pick a customer..." value="{{ prefill.customer }}" autocomplete="off">
 							<datalist id="customers-list">
 								{% for c in customers %}<option value="{{ c.name }}">{{ c.customer_name }}</option>{% endfor %}
 							</datalist>
 						</div>
 						<div>
-							<label>Lead <span class="req">*</span> <span class="form-hint">(or pick a lead instead)</span></label>
+							<label>Lead <span class="form-hint">(optional - or pick a lead instead)</span></label>
 							<input type="text" id="lead" name="lead" list="leads-list" placeholder="Type &amp; pick a lead..." value="{{ prefill.lead }}" autocomplete="off">
 							<datalist id="leads-list">
 								{% for l in leads %}<option value="{{ l.name }}">{{ l.lead_name }} ({{ l.company_name or 'no company' }})</option>{% endfor %}
@@ -76,7 +76,7 @@
 						</div>
 					</div>
 					<div class="form-row">
-						<div>
+						<div style="grid-column: 1 / -1;">
 							<label>Functional Consultant <span class="req">*</span></label>
 							<select id="functional_consultant" name="functional_consultant">
 								<option value="">— Select consultant —</option>
@@ -85,10 +85,9 @@
 								{% endfor %}
 							</select>
 						</div>
-						<div><label>Contact Person</label><input type="text" id="contact_person" name="contact_person"></div>
 					</div>
 					<div class="form-row">
-						<div><label>Contact Person</label><input type="text" id="contact_person" name="contact_person" value="{{ prefill.contact_person }}"></div>
+						<div><label>Contact Person <span class="form-hint">(name, if no Customer/Lead yet)</span></label><input type="text" id="contact_person" name="contact_person" value="{{ prefill.contact_person }}"></div>
 						<div><label>Contact Number</label><input type="text" id="contact_number" name="contact_number" value="{{ prefill.contact_number }}"></div>
 						<div><label>Email</label><input type="email" id="email" name="email" value="{{ prefill.email }}"></div>
 					</div>
@@ -439,10 +438,6 @@
 	   of the datalist options (picked from the suggestions). A free-typed name
 	   can never match a record, so we check before submitting and explain the
 	   exact problem in the popup instead of a cryptic server error. */
-	function hasOptions(listId) {
-		var dl = document.getElementById(listId);
-		return !!(dl && dl.querySelector("option"));
-	}
 	function isKnown(listId, value) {
 		var dl = document.getElementById(listId);
 		if (!dl) return false;
@@ -459,13 +454,17 @@
 		var lead = document.getElementById("lead").value.trim();
 		var consultant = document.getElementById("functional_consultant").value;
 
-		if (!hasOptions("customers-list") && !hasOptions("leads-list")) {
-			portalAlert("No Customers or Leads exist in your system yet. Create at least one Customer (or Lead) in ERPNext first - or ask your administrator - before creating a demo request.", "err");
-			return;
-		}
+		/* A Customer/Lead is NOT required any more - a request can be created
+		   for a prospect using just name / email / phone. Only block when the
+		   user gave no party AND no contact details at all. */
 		if (!customer && !lead) {
-			portalAlert("Please select a Customer or a Lead before creating the demo request. Type in the Customer (or Lead) box and pick a suggestion from the list, then try again.", "err");
-			return;
+			var pName = document.getElementById("contact_person").value.trim();
+			var pPhone = document.getElementById("contact_number").value.trim();
+			var pEmail = document.getElementById("email").value.trim();
+			if (!pName && !pPhone && !pEmail) {
+				portalAlert("Tell us who the demo is for - pick a Customer or a Lead from the suggestions, or enter at least a contact name / email / phone.", "err");
+				return;
+			}
 		}
 		if (customer && !isKnown("customers-list", customer)) {
 			portalAlert("Customer \"" + customer + "\" was not found. Please pick a customer from the suggestions list.", "err");
@@ -479,11 +478,9 @@
 			portalAlert("Please select a Functional Consultant to run this demo.", "err");
 			return;
 		}
+		/* Company is optional - if the typed name is not a saved Company record
+		   the server keeps it in the remarks instead of blocking the request. */
 		var company = document.getElementById("company") ? document.getElementById("company").value.trim() : "";
-		if (company && !isKnown("companies-list", company)) {
-			portalAlert("Company \"" + company + "\" was not found. Pick a company from the suggestions list, or leave the field empty.", "err");
-			return;
-		}
 		var btn = document.getElementById("btn-create");
 		btn.disabled = true; btn.textContent = "Creating...";
 		portalCall("functional_demo.api.create_demo_request", {

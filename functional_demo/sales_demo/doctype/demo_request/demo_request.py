@@ -36,11 +36,18 @@ class DemoRequest(Document):
 			self.sales_person = frappe.session.user
 
 	def validate_lead_or_customer(self):
-		if not self.lead and not self.customer and self.workflow_state not in (None, "", "Draft"):
-			frappe.throw(
-				_("Please select a Lead or a Customer for this Demo Request."),
-				title=_("Missing Party"),
-			)
+		"""A Demo Request needs a party (Customer/Lead) OR at least one direct
+		contact detail - the sales portal lets you log a prospect with just a
+		name / email / phone before a CRM record exists (e.g. customer
+		self-bookings from /book_demo)."""
+		if self.lead or self.customer:
+			return
+		if self.workflow_state not in (None, "", "Draft"):
+			if not (self.contact_person or self.contact_number or self.email):
+				frappe.throw(
+					_("Please select a Lead or a Customer, or add at least one contact detail (name / email / phone) for this Demo Request."),
+					title=_("Missing Party"),
+				)
 
 	def fetch_contact_details(self):
 		"""Auto-populate the contact person / number / email from the selected
