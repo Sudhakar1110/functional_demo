@@ -48,5 +48,6 @@ def get_context(context):
 		"Functional Consultant",
 		fields=["name", "consultant_name", "specialization", "status"],
 		order_by="consultant_name asc",
+		ignore_permissions=True,
 	) or []
 	context.consultants = [c for c in _consultants if (c.get("status") or "") != "Inactive"]

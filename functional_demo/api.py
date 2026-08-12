@@ -169,9 +169,12 @@ def get_available_consultants(module=None, include_inactive=0):
 	# Python: Frappe stores an unset Select field as NULL, and SQL treats
 	# NULL != 'Inactive' as unknown (row excluded) - so both '=' and 'not in'
 	# filters silently hid consultants whose status was never set.
+	# ignore_permissions: consultants are shared reference data - the portal
+	# is already gated by role, so no user/role setup should ever hide them.
 	consultants = frappe.get_all(
 		"Functional Consultant",
 		filters={} if include_inactive else None,
+		ignore_permissions=True,
 		fields=[
 			"name",
 			"consultant_name",
@@ -902,6 +905,7 @@ def create_demo_request(customer=None, lead=None, company=None, contact_person=N
 			"Functional Consultant",
 			fields=["name", "status"],
 			order_by="consultant_name asc",
+			ignore_permissions=True,
 		)
 		for cand in candidates:
 			if (cand.get("status") or "") != "Inactive":
@@ -917,14 +921,19 @@ def create_demo_request(customer=None, lead=None, company=None, contact_person=N
 	# Contact Person / Company are Link fields: only set them when the value is
 	# a real record. A free-typed name (e.g. when no CRM data exists yet) is
 	# preserved in the remarks instead of crashing Link validation.
+	# IMPORTANT: never call frappe.msgprint() here. If anything below raises,
+	# Frappe promotes the last msgprint text to the error message and hides the
+	# real failure. The note is returned in the response instead and the portal
+	# shows it as a success toast.
+	auto_assigned_note = ""
 	extra_remarks = []
 	if auto_assigned_consultant:
 		extra_remarks.append(_("Consultant auto-assigned: {0}").format(auto_assigned_consultant))
-		frappe.msgprint(
-			_("No consultant was selected, so {0} was auto-assigned to this demo. You can change it from the request page if needed.").format(
-				frappe.db.get_value("Functional Consultant", auto_assigned_consultant, "consultant_name")
-				or auto_assigned_consultant
-			)
+		auto_assigned_note = _(
+			"No consultant was selected, so {0} was auto-assigned to this demo. You can change it from the request page if needed."
+		).format(
+			frappe.db.get_value("Functional Consultant", auto_assigned_consultant, "consultant_name")
+			or auto_assigned_consultant
 		)
 	if contact_person and not frappe.db.exists("Contact", contact_person):
 		extra_remarks.append(_("Contact person: {0}").format(contact_person))
@@ -968,8 +977,7 @@ def create_demo_request(customer=None, lead=None, company=None, contact_person=N
 			message=frappe.get_traceback(),
 		)
 
-	frappe.msgprint(_("Demo Request {0} created.").format(doc.name))
-	return {"name": doc.name}
+	return {"name": doc.name, "note": auto_assigned_note or ""}
 
 
 @frappe.whitelist()

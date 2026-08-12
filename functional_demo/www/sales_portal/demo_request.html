@@ -509,7 +509,17 @@
 			sales_remarks: document.getElementById("sales_remarks").value,
 		}).then(function (res) {
 			if (res && res.name) {
-				window.location.href = "/sales_portal/demo_request?name=" + res.name;
+				/* The server returns a note when it had to auto-assign a
+				   consultant - show it as a success toast, then redirect so
+				   the user can see it before the page changes. */
+				if (res.note) {
+					window.portalAlert(res.note, "ok");
+					setTimeout(function () {
+						window.location.href = "/sales_portal/demo_request?name=" + res.name;
+					}, 1400);
+				} else {
+					window.location.href = "/sales_portal/demo_request?name=" + res.name;
+				}
 			} else {
 				btn.disabled = false; btn.textContent = "Create Demo Request";
 			}

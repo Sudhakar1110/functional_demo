@@ -124,9 +124,11 @@
 			};
 			/* Frappe puts the real traceback in data.exc on unhandled exceptions.
 			   Pull the last meaningful line ("ErrorType: message") so the popup
-			   shows the actual cause instead of a generic message. */
+			   shows the actual cause instead of a generic message. When a method
+			   called frappe.msgprint() and THEN raised, Frappe promotes the
+			   msgprint text to data.message - which masks the real failure - so
+			   the traceback line must win over data.message. */
 			var realError = function () {
-				if (data.message) return "";
 				var exc = String(data.exc || "").split("\n").filter(Boolean);
 				for (var i = exc.length - 1; i >= 0; i--) {
 					var line = exc[i].trim();
@@ -152,10 +154,13 @@
 			};
 			var isError = !res.ok || data.exc_type || data.raise_exception;
 			if (isError) {
+				/* Prefer the real traceback line, then the error message, then
+				   any server message - in that order. data.message may be an
+				   object (a return value) on odd responses, so only use strings. */
 				var errMsg =
-					data.message ||
-					(serverMsgs.length ? plain(serverMsgs[0]) : "") ||
 					realError() ||
+					(typeof data.message === "string" ? data.message : "") ||
+					(serverMsgs.length ? plain(serverMsgs[0]) : "") ||
 					rawHint() ||
 					"Something went wrong. Please try again.";
 				window.portalModal(data.title || "Something went wrong", errMsg, "err");
