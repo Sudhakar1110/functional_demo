@@ -1,0 +1,1 @@
+<h4>{{ _("Follow-up Due") }}</h4><p>{{ _("Your follow-up for") }} <b>{{ doc.customer or doc.demo_request }}</b> {{ _("is due today.") }}</p><ul><li>{{ _("Demo Request") }}: {{ doc.demo_request }}</li><li>{{ _("Next Action") }}: {{ doc.next_action or "-" }}</li></ul><p><a href="/app/demo-follow-up/{{ doc.name }}">{{ _("Open Follow-up") }}</a></p>

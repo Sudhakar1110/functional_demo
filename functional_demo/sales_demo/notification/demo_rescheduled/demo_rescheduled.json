@@ -11,7 +11,7 @@
  "event": "Value Change",
  "idx": 0,
  "is_standard": 1,
- "message": "<h4>{{ _(\"Demo Rescheduled\") }}</h4><p>{{ _(\"Demo Session {0} has been rescheduled.\") }}</p><ul><li>{{ _(\"Customer\") }}: {{ doc.customer or doc.demo_request }}</li><li>{{ _(\"New Date\") }}: {{ doc.scheduled_date }}</li><li>{{ _(\"Start Time\") }}: {{ doc.start_time or \"-\" }}</li><li>{{ _(\"Meeting Link\") }}: {{ doc.meeting_link or \"-\" }}</li></ul><p>{{ frappe.utils.get_link_to_form(\"Demo Session\", doc.name, _(\"Open Demo Session\")) }}</p>",
+ "message": "<h4>{{ _(\"Demo Rescheduled\") }}</h4><p>{{ _(\"Demo Session {0} has been rescheduled.\") }}</p><ul><li>{{ _(\"Customer\") }}: {{ doc.customer or doc.demo_request }}</li><li>{{ _(\"New Date\") }}: {{ doc.scheduled_date }}</li><li>{{ _(\"Start Time\") }}: {{ doc.start_time or \"-\" }}</li><li>{{ _(\"Meeting Link\") }}: {{ doc.meeting_link or \"-\" }}</li></ul><p><a href=\"/app/demo-session/{{ doc.name }}\">{{ _(\"Open Demo Session\") }}</a></p>",
  "message_type": "HTML",
  "modified": "2026-08-11 10:00:00.000000",
  "modified_by": "Administrator",
