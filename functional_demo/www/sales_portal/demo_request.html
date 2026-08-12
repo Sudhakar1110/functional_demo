@@ -212,15 +212,13 @@
 							<button class="btn-portal secondary" id="btn-unassign">Unassign Consultant</button>
 						</div>
 					</div>
-					{% endif %}
-
-					<div id="form-cancel-request" style="display: none;" class="portal-form">
+					{% endif %}						<div id="form-cancel-request" style="display: none;" class="portal-form">
 						<div class="divider"></div>
 						<label>Reason for cancelling</label>
 						<textarea id="cancel-request-reason" placeholder="Optional reason..."></textarea>
 						<p class="text-muted" style="margin-top: 6px;">Open demo sessions (if any) will also be cancelled.</p>
 						<div class="form-actions">
-							<button class="btn-portal danger" id="btn-cancel-request">Cancel Demo Request</button>
+							<button class="btn-portal danger" id="btn-cancel-request" data-name="{{ doc.name }}">Cancel Demo Request</button>
 						</div>
 					</div>
 				</div>
@@ -498,6 +496,21 @@
 	{% else %}
 	var DOC_NAME = "{{ doc.name }}";
 
+	/* The request name, recovered from three independent sources so the call
+	   can never be fired without it: (1) the server-rendered variable, (2) the
+	   data-name attribute on the Cancel button, (3) the ?name= URL parameter.
+	   If all three are empty the page is genuinely stale and we say so. */
+	function requestName() {
+		if (DOC_NAME) return DOC_NAME;
+		var btn = document.getElementById("btn-cancel-request");
+		if (btn && btn.getAttribute("data-name")) return btn.getAttribute("data-name");
+		try {
+			var q = new URLSearchParams(window.location.search);
+			if (q.get("name")) return q.get("name");
+		} catch (e) { /* ignore */ }
+		return "";
+	}
+
 	function toggle(id) {
 		var el = document.getElementById(id);
 		if (el) el.style.display = el.style.display === "none" ? "block" : "none";
@@ -536,14 +549,15 @@
 	if (document.getElementById("btn-toggle-cancel-request")) {
 		document.getElementById("btn-toggle-cancel-request").addEventListener("click", function () { toggle("form-cancel-request"); });
 		document.getElementById("btn-cancel-request").addEventListener("click", function () {
-			if (!window.confirm("Cancel Demo Request " + DOC_NAME + "? Open demo sessions will also be cancelled.")) return;
-			if (!DOC_NAME) {
+			var reqName = requestName();
+			if (!reqName) {
 				portalAlert("The page is stale - please refresh it (Ctrl+Shift+R) and try again.", "err");
 				return;
 			}
+			if (!window.confirm("Cancel Demo Request " + reqName + "? Open demo sessions will also be cancelled.")) return;
 			var btn = this; btn.disabled = true;
 			portalCall("functional_demo.api.cancel_demo_request", {
-				demo_request: DOC_NAME,
+				demo_request: reqName,
 				reason: document.getElementById("cancel-request-reason").value,
 			}).then(function (res) {
 				if (res && res.already) {

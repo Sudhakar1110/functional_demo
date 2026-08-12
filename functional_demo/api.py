@@ -398,9 +398,29 @@ def cancel_demo_request(demo_request=None, reason=None, name=None):
 	# under the key 'name' - accept it too so the framework does not raise
 	# 'unexpected keyword argument' before this function even runs.
 	demo_request = demo_request or name
+	# Ultimate fallback: dig the name out of whatever the client actually sent
+	# (form_dict may hold the raw body or a nested 'args' dict on odd clients).
 	if not demo_request:
+		fd = frappe.local.form_dict or {}
+		if isinstance(fd.get("args"), dict):
+			demo_request = fd["args"].get("demo_request") or fd["args"].get("name")
+		demo_request = demo_request or fd.get("demo_request") or fd.get("name")
+	if not demo_request:
+		# log what actually arrived so the real cause is never lost to a
+		# truncated popup - the portal error dialog only shows the last line
+		frappe.log_error(
+			title=_("Cancel Demo Request: missing request name"),
+			message="form_dict={0}\nargs={1}\nkwargs demo_request={2!r} name={3!r}".format(
+				str(frappe.local.form_dict or {})[:500],
+				str(getattr(frappe.local, "request", None))[:200],
+				demo_request,
+				name,
+			),
+		)
 		frappe.throw(
-			_("Demo Request is missing. Please refresh the page and try again."),
+			_("Demo Request is missing. Please refresh the page (Ctrl+Shift+R) and try again. Server received: {0}").format(
+				str(frappe.local.form_dict or {})[:300]
+			),
 			title=_("Missing Request"),
 		)
 
