@@ -3,8 +3,9 @@
 <div class="portal-layout">
 	<aside class="portal-sidebar" id="portal-sidebar">
 		<a class="sidebar-brand" href="/demo_portal">
-			<div>
-				<span class="brand-dot"></span> Demo Portal
+			<img class="brand-logo" src="/assets/functional_demo/images/bizaxl_logo.png" alt="Bizaxl" />
+			<div class="brand-text">
+				<span class="brand-name">Demo Portal</span>
 				<span class="brand-sub">Sales &amp; Functional</span>
 			</div>
 		</a>
@@ -33,7 +34,7 @@
 			</div>
 		</header>
 		<div class="portal-content">
-			<h2 style="margin: 0 0 16px; font-size: 20px; font-weight: 800; color: #1F4E79;">Follow-ups ({{ follow_ups|length }})</h2>
+			<h2 style="margin: 0 0 16px; font-size: 20px; font-weight: 800; color: #05133C;">Follow-ups ({{ follow_ups|length }})</h2>
 
 			{% if follow_ups %}
 			<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 16px;">

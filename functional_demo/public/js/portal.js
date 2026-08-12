@@ -87,4 +87,22 @@
 			});
 		}
 	});
+
+	/* Set the browser-tab favicon to the Bizaxl brand logo.
+	   Replace any favicon link the base template already emitted so the
+	   brand logo is the single deterministic tab icon. */
+	(function () {
+		var logo = "/assets/functional_demo/images/bizaxl_logo.png";
+		var existing = document.querySelectorAll('link[rel*="icon"]');
+		for (var i = 0; i < existing.length; i++) existing[i].remove();
+		var link = document.createElement("link");
+		link.rel = "icon";
+		link.type = "image/png";
+		link.href = logo;
+		document.head.appendChild(link);
+		var apple = document.createElement("link");
+		apple.rel = "apple-touch-icon";
+		apple.href = logo;
+		document.head.appendChild(apple);
+	})();
 })();

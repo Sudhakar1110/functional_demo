@@ -25,10 +25,10 @@
 	white-space: nowrap;
 }
 
-.demo-exec-badge.scheduled { background: #fff3cd; color: #856404; }
-.demo-exec-badge.in-progress { background: #fff8e1; color: #7a6a00; }
-.demo-exec-badge.completed { background: #d4edda; color: #155724; }
-.demo-exec-badge.cancelled, .demo-exec-badge.closed { background: #f8d7da; color: #721c24; }
+.demo-exec-badge.scheduled { background: #E8EEFF; color: #114EFF; }
+.demo-exec-badge.in-progress { background: #FFF1E6; color: #D96C0A; }
+.demo-exec-badge.completed { background: #DCFBEA; color: #009A52; }
+.demo-exec-badge.cancelled, .demo-exec-badge.closed { background: #FDE8EB; color: #E11D48; }
 
 .demo-exec-grid {
 	display: grid;

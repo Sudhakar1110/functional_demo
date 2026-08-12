@@ -3,8 +3,9 @@
 <div class="portal-layout">
 	<aside class="portal-sidebar" id="portal-sidebar">
 		<a class="sidebar-brand" href="/demo_portal">
-			<div>
-				<span class="brand-dot"></span> Demo Portal
+			<img class="brand-logo" src="/assets/functional_demo/images/bizaxl_logo.png" alt="Bizaxl" />
+			<div class="brand-text">
+				<span class="brand-name">Demo Portal</span>
 				<span class="brand-sub">Sales &amp; Functional</span>
 			</div>
 		</a>
@@ -35,7 +36,7 @@
 		<div class="portal-content">
 			<div class="flex-between mb-16">
 				<div>
-					<h2 style="margin: 0; font-size: 20px; font-weight: 800; color: #1F4E79;">My Templates ({{ templates|length }})</h2>
+					<h2 style="margin: 0; font-size: 20px; font-weight: 800; color: #05133C;">My Templates ({{ templates|length }})</h2>
 					<p class="text-muted" style="margin: 4px 0 0;">{% if consultant_name %}for {{ consultant_name }}{% endif %} — templates are personal to you.</p>
 				</div>
 				<a class="btn-portal" href="/functional_portal/template?new=1">+ New Template</a>
