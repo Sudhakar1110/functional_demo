@@ -46,9 +46,10 @@ frappe.ui.form.on("Demo Request", {
 
 function set_consultant_query(frm) {
 	frm.set_query("functional_consultant", () => {
-		// exclude only explicitly-Inactive records (an unset/NULL status is fine
-		// - the old Active-only filter hid valid consultants from the dropdown)
-		return { filters: [["status", "not in", ["Inactive", null]]] };
+		// No status filter: an unset status is stored as NULL and ANY SQL
+		// status filter would hide those consultants. The doctype's own
+		// validate() rejects explicit 'Inactive' picks with a clear message.
+		return {};
 	});
 }
 

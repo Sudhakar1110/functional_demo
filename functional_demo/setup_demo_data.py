@@ -519,8 +519,12 @@ def _make_request(created, customer=None, lead=None, module=None, priority="Medi
 		# Business rule: every Demo Request needs a Functional Consultant, so
 		# fall back to the first active consultant for seed records that don't
 		# specify one (the request still starts in Draft status).
-		fallback = frappe.db.get_value(
-			"Functional Consultant", [["status", "not in", ["Inactive", None]]], "name"
+		fallback_candidates = frappe.get_all(
+			"Functional Consultant", fields=["name", "status"], order_by="consultant_name asc"
+		)
+		fallback = next(
+			(c["name"] for c in fallback_candidates if (c.get("status") or "") != "Inactive"),
+			None,
 		)
 		if fallback:
 			doc.functional_consultant = fallback

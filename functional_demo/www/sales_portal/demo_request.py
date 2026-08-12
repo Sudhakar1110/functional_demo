@@ -52,12 +52,14 @@ def get_context(context):
 		# 'Consultant Required' error when testing the portal.
 		consultant_of_user()  # side effect: auto-creates the Administrator profile
 
-		context.consultants = frappe.get_all(
+		# Availability is filtered in Python: an unset status is stored as NULL
+		# and SQL status filters would silently hide those consultants.
+		_consultants = frappe.get_all(
 			"Functional Consultant",
-			filters=[["status", "not in", ["Inactive", None]]],
-			fields=["name", "consultant_name", "specialization", "availability", "experience_years"],
+			fields=["name", "consultant_name", "specialization", "availability", "experience_years", "status"],
 			order_by="consultant_name asc",
 		) or []
+		context.consultants = [c for c in _consultants if (c.get("status") or "") != "Inactive"]
 		# Diagnostic: every consultant record (incl. Inactive / no status) so the
 		# form can show exactly what the portal sees when the dropdown is empty
 		context.consultant_diag = frappe.get_all(
@@ -87,12 +89,12 @@ def get_context(context):
 		{"demo_request": doc.name, "demo_status": ["in", ["Scheduled", "In Progress"]]},
 		"name",
 	)
-	context.consultants = frappe.get_all(
+	_consultants = frappe.get_all(
 		"Functional Consultant",
-		filters=[["status", "not in", ["Inactive", None]]],
-		fields=["name", "consultant_name", "specialization", "availability", "experience_years"],
+		fields=["name", "consultant_name", "specialization", "availability", "experience_years", "status"],
 		order_by="consultant_name asc",
 	) or []
+	context.consultants = [c for c in _consultants if (c.get("status") or "") != "Inactive"]
 	context.consultant_names = {c["name"]: c["consultant_name"] for c in context.consultants}
 	return context
 

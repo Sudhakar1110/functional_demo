@@ -165,13 +165,13 @@ def get_lead_details(lead=None):
 def get_available_consultants(module=None, include_inactive=0):
 	"""List Functional Consultants (active by default), optionally filtered by
 	an ERPNext module they specialize in. Also returns their current workload."""
-	# exclude only explicitly-Inactive consultants (records with an unset/NULL
-	# status still count as available - the old 'status = Active' filter hid
-	# them; 'not in' with None is NULL-safe, unlike '!=')
-	filters = [["status", "not in", ["Inactive", None]]] if not include_inactive else []
+	# Exclude only explicitly-Inactive consultants. This MUST be filtered in
+	# Python: Frappe stores an unset Select field as NULL, and SQL treats
+	# NULL != 'Inactive' as unknown (row excluded) - so both '=' and 'not in'
+	# filters silently hid consultants whose status was never set.
 	consultants = frappe.get_all(
 		"Functional Consultant",
-		filters=filters,
+		filters={} if include_inactive else None,
 		fields=[
 			"name",
 			"consultant_name",
@@ -183,6 +183,8 @@ def get_available_consultants(module=None, include_inactive=0):
 		],
 		order_by="consultant_name asc",
 	)
+	if not include_inactive:
+		consultants = [c for c in consultants if (c.get("status") or "") != "Inactive"]
 
 	# ERPNext modules per consultant (child table - fetched separately for safety)
 	modules_map = {}
@@ -892,15 +894,19 @@ def create_demo_request(customer=None, lead=None, company=None, contact_person=N
 	# creation. If the value is missing (e.g. a stale cached page submits
 	# without it), auto-assign the first available consultant instead of
 	# failing - the request always gets a consultant and it can be changed
-	# from the request page afterwards.
+	# from the request page afterwards. Availability is checked in Python
+	# because an unset status is stored as NULL and SQL filters would hide it.
 	auto_assigned_consultant = ""
 	if not functional_consultant:
-		auto_assigned_consultant = frappe.db.get_value(
+		candidates = frappe.get_all(
 			"Functional Consultant",
-			filters=[["status", "not in", ["Inactive", None]]],
-			fieldname="name",
+			fields=["name", "status"],
 			order_by="consultant_name asc",
-		) or ""
+		)
+		for cand in candidates:
+			if (cand.get("status") or "") != "Inactive":
+				auto_assigned_consultant = cand["name"]
+				break
 		functional_consultant = auto_assigned_consultant or None
 	if not functional_consultant:
 		frappe.throw(

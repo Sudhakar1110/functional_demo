@@ -25,11 +25,14 @@ def get_context(context):
 	context.subtitle = _("Pick a module, consultant and time slot - our team confirms right back.")
 	context.modules = MODULES
 	context.slots = SLOTS
-	context.consultants = frappe.get_all(
+	# Filtered in Python: an unset status is stored as NULL and any SQL status
+	# filter would silently hide those consultants. Only explicit 'Inactive'
+	# records are excluded.
+	_consultants = frappe.get_all(
 		"Functional Consultant",
-		filters={"status": "Active"},
-		fields=["name", "consultant_name", "specialization", "availability"],
+		fields=["name", "consultant_name", "specialization", "availability", "status"],
 		order_by="consultant_name asc",
 	) or []
+	context.consultants = [c for c in _consultants if (c.get("status") or "") != "Inactive"]
 	context.today = frappe.utils.today()
 	return context
