@@ -4,7 +4,8 @@
 import frappe
 from frappe import _
 
-from functional_demo.portal import consultant_of_user, portal_context
+from functional_demo.api import SPECIALIZATIONS
+from functional_demo.portal import can_manage_consultants, consultant_of_user, portal_context
 
 MODULES = [
 	"", "Accounting", "CRM", "Selling", "Buying", "Stock", "Manufacturing",
@@ -22,8 +23,10 @@ def get_context(context):
 		subtitle=_("Create or edit your demo template"),
 	)
 	context.modules = MODULES
+	context.specializations = SPECIALIZATIONS
 	consultant = consultant_of_user()
 	context.my_consultant = consultant
+	context.can_manage_consultants = can_manage_consultants()
 	context.consultant_name = None
 	if consultant:
 		context.consultant_name = frappe.db.get_value(

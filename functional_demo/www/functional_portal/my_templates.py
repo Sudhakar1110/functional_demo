@@ -4,7 +4,7 @@
 import frappe
 from frappe import _
 
-from functional_demo.portal import consultant_of_user, portal_context
+from functional_demo.portal import can_manage_consultants, consultant_of_user, portal_context
 
 
 def get_context(context):
@@ -17,6 +17,7 @@ def get_context(context):
 	)
 	consultant = consultant_of_user()
 	context.consultant = consultant
+	context.can_manage_consultants = can_manage_consultants()
 	context.consultant_name = None
 	if consultant:
 		context.consultant_name = frappe.db.get_value(

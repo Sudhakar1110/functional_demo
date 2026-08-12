@@ -3,7 +3,59 @@
 {% block navbar %}{% endblock %}
 {% block footer %}{% endblock %}
 {% block style %}{% include "functional_demo/templates/includes/portal_style.html" %}{% endblock %}
-{% block script %}{% include "functional_demo/templates/includes/portal_script.html" %}{% endblock %}
+{% block script %}
+{% include "functional_demo/templates/includes/portal_script.html" %}
+{% if can_manage_consultants %}
+<script>
+(function () {
+	"use strict";
+	var listEl = document.getElementById("unlinked-users");
+	if (!listEl) return;
+	function esc(s) {
+		return String(s == null ? "" : s)
+			.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+			.replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+	}
+	function render(users) {
+		if (!users || !users.length) {
+			listEl.innerHTML = '<p class="text-muted" style="margin:0;">🎉 All enabled users already have a consultant profile.</p>';
+			return;
+		}
+		var html = '<table class="table-portal"><thead><tr><th>User</th><th>Email</th><th style="width:150px;"></th></tr></thead><tbody>';
+		users.forEach(function (u) {
+			html += '<tr data-user="' + esc(u.user) + '">'
+				+ '<td><strong>' + esc(u.full_name) + '</strong><div class="muted">' + esc(u.user) + '</div></td>'
+				+ '<td class="muted">' + esc(u.email || "-") + '</td>'
+				+ '<td><button type="button" class="btn-portal sm" data-link="' + esc(u.user) + '">Link profile</button></td>'
+				+ '</tr>';
+		});
+		html += '</tbody></table>';
+		listEl.innerHTML = html;
+		listEl.querySelectorAll("button[data-link]").forEach(function (btn) {
+			btn.addEventListener("click", function () {
+				var user = btn.getAttribute("data-link");
+				var original = btn.textContent;
+				btn.disabled = true;
+				btn.textContent = "Linking...";
+				portalCall("functional_demo.api.create_consultant_profile", { user: user })
+					.then(function () {
+						portalAlert("Profile created for " + user + ". The role was granted automatically.", "ok");
+						setTimeout(function () { window.location.reload(); }, 900);
+					})
+					.catch(function () {
+						btn.disabled = false;
+						btn.textContent = original;
+					});
+			});
+		});
+	}
+	portalCall("functional_demo.api.get_unlinked_users", {}).then(render).catch(function () {
+		listEl.innerHTML = '<p class="text-muted" style="margin:0;">Could not load users. Please refresh the page.</p>';
+	});
+})();
+</script>
+{% endif %}
+{% endblock %}
 {% block content %}
 <div class="portal-layout">
 	<header class="portal-topbar">
@@ -41,6 +93,19 @@
 	<div class="sidebar-overlay"></div>
 	<div class="portal-main">
 		<div class="portal-content">
+			{% if can_manage_consultants %}
+			<div class="portal-card">
+				<div class="card-head">
+					<h2>👥 Consultant Profiles <span class="muted" style="font-weight:500;">(Functional Team Manager)</span></h2>
+					<a class="btn-portal secondary sm" href="/app/functional-consultant" target="_blank" rel="noopener">Open in ERPNext</a>
+				</div>
+				<div class="card-body">
+					<p class="text-muted" style="margin-top:0;">Link a user to a consultant profile in one click — they get the Functional Consultant role automatically and can start creating templates.</p>
+					<div id="unlinked-users"><p class="text-muted" style="margin:0;">Loading users…</p></div>
+				</div>
+			</div>
+			{% endif %}
+
 			<div class="flex-between mb-16">
 				<div>
 					<h2 style="margin: 0; font-size: 20px; font-weight: 800; color: #05133C;">My Templates ({{ templates|length }})</h2>

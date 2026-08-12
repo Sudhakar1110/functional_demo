@@ -5,6 +5,7 @@
 import frappe
 from frappe import _
 
+from functional_demo.portal import can_manage_consultants
 from functional_demo.sales_demo.doctype.demo_request.demo_request import (
 	change_status,
 	get_primary_contact,
@@ -479,6 +480,102 @@ def assign_consultant(demo_request, consultant):
 
 	frappe.msgprint(_("Functional Consultant assigned to {0}.").format(demo_request))
 	return {"status": doc.get("status") or doc.get("workflow_state")}
+
+
+# ---------------------------------------------------------------------------
+# Consultant profile linking (used by the Functional portal 'Link my user')
+# ---------------------------------------------------------------------------
+
+# Specializations come from the doctype itself so this list can never drift
+SPECIALIZATIONS = [
+	s
+	for s in (
+		frappe.get_meta("Functional Consultant").get_field("specialization").options or ""
+	).split("\n")
+	if s
+]
+
+
+def _guard_consultant_manager():
+	"""Only Functional Team Managers / System Managers may manage consultant
+	profiles (mirrors the Functional Consultant doctype permissions)."""
+	if not can_manage_consultants():
+		frappe.throw(
+			_("Only Functional Team Managers can manage consultant profiles."),
+			frappe.PermissionError,
+		)
+
+
+@frappe.whitelist()
+def get_unlinked_users():
+	"""Enabled users who do not yet have a Functional Consultant profile.
+	Used by the 'Consultant Profiles' manager card in the portal."""
+	_guard_consultant_manager()
+	linked = {
+		row[0]
+		for row in frappe.db.sql(
+			"select user from `tabFunctional Consultant` where ifnull(user, '') != ''"
+		)
+	}
+	users = frappe.get_all(
+		"User",
+		filters=[["enabled", "=", 1]],
+		fields=["name", "full_name", "email"],
+		order_by="full_name asc",
+	)
+	out = []
+	for u in users:
+		if u.name in ("Guest", "Administrator") or u.name in linked:
+			continue
+		out.append(
+			{
+				"user": u.name,
+				"full_name": u.full_name or u.name,
+				"email": u.email or "",
+			}
+		)
+	return out
+
+
+@frappe.whitelist()
+def create_consultant_profile(user, consultant_name=None, specialization=None):
+	"""One-click: create a Functional Consultant profile linked to a User.
+	The doctype's on_update hook grants the Functional Consultant role."""
+	_guard_consultant_manager()
+	if not user:
+		frappe.throw(_("Please select a user to link."))
+	if user in ("Guest", "Administrator"):
+		frappe.throw(_("This user cannot be linked to a consultant profile."))
+	if not frappe.db.exists("User", user):
+		frappe.throw(_("User {0} does not exist.").format(user))
+	if not frappe.db.get_value("User", user, "enabled"):
+		frappe.throw(_("User {0} is disabled.").format(user))
+	if frappe.db.get_value("Functional Consultant", {"user": user}, "name"):
+		frappe.throw(
+			_("User {0} already has a consultant profile.").format(user),
+			title=_("Already Linked"),
+		)
+
+	full_name = frappe.db.get_value("User", user, "full_name") or user
+	if not consultant_name:
+		consultant_name = full_name
+	if specialization and specialization not in SPECIALIZATIONS:
+		frappe.throw(_("Invalid specialization."))
+
+	doc = frappe.new_doc("Functional Consultant")
+	doc.consultant_name = consultant_name
+	doc.user = user
+	doc.specialization = specialization or ""
+	doc.status = "Active"
+	doc.availability = "Available"
+	doc.insert(ignore_permissions=True)  # role guard enforced above
+
+	frappe.msgprint(
+		_("Consultant profile {0} created for {1}. The Functional Consultant role has been granted.").format(
+			doc.name, full_name
+		)
+	)
+	return {"name": doc.name, "consultant_name": doc.consultant_name}
 
 
 @frappe.whitelist()

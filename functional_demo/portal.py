@@ -31,6 +31,16 @@ def is_manager(user=None):
 	return bool(user_roles(user) & set(MANAGER_ROLES))
 
 
+def can_manage_consultants(user=None):
+	"""Functional Team Managers and System Managers can create/link
+	consultant profiles (the desk-side Functional Consultant doctype is
+	restricted to exactly these two roles)."""
+	user = user or frappe.session.user
+	if user == "Administrator":
+		return True
+	return bool(user_roles(user) & {"Functional Team Manager", "System Manager"})
+
+
 def consultant_of_user(user=None):
 	"""Functional Consultant record linked to the current user."""
 	user = user or frappe.session.user

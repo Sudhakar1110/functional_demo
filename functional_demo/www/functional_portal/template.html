@@ -72,7 +72,21 @@
 				<div class="empty-state">
 					<div class="empty-icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12.01" y1="17" y2="17"/></svg></div>
 					<h3>No consultant profile linked to your user</h3>
+					{% if can_manage_consultants %}
+					<p>Templates belong to a Functional Consultant. As a Functional Team Manager you can link your own user right here — one click, no ERPNext needed.</p>
+					<div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:6px;">
+						<input type="text" id="link-consultant-name" placeholder="Consultant name (e.g. {{ full_name }})" style="width:260px; max-width:100%;">
+						<select id="link-specialization" style="width:200px; max-width:100%;">
+							<option value="">— Specialization (optional) —</option>
+							{% for s in specializations %}<option value="{{ s }}">{{ s }}</option>{% endfor %}
+						</select>
+					</div>
+					<div style="margin-top:16px;">
+						<button class="btn-portal" type="button" id="btn-link-my-user">⚡ Link my user</button>
+					</div>
+					{% else %}
 					<p>Templates belong to a Functional Consultant. Ask your manager to link a consultant profile to your user in ERPNext, then reload this page.</p>
+					{% endif %}
 				</div>
 			</div>
 			{% else %}
@@ -213,6 +227,30 @@
 <script>
 (function () {
 	"use strict";
+	{% if not my_consultant and can_manage_consultants %}
+	/* One-click: create a consultant profile linked to the current user. */
+	var linkBtn = document.getElementById("btn-link-my-user");
+	if (linkBtn) {
+		linkBtn.addEventListener("click", function () {
+			var btn = this;
+			var name = (document.getElementById("link-consultant-name").value || "").trim();
+			var spec = document.getElementById("link-specialization").value;
+			btn.disabled = true;
+			btn.textContent = "Linking...";
+			portalCall("functional_demo.api.create_consultant_profile", {
+				user: "{{ frappe.session.user }}",
+				consultant_name: name || null,
+				specialization: spec || null,
+			}).then(function () {
+				portalAlert("Consultant profile created. Loading your templates...", "ok");
+				setTimeout(function () { window.location.reload(); }, 900);
+			}).catch(function () {
+				btn.disabled = false;
+				btn.textContent = "⚡ Link my user";
+			});
+		});
+	}
+	{% endif %}
 	{% if my_consultant %}
 
 	function initRepeaters() {
