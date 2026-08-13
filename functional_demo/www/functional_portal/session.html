@@ -115,7 +115,7 @@
 
 					<div id="form-complete" style="display: none;" class="portal-form">
 						<div class="divider"></div>
-						<label>Overall Feedback</label>
+						<label>Overall Feedback <span class="req">*</span></label>
 						<textarea id="fb-overall" placeholder="How did the demo go?"></textarea>
 						<div class="form-row">
 							<div>
@@ -362,6 +362,10 @@
 			document.getElementById("fb-followup-fields").style.display = this.checked ? "block" : "none";
 		});
 		document.getElementById("btn-complete").addEventListener("click", function () {
+			if (!val("fb-overall").trim()) {
+				portalAlert("Please enter the overall feedback before completing the demo.", "err");
+				return;
+			}
 			var btn = this; btn.disabled = true;
 			var questions = val("fb-questions").split("\n").map(function (x) { return x.trim(); }).filter(Boolean);
 			var changes = val("fb-changes").split("\n").map(function (x) { return x.trim(); }).filter(Boolean);

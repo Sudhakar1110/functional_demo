@@ -1,0 +1,123 @@
+{% extends "templates/web.html" %}
+{% block banner %}{% endblock %}
+{% block navbar %}{% endblock %}
+{% block footer %}{% endblock %}
+{% block style %}{% include "functional_demo/templates/includes/portal_style.html" %}{% endblock %}
+{% block content %}
+<div class="portal-layout">
+	<header class="portal-topbar">
+		<button class="sidebar-toggle" id="sidebar-toggle" aria-label="Menu">&#9776;</button>
+		<a class="topbar-brand" href="/demo_portal">
+			<img class="brand-logo" src="/assets/functional_demo/images/brand_logo.jpg" alt="Brand Logo" />
+			<div class="brand-text">
+				<span class="brand-name">Demo Portal</span>
+				<span class="brand-sub">Sales &amp; Functional</span>
+			</div>
+		</a>
+		<div class="topbar-title">
+			<h1>{{ title }}</h1>
+			<p>{{ subtitle }}</p>
+		</div>
+		<div class="topbar-right">
+			<span class="portal-avatar">{{ full_name[:1] }}</span>
+			<span class="portal-user-name">{{ full_name }}</span>
+			<a class="btn-logout" href="/logout">Log Out</a>
+		</div>
+	</header>
+	<div class="portal-body">
+		<aside class="portal-sidebar" id="portal-sidebar">
+			<div class="sidebar-menu">
+			{% for item in sidebar_items %}
+			<a class="sidebar-item {% if item.active %}active{% endif %}" href="{{ item.route }}">
+				<span class="sidebar-icon">{{ item.icon | safe }}</span>{{ item.label }}
+			</a>
+			{% endfor %}
+			</div>
+			<div class="sidebar-footer">
+				<a class="sidebar-desk" href="/app" target="_blank" rel="noopener">Open ERPNext &nearr;</a>
+			</div>
+		</aside>
+		<div class="sidebar-overlay"></div>
+		<div class="portal-main">
+			<div class="portal-content">
+				<div class="flex-between mb-16">
+					<div>
+						<h2 style="margin: 0; font-size: 20px; font-weight: 800; color: #05133C;">Template Feedback ({{ total_templates }} templates)</h2>
+						<p class="text-muted" style="margin: 4px 0 0;">{{ total_feedback }} feedback {{ "entry" if total_feedback == 1 else "entries" }} recorded across all templates. The same view is available in the desk at <a href="/app/demo-feedback" target="_blank" rel="noopener">Template Feedback</a>.</p>
+					</div>
+				</div>
+
+				{% for t in templates %}
+				<div class="portal-card">
+					<div class="card-head" style="align-items: flex-start;">
+						<div>
+							<h2>{{ t.template_name }}</h2>
+							<div class="muted" style="margin-top: 6px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+								{% if t.erpnext_module %}<span class="chip">{{ t.erpnext_module }}</span>{% endif %}
+								{% if t.business_area %}<span class="chip">{{ t.business_area }}</span>{% endif %}
+								<span>Owner: {{ t.owner_display }}</span>
+								<span>Feedback: {{ t.feedback_count }}</span>
+							</div>
+						</div>
+						<span class="badge b-{{ 'completed' if t.is_active else 'draft' }}">{{ 'Active' if t.is_active else 'Inactive' }}</span>
+					</div>
+					{% if t.demo_objective %}
+					<div class="card-body" style="padding-bottom: 6px;">
+						<p class="text-muted" style="margin: 0;">{{ t.demo_objective }}</p>
+					</div>
+					{% endif %}
+					<div class="card-body flush">
+						{% if t.sessions %}
+						<table class="table-portal">
+							<thead>
+								<tr>
+									<th>Customer</th>
+									<th>Date</th>
+									<th>Overall Feedback</th>
+									<th>Interested</th>
+									<th>Requirements Met</th>
+									<th>Questions / Changes</th>
+									<th>Result</th>
+								</tr>
+							</thead>
+							<tbody>
+								{% for s in t.sessions %}
+								<tr>
+									<td><strong>{{ s.customer_display }}</strong><div class="muted">{{ s.consultant_display }}</div></td>
+									<td class="muted">{{ s.date_display }}</td>
+									<td class="wrap" style="max-width: 320px;">{{ s.overall_feedback or "-" }}</td>
+									<td>{{ s.interested or "-" }}</td>
+									<td>{{ s.requirements_met or "-" }}</td>
+									<td>
+										{% if s.feedback_items %}
+										<ul style="margin: 0; padding-left: 16px;">
+											{% for it in s.feedback_items %}<li><strong>{{ it.item_type }}:</strong> {{ it.description }}</li>{% endfor %}
+										</ul>
+										{% else %}<span class="muted">-</span>{% endif %}
+									</td>
+									<td>{{ s.final_result or "-" }}</td>
+								</tr>
+								{% endfor %}
+							</tbody>
+						</table>
+						{% else %}
+						<p class="text-muted" style="margin: 0; padding: 16px;">No feedback recorded for this template yet.</p>
+						{% endif %}
+					</div>
+				</div>
+				{% endfor %}
+
+				{% if not templates %}
+				<div class="portal-card">
+					<div class="empty-state">
+						<div class="empty-icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
+						<h3>No templates yet</h3>
+						<p>Create demo templates and run demos — feedback recorded against them will appear here.</p>
+					</div>
+				</div>
+				{% endif %}
+			</div>
+		</div>
+	</div>
+</div>
+{% endblock %}

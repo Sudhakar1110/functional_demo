@@ -143,30 +143,31 @@ re-import.
 
 
 def sync_sales_workspace():
-	"""Force re-import the Sales Demo Workspace JSON on every migrate.
+	"""Force re-import both app workspaces on every migrate.
 
 	The standard workspace sync only applies when the JSON's `modified` is
 	newer than the record in the database, which is not guaranteed on
-	already-installed sites. A force import makes sure the removed Lead
-	shortcut/link (leads are managed from the sales portal only, not the
-	desk) actually disappears from the live workspace.
+	already-installed sites. A force import makes sure workspace changes
+	(removed Lead shortcut/link, new shortcuts like Template Feedback) actually
+	appear in the live desk.
 	"""
 	from frappe.modules.import_file import import_file_by_path
 
-	path = frappe.get_app_path(
-		"functional_demo",
-		"sales_demo",
-		"workspace",
-		"sales_demo_workspace",
-		"sales_demo_workspace.json",
+	workspaces = (
+		("sales_demo_workspace", "sales_demo_workspace.json"),
+		("functional_demo_workspace", "functional_demo_workspace.json"),
 	)
-	try:
-		import_file_by_path(path, force=True)
-	except Exception:
-		frappe.log_error(
-			title=_("functional_demo: failed to re-import Sales Demo Workspace"),
-			message=frappe.get_traceback(),
+	for folder, fname in workspaces:
+		path = frappe.get_app_path(
+			"functional_demo", "sales_demo", "workspace", folder, fname
 		)
+		try:
+			import_file_by_path(path, force=True)
+		except Exception:
+			frappe.log_error(
+				title=_("functional_demo: failed to re-import {0}").format(fname),
+				message=frappe.get_traceback(),
+			)
 
 
 def fix_workspace_parents():

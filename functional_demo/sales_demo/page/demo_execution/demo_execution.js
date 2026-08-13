@@ -269,7 +269,7 @@ frappe.pages["demo-execution"].on_page_load = function (wrapper) {
 		const dialog = new frappe.ui.Dialog({
 			title: __("Complete Demo & Feedback"),
 			fields: [
-				{ fieldname: "overall_feedback", label: __("Overall Feedback"), fieldtype: "Small Text" },
+				{ fieldname: "overall_feedback", label: __("Overall Feedback"), fieldtype: "Small Text", reqd: 1 },
 				{ fieldname: "interested", label: __("Interested?"), fieldtype: "Select", options: ["", "Interested", "Not Interested", "Undecided"] },
 				{ fieldname: "requirements_met", label: __("Requirements Met"), fieldtype: "Select", options: ["", "Fully Met", "Partially Met", "Not Met"] },
 				{ fieldname: "additional_requirements", label: __("Additional Requirements"), fieldtype: "Small Text" },

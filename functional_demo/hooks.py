@@ -28,7 +28,10 @@ after_migrate = "functional_demo.install.after_migrate"
 # Demo Execution screen: ships as a standard Page doctype (Sales Demo > Page >
 # demo-execution) - its JS is loaded by Frappe for the /app/demo-execution route.
 # Only the shared CSS is included globally so the styling also applies in other views.
-app_include_css = ["/assets/functional_demo/css/demo_execution.css"]
+app_include_css = [
+	"/assets/functional_demo/css/demo_execution.css",
+	"/assets/functional_demo/css/demo_feedback.css",
+]
 
 # Portal (website) pages: the shared styles + JS are inlined directly in each
 # page template (templates/includes/portal_style.html / portal_script.html) so the

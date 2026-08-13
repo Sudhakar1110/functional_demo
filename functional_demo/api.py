@@ -667,28 +667,6 @@ def export_demo_requests(status=None):
 
 
 # ---------------------------------------------------------------------------
-# Request templates (reusable pre-filled requirement templates)
-# ---------------------------------------------------------------------------
-
-@frappe.whitelist()
-def get_request_template(template=None):
-	"""Return the fields of a Demo Request Template so the create form can
-	pre-fill module, priority, demo type and requirements in one click."""
-	if not template:
-		return {}
-	if not frappe.db.exists("Demo Request Template", template):
-		frappe.throw(_("Template {0} was not found.").format(template))
-	doc = frappe.get_doc("Demo Request Template", template)
-	return {
-		"interested_module": doc.interested_module or "",
-		"priority": doc.priority or "",
-		"demo_type": doc.demo_type or "",
-		"customer_requirements": doc.customer_requirements or "",
-		"business_process_requirements": doc.business_process_requirements or "",
-	}
-
-
-# ---------------------------------------------------------------------------
 # Demo Session quick actions (used by the form and the Execution screen)
 # ---------------------------------------------------------------------------
 
@@ -862,6 +840,106 @@ def get_my_demo_sessions(demo_status=None):
 		order_by="scheduled_date desc",
 		limit_page_length=50,
 	)
+
+
+# ---------------------------------------------------------------------------
+# Template feedback (Feedback page - shared by the portal and the desk)
+# ---------------------------------------------------------------------------
+
+def get_template_feedback_data():
+	"""Return every Functional Demo Template together with the feedback recorded
+	against the demos that used it (overall feedback, interest, requirements met,
+	customer questions/change requests, final result, ...).
+
+	Single source of truth for the portal Feedback page (/feedback) and the desk
+	demo-feedback page (/app/demo-feedback), so both sides always show the same
+	data. ignore_permissions: feedback is shared reference data for the whole
+	sales + functional team - both pages are already gated by role."""
+	templates = frappe.get_all(
+		"Functional Demo Template",
+		fields=[
+			"name", "template_name", "functional_consultant", "erpnext_module",
+			"business_area", "is_active", "demo_objective", "modified",
+		],
+		order_by="template_name asc",
+		ignore_permissions=True,
+		limit_page_length=200,
+	) or []
+	if not templates:
+		return templates
+
+	names = [t.name for t in templates]
+	sessions = frappe.get_all(
+		"Demo Session",
+		filters={
+			"demo_template": ["in", names],
+			"demo_status": ["in", ["Completed", "Follow-up Required", "Closed"]],
+		},
+		fields=[
+			"name", "demo_template", "customer", "lead", "scheduled_date", "completed_on",
+			"overall_feedback", "interested", "requirements_met", "additional_requirements",
+			"requested_changes", "follow_up_required", "follow_up_date", "next_action",
+			"consultant_remarks", "final_result", "functional_consultant", "sales_person",
+		],
+		order_by="completed_on desc",
+		ignore_permissions=True,
+		limit_page_length=500,
+	) or []
+
+	# per-session feedback rows (child table, fetched in bulk)
+	items_map = {}
+	session_names = [s.name for s in sessions]
+	if session_names:
+		for row in frappe.get_all(
+			"Demo Feedback Item",
+			filters={"parent": ["in", session_names]},
+			fields=["parent", "item_type", "description"],
+			order_by="idx asc",
+			ignore_permissions=True,
+		):
+			items_map.setdefault(row.parent, []).append(
+				{"item_type": row.item_type or "Question", "description": row.description or ""}
+			)
+
+	# consultant display names (bulk)
+	consultant_ids = {s.functional_consultant for s in sessions if s.functional_consultant}
+	consultant_names = {}
+	if consultant_ids:
+		for c in frappe.get_all(
+			"Functional Consultant",
+			filters={"name": ["in", list(consultant_ids)]},
+			fields=["name", "consultant_name"],
+			ignore_permissions=True,
+		):
+			consultant_names[c.name] = c.consultant_name
+
+	by_template = {}
+	for s in sessions:
+		s["feedback_items"] = items_map.get(s.name, [])
+		s["customer_display"] = s.customer or s.lead or "-"
+		s["date_display"] = (
+			frappe.utils.format_date(s.completed_on or s.scheduled_date, "medium")
+			if (s.completed_on or s.scheduled_date)
+			else "-"
+		)
+		s["consultant_display"] = (
+			consultant_names.get(s.functional_consultant) or s.functional_consultant or "-"
+		)
+		by_template.setdefault(s.demo_template, []).append(s)
+
+	for t in templates:
+		t["sessions"] = by_template.get(t.name, [])
+		t["feedback_count"] = len(t["sessions"])
+		t["owner_display"] = (
+			consultant_names.get(t.functional_consultant) or t.functional_consultant or "-"
+		)
+	return templates
+
+
+@frappe.whitelist()
+def get_template_feedback():
+	"""Return every template with its demo feedback (Feedback page - portal & desk)."""
+	return get_template_feedback_data()
 
 
 # ---------------------------------------------------------------------------

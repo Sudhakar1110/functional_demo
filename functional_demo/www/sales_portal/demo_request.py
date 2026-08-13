@@ -75,13 +75,6 @@ def get_context(context):
 		# (?customer=) or an ERPNext Opportunity (?opportunity=) pulls the
 		# contact / company details from the CRM record into the form.
 		context.prefill = _lead_opportunity_prefill()
-		# Reusable request templates (industry presets) - Feature: Request Templates
-		context.request_templates = frappe.get_all(
-			"Demo Request Template",
-			filters={"is_active": 1},
-			fields=["name", "template_name"],
-			order_by="template_name asc",
-		) or []
 		return context
 
 	# get_doc applies the app's row-level + document-level permissions automatically

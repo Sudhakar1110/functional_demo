@@ -274,6 +274,14 @@ class DemoSession(Document):
 				title=_("Demo Not Started"),
 			)
 		feedback = feedback or {}
+		# The consultant must record feedback before the demo can be completed -
+		# this is the whole point of the completion step, so an empty submission
+		# is rejected even if a stale client skips the UI validation.
+		if not str(feedback.get("overall_feedback") or "").strip():
+			frappe.throw(
+				_("Please enter the overall feedback before completing the demo."),
+				title=_("Feedback Required"),
+			)
 
 		def _set(fieldname, key=None):
 			value = feedback.get(key or fieldname)

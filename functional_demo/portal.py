@@ -118,6 +118,7 @@ ICON_SESSIONS = _icon('<rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><
 ICON_TEMPLATES = _icon('<rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/>')
 ICON_FOLLOWUPS = _icon('<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>')
 ICON_MANAGER = _icon('<path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/>')
+ICON_FEEDBACK = _icon('<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>')
 
 
 def sidebar_items(active):
@@ -142,6 +143,9 @@ def sidebar_items(active):
 
 	if is_manager():
 		items += [{"label": _("Manager Dashboard"), "route": "/manager_portal", "icon": ICON_MANAGER, "active": active == "manager"}]
+
+	# Shared section: template feedback is visible to every portal role
+	items.append({"label": _("Feedback"), "route": "/feedback", "icon": ICON_FEEDBACK, "active": active == "feedback"})
 
 	return items
 

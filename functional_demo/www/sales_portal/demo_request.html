@@ -51,15 +51,6 @@
 				<div class="card-body">
 					<form class="portal-form" id="dr-form">
 					<div class="form-row">
-						<div style="grid-column: 1 / -1;">
-							<label>Start from a Request Template <span class="form-hint">(optional - pre-fills the form)</span></label>
-							<select id="request-template">
-								<option value="">— Select a template —</option>
-								{% for t in request_templates %}<option value="{{ t.name }}">{{ t.template_name }}</option>{% endfor %}
-							</select>
-						</div>
-					</div>
-					<div class="form-row">
 						<div>
 							<label>Customer <span class="form-hint">(optional - pick one, or type a new name to auto-create)</span></label>
 							<input type="text" id="customer" name="customer" list="customers-list" placeholder="Type &amp; pick a customer, or type a new one..." value="{{ prefill.customer }}" autocomplete="off">
@@ -397,22 +388,6 @@
 	var preLead = document.getElementById("lead").value.trim();
 	if (preLead) fillContact("lead", preLead);
 
-	/* Load a Request Template: pre-fills module, priority, demo type and the
-	   requirement text areas in one click. */
-	var tmplSel = document.getElementById("request-template");
-	if (tmplSel) tmplSel.addEventListener("change", function () {
-		var name = this.value;
-		if (!name) return;
-		portalCall("functional_demo.api.get_request_template", { template: name })
-			.then(function (t) {
-				if (!t) return;
-				if (t.interested_module) document.getElementById("interested_module").value = t.interested_module;
-				if (t.priority) document.getElementById("priority").value = t.priority;
-				if (t.demo_type) document.getElementById("demo_type").value = t.demo_type;
-				if (t.customer_requirements) document.getElementById("customer_requirements").value = t.customer_requirements;
-				if (t.business_process_requirements) document.getElementById("business_process_requirements").value = t.business_process_requirements;
-			});
-	});
 
 	/* The Customer / Lead boxes only accept real records: the value must be one
 	   of the datalist options (picked from the suggestions). A free-typed name
