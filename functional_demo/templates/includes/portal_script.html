@@ -205,7 +205,7 @@
 	   Replace any favicon link the base template already emitted so the
 	   brand logo is the single deterministic tab icon. */
 	(function () {
-		var logo = "/images/favicon.jpg";
+		var logo = "/assets/functional_demo/images/favicon.jpg";
 		var existing = document.querySelectorAll('link[rel*="icon"]');
 		for (var i = 0; i < existing.length; i++) existing[i].remove();
 		var link = document.createElement("link");
@@ -215,7 +215,7 @@
 		document.head.appendChild(link);
 		var apple = document.createElement("link");
 		apple.rel = "apple-touch-icon";
-		apple.href = "/images/brand_logo.jpg";
+		apple.href = "/assets/functional_demo/images/brand_logo.jpg";
 		document.head.appendChild(apple);
 	})();
 })();
