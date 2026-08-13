@@ -544,7 +544,14 @@
 			start_time: document.getElementById("sch-start").value,
 			end_time: document.getElementById("sch-end").value,
 			meeting_link: document.getElementById("sch-link").value,
-		}).then(function () { window.location.reload(); }).catch(function () { btn.disabled = false; });
+		}).then(function (res) {
+			/* Show the confirmation first, then reload so the new status is
+			   visible - an immediate reload wiped the success toast and made
+			   scheduling look like a silent page refresh. */
+			var sessionName = res && res.demo_session ? " (Session " + res.demo_session + ")" : "";
+			portalAlert("Demo scheduled for " + date + sessionName + ".", "ok");
+			setTimeout(function () { window.location.reload(); }, 1400);
+		}).catch(function () { btn.disabled = false; });
 	});
 	{% endif %}
 
