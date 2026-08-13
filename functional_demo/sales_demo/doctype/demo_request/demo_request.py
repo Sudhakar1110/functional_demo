@@ -382,6 +382,10 @@ def get_primary_contact(party_type, party_name):
 	"""Return the primary (or first) Contact linked to a Customer/Lead."""
 	if not party_type or not party_name:
 		return None
+	# NOTE: the order_by MUST be qualified with the Contact table. The
+	# Dynamic Link filters join `tabDynamic Link`, which also has a `creation`
+	# column, so a bare `creation asc` makes MySQL raise 'Column 'creation' in
+	# order clause is ambiguous'.
 	names = frappe.get_all(
 		"Contact",
 		filters=[
@@ -390,7 +394,7 @@ def get_primary_contact(party_type, party_name):
 			["is_primary_contact", "=", 1],
 		],
 		limit=1,
-		order_by="creation asc",
+		order_by="`tabContact`.`creation` asc",
 	)
 	if not names:
 		names = frappe.get_all(
@@ -400,7 +404,7 @@ def get_primary_contact(party_type, party_name):
 				["Dynamic Link", "link_name", "=", party_name],
 			],
 			limit=1,
-			order_by="creation asc",
+			order_by="`tabContact`.`creation` asc",
 		)
 	if not names:
 		return None
