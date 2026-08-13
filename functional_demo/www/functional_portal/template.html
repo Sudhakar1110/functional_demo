@@ -126,17 +126,6 @@
 				</div>
 			</div>
 
-				<div class="portal-card">
-					<div class="card-head"><h2>Demo Steps</h2></div>
-					<div class="card-body">
-						{{ repeater_item("steps-rep", [
-							{"name": "step_no", "label": "Step No", "type": "number"},
-							{"name": "description", "label": "Step description *"},
-							{"name": "doctype_to_demo", "label": "DocType / Screen"},
-						], "Template Step", doc.demo_steps if not create_mode else [], "Add step") }}
-					</div>
-				</div>
-
 				<details class="portal-card" {% if not create_mode and (doc.introduction or doc.customer_business_scenario or doc.demo_agenda or doc.demo_notes or doc.key_features or doc.configuration_points or doc.business_benefits or doc.questions_to_ask or doc.customer_questions or doc.faqs or doc.follow_up_points) %}open{% endif %}>
 					<summary class="card-head"><h2>Additional details (optional)</h2></summary>
 					<div class="card-body">
@@ -300,7 +289,6 @@
 			demo_agenda: val("demo_agenda"),
 			demo_notes: val("demo_notes"),
 			is_active: document.getElementById("is_active").checked ? 1 : 0,
-			demo_steps: collectRows("steps-rep", "Template Step"),
 			key_features: collectRows("features-rep", "Template Item"),
 			configuration_points: collectRows("config-rep", "Template Item"),
 			business_benefits: collectRows("benefits-rep", "Template Item"),
