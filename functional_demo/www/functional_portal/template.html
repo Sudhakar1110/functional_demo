@@ -273,13 +273,10 @@
 	document.getElementById("template-form").addEventListener("submit", function (e) {
 		e.preventDefault();
 		if (!val("template_name")) { portalAlert("Template Name is required.", "err"); return; }
+		{% if create_mode %}
 		var doc = {
 			doctype: "Functional Demo Template",
-			{% if create_mode %}
 			functional_consultant: "{{ my_consultant }}",
-			{% else %}
-			name: "{{ doc.name }}",
-			{% endif %}
 			template_name: val("template_name"),
 			erpnext_module: val("erpnext_module"),
 			business_area: val("business_area"),
@@ -297,9 +294,34 @@
 			faqs: collectRows("faqs-rep", "Template Question"),
 			follow_up_points: collectRows("followup-rep", "Template Item"),
 		};
+		var method = "frappe.client.insert";
+		{% else %}
+		/* Edit mode: start from the full server-rendered doc and overlay only
+		   the form-managed fields (same as the desk sends). Fields the form
+		   does not render - functional_consultant, demo_steps, owner, ... -
+		   are preserved, and 'modified' matches the database so Frappe's
+		   optimistic-lock check (client.save) passes. */
+		var doc = {{ doc_json | safe }};
+		doc.template_name = val("template_name");
+		doc.erpnext_module = val("erpnext_module");
+		doc.business_area = val("business_area");
+		doc.demo_objective = val("demo_objective");
+		doc.introduction = val("introduction");
+		doc.customer_business_scenario = val("customer_business_scenario");
+		doc.demo_agenda = val("demo_agenda");
+		doc.demo_notes = val("demo_notes");
+		doc.is_active = document.getElementById("is_active").checked ? 1 : 0;
+		doc.key_features = collectRows("features-rep", "Template Item");
+		doc.configuration_points = collectRows("config-rep", "Template Item");
+		doc.business_benefits = collectRows("benefits-rep", "Template Item");
+		doc.questions_to_ask = collectRows("ask-rep", "Template Question");
+		doc.customer_questions = collectRows("cq-rep", "Template Question");
+		doc.faqs = collectRows("faqs-rep", "Template Question");
+		doc.follow_up_points = collectRows("followup-rep", "Template Item");
+		var method = "frappe.client.save";
+		{% endif %}
 		var btn = document.getElementById("btn-save");
 		btn.disabled = true; btn.textContent = "Saving...";
-		var method = {% if create_mode %}"frappe.client.insert"{% else %}"frappe.client.save"{% endif %};
 		portalCall(method, { doc: doc })
 			.then(function (res) {
 				var saved = res && res.name;

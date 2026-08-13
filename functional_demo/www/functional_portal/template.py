@@ -1,6 +1,8 @@
 # Copyright (c) 2026, Functional Demo Team and Contributors
 # License: GNU General Public License (v3). See LICENSE
 
+import json
+
 import frappe
 from frappe import _
 
@@ -38,4 +40,12 @@ def get_context(context):
 	if not context.create_mode:
 		# get_doc applies document-level permissions (consultants own their templates)
 		context.doc = frappe.get_doc("Functional Demo Template", name)
+		# Render the FULL doc (all fields + child rows) as JSON for the edit
+		# form. The save handler starts from this copy and overlays only the
+		# fields the form manages - exactly what the desk does - so fields the
+		# form does not render (functional_consultant, demo_steps, owner, ...)
+		# are never wiped on save and 'modified' matches the database (Frappe's
+		# optimistic-lock check in client.save requires it). '<' is escaped so
+		# template content can never break out of the inline <script> block.
+		context.doc_json = json.dumps(context.doc.as_dict(), default=str).replace("<", "\\u003c")
 	return context
