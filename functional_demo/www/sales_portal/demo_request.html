@@ -532,11 +532,13 @@
 	var btnSchedule = document.getElementById("btn-schedule");
 	if (btnScheduleToggle) btnScheduleToggle.addEventListener("click", function () { toggle("form-schedule"); });
 	if (btnSchedule) btnSchedule.addEventListener("click", function () {
+		var reqName = requestName();
+		if (!reqName) { portalAlert("The page is stale - please refresh it (Ctrl+Shift+R) and try again.", "err"); return; }
 		var date = document.getElementById("sch-date").value;
 		if (!date) { portalAlert("Please pick a scheduled date.", "err"); return; }
 		var btn = this; btn.disabled = true;
 		portalCall("functional_demo.api.schedule_demo", {
-			demo_request: DOC_NAME,
+			demo_request: reqName,
 			scheduled_date: date,
 			start_time: document.getElementById("sch-start").value,
 			end_time: document.getElementById("sch-end").value,

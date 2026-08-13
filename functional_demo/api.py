@@ -248,11 +248,22 @@ def get_consultant_templates(consultant=None):
 # ---------------------------------------------------------------------------
 
 @frappe.whitelist()
-def schedule_demo(demo_request=None, scheduled_date=None, start_time=None, end_time=None, meeting_link=None):
+def schedule_demo(demo_request=None, scheduled_date=None, start_time=None, end_time=None, meeting_link=None, name=None):
 	"""Schedule (or reschedule) a demo for a Demo Request and create a Demo Session.
 
 	Arguments are optional so a client that fires the call without a value gets
 	a clear popup instead of a TypeError 500."""
+	# Belt & braces for stale portal bundles: older pages posted the request
+	# under the key 'name' (or wrapped the payload in an 'args' dict), which
+	# would otherwise raise 'unexpected keyword argument' / 'Demo Request is
+	# missing' before the function body even runs - accept both so a cached
+	# page can never block scheduling.
+	demo_request = demo_request or name
+	if not demo_request:
+		fd = frappe.local.form_dict or {}
+		if isinstance(fd.get("args"), dict):
+			demo_request = fd["args"].get("demo_request") or fd["args"].get("name")
+		demo_request = demo_request or fd.get("demo_request") or fd.get("name")
 	if not demo_request:
 		frappe.throw(
 			_("Demo Request is missing. Please refresh the page and try again."),
