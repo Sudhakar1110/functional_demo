@@ -285,13 +285,12 @@ def schedule_demo(demo_request=None, scheduled_date=None, start_time=None, end_t
 	dr = frappe.get_doc("Demo Request", demo_request)
 	frappe.has_permission("Demo Request", "write", doc=dr, throw=True)
 
-	# Auto-fill the date from the request's preferred date when the click sends
-	# none (stale page / forgotten picker) - scheduling should never be blocked
-	# by an empty date if the request already has a preferred one.
+	# Auto-fill the date when the click sends none: first the request's
+	# preferred date, then today. Scheduling should never be blocked by an
+	# empty date (stale page, forgotten picker, or a request created without
+	# a preferred slot) - the session can always be rescheduled later.
 	if not scheduled_date:
-		scheduled_date = dr.preferred_demo_date
-	if not scheduled_date:
-		frappe.throw(_("Please select a scheduled date."))
+		scheduled_date = dr.preferred_demo_date or frappe.utils.today()
 
 	if not dr.functional_consultant:
 		frappe.throw(
