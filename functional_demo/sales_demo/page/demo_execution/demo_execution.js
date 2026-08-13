@@ -166,6 +166,7 @@ frappe.pages["demo-execution"].on_page_load = function (wrapper) {
 
 				${render_feedback(session)}
 			</div>`);
+		bind_action_buttons();
 	}
 
 	function render_feedback(session) {
@@ -217,11 +218,17 @@ frappe.pages["demo-execution"].on_page_load = function (wrapper) {
 		return buttons.join("");
 	}
 
-	page.main.on("click", ".demo-exec-actions button", (e) => {
-		const action = $(e.currentTarget).attr("data-action");
+	/* Wire the action buttons with NATIVE event listeners attached at render
+	   time - the previous delegated handler depended on jQuery's global `$`
+	   (and its .on() on page.main), and when that is unavailable in the desk
+	   bundle every button silently does nothing. Native addEventListener works
+	   regardless of how the desk loads jQuery, and is re-attached on each
+	   render so it can never go stale. */
+	function handle_action(action) {
 		const name = current && current.session ? current.session.name : session_field.get_value();
 		if (!name) return;
-		if (action === "start") call("functional_demo.api.start_demo_session", { demo_session: name }, __("Demo started. Good luck!"));
+		if (action === "start")
+			call("functional_demo.api.start_demo_session", { demo_session: name }, __("Demo started. Good luck!"), () => load_session(name));
 		if (action === "cancel") cancel_demo(name);
 		if (action === "complete") complete_demo(name);
 		if (action === "reschedule") reschedule_demo(name);
@@ -229,7 +236,17 @@ frappe.pages["demo-execution"].on_page_load = function (wrapper) {
 		if (action === "result") result_dialog(name);
 		if (action === "open_form") frappe.set_route("Form", "Demo Session", name);
 		if (action === "refresh") load_session(name);
-	});
+	}
+
+	function bind_action_buttons() {
+		const container = page.main && page.main.get ? page.main.get(0) : page.main;
+		if (!container || !container.querySelectorAll) return;
+		container.querySelectorAll(".demo-exec-actions button").forEach((btn) => {
+			btn.addEventListener("click", function () {
+				handle_action(this.getAttribute("data-action"));
+			});
+		});
+	}
 
 	function call(method, args, success_message, on_success) {
 		frappe.call({
