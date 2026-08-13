@@ -420,20 +420,45 @@ def _ensure_lead_source(source_name):
 def change_status(doc, new_status, ignore_permissions=False):
 	"""Move a Demo Request through its workflow with friendly validation.
 
-	Walks the workflow graph so intermediate states (e.g. Requested -> Assigned ->
-	Scheduled) are applied in order even when no direct transition exists. Every
-	step is validated by the framework against the current user's roles, so users
-	can only move the request along transitions their role allows. Jumps further
-	than three transitions ahead are not allowed.
+	Walks the workflow graph so intermediate states (e.g. Draft -> Requested ->
+	Assigned, or Scheduled -> Demo In Progress -> Demo Completed) are applied in
+	order even when no direct transition exists. Every step is validated by the
+	framework against the current user's roles, so users can only move the
+	request along transitions their role allows. Jumps further than three
+	transitions ahead are not allowed.
 	"""
 	from collections import deque
 
-	from frappe.model.workflow import get_transitions
+	from frappe.model.workflow import get_workflow, get_workflow_safe_globals
 
 	doc = frappe.get_doc(doc.doctype, doc.name)
 	current = doc.get("workflow_state") or doc.get("status") or "Draft"
 	if current == new_status:
 		return doc
+
+	workflow = get_workflow(doc.doctype)
+	roles = frappe.get_roles()
+
+	# Transitions per state, restricted to the current user's roles. This
+	# mirrors frappe.model.workflow.get_transitions() but walks the Workflow
+	# definition directly: get_transitions() reloads the document from the DB
+	# (load_from_db), which wipes the simulated workflow_state set below and
+	# used to limit every path to a single transition.
+	transitions_from = {}
+	for transition in workflow.transitions:
+		if transition.allowed not in roles:
+			continue
+		transitions_from.setdefault(transition.state, []).append(transition)
+
+	def transition_allowed(state, transition):
+		if not transition.condition:
+			return True
+		# evaluate the condition against the simulated state so conditions can
+		# inspect the request as it would look in that state
+		simulated = {**doc.as_dict(), "workflow_state": state, "status": state}
+		return frappe.safe_eval(
+			transition.condition, get_workflow_safe_globals(), dict(doc=simulated)
+		)
 
 	# find a path through the workflow graph using role-allowed transitions.
 	# The path is capped at 3 transitions: real flows never need more than
@@ -451,9 +476,10 @@ def change_status(doc, new_status, ignore_permissions=False):
 			break
 		if depth >= 3:
 			continue  # do not explore deeper than 3 transitions
-		doc.workflow_state = state
-		for transition in get_transitions(doc) or []:
-			next_state = transition.get("next_state")
+		for transition in transitions_from.get(state, []):
+			if not transition_allowed(state, transition):
+				continue
+			next_state = transition.next_state
 			if next_state and next_state not in parent:
 				parent[next_state] = state
 				queue.append((next_state, depth + 1))

@@ -51,6 +51,17 @@ class TestDemoSession(FrappeTestCase):
 		content_after = [{"section": s.section, "content": s.content} for s in session.template_sections]
 		self.assertEqual(content_before, content_after)
 
+	def test_completing_session_walks_request_from_scheduled(self):
+		# completing a session without starting it first (e.g. bulk import or a
+		# direct desk edit) must walk the request Scheduled -> Demo In Progress
+		# -> Demo Completed even though no direct transition exists
+		session = make_session(self.request, template=self.template)
+		change_status(self.request, "Scheduled", ignore_permissions=True)
+		session.demo_status = "Completed"
+		session.save(ignore_permissions=True)
+		self.request.reload()
+		self.assertEqual(self.request.status, "Demo Completed")
+
 	def test_full_demo_lifecycle(self):
 		session = make_session(self.request, template=self.template)
 		change_status(self.request, "Scheduled", ignore_permissions=True)
