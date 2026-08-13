@@ -95,7 +95,12 @@
 					"Content-Type": "application/json",
 					"X-Frappe-CSRF-Token": token,
 				},
-				body: JSON.stringify({ args: args || {} }),
+				/* Send the payload flat (NOT wrapped in { args: ... }). Frappe v15
+				   builds form_dict straight from the JSON body and then filters the
+				   call's kwargs down to the method signature, so an 'args' wrapper
+				   would be silently dropped and every method would receive empty
+				   values (e.g. frappe.client.insert(doc) -> doc=None -> TypeError). */
+				body: JSON.stringify(args || {}),
 				credentials: "same-origin",
 			});
 		})

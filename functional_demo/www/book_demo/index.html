@@ -195,7 +195,10 @@
 		return fetch("/api/method/" + method, {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({ args: args || {} }),
+			/* Payload is sent flat (no { args: ... } wrapper) - Frappe v15 filters
+			   kwargs down to the method signature, so a wrapper would be dropped
+			   and every method would receive empty values. */
+			body: JSON.stringify(args || {}),
 			credentials: "same-origin",
 		}).then(function (r) { return r.json(); })
 		.then(function (data) {
