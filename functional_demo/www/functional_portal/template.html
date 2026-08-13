@@ -113,16 +113,18 @@
 							<div><label>Business Area</label><input type="text" id="business_area" value="{{ doc.business_area if not create_mode else '' }}" placeholder="e.g. GST filing & returns"></div>
 							<div><label>Owner Consultant</label><input type="text" value="{{ consultant_name }}" disabled></div>
 						</div>
-						<label>Demo Objective</label>
-						<textarea id="demo_objective" placeholder="What this demo should achieve...">{{ doc.demo_objective if not create_mode else '' }}</textarea>
-						<label>Introduction</label>
-						<textarea id="introduction">{{ doc.introduction if not create_mode else '' }}</textarea>
-						<label>Customer Business Scenario</label>
-						<textarea id="customer_business_scenario">{{ doc.customer_business_scenario if not create_mode else '' }}</textarea>
-						<label>Demo Agenda</label>
-						<textarea id="demo_agenda">{{ doc.demo_agenda if not create_mode else '' }}</textarea>
+					<label>Demo Objective</label>
+					<textarea id="demo_objective" placeholder="What this demo should achieve...">{{ doc.demo_objective if not create_mode else '' }}</textarea>
+					<div class="divider"></div>
+					<label style="display: flex; align-items: center; gap: 8px;">
+						<input type="checkbox" id="is_active" style="width: auto;" {% if not create_mode and doc.is_active %}checked{% endif %}> Active (available for demos)
+					</label>
+					<div class="form-actions">
+						<button class="btn-portal" type="submit" id="btn-save">{{ "Create Template" if create_mode else "Save Changes" }}</button>
+						<a class="btn-portal secondary" href="/functional_portal/my_templates">Cancel</a>
 					</div>
 				</div>
+			</div>
 
 				<div class="portal-card">
 					<div class="card-head"><h2>Demo Steps</h2></div>
@@ -135,85 +137,63 @@
 					</div>
 				</div>
 
-				<div class="portal-card">
-					<div class="card-head"><h2>Key Features</h2></div>
+				<details class="portal-card" {% if not create_mode and (doc.introduction or doc.customer_business_scenario or doc.demo_agenda or doc.demo_notes or doc.key_features or doc.configuration_points or doc.business_benefits or doc.questions_to_ask or doc.customer_questions or doc.faqs or doc.follow_up_points) %}open{% endif %}>
+					<summary class="card-head"><h2>Additional details (optional)</h2></summary>
 					<div class="card-body">
-						{{ repeater_item("features-rep", [
-							{"name": "item", "label": "Feature *"},
-							{"name": "description", "label": "Description"},
-						], "Template Item", doc.key_features if not create_mode else [], "Add feature") }}
-					</div>
-				</div>
+						<label>Introduction</label>
+						<textarea id="introduction">{{ doc.introduction if not create_mode else '' }}</textarea>
+						<label>Customer Business Scenario</label>
+						<textarea id="customer_business_scenario">{{ doc.customer_business_scenario if not create_mode else '' }}</textarea>
+						<label>Demo Agenda</label>
+						<textarea id="demo_agenda">{{ doc.demo_agenda if not create_mode else '' }}</textarea>
+						<div class="divider"></div>
 
-				<div class="portal-card">
-					<div class="card-head"><h2>Configuration Points</h2></div>
-					<div class="card-body">
-						{{ repeater_item("config-rep", [
-							{"name": "item", "label": "Configuration *"},
-							{"name": "description", "label": "Description"},
-						], "Template Item", doc.configuration_points if not create_mode else [], "Add configuration point") }}
-					</div>
-				</div>
+					<h3 class="details-section">Key Features</h3>
+					{{ repeater_item("features-rep", [
+						{"name": "item", "label": "Feature *"},
+						{"name": "description", "label": "Description"},
+					], "Template Item", doc.key_features if not create_mode else [], "Add feature") }}
 
-				<div class="portal-card">
-					<div class="card-head"><h2>Business Benefits</h2></div>
-					<div class="card-body">
-						{{ repeater_item("benefits-rep", [
-							{"name": "item", "label": "Benefit *"},
-							{"name": "description", "label": "Description"},
-						], "Template Item", doc.business_benefits if not create_mode else [], "Add benefit") }}
-					</div>
-				</div>
+					<h3 class="details-section">Configuration Points</h3>
+					{{ repeater_item("config-rep", [
+						{"name": "item", "label": "Configuration *"},
+						{"name": "description", "label": "Description"},
+					], "Template Item", doc.configuration_points if not create_mode else [], "Add configuration point") }}
 
-				<div class="portal-card">
-					<div class="card-head"><h2>Questions to Ask the Customer</h2></div>
-					<div class="card-body">
-						{{ repeater_item("ask-rep", [
-							{"name": "question", "label": "Question *"},
-							{"name": "answer", "label": "Suggested Answer"},
-						], "Template Question", doc.questions_to_ask if not create_mode else [], "Add question") }}
-					</div>
-				</div>
+					<h3 class="details-section">Business Benefits</h3>
+					{{ repeater_item("benefits-rep", [
+						{"name": "item", "label": "Benefit *"},
+						{"name": "description", "label": "Description"},
+					], "Template Item", doc.business_benefits if not create_mode else [], "Add benefit") }}
 
-				<div class="portal-card">
-					<div class="card-head"><h2>Common Customer Questions</h2></div>
-					<div class="card-body">
-						{{ repeater_item("cq-rep", [
-							{"name": "question", "label": "Question *"},
-							{"name": "answer", "label": "Suggested Answer"},
-						], "Template Question", doc.customer_questions if not create_mode else [], "Add question") }}
-					</div>
-				</div>
+					<h3 class="details-section">Questions to Ask the Customer</h3>
+					{{ repeater_item("ask-rep", [
+						{"name": "question", "label": "Question *"},
+						{"name": "answer", "label": "Suggested Answer"},
+					], "Template Question", doc.questions_to_ask if not create_mode else [], "Add question") }}
 
-				<div class="portal-card">
-					<div class="card-head"><h2>FAQs</h2></div>
-					<div class="card-body">
-						{{ repeater_item("faqs-rep", [
-							{"name": "question", "label": "Question *"},
-							{"name": "answer", "label": "Answer"},
-						], "Template Question", doc.faqs if not create_mode else [], "Add FAQ") }}
-					</div>
-				</div>
+					<h3 class="details-section">Common Customer Questions</h3>
+					{{ repeater_item("cq-rep", [
+						{"name": "question", "label": "Question *"},
+						{"name": "answer", "label": "Suggested Answer"},
+					], "Template Question", doc.customer_questions if not create_mode else [], "Add question") }}
 
-				<div class="portal-card">
-					<div class="card-head"><h2>Notes &amp; Follow-up</h2></div>
-					<div class="card-body">
-						<label>Demo Notes</label>
-						<textarea id="demo_notes">{{ doc.demo_notes if not create_mode else '' }}</textarea>
-						<label>Follow-up Points</label>
-						{{ repeater_item("followup-rep", [
-							{"name": "item", "label": "Follow-up point *"},
-							{"name": "description", "label": "Description"},
-						], "Template Item", doc.follow_up_points if not create_mode else [], "Add follow-up point") }}
-						<label style="display: flex; align-items: center; gap: 8px; margin-top: 16px;">
-							<input type="checkbox" id="is_active" style="width: auto;" {% if not create_mode and doc.is_active %}checked{% endif %}> Active (available for demos)
-						</label>
-						<div class="form-actions">
-							<button class="btn-portal" type="submit" id="btn-save">{{ "Create Template" if create_mode else "Save Changes" }}</button>
-							<a class="btn-portal secondary" href="/functional_portal/my_templates">Cancel</a>
-						</div>
+					<h3 class="details-section">FAQs</h3>
+					{{ repeater_item("faqs-rep", [
+						{"name": "question", "label": "Question *"},
+						{"name": "answer", "label": "Answer"},
+					], "Template Question", doc.faqs if not create_mode else [], "Add FAQ") }}
+
+					<h3 class="details-section">Notes &amp; Follow-up</h3>
+					<label>Demo Notes</label>
+					<textarea id="demo_notes">{{ doc.demo_notes if not create_mode else '' }}</textarea>
+					<label>Follow-up Points</label>
+					{{ repeater_item("followup-rep", [
+						{"name": "item", "label": "Follow-up point *"},
+						{"name": "description", "label": "Description"},
+					], "Template Item", doc.follow_up_points if not create_mode else [], "Add follow-up point") }}
 					</div>
-				</div>
+				</details>
 			</form>
 			{% endif %}
 		</div>

@@ -611,6 +611,32 @@ body {
 .portal-card .card-body { padding: 20px; }
 .portal-card .card-body.flush { padding: 0; }
 
+/* Collapsible card (native <details>) used to keep long forms short */
+details.portal-card > summary.card-head {
+	cursor: pointer;
+	list-style: none;
+	user-select: none;
+}
+details.portal-card > summary.card-head::-webkit-details-marker {
+	display: none;
+}
+details.portal-card > summary.card-head::after {
+	content: "＋";
+	font-size: 15px;
+	color: var(--bx-gray-400);
+}
+details.portal-card[open] > summary.card-head::after {
+	content: "－";
+}
+.details-section {
+	font-size: 15px;
+	font-weight: 600;
+	color: var(--bx-navy);
+	letter-spacing: -0.2px;
+	margin: 22px 0 10px;
+}
+.details-section:first-child { margin-top: 0; }
+
 /* ==========================================================================
    Tables
    ========================================================================== */
