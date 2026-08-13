@@ -35,6 +35,7 @@ def after_migrate():
 	create_workflow_states()
 	backfill_consultant_statuses()
 	move_approved_requests_forward()
+	sync_sales_workspace()
 
 
 def backfill_consultant_statuses():
@@ -121,6 +122,33 @@ re-import.
 			if cur != field:
 				frappe.db.set_value("Dashboard Chart", chart_name, "group_by_based_on", field)
 	frappe.db.commit()
+
+
+def sync_sales_workspace():
+	"""Force re-import the Sales Demo Workspace JSON on every migrate.
+
+	The standard workspace sync only applies when the JSON's `modified` is
+	newer than the record in the database, which is not guaranteed on
+	already-installed sites. A force import makes sure the removed Lead
+	shortcut/link (leads are managed from the sales portal only, not the
+	desk) actually disappears from the live workspace.
+	"""
+	from frappe.modules.import_file import import_file_by_path
+
+	path = frappe.get_app_path(
+		"functional_demo",
+		"sales_demo",
+		"workspace",
+		"sales_demo_workspace",
+		"sales_demo_workspace.json",
+	)
+	try:
+		import_file_by_path(path, force=True)
+	except Exception:
+		frappe.log_error(
+			title=_("functional_demo: failed to re-import Sales Demo Workspace"),
+			message=frappe.get_traceback(),
+		)
 
 
 def fix_workspace_parents():
