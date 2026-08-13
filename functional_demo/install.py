@@ -34,6 +34,7 @@ def after_migrate():
 	records introduced by later versions of the app. All steps are idempotent."""
 	create_workflow_states()
 	backfill_consultant_statuses()
+	backfill_session_consultants()
 	move_approved_requests_forward()
 	sync_sales_workspace()
 
@@ -50,6 +51,23 @@ def backfill_consultant_statuses():
 		"""update `tabFunctional Consultant`
 		set status = 'Active'
 		where ifnull(status, '') = ''"""
+	)
+	frappe.db.commit()
+
+
+def backfill_session_consultants():
+	"""One-time data fix: sessions created before the consultant was always
+	copied from the Demo Request can be empty, which shows 'No consultant
+	selected' on the session form. Auto-select the request's consultant so
+	every session carries the assigned consultant."""
+	if not frappe.db.exists("DocType", "Demo Session"):
+		return
+	frappe.db.sql(
+		"""update `tabDemo Session` ds
+		join `tabDemo Request` dr on dr.name = ds.demo_request
+		set ds.functional_consultant = dr.functional_consultant
+		where ifnull(ds.functional_consultant, '') = ''
+			and ifnull(dr.functional_consultant, '') != ''"""
 	)
 	frappe.db.commit()
 

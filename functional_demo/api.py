@@ -282,11 +282,16 @@ def schedule_demo(demo_request=None, scheduled_date=None, start_time=None, end_t
 			),
 			title=_("Missing Request"),
 		)
-	if not scheduled_date:
-		frappe.throw(_("Please select a scheduled date."))
-
 	dr = frappe.get_doc("Demo Request", demo_request)
 	frappe.has_permission("Demo Request", "write", doc=dr, throw=True)
+
+	# Auto-fill the date from the request's preferred date when the click sends
+	# none (stale page / forgotten picker) - scheduling should never be blocked
+	# by an empty date if the request already has a preferred one.
+	if not scheduled_date:
+		scheduled_date = dr.preferred_demo_date
+	if not scheduled_date:
+		frappe.throw(_("Please select a scheduled date."))
 
 	if not dr.functional_consultant:
 		frappe.throw(
@@ -308,6 +313,10 @@ def schedule_demo(demo_request=None, scheduled_date=None, start_time=None, end_t
 			ds.start_time = start_time
 			ds.end_time = end_time
 			ds.meeting_link = meeting_link
+			# auto-select the request's consultant - a session created before the
+			# consultant was always copied can be empty, so top it up on reschedule
+			if not ds.functional_consultant:
+				ds.functional_consultant = dr.functional_consultant
 			ds.reschedule_count = int(ds.reschedule_count or 0) + 1
 			ds.flags.rescheduling = True
 			ds.save(ignore_permissions=True)
@@ -315,6 +324,10 @@ def schedule_demo(demo_request=None, scheduled_date=None, start_time=None, end_t
 		else:
 			ds = frappe.new_doc("Demo Session")
 			ds.demo_request = dr.name
+			# auto-select: the session always carries the request's consultant so
+			# the form never shows 'No consultant selected'
+			ds.functional_consultant = dr.functional_consultant
+			ds.consultant_user = dr.consultant_user
 			ds.scheduled_date = scheduled_date
 			ds.start_time = start_time
 			ds.end_time = end_time

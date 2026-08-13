@@ -242,10 +242,11 @@
 					<div id="form-schedule" style="display: none;" class="portal-form">
 						<div class="divider"></div>
 						<div class="form-row">
+							<div><label>Functional Consultant</label><input type="text" value="{{ consultant_names.get(doc.functional_consultant) or doc.functional_consultant }}" disabled></div>
 							<div><label>Scheduled Date <span class="req">*</span></label><input type="date" id="sch-date" value="{{ doc.preferred_demo_date or '' }}"></div>
-							<div><label>Start Time</label><input type="time" id="sch-start" value="{{ doc.preferred_demo_time or '' }}"></div>
 						</div>
 						<div class="form-row">
+							<div><label>Start Time</label><input type="time" id="sch-start" value="{{ doc.preferred_demo_time or '' }}"></div>
 							<div><label>End Time</label><input type="time" id="sch-end"></div>
 							<div><label>Meeting Link</label><input type="text" id="sch-link" placeholder="https://meet.google.com/..."></div>
 						</div>

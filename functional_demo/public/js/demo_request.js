@@ -113,6 +113,7 @@ function schedule_demo_dialog(frm) {
 	const dialog = new frappe.ui.Dialog({
 		title: __("Schedule Demo"),
 		fields: [
+			{ fieldname: "functional_consultant", label: __("Functional Consultant"), fieldtype: "Read Only", default: frm.doc.functional_consultant },
 			{ fieldname: "scheduled_date", label: __("Scheduled Date"), fieldtype: "Date", reqd: 1, default: frm.doc.preferred_demo_date },
 			{ fieldname: "start_time", label: __("Start Time"), fieldtype: "Time", default: frm.doc.preferred_demo_time },
 			{ fieldname: "end_time", label: __("End Time"), fieldtype: "Time" },
