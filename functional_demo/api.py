@@ -265,8 +265,21 @@ def schedule_demo(demo_request=None, scheduled_date=None, start_time=None, end_t
 			demo_request = fd["args"].get("demo_request") or fd["args"].get("name")
 		demo_request = demo_request or fd.get("demo_request") or fd.get("name")
 	if not demo_request:
+		# log what actually arrived so the real cause is never lost to a
+		# truncated popup - the portal error dialog only shows the last line
+		frappe.log_error(
+			title=_("Schedule Demo: missing request name"),
+			message="form_dict={0}\nargs={1}\nkwargs demo_request={2!r} name={3!r}".format(
+				str(frappe.local.form_dict or {})[:500],
+				str(getattr(frappe.local, "request", None))[:200],
+				demo_request,
+				name,
+			),
+		)
 		frappe.throw(
-			_("Demo Request is missing. Please refresh the page and try again."),
+			_("Demo Request is missing. Please refresh the page (Ctrl+Shift+R) and try again. Server received: {0}").format(
+				str(frappe.local.form_dict or {})[:300]
+			),
 			title=_("Missing Request"),
 		)
 	if not scheduled_date:
