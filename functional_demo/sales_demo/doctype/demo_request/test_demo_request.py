@@ -48,13 +48,21 @@ class TestDemoRequest(FrappeTestCase):
 
 	def test_portal_create_jumps_draft_to_assigned(self):
 		# the sales portal creates a request with a consultant and moves it
-		# straight to Assigned in one call - the path walker must apply the
-		# intermediate Requested state on the way (Draft -> Requested -> Assigned)
+		# straight to Assigned in one call - the direct Draft -> Assigned
+		# transition means the intermediate Requested state is never recorded
 		doc = make_demo_request(consultant=self.consultant.name)
 		self.assertEqual(doc.status, "Draft")
 		doc = change_status(doc, "Assigned", ignore_permissions=True)
 		self.assertEqual(doc.status, "Assigned")
 		self.assertEqual(doc.workflow_state, "Assigned")
+		status_changes = [
+			row.remarks
+			for row in (doc.get("demo_request_activity") or [])
+			if row.activity_type == "Status Changed"
+		]
+		self.assertIn("Draft -> Assigned", status_changes)
+		self.assertNotIn("Draft -> Requested", status_changes)
+		self.assertNotIn("Requested -> Assigned", status_changes)
 
 	def test_invalid_transition_is_blocked(self):
 		doc = make_demo_request(consultant=self.consultant.name)
