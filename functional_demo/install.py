@@ -148,7 +148,7 @@ def sync_sales_workspace():
 	The standard workspace sync only applies when the JSON's `modified` is
 	newer than the record in the database, which is not guaranteed on
 	already-installed sites. A force import makes sure workspace changes
-	(removed Lead shortcut/link, new shortcuts like Template Feedback) actually
+	(removed Lead shortcut/link, new shortcuts like Demo Feedback) actually
 	appear in the live desk.
 	"""
 	from frappe.modules.import_file import import_file_by_path

@@ -3,18 +3,17 @@
 
 from frappe import _
 
-from functional_demo.api import get_template_feedback_data
+from functional_demo.api import get_demo_feedback_data
 from functional_demo.portal import portal_context
 
 
 def get_context(context):
 	portal_context(
 		context,
-		_("Template Feedback"),
+		_("Demo Feedback"),
 		["Sales User", "Sales Manager", "Functional Consultant", "Functional Team Manager"],
 		active="feedback",
-		subtitle=_("Demo templates and the feedback recorded against them"),
+		subtitle=_("Feedback recorded against the demos"),
 	)
-	context.templates = get_template_feedback_data()
-	context.total_templates = len(context.templates)
-	context.total_feedback = sum(t.get("feedback_count") or 0 for t in context.templates)
+	context.feedback = get_demo_feedback_data()
+	context.total_feedback = len(context.feedback)

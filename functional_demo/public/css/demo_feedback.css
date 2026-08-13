@@ -1,4 +1,4 @@
-/* Template Feedback desk page (/app/demo-feedback) */
+/* Demo Feedback desk page (/app/demo-feedback) */
 .demo-fb-page {
 	max-width: 1100px;
 }
@@ -13,69 +13,13 @@
 	background: var(--card-bg, #fff);
 	border: 1px solid var(--border-color, #e5e7eb);
 	border-radius: 0.75rem;
-	padding: 1rem 1.25rem;
-	margin-bottom: 1.25rem;
-}
-
-.demo-fb-card-head {
-	display: flex;
-	justify-content: space-between;
-	align-items: flex-start;
-	gap: 0.75rem;
-	flex-wrap: wrap;
-}
-
-.demo-fb-card-head h3 {
-	margin: 0 0 0.4rem;
-	font-size: 1.05rem;
-	font-weight: 700;
-}
-
-.demo-fb-meta {
-	display: flex;
-	gap: 0.5rem;
-	flex-wrap: wrap;
-	align-items: center;
-	font-size: 0.8rem;
-	color: var(--text-muted, #6b7280);
-}
-
-.demo-fb-chip {
-	background: var(--bg-light-gray, #f3f4f6);
-	border-radius: 999px;
-	padding: 0.1rem 0.6rem;
-	font-size: 0.75rem;
-}
-
-.demo-fb-badge {
-	font-size: 0.75rem;
-	font-weight: 600;
-	border-radius: 999px;
-	padding: 0.15rem 0.65rem;
-	white-space: nowrap;
-}
-
-.demo-fb-badge.active {
-	background: var(--bg-green, #e5f6ec);
-	color: var(--text-green, #1f7a3d);
-}
-
-.demo-fb-badge.inactive {
-	background: var(--bg-light-gray, #f3f4f6);
-	color: var(--text-muted, #6b7280);
-}
-
-.demo-fb-objective {
-	margin: 0.6rem 0;
-	font-size: 0.85rem;
-	color: var(--text-muted, #6b7280);
+	padding: 0.5rem 1.25rem;
 }
 
 .demo-fb-table {
 	width: 100%;
 	border-collapse: collapse;
 	font-size: 0.85rem;
-	margin-top: 0.5rem;
 }
 
 .demo-fb-table th,
@@ -110,5 +54,5 @@
 
 .demo-fb-empty {
 	color: var(--text-muted, #6b7280);
-	margin: 0.75rem 0 0;
+	margin: 1rem 0;
 }

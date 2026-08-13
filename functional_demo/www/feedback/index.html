@@ -42,35 +42,18 @@
 			<div class="portal-content">
 				<div class="flex-between mb-16">
 					<div>
-						<h2 style="margin: 0; font-size: 20px; font-weight: 800; color: #05133C;">Template Feedback ({{ total_templates }} templates)</h2>
-						<p class="text-muted" style="margin: 4px 0 0;">{{ total_feedback }} feedback {{ "entry" if total_feedback == 1 else "entries" }} recorded across all templates. The same view is available in the desk at <a href="/app/demo-feedback" target="_blank" rel="noopener">Template Feedback</a>.</p>
+						<h2 style="margin: 0; font-size: 20px; font-weight: 800; color: #05133C;">Demo Feedback ({{ total_feedback }})</h2>
+						<p class="text-muted" style="margin: 4px 0 0;">Feedback recorded against the demos, newest first. The same view is available in the desk at <a href="/app/demo-feedback" target="_blank" rel="noopener">Demo Feedback</a>.</p>
 					</div>
 				</div>
 
-				{% for t in templates %}
 				<div class="portal-card">
-					<div class="card-head" style="align-items: flex-start;">
-						<div>
-							<h2>{{ t.template_name }}</h2>
-							<div class="muted" style="margin-top: 6px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
-								{% if t.erpnext_module %}<span class="chip">{{ t.erpnext_module }}</span>{% endif %}
-								{% if t.business_area %}<span class="chip">{{ t.business_area }}</span>{% endif %}
-								<span>Owner: {{ t.owner_display }}</span>
-								<span>Feedback: {{ t.feedback_count }}</span>
-							</div>
-						</div>
-						<span class="badge b-{{ 'completed' if t.is_active else 'draft' }}">{{ 'Active' if t.is_active else 'Inactive' }}</span>
-					</div>
-					{% if t.demo_objective %}
-					<div class="card-body" style="padding-bottom: 6px;">
-						<p class="text-muted" style="margin: 0;">{{ t.demo_objective }}</p>
-					</div>
-					{% endif %}
+					{% if feedback %}
 					<div class="card-body flush">
-						{% if t.sessions %}
 						<table class="table-portal">
 							<thead>
 								<tr>
+									<th>Session</th>
 									<th>Customer</th>
 									<th>Date</th>
 									<th>Overall Feedback</th>
@@ -81,41 +64,35 @@
 								</tr>
 							</thead>
 							<tbody>
-								{% for s in t.sessions %}
+								{% for f in feedback %}
 								<tr>
-									<td><strong>{{ s.customer_display }}</strong><div class="muted">{{ s.consultant_display }}</div></td>
-									<td class="muted">{{ s.date_display }}</td>
-									<td class="wrap" style="max-width: 320px;">{{ s.overall_feedback or "-" }}</td>
-									<td>{{ s.interested or "-" }}</td>
-									<td>{{ s.requirements_met or "-" }}</td>
+									<td><a href="/app/demo-session/{{ f.name }}" target="_blank" rel="noopener">{{ f.name }}</a></td>
+									<td><strong>{{ f.customer }}</strong><div class="muted">{{ f.consultant }}</div></td>
+									<td class="muted">{{ f.date }}</td>
+									<td class="wrap" style="max-width: 320px;">{{ f.overall_feedback or "-" }}</td>
+									<td>{{ f.interested or "-" }}</td>
+									<td>{{ f.requirements_met or "-" }}</td>
 									<td>
-										{% if s.feedback_items %}
+										{% if f.feedback_items %}
 										<ul style="margin: 0; padding-left: 16px;">
-											{% for it in s.feedback_items %}<li><strong>{{ it.item_type }}:</strong> {{ it.description }}</li>{% endfor %}
+											{% for it in f.feedback_items %}<li><strong>{{ it.item_type }}:</strong> {{ it.description }}</li>{% endfor %}
 										</ul>
 										{% else %}<span class="muted">-</span>{% endif %}
 									</td>
-									<td>{{ s.final_result or "-" }}</td>
+									<td>{{ f.final_result or "-" }}</td>
 								</tr>
 								{% endfor %}
 							</tbody>
 						</table>
-						{% else %}
-						<p class="text-muted" style="margin: 0; padding: 16px;">No feedback recorded for this template yet.</p>
-						{% endif %}
 					</div>
-				</div>
-				{% endfor %}
-
-				{% if not templates %}
-				<div class="portal-card">
+					{% else %}
 					<div class="empty-state">
 						<div class="empty-icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
-						<h3>No templates yet</h3>
-						<p>Create demo templates and run demos — feedback recorded against them will appear here.</p>
+						<h3>No feedback yet</h3>
+						<p>Feedback recorded when demos are completed will appear here.</p>
 					</div>
+					{% endif %}
 				</div>
-				{% endif %}
 			</div>
 		</div>
 	</div>
