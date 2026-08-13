@@ -137,8 +137,7 @@ execution screen.
 ### Functional consultant
 1. Open the **Functional Demo Workspace** → **My Demos**.
 2. Open your Demo Session → **Open Execution Screen** (or `/app/demo-execution`).
-3. Review customer info, select **your demo template** (content is snapshotted),
-   run the demo, then **Complete Demo** with feedback.
+3. Review customer info, run the demo, then **Complete Demo** with feedback.
 4. If follow-up is required, it is created automatically (with a ToDo).
 
 ### Managers
@@ -158,8 +157,7 @@ execution screen.
 | Upcoming Demo Report | Scheduled / in-progress sessions ahead |
 | Completed Demo Report | Completed sessions + feedback |
 | Follow-up Report | Follow-ups with status/outcome |
-| Consultant Workload Report | Active/today/next-week demos + templates |
-| Template Usage Report | Template usage and last-used dates |
+| Consultant Workload Report | Active/today/next-week demos |
 | Module-wise Demo Report | Module-wise pipeline + conversion |
 | Demo Conversion Report | Full funnel + conversion rate |
 
@@ -176,8 +174,8 @@ scheduler runs.
 - **Sales User**: own Demo Requests (if_owner + query filter), read customers,
   create/schedule, manage follow-ups.
 - **Sales Manager**: everything sales (all requests, reassign, reports).
-- **Functional Consultant**: sees only demos/requests assigned to them; manages
-  their own templates; completes demos and records feedback.
+- **Functional Consultant**: sees only demos/requests assigned to them;
+  completes demos and records feedback.
 - **Functional Team Manager**: all consultants, all sessions, templates, workload,
   reassignments.
 - **System Manager**: full access.

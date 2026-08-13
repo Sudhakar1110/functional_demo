@@ -42,11 +42,9 @@ def can_manage_consultants(user=None):
 
 
 def consultant_of_user(user=None):
-	"""Functional Consultant record linked to the current user.
-
-	Administrator gets a consultant profile auto-created on first access so the
-	whole portal (template editor, My Templates, My Sessions, …) works right
-	away for the site admin — no manual ERPNext setup needed to test."""
+	"""Functional Consultant record linked to the current user.		Administrator gets a consultant profile auto-created on first access so the
+		whole portal (My Sessions, Follow-ups, …) works right away for the site
+		admin — no manual ERPNext setup needed to test."""
 	user = user or frappe.session.user
 	name = frappe.db.get_value("Functional Consultant", {"user": user}, "name")
 	if name:
@@ -115,7 +113,6 @@ ICON_REQUESTS = _icon('<path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2
 ICON_RESULTS = _icon('<polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/>')
 ICON_FUNCTIONAL = _icon('<circle cx="12" cy="12" r="10"/><line x1="22" x2="18" y1="12" y2="12"/><line x1="6" x2="2" y1="12" y2="12"/><line x1="12" x2="12" y1="6" y2="2"/><line x1="12" x2="12" y1="22" y2="18"/>')
 ICON_SESSIONS = _icon('<rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/>')
-ICON_TEMPLATES = _icon('<rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/>')
 ICON_FOLLOWUPS = _icon('<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>')
 ICON_MANAGER = _icon('<path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/>')
 ICON_FEEDBACK = _icon('<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>')
@@ -137,7 +134,6 @@ def sidebar_items(active):
 		items += [
 			{"label": _("Functional Home"), "route": "/functional_portal", "icon": ICON_FUNCTIONAL, "active": active == "functional"},
 			{"label": _("My Sessions"), "route": "/functional_portal/my_sessions", "icon": ICON_SESSIONS, "active": active == "sessions"},
-			{"label": _("My Templates"), "route": "/functional_portal/my_templates", "icon": ICON_TEMPLATES, "active": active == "templates"},
 			{"label": _("Follow-ups"), "route": "/functional_portal/follow_ups", "icon": ICON_FOLLOWUPS, "active": active == "follow_ups"},
 		]
 
@@ -279,7 +275,6 @@ def functional_stats(user=None):
 		"in_progress": in_progress,
 		"upcoming": upcoming,
 		"completed": completed,
-		"templates": _count("Functional Demo Template", {"functional_consultant": consultant}),
 		"follow_ups": _count(
 			"Demo Follow Up",
 			{"functional_consultant": consultant, "status": ["in", ["Open", "In Progress"]]},

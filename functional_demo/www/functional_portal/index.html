@@ -3,7 +3,76 @@
 {% block navbar %}{% endblock %}
 {% block footer %}{% endblock %}
 {% block style %}{% include "functional_demo/templates/includes/portal_style.html" %}{% endblock %}
-{% block script %}{% include "functional_demo/templates/includes/portal_script.html" %}{% endblock %}
+{% block script %}
+{% include "functional_demo/templates/includes/portal_script.html" %}
+{% if can_manage_consultants %}
+<script>
+(function () {
+	"use strict";
+	var listEl = document.getElementById("unlinked-users");
+	if (!listEl) return;
+	function esc(s) {
+		return String(s == null ? "" : s)
+			.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+			.replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+	}
+	function render(users) {
+		if (!users || !users.length) {
+			listEl.innerHTML = '<p class="text-muted" style="margin:0;">🎉 All enabled users already have a consultant profile.</p>';
+			return;
+		}
+		var html = '<table class="table-portal"><thead><tr><th>User</th><th>Email</th><th style="width:150px;"></th></tr></thead><tbody>';
+		users.forEach(function (u) {
+			html += '<tr data-user="' + esc(u.user) + '">'
+				+ '<td><strong>' + esc(u.full_name) + '</strong><div class="muted">' + esc(u.user) + '</div></td>'
+				+ '<td class="muted">' + esc(u.email || "-") + '</td>'
+				+ '<td><button type="button" class="btn-portal sm" data-link="' + esc(u.user) + '">Link profile</button></td>'
+				+ '</tr>';
+		});
+		html += '</tbody></table>';
+		listEl.innerHTML = html;
+		listEl.querySelectorAll("button[data-link]").forEach(function (btn) {
+			btn.addEventListener("click", function () {
+				var row = btn.closest("tr");
+				var user = btn.getAttribute("data-link") || (row ? row.getAttribute("data-user") : "");
+				if (!user) {
+					portalAlert("Could not read the selected user. Please refresh the page (Ctrl+Shift+R) and try again.", "err");
+					return;
+				}
+				var original = btn.textContent;
+				btn.disabled = true;
+				btn.textContent = "Linking...";
+				portalCall("functional_demo.api.create_consultant_profile", { user: user })
+					.then(function () {
+						portalAlert("Profile created for " + user + ". The role was granted automatically.", "ok");
+						setTimeout(function () { window.location.reload(); }, 900);
+					})
+					.catch(function () {
+						btn.disabled = false;
+						btn.textContent = original;
+					});
+			});
+		});
+	}
+	/* Defer until the DOM (and Frappe's injected frappe.csrf_token script)
+	   is fully parsed - calling portalCall earlier sends an empty CSRF token
+	   and Frappe rejects it with 'Invalid Request'. */
+	function whenReady(fn) {
+		if (document.readyState === "loading") {
+			document.addEventListener("DOMContentLoaded", fn);
+		} else {
+			fn();
+		}
+	}
+	whenReady(function () {
+		portalCall("functional_demo.api.get_unlinked_users", {}).then(render).catch(function () {
+			listEl.innerHTML = '<p class="text-muted" style="margin:0;">Could not load users. Please refresh the page.</p>';
+		});
+	});
+})();
+</script>
+{% endif %}
+{% endblock %}
 {% block content %}
 <div class="portal-layout">
 	<header class="portal-topbar">
@@ -41,6 +110,19 @@
 	<div class="sidebar-overlay"></div>
 	<div class="portal-main">
 		<div class="portal-content">
+			{% if can_manage_consultants %}
+			<div class="portal-card">
+				<div class="card-head">
+					<h2>👥 Consultant Profiles <span class="muted" style="font-weight:500;">(Functional Team Manager)</span></h2>
+					<a class="btn-portal secondary sm" href="/app/functional-consultant" target="_blank" rel="noopener">Open in ERPNext</a>
+				</div>
+				<div class="card-body">
+					<p class="text-muted" style="margin-top:0;">Link a user to a consultant profile in one click — they get the Functional Consultant role automatically and can start working.</p>
+					<div id="unlinked-users"><p class="text-muted" style="margin:0;">Loading users…</p></div>
+				</div>
+			</div>
+			{% endif %}
+
 			<div class="dash-greet">
 				<div>
 					<span class="greet-eyebrow">● {{ today_pretty }}</span>
@@ -48,7 +130,6 @@
 					<p>Here's your demo day at a glance.</p>
 				</div>
 				<div class="greet-actions">
-					<a class="btn-portal" href="/functional_portal/template?new=1">+ New Template</a>
 					<a class="btn-portal tertiary" href="/functional_portal/my_sessions">My Sessions</a>
 				</div>
 			</div>
@@ -77,12 +158,6 @@
 					<div class="kpi-label">Completed</div>
 					<div class="kpi-value">{{ stats.completed }}</div>
 					<div class="kpi-note">Demos delivered</div>
-				</div>
-				<div class="kpi-card kpi-purple">
-					<span class="kpi-icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></svg></span>
-					<div class="kpi-label">My Templates</div>
-					<div class="kpi-value">{{ stats.templates }}</div>
-					<div class="kpi-note">Reusable demos</div>
 				</div>
 				<div class="kpi-card kpi-red">
 					<span class="kpi-icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></span>

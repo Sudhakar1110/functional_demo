@@ -228,16 +228,6 @@
   {
    "hidden": 0,
    "is_query_report": 1,
-   "label": "Template Usage Report",
-   "link_count": 0,
-   "link_to": "Template Usage Report",
-   "link_type": "Report",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "hidden": 0,
-   "is_query_report": 1,
    "label": "Demo Status Report",
    "link_count": 0,
    "link_to": "Demo Status Report",

@@ -230,19 +230,6 @@ def get_available_consultants(module=None, include_inactive=0):
 	return out
 
 
-@frappe.whitelist()
-def get_consultant_templates(consultant=None):
-	"""List active demo templates belonging to a Functional Consultant."""
-	if not consultant:
-		return []
-	return frappe.get_all(
-		"Functional Demo Template",
-		filters={"functional_consultant": consultant, "is_active": 1},
-		fields=["name", "template_name", "erpnext_module", "business_area", "demo_objective"],
-		order_by="template_name asc",
-	)
-
-
 # ---------------------------------------------------------------------------
 # Demo Request quick actions
 # ---------------------------------------------------------------------------
@@ -986,7 +973,7 @@ def create_demo_request(customer=None, lead=None, company=None, contact_person=N
 		functional_consultant = auto_assigned_consultant or None
 	if not functional_consultant:
 		frappe.throw(
-			_("No consultants are available yet. Ask your Functional Team Manager to create a consultant profile (Functional Portal → My Templates → Link profile) or add one in ERPNext, then try again."),
+			_("No consultants are available yet. Ask your Functional Team Manager to create a consultant profile (Functional Portal → Link profile) or add one in ERPNext, then try again."),
 			title=_("Consultant Required"),
 		)
 

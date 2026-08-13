@@ -55,7 +55,6 @@
 			{% set r = data.request %}
 			{% set c = data.customer %}
 			{% set t = data.team %}
-			{% set tpl = data.template %}
 
 			<div class="portal-card">
 				<div class="card-head" style="align-items: flex-start;">
@@ -221,39 +220,6 @@
 			</div>
 
 			<div class="portal-card">
-				<div class="card-head">
-					<h2>Demo Template</h2>
-					{% if data.can_write %}
-					<div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
-						<select id="template-select" style="min-width: 240px; padding: 8px 10px; border: 1px solid #D1D9E6; border-radius: 8px;">
-							<option value="">— Select my template —</option>
-						</select>
-						<button class="btn-portal sm" id="btn-load-template">Load Template</button>
-					</div>
-					{% endif %}
-				</div>
-				<div class="card-body">
-					{% if tpl.sections %}
-						{% if tpl.name and data.can_write %}<p class="text-muted" style="margin-top: 0;">Snapshot of <strong>{{ tpl.template_name }}</strong> taken {{ tpl.snapshot_date or '' }}. Edits to the master template will never change this session.</p>{% endif %}
-						{% for sec in tpl.sections %}
-						{% if sec.content %}
-						<div class="tpl-section">
-							<h4>{{ sec.section }}</h4>
-							<div class="tpl-content">{{ sec.content }}</div>
-						</div>
-						{% endif %}
-						{% endfor %}
-					{% else %}
-						<div class="empty-state" style="padding: 24px;">
-							<div class="empty-icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></svg></div>
-							<h3>No template loaded yet</h3>
-							<p>Pick one of your templates above and click <strong>Load Template</strong> — it will be copied into this session (your master template is never changed).</p>
-						</div>
-					{% endif %}
-				</div>
-			</div>
-
-			<div class="portal-card">
 				<div class="card-head"><h2>Notes, Feedback &amp; Result</h2></div>
 				<div class="card-body">
 					<div class="detail-grid">
@@ -290,29 +256,6 @@
 		if (el) el.style.display = el.style.display === "none" ? "block" : "none";
 	}
 	function val(id) { var el = document.getElementById(id); return el ? el.value : ""; }
-
-	/* ---- template loader ---- */
-	{% if t.functional_consultant %}
-	portalCall("functional_demo.api.get_consultant_templates", { consultant: "{{ t.functional_consultant }}" })
-		.then(function (list) {
-			var sel = document.getElementById("template-select");
-			if (!sel) return;
-			(list || []).forEach(function (tpl) {
-				var o = document.createElement("option");
-				o.value = tpl.name;
-				o.textContent = tpl.template_name + (tpl.erpnext_module ? " (" + tpl.erpnext_module + ")" : "");
-				sel.appendChild(o);
-			});
-		});
-	{% endif %}
-	document.getElementById("btn-load-template").addEventListener("click", function () {
-		var tpl = val("template-select");
-		if (!tpl) { portalAlert("Please select a template first.", "err"); return; }
-		var btn = this; btn.disabled = true;
-		portalCall("frappe.client.set_value", {
-			doctype: "Demo Session", name: SESSION, fieldname: "demo_template", value: tpl
-		}).then(function () { window.location.reload(); }).catch(function () { btn.disabled = false; });
-	});
 
 	/* ---- start ---- */
 	var btnStart = document.getElementById("btn-start");
