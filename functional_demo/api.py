@@ -916,6 +916,52 @@ def get_demo_feedback():
 
 
 # ---------------------------------------------------------------------------
+# Portal notifications (bell in the portal topbar - in-app alerts)
+# ---------------------------------------------------------------------------
+
+@frappe.whitelist()
+def get_portal_notifications(limit=8):
+	"""Recent in-app notifications (Notification Log) for the current user, used
+	by the notification bell in the portal topbar."""
+	user = frappe.session.user
+	if not user or user == "Guest":
+		return {"unread": 0, "items": []}
+	items = frappe.get_all(
+		"Notification Log",
+		filters={"for_user": user},
+		fields=["name", "subject", "type", "document_type", "document_name", "creation", "read"],
+		order_by="creation desc",
+		limit_page_length=int(limit) or 8,
+	) or []
+	unread = frappe.db.count("Notification Log", {"for_user": user, "read": 0})
+	out = []
+	for it in items:
+		out.append(
+			{
+				"name": it.name,
+				"subject": it.subject or "",
+				"type": it.type or "",
+				"document_type": it.document_type or "",
+				"document_name": it.document_name or "",
+				"creation": frappe.utils.pretty_date(it.creation) if it.creation else "",
+				"read": 1 if it.read else 0,
+			}
+		)
+	return {"unread": unread, "items": out}
+
+
+@frappe.whitelist()
+def mark_portal_notifications_read():
+	"""Mark all of the current user's in-app notifications as read (bell action)."""
+	frappe.db.sql(
+		"update `tabNotification Log` set `read` = 1 where `for_user` = %s and `read` = 0",
+		frappe.session.user,
+	)
+	frappe.db.commit()
+	return True
+
+
+# ---------------------------------------------------------------------------
 # Portal actions (used by the Sales / Functional / Manager portal pages)
 # ---------------------------------------------------------------------------
 

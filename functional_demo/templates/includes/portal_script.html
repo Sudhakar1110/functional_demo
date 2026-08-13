@@ -206,6 +206,102 @@
 		}
 	});
 
+	/* ---- portal notification bell (topbar, in-app alerts) ---- */
+	(function () {
+		var right = document.querySelector(".portal-topbar .topbar-right");
+		if (!right) return;
+
+		var wrap = document.createElement("div");
+		wrap.className = "portal-notif";
+		var btn = document.createElement("button");
+		btn.type = "button";
+		btn.className = "portal-notif-btn";
+		btn.setAttribute("aria-label", "Notifications");
+		btn.innerHTML =
+			'<svg class="portal-notif-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>' +
+			'<span class="portal-notif-badge" style="display:none;">0</span>';
+		var panel = document.createElement("div");
+		panel.className = "portal-notif-panel";
+		panel.style.display = "none";
+
+		wrap.appendChild(btn);
+		wrap.appendChild(panel);
+		right.insertBefore(wrap, right.firstChild);
+
+		function esc(s) {
+			return String(s == null ? "" : s)
+				.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+				.replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+		}
+		function docHref(n) {
+			if (!n.document_type || !n.document_name) return "/app/notification-log";
+			return "/app/" + esc(n.document_type.replace(/ /g, "-").toLowerCase()) + "/" + esc(n.document_name);
+		}
+		function render(data) {
+			var items = data.items || [];
+			var unread = data.unread || 0;
+			var badge = btn.querySelector(".portal-notif-badge");
+			badge.textContent = unread;
+			badge.style.display = unread > 0 ? "flex" : "none";
+
+			var rows = items.map(function (n) {
+				return '<a class="portal-notif-item' + (n.read ? "" : " unread") + '" href="' + docHref(n) + '" data-name="' + esc(n.name) + '">'
+					+ '<div class="portal-notif-subject">' + esc(n.subject || "Notification") + "</div>"
+					+ '<div class="portal-notif-meta">' + esc(n.creation || "") + "</div>"
+					+ "</a>";
+			}).join("");
+
+			panel.innerHTML =
+				'<div class="portal-notif-head">'
+				+ "<span>Notifications</span>"
+				+ (unread ? '<button type="button" class="portal-notif-markall" id="portal-notif-markall">Mark all read</button>' : "")
+				+ "</div>"
+				+ (rows || '<div class="portal-notif-empty">No notifications yet.</div>')
+				+ '<a class="portal-notif-viewall" href="/app/notification-log">View all in ERPNext &rarr;</a>';
+		}
+		function load() {
+			portalCall("functional_demo.api.get_portal_notifications", {})
+				.then(function (data) { if (data) render(data); })
+				.catch(function () {
+					/* silent - the bell is a convenience, never an error popup */
+				});
+		}
+
+		btn.addEventListener("click", function () {
+			var open = panel.style.display === "block";
+			panel.style.display = open ? "none" : "block";
+			if (!open) load();
+		});
+		document.addEventListener("click", function (e) {
+			if (!wrap.contains(e.target)) panel.style.display = "none";
+		});
+		panel.addEventListener("click", function (e) {
+			var mark = e.target.closest ? e.target.closest("#portal-notif-markall") : null;
+			if (mark) {
+				e.preventDefault();
+				portalCall("functional_demo.api.mark_portal_notifications_read", {})
+					.then(function () {
+						var badge = btn.querySelector(".portal-notif-badge");
+						badge.textContent = "0";
+						badge.style.display = "none";
+						var m = document.getElementById("portal-notif-markall");
+						if (m) m.remove();
+						var items = panel.querySelectorAll(".portal-notif-item");
+						for (var i = 0; i < items.length; i++) items[i].classList.remove("unread");
+					})
+					.catch(function () {});
+				return;
+			}
+			/* clicking a notification marks everything read (fire & forget) */
+			var item = e.target.closest ? e.target.closest(".portal-notif-item") : null;
+			if (item && item.getAttribute("data-name")) {
+				portalCall("functional_demo.api.mark_portal_notifications_read", {}).catch(function () {});
+			}
+		});
+
+		load();
+	})();
+
 	/* Set the browser-tab favicon to the brand logo.
 	   Replace any favicon link the base template already emitted so the
 	   brand logo is the single deterministic tab icon. */
