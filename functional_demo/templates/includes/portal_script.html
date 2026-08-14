@@ -329,6 +329,7 @@
    carrying the Developer role correctly sees only Feedback. */
 (function () {
 	var roles = "{{ user_roles_display or '' }}";
+	var rolesFull = "{{ user_roles_full or '' }}";
 	if (!roles) return;
 	var nameEl = document.querySelector(".portal-user-name");
 	if (!nameEl || !nameEl.parentElement) return;
@@ -337,6 +338,7 @@
 	var el = document.createElement("div");
 	el.className = "portal-user-roles";
 	el.textContent = "Roles: " + roles;
+	if (rolesFull && rolesFull !== roles) el.title = "Full roles: " + rolesFull;
 	parent.appendChild(el);
 })();
 </script>

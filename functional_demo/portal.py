@@ -38,9 +38,22 @@ def is_manager(user=None):
 	return bool(user_roles(user) & set(MANAGER_ROLES))
 
 
+def is_admin(user=None):
+	"""Site admins (Administrator / System Manager) are never restricted by
+	role-based sidebar rules - they see every section."""
+	user = user or frappe.session.user
+	if user == "Administrator":
+		return True
+	return "System Manager" in user_roles(user)
+
+
 def is_developer(user=None):
 	"""The Developer role is feedback-only: it may view the portal Feedback
-	page and nothing else."""
+	page and nothing else. Site admins are never restricted by it - e.g. the
+	Administrator account often carries every role, including Developer, and
+	must still see the whole portal."""
+	if is_admin(user):
+		return False
 	return bool(user_roles(user) & set(DEVELOPER_ROLES))
 
 
@@ -199,10 +212,14 @@ def portal_context(context, title, required_roles, active, subtitle=""):
 	context.is_developer = is_developer()
 	# Show the user's actual roles in the topbar (diagnostic aid for the
 	# role-based sidebar: e.g. an account with the Developer role correctly
-	# sees only Feedback).
-	context.user_roles_display = ", ".join(
-		sorted(r for r in user_roles() if r not in {"All", "Guest", "Full Name"})
-	) or "-"
+	# sees only Feedback). Administrators typically carry every role, so the
+	# visible list is capped with the full list on hover.
+	roles = sorted(r for r in user_roles() if r not in {"All", "Guest", "Full Name"})
+	context.user_roles_full = ", ".join(roles) or "-"
+	if len(roles) > 4:
+		context.user_roles_display = ", ".join(roles[:4]) + ", +{0} more".format(len(roles) - 4)
+	else:
+		context.user_roles_display = context.user_roles_full
 	context.full_name = frappe.utils.get_fullname(frappe.session.user)
 	context.greeting = greeting()
 	context.today_pretty = frappe.utils.now_datetime().strftime("%A, %d %B %Y")
