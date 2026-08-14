@@ -16,6 +16,7 @@ class DemoFollowUp(Document):
 
 	def after_insert(self):
 		self.assign_todo()
+		self.notify_sales_person()
 
 	def on_update(self):
 		# on_update runs AFTER the db write in v15, so the pre-save value
@@ -45,6 +46,53 @@ class DemoFollowUp(Document):
 		todo.role = "Sales User"
 		todo.owner = self.assigned_to
 		todo.insert(ignore_permissions=True)
+
+	def notify_sales_person(self):
+		"""Email the sales person that a follow-up was created for their demo.
+
+		Fires from after_insert, so it covers follow-ups created from the portal
+		request page, from a completed demo session, and the auto-created
+		follow-up when a demo completes with follow-up required. A mail failure
+		is logged but never blocks the follow-up creation."""
+		try:
+			sales_person = self.sales_person or self.assigned_to
+			if not sales_person or sales_person == "Administrator":
+				return
+			email = frappe.db.get_value("User", sales_person, "email")
+			if not email:
+				return
+			subject = _("Follow-up created for {0}").format(self.customer or self.demo_request)
+			message = _(
+				"Hi,\n\n"
+				"A follow-up has been created for {0} (Demo Request {1}).\n\n"
+				"Follow-up date: {2}\n"
+				"Next action: {3}\n"
+				"Assigned to: {4}\n\n"
+				"Open the follow-up: {5}\n"
+			).format(
+				self.customer or "-",
+				self.demo_request or "-",
+				self.follow_up_date or "-",
+				self.next_action or "-",
+				self.assigned_to or "-",
+				frappe.utils.get_url("/app/demo-follow-up/{0}".format(self.name)),
+			)
+			frappe.sendmail(
+				recipients=[email],
+				subject=subject,
+				message=message,
+				reference_doctype="Demo Follow Up",
+				reference_name=self.name,
+				now=True,
+			)
+		except Exception:
+			# never block follow-up creation because the email could not be sent
+			frappe.log_error(
+				title=_("Follow-up email to {0} failed for {1}").format(
+					self.sales_person or "-", self.name
+				),
+				message=frappe.get_traceback(),
+			)
 
 	def close_open_todos(self):
 		frappe.db.set_value(
