@@ -1286,4 +1286,64 @@ details.portal-card[open] > summary.card-head::after {
 	border-top: 1px solid #EEF0F3;
 }
 .portal-notif-viewall:hover { background: #F8FAFC; }
+
+/* ---- popup toast for new notifications (top-right, auto-hides) ---- */
+.portal-toast {
+	position: fixed;
+	top: 18px;
+	right: 18px;
+	z-index: 1000;
+	display: flex;
+	align-items: flex-start;
+	gap: 10px;
+	max-width: 340px;
+	padding: 12px 14px;
+	background: linear-gradient(135deg, #0B6B3A, #128A4A);
+	color: #fff;
+	border-radius: 12px;
+	box-shadow: 0 12px 32px rgba(5, 19, 60, 0.28);
+	text-decoration: none;
+	cursor: pointer;
+	opacity: 0;
+	transform: translateY(-12px);
+	transition: opacity 0.3s ease, transform 0.3s ease;
+}
+.portal-toast.show { opacity: 1; transform: translateY(0); }
+.portal-toast-ic {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 30px;
+	height: 30px;
+	min-width: 30px;
+	border-radius: 50%;
+	background: rgba(255, 255, 255, 0.18);
+}
+.portal-toast-ic .portal-notif-ic { width: 16px; height: 16px; }
+.portal-toast-body { display: flex; flex-direction: column; min-width: 0; }
+.portal-toast-label {
+	font-size: 10px;
+	font-weight: 700;
+	letter-spacing: 0.05em;
+	text-transform: uppercase;
+	opacity: 0.85;
+}
+.portal-toast-subject {
+	font-size: 13px;
+	font-weight: 600;
+	line-height: 1.4;
+	margin-top: 2px;
+	word-break: break-word;
+}
+.portal-toast-close {
+	border: none;
+	background: transparent;
+	color: #fff;
+	font-size: 18px;
+	line-height: 1;
+	padding: 0 2px;
+	cursor: pointer;
+	opacity: 0.8;
+}
+.portal-toast-close:hover { opacity: 1; }
 </style>

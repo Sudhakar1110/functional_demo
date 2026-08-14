@@ -222,6 +222,44 @@ def get_available_consultants(module=None, include_inactive=0):
 # ---------------------------------------------------------------------------
 
 @frappe.whitelist()
+def _party_and_consultant(doc):
+	"""Friendly labels for a demo's party (customer/lead) and consultant, used
+	in the smart success popups - e.g. 'Acme Corp' and 'Jack Wilson' instead of
+	the raw ERPNext names."""
+	if not doc:
+		return "", ""
+	if getattr(doc, "doctype", "") == "Demo Session" and doc.get("demo_request"):
+		try:
+			req = frappe.get_doc("Demo Request", doc.demo_request)
+		except Exception:
+			req = doc
+	else:
+		req = doc
+	party = ""
+	if req.get("customer"):
+		party = frappe.db.get_value("Customer", req.customer, "customer_name") or req.customer
+	elif req.get("lead"):
+		party = frappe.db.get_value("Lead", req.lead, "lead_name") or req.lead
+	consultant = ""
+	consultant_name = req.get("functional_consultant")
+	if consultant_name:
+		consultant = (
+			frappe.db.get_value("Functional Consultant", consultant_name, "consultant_name")
+			or consultant_name
+		)
+	return party, consultant
+
+
+def _fmt_date(value):
+	"""Pretty date for success popups (falls back to the raw value)."""
+	if not value:
+		return ""
+	try:
+		return frappe.utils.format_date(value, "medium")
+	except Exception:
+		return str(value)
+
+
 def schedule_demo(demo_request=None, scheduled_date=None, start_time=None, end_time=None, meeting_link=None, name=None):
 	"""Schedule (or reschedule) a demo for a Demo Request and create a Demo Session.
 
@@ -293,7 +331,15 @@ def schedule_demo(demo_request=None, scheduled_date=None, start_time=None, end_t
 			ds.reschedule_count = int(ds.reschedule_count or 0) + 1
 			ds.flags.rescheduling = True
 			ds.save(ignore_permissions=True)
-			frappe.msgprint(_("Demo Session {0} rescheduled to {1}.").format(ds.name, scheduled_date))
+			party, consultant = _party_and_consultant(dr)
+			frappe.msgprint(
+				_("Demo {0} rescheduled to {1}{2}{3}.").format(
+					ds.name,
+					_fmt_date(scheduled_date),
+					" for " + party if party else "",
+					" with " + consultant if consultant else "",
+				)
+			)
 		else:
 			ds = frappe.new_doc("Demo Session")
 			ds.demo_request = dr.name
@@ -306,7 +352,15 @@ def schedule_demo(demo_request=None, scheduled_date=None, start_time=None, end_t
 			ds.end_time = end_time
 			ds.meeting_link = meeting_link
 			ds.insert(ignore_permissions=True)
-			frappe.msgprint(_("Demo Session {0} scheduled for {1}.").format(ds.name, scheduled_date))
+			party, consultant = _party_and_consultant(dr)
+			frappe.msgprint(
+				_("Demo {0} scheduled for {1}{2}{3}.").format(
+					ds.name,
+					_fmt_date(scheduled_date),
+					" for " + party if party else "",
+					" with " + consultant if consultant else "",
+				)
+			)
 
 		# keep the Demo Request in sync (fields first, then the workflow move)
 		dr.preferred_demo_date = scheduled_date
@@ -365,7 +419,12 @@ def create_demo_follow_up(demo_request=None, follow_up_date=None, next_action=No
 	dr.save(ignore_permissions=True)
 	change_status(dr, "Follow-up Required", ignore_permissions=True)
 
-	frappe.msgprint(_("Follow-up {0} created. A task has been assigned to {1}.").format(fu.name, fu.assigned_to))
+	party, _ = _party_and_consultant(dr)
+	frappe.msgprint(
+		_("Follow-up {0} created for {1}. Assigned to {2}.").format(
+			fu.name, party or dr.name, fu.assigned_to or dr.sales_person or "-"
+		)
+	)
 	return fu.name
 
 
@@ -389,7 +448,8 @@ def set_demo_result(demo_request=None, result=None):
 	dr = frappe.get_doc("Demo Request", demo_request)
 	frappe.has_permission("Demo Request", "write", doc=dr, throw=True)
 	dr = change_status(dr, result, ignore_permissions=True)
-	frappe.msgprint(_("Demo Request {0} marked as {1}.").format(dr.name, result))
+	party, _ = _party_and_consultant(dr)
+	frappe.msgprint(_("Demo {0} for {1} marked as {2}.").format(dr.name, party or "-", result))
 	return dr.status
 
 
@@ -465,7 +525,8 @@ def cancel_demo_request(demo_request=None, reason=None, name=None):
 			)
 		session.save(ignore_permissions=True)
 
-	frappe.msgprint(_("Demo Request {0} cancelled.").format(doc.name))
+	party, _ = _party_and_consultant(doc)
+	frappe.msgprint(_("Demo {0} for {1} cancelled.").format(doc.name, party or "-"))
 	return {"status": doc.get("status") or doc.get("workflow_state")}
 
 
@@ -759,7 +820,12 @@ def get_demo_execution_data(demo_session=None):
 def start_demo_session(demo_session=None):
 	ds = _get_session(demo_session)
 	ds.start_demo()
-	frappe.msgprint(_("Demo Session {0} started. Good luck!").format(ds.name))
+	party, consultant = _party_and_consultant(ds)
+	frappe.msgprint(
+		_("Demo {0} for {1} started with {2}. Good luck!").format(
+			ds.name, party or "-", consultant or ds.functional_consultant or "-"
+		)
+	)
 	return {"demo_status": ds.demo_status}
 
 
@@ -768,7 +834,8 @@ def complete_demo_session(demo_session=None, feedback=None):
 	"""Complete a demo and record customer feedback."""
 	ds = _get_session(demo_session)
 	ds.complete_demo(feedback or {})
-	frappe.msgprint(_("Demo Session {0} completed and feedback recorded.").format(ds.name))
+	party, _ = _party_and_consultant(ds)
+	frappe.msgprint(_("Demo {0} for {1} completed and feedback recorded.").format(ds.name, party or "-"))
 	return {
 		"demo_status": ds.demo_status,
 		"request_status": frappe.db.get_value("Demo Request", ds.demo_request, "status"),
@@ -779,7 +846,8 @@ def complete_demo_session(demo_session=None, feedback=None):
 def cancel_demo_session(demo_session=None, reason=None):
 	ds = _get_session(demo_session)
 	ds.cancel_demo(reason)
-	frappe.msgprint(_("Demo Session {0} cancelled.").format(ds.name))
+	party, _ = _party_and_consultant(ds)
+	frappe.msgprint(_("Demo {0} for {1} cancelled.").format(ds.name, party or "-"))
 	return {"demo_status": ds.demo_status}
 
 
@@ -789,7 +857,15 @@ def reschedule_demo_session(demo_session=None, scheduled_date=None, start_time=N
 		frappe.throw(_("Please select a new date."))
 	ds = _get_session(demo_session)
 	ds.reschedule_demo(scheduled_date, start_time, end_time, meeting_link)
-	frappe.msgprint(_("Demo Session {0} rescheduled to {1}.").format(ds.name, scheduled_date))
+	party, consultant = _party_and_consultant(ds)
+	frappe.msgprint(
+		_("Demo {0} rescheduled to {1}{2}{3}.").format(
+			ds.name,
+			_fmt_date(scheduled_date),
+			" for " + party if party else "",
+			" with " + consultant if consultant else "",
+		)
+	)
 	return {"demo_status": ds.demo_status}
 
 
@@ -800,7 +876,10 @@ def create_follow_up_from_session(demo_session=None, follow_up_date=None, next_a
 		frappe.throw(_("Please select a follow-up date."))
 	ds = _get_session(demo_session)
 	fu = ds.create_follow_up(follow_up_date, next_action, assigned_to)
-	frappe.msgprint(_("Follow-up {0} created.").format(fu.name))
+	party, _ = _party_and_consultant(ds)
+	frappe.msgprint(
+		_("Follow-up {0} created for {1}.").format(fu.name, party or ds.customer or ds.demo_request)
+	)
 	return {"follow_up": fu.name}
 
 
@@ -814,7 +893,8 @@ def set_session_final_result(demo_session=None, result=None):
 		frappe.throw(_("Please choose a final result."))
 	ds = _get_session(demo_session)
 	ds.set_final_result(result)
-	frappe.msgprint(_("Demo Session {0} marked as {1}.").format(ds.name, result))
+	party, _ = _party_and_consultant(ds)
+	frappe.msgprint(_("Demo {0} for {1} marked as {2}.").format(ds.name, party or "-", result))
 	return {"final_result": ds.final_result}
 
 

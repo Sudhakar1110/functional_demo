@@ -268,9 +268,69 @@
 				+ "</div>"
 				+ (rows || '<div class="portal-notif-empty">No notifications yet.</div>');
 		}
+		/* ---- popup toast for new notifications (Option A) ----
+		   The bell polls every 30s; when a notification the user has not seen
+		   yet arrives, a green toast pops in top-right and auto-hides. */
+		var seenNames = {};
+		var isFirstLoad = true;
+
+		function showToast(subject, href) {
+			if (!subject) return;
+			var toast = document.createElement("a");
+			toast.className = "portal-toast";
+			toast.href = href || "/demo_portal";
+			toast.innerHTML =
+				'<span class="portal-toast-ic"><svg class="portal-notif-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></span>'
+				+ '<span class="portal-toast-body"><span class="portal-toast-label">New notification</span>'
+				+ '<span class="portal-toast-subject">' + esc(subject) + "</span></span>"
+				+ '<button type="button" class="portal-toast-close" aria-label="Dismiss">&times;</button>';
+			document.body.appendChild(toast);
+			/* trigger the enter animation */
+			requestAnimationFrame(function () { toast.classList.add("show"); });
+			var timer = setTimeout(function () { dismiss(); }, 8000);
+			function dismiss() {
+				clearTimeout(timer);
+				toast.classList.remove("show");
+				setTimeout(function () { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 350);
+			}
+			toast.querySelector(".portal-toast-close").addEventListener("click", function (e) {
+				e.preventDefault();
+				e.stopPropagation();
+				dismiss();
+			});
+			/* clicking the toast marks notifications read and opens the target */
+			toast.addEventListener("click", function () {
+				portalCall("functional_demo.api.mark_portal_notifications_read", {}).catch(function () {});
+			});
+		}
+
+		function checkNew(data) {
+			var items = (data && data.items) || [];
+			if (isFirstLoad) {
+				/* seed the seen-set with what is already in the bell - the user
+				   does not need a popup for notifications that existed before
+				   this page loaded */
+				for (var i = 0; i < items.length; i++) seenNames[items[i].name] = 1;
+				isFirstLoad = false;
+				return;
+			}
+			for (var j = items.length - 1; j >= 0; j--) {
+				var n = items[j];
+				if (n.name && !seenNames[n.name]) {
+					seenNames[n.name] = 1;
+					if (!n.read) showToast(n.subject || "New notification", docHref(n));
+				}
+			}
+		}
+
 		function load() {
 			portalCall("functional_demo.api.get_portal_notifications", {})
-				.then(function (data) { if (data) render(data); })
+				.then(function (data) {
+					if (data) {
+						render(data);
+						checkNew(data);
+					}
+				})
 				.catch(function () {
 					/* silent - the bell is a convenience, never an error popup */
 				});
