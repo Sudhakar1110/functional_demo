@@ -18,10 +18,11 @@ DEVELOPER_ROLES = ("Developer",)
 def user_roles(user=None):
 	user = user or frappe.session.user
 	roles = set(frappe.get_roles(user))
-	# Site admins (Administrator / System Manager) see every portal section -
-	# the same treatment the app already gives them in guard(). This keeps the
-	# admin account from falling through to the bare 'Home + Feedback' sidebar.
-	if user == "Administrator" or "System Manager" in roles:
+	# Only the Administrator account gets every portal section. System Manager
+	# is NOT injected here - accounts that carry it along with a sales or
+	# functional role must still see exactly what their portal role allows
+	# (sales: all content, functional: functional only, developer: feedback).
+	if user == "Administrator":
 		roles |= set(SALES_ROLES + FUNCTIONAL_ROLES + MANAGER_ROLES)
 	return roles
 
@@ -40,7 +41,9 @@ def is_manager(user=None):
 
 def is_admin(user=None):
 	"""Site admins (Administrator / System Manager) are never restricted by
-	role-based sidebar rules - they see every section."""
+	the feedback-only Developer rule. Note: only the Administrator account
+	itself sees every section; System Manager users still follow their
+	portal roles for the sidebar."""
 	user = user or frappe.session.user
 	if user == "Administrator":
 		return True
