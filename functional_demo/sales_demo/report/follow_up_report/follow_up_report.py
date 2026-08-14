@@ -10,7 +10,7 @@ def execute(filters=None):
 	columns = [
 		{"label": _("Follow-up"), "fieldname": "name", "fieldtype": "Link", "options": "Demo Follow Up", "width": 130},
 		{"label": _("Demo Session"), "fieldname": "demo_session", "fieldtype": "Link", "options": "Demo Session", "width": 140},
-		{"label": _("Customer"), "fieldname": "customer", "fieldtype": "Link", "options": "Customer", "width": 160},
+		{"label": _("Leads"), "fieldname": "customer", "fieldtype": "Link", "options": "Customer", "width": 160},
 		{"label": _("Assigned To"), "fieldname": "assigned_to", "fieldtype": "Link", "options": "User", "width": 130},
 		{"label": _("Follow-up Date"), "fieldname": "follow_up_date", "fieldtype": "Date", "width": 110},
 		{"label": _("Status"), "fieldname": "status", "fieldtype": "Data", "width": 100},

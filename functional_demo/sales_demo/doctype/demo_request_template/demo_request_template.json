@@ -59,7 +59,7 @@
   {
    "fieldname": "customer_requirements",
    "fieldtype": "Text",
-   "label": "Customer Requirements"
+   "label": "Leads Requirements"
   },
   {
    "fieldname": "business_process_requirements",

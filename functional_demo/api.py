@@ -88,7 +88,7 @@ def _ensure_customer(customer_name, contact_person=None, contact_number=None, em
 		# the customer is already created - a missing Contact must never
 		# block the demo request
 		frappe.log_error(
-			title=_("Could not create Contact for new customer {0}").format(name),
+			title=_("Could not create Contact for new lead {0}").format(name),
 			message=frappe.get_traceback(),
 		)
 	return cust.name, contact_name
@@ -1065,7 +1065,7 @@ def create_demo_request(customer=None, lead=None, company=None, contact_person=N
 				contact_person = created_contact
 		except Exception:
 			frappe.log_error(
-				title=_("Auto-create Customer failed: {0}").format(customer),
+				title=_("Auto-create Leads failed: {0}").format(customer),
 				message=frappe.get_traceback(),
 			)
 			customer = ""

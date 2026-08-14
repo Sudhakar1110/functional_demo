@@ -30,7 +30,7 @@ frappe.pages["demo-feedback"].on_page_load = function (wrapper) {
 				<div class="demo-fb-card">
 					${entries.length ? `
 					<table class="demo-fb-table">
-						<thead><tr><th>${__("Session")}</th><th>${__("Customer")}</th><th>${__("Date")}</th><th>${__("Overall Feedback")}</th><th>${__("Interested")}</th><th>${__("Requirements Met")}</th><th>${__("Questions / Changes")}</th><th>${__("Result")}</th></tr></thead>
+						<thead><tr><th>${__("Session")}</th><th>${__("Leads")}</th><th>${__("Date")}</th><th>${__("Overall Feedback")}</th><th>${__("Interested")}</th><th>${__("Requirements Met")}</th><th>${__("Questions / Changes")}</th><th>${__("Result")}</th></tr></thead>
 						<tbody>${rows}</tbody>
 					</table>` : `<p class="demo-fb-empty">${__("No feedback recorded yet. Feedback captured when demos are completed will appear here.")}</p>`}
 				</div>

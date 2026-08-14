@@ -9,7 +9,7 @@ def execute(filters=None):
 	filters = frappe._dict(filters or {})
 	columns = [
 		{"label": _("Demo Session"), "fieldname": "name", "fieldtype": "Link", "options": "Demo Session", "width": 140},
-		{"label": _("Customer"), "fieldname": "customer", "fieldtype": "Link", "options": "Customer", "width": 160},
+		{"label": _("Leads"), "fieldname": "customer", "fieldtype": "Link", "options": "Customer", "width": 160},
 		{"label": _("Consultant"), "fieldname": "functional_consultant", "fieldtype": "Link", "options": "Functional Consultant", "width": 150},
 		{"label": _("Sales Person"), "fieldname": "sales_person", "fieldtype": "Link", "options": "User", "width": 130},
 		{"label": _("Scheduled Date"), "fieldname": "scheduled_date", "fieldtype": "Date", "width": 110},

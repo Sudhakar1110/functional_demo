@@ -8,7 +8,7 @@ from frappe import _
 def execute(filters=None):
 	filters = frappe._dict(filters or {})
 	columns = [
-		{"label": _("Customer"), "fieldname": "customer", "fieldtype": "Link", "options": "Customer", "width": 180},
+		{"label": _("Leads"), "fieldname": "customer", "fieldtype": "Link", "options": "Customer", "width": 180},
 		{"label": _("Total Requests"), "fieldname": "total_requests", "fieldtype": "Int", "width": 110},
 		{"label": _("Demos Completed"), "fieldname": "completed", "fieldtype": "Int", "width": 120},
 		{"label": _("Follow-ups"), "fieldname": "follow_ups", "fieldtype": "Int", "width": 100},

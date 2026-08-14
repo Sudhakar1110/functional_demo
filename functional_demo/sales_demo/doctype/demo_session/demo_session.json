@@ -57,7 +57,7 @@
   {
    "fieldname": "party_section",
    "fieldtype": "Section Break",
-   "label": "Customer Information"
+   "label": "Leads Information"
   },
   {
    "fieldname": "demo_request",
@@ -75,7 +75,7 @@
    "fieldtype": "Link",
    "in_list_view": 1,
    "in_standard_filter": 1,
-   "label": "Customer",
+   "label": "Leads",
    "options": "Customer",
    "read_only": 1
   },
@@ -239,7 +239,7 @@
    "fetch_if_empty": 1,
    "fieldname": "customer_requirements",
    "fieldtype": "Text",
-   "label": "Customer Requirements",
+   "label": "Leads Requirements",
    "read_only": 1
   },
   {
@@ -297,7 +297,7 @@
   {
    "fieldname": "demo_feedback_items",
    "fieldtype": "Table",
-   "label": "Customer Questions & Requests",
+   "label": "Leads Questions & Requests",
    "options": "Demo Feedback Item"
   },
   {

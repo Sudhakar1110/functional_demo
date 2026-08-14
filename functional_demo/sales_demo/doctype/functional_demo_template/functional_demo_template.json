@@ -74,7 +74,7 @@
   {
    "fieldname": "customer_business_scenario",
    "fieldtype": "Text",
-   "label": "Customer Business Scenario"
+   "label": "Leads Business Scenario"
   },
   {
    "fieldname": "demo_agenda",

@@ -49,8 +49,8 @@
 					<form class="portal-form" id="dr-form">
 					<div class="form-row">
 						<div>
-							<label>Customer <span class="form-hint">(optional - pick one, or type a new name to auto-create)</span></label>
-							<input type="text" id="customer" name="customer" list="customers-list" placeholder="Type &amp; pick a customer, or type a new one..." value="{{ prefill.customer }}" autocomplete="off">
+							<label>Leads <span class="form-hint">(optional - pick one, or type a new name to auto-create)</span></label>
+							<input type="text" id="customer" name="customer" list="customers-list" placeholder="Type &amp; pick a lead, or type a new one..." value="{{ prefill.customer }}" autocomplete="off">
 							<datalist id="customers-list">
 								{% for c in customers %}<option value="{{ c.name }}">{{ c.customer_name }}</option>{% endfor %}
 							</datalist>
@@ -88,7 +88,7 @@
 						</div>
 					</div>
 					<div class="form-row">
-						<div><label>Contact Person <span class="form-hint">(name, if no Customer/Sales Person yet)</span></label><input type="text" id="contact_person" name="contact_person" value="{{ prefill.contact_person }}"></div>
+						<div><label>Contact Person <span class="form-hint">(name, if no Leads/Sales Person yet)</span></label><input type="text" id="contact_person" name="contact_person" value="{{ prefill.contact_person }}"></div>
 						<div><label>Contact Number</label><input type="text" id="contact_number" name="contact_number" value="{{ prefill.contact_number }}"></div>
 						<div><label>Email</label><input type="email" id="email" name="email" value="{{ prefill.email }}"></div>
 					</div>
@@ -111,7 +111,7 @@
 						<div class="form-row">
 							<div><label>Priority</label>
 								<select id="priority" name="priority">
-									<option value="Auto" selected>Auto (sales value / customer tier)</option>
+									<option value="Auto" selected>Auto (sales value / leads tier)</option>
 									{% for p in priorities %}<option value="{{ p }}">{{ p }}</option>{% endfor %}
 								</select>
 							</div>
@@ -125,8 +125,8 @@
 							<div><label>Preferred Demo Date</label><input type="date" id="preferred_demo_date" name="preferred_demo_date"></div>
 							<div><label>Preferred Demo Time</label><input type="time" id="preferred_demo_time" name="preferred_demo_time"></div>
 						</div>
-						<label>Customer Requirements</label>
-						<textarea id="customer_requirements" name="customer_requirements" placeholder="What does the customer need?"></textarea>
+						<label>Leads Requirements</label>
+						<textarea id="customer_requirements" name="customer_requirements" placeholder="What does the lead need?"></textarea>
 						<label>Business Process Requirements</label>
 						<textarea id="business_process_requirements" name="business_process_requirements" placeholder="Which business processes should be demonstrated?"></textarea>
 						<label>Sales Remarks</label>
@@ -272,10 +272,10 @@
 			{% endif %}
 
 			<div class="portal-card">
-				<div class="card-head"><h2>Customer &amp; Contact</h2></div>
+				<div class="card-head"><h2>Leads &amp; Contact</h2></div>
 				<div class="card-body">
 					<div class="detail-grid">
-						<div class="detail-item"><div class="d-label">Customer</div><div class="d-value">{{ doc.customer or "-" }}</div></div>
+						<div class="detail-item"><div class="d-label">Leads</div><div class="d-value">{{ doc.customer or "-" }}</div></div>
 						<div class="detail-item"><div class="d-label">Sales Person</div><div class="d-value">{{ doc.sales_person or "-" }}</div></div>
 						<div class="detail-item"><div class="d-label">Company</div><div class="d-value">{{ doc.company or "-" }}</div></div>
 						<div class="detail-item"><div class="d-label">Contact Person</div><div class="d-value">{{ doc.contact_person or "-" }}</div></div>
@@ -295,7 +295,7 @@
 						<div class="detail-item"><div class="d-label">Preferred Time</div><div class="d-value">{{ doc.preferred_demo_time or "-" }}</div></div>
 					</div>
 					<div class="detail-grid" style="margin-top: 16px;">
-						<div class="detail-item"><div class="d-label">Customer Requirements</div><div class="d-value wrap">{{ doc.customer_requirements or "-" }}</div></div>
+						<div class="detail-item"><div class="d-label">Leads Requirements</div><div class="d-value wrap">{{ doc.customer_requirements or "-" }}</div></div>
 						<div class="detail-item"><div class="d-label">Business Process Requirements</div><div class="d-value wrap">{{ doc.business_process_requirements or "-" }}</div></div>
 					</div>
 				</div>

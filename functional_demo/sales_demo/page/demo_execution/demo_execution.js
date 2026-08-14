@@ -126,9 +126,9 @@ frappe.pages["demo-execution"].on_page_load = function (wrapper) {
 
 				<div class="demo-exec-grid">
 					<div class="demo-exec-card">
-						<h5>${__("Customer Information")}</h5>
-						<div class="demo-exec-row"><span class="label">${__("Customer")}</span><span class="value">${esc(customer.customer || "-")}</span></div>
-						<div class="demo-exec-row"><span class="label">${__("Lead")}</span><span class="value">${esc(customer.lead || "-")}</span></div>
+						<h5>${__("Leads Information")}</h5>
+						<div class="demo-exec-row"><span class="label">${__("Leads")}</span><span class="value">${esc(customer.customer || "-")}</span></div>
+						<div class="demo-exec-row"><span class="label">${__("Sales Person")}</span><span class="value">${esc(customer.lead || "-")}</span></div>
 						<div class="demo-exec-row"><span class="label">${__("Contact Person")}</span><span class="value">${esc(customer.contact_person || "-")}</span></div>
 						<div class="demo-exec-row"><span class="label">${__("Contact Number")}</span><span class="value">${esc(customer.contact_number || "-")}</span></div>
 						<div class="demo-exec-row"><span class="label">${__("Email")}</span><span class="value">${esc(customer.email || "-")}</span></div>
@@ -152,7 +152,7 @@ frappe.pages["demo-execution"].on_page_load = function (wrapper) {
 
 				${request.customer_requirements ? `
 				<div class="demo-exec-card" style="margin-bottom: 1.25rem;">
-					<h5>${__("Customer Requirements")}</h5>
+					<h5>${__("Leads Requirements")}</h5>
 					<div style="white-space: pre-wrap; font-size: 0.9rem;">${esc(request.customer_requirements)}</div>
 					${request.business_process_requirements ? `<div style="white-space: pre-wrap; font-size: 0.9rem; margin-top: 0.5rem; color: var(--text-muted);">${esc(request.business_process_requirements)}</div>` : ""}
 				</div>` : ""}
@@ -174,7 +174,7 @@ frappe.pages["demo-execution"].on_page_load = function (wrapper) {
 		return `
 			<div class="demo-feedback-grid">
 				<div class="demo-exec-card">
-					<h5>${__("Customer Feedback")}</h5>
+					<h5>${__("Leads Feedback")}</h5>
 					<div class="demo-exec-row"><span class="label">${__("Overall Feedback")}</span><span class="value">${esc(session.overall_feedback || "-")}</span></div>
 					<div class="demo-exec-row"><span class="label">${__("Interested?")}</span><span class="value">${esc(session.interested || "-")}</span></div>
 					<div class="demo-exec-row"><span class="label">${__("Requirements Met")}</span><span class="value">${esc(session.requirements_met || "-")}</span></div>
