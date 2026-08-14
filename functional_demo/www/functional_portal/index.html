@@ -5,73 +5,6 @@
 {% block style %}{% include "functional_demo/templates/includes/portal_style.html" %}{% endblock %}
 {% block script %}
 {% include "functional_demo/templates/includes/portal_script.html" %}
-{% if can_manage_consultants %}
-<script>
-(function () {
-	"use strict";
-	var listEl = document.getElementById("unlinked-users");
-	if (!listEl) return;
-	function esc(s) {
-		return String(s == null ? "" : s)
-			.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
-			.replace(/"/g, "&quot;").replace(/'/g, "&#39;");
-	}
-	function render(users) {
-		if (!users || !users.length) {
-			listEl.innerHTML = '<p class="text-muted" style="margin:0;">🎉 All enabled users already have a consultant profile.</p>';
-			return;
-		}
-		var html = '<table class="table-portal"><thead><tr><th>User</th><th>Email</th><th style="width:150px;"></th></tr></thead><tbody>';
-		users.forEach(function (u) {
-			html += '<tr data-user="' + esc(u.user) + '">'
-				+ '<td><strong>' + esc(u.full_name) + '</strong><div class="muted">' + esc(u.user) + '</div></td>'
-				+ '<td class="muted">' + esc(u.email || "-") + '</td>'
-				+ '<td><button type="button" class="btn-portal sm" data-link="' + esc(u.user) + '">Link profile</button></td>'
-				+ '</tr>';
-		});
-		html += '</tbody></table>';
-		listEl.innerHTML = html;
-		listEl.querySelectorAll("button[data-link]").forEach(function (btn) {
-			btn.addEventListener("click", function () {
-				var row = btn.closest("tr");
-				var user = btn.getAttribute("data-link") || (row ? row.getAttribute("data-user") : "");
-				if (!user) {
-					portalAlert("Could not read the selected user. Please refresh the page (Ctrl+Shift+R) and try again.", "err");
-					return;
-				}
-				var original = btn.textContent;
-				btn.disabled = true;
-				btn.textContent = "Linking...";
-				portalCall("functional_demo.api.create_consultant_profile", { user: user })
-					.then(function () {
-						portalAlert("Profile created for " + user + ". The role was granted automatically.", "ok");
-						setTimeout(function () { window.location.reload(); }, 900);
-					})
-					.catch(function () {
-						btn.disabled = false;
-						btn.textContent = original;
-					});
-			});
-		});
-	}
-	/* Defer until the DOM (and Frappe's injected frappe.csrf_token script)
-	   is fully parsed - calling portalCall earlier sends an empty CSRF token
-	   and Frappe rejects it with 'Invalid Request'. */
-	function whenReady(fn) {
-		if (document.readyState === "loading") {
-			document.addEventListener("DOMContentLoaded", fn);
-		} else {
-			fn();
-		}
-	}
-	whenReady(function () {
-		portalCall("functional_demo.api.get_unlinked_users", {}).then(render).catch(function () {
-			listEl.innerHTML = '<p class="text-muted" style="margin:0;">Could not load users. Please refresh the page.</p>';
-		});
-	});
-})();
-</script>
-{% endif %}
 {% endblock %}
 {% block content %}
 <div class="portal-layout">
@@ -118,7 +51,6 @@
 				</div>
 				<div class="card-body">
 					<p class="text-muted" style="margin-top:0;">Create a consultant profile with specialization, experience and availability — it is saved in the desk automatically, and the consultant gets the Functional Consultant role to start working.</p>
-					<div id="unlinked-users"><p class="text-muted" style="margin:0;">Loading users…</p></div>
 				</div>
 			</div>
 			{% endif %}

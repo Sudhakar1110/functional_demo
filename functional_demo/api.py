@@ -1093,7 +1093,7 @@ def create_demo_request(customer=None, lead=None, company=None, contact_person=N
 		functional_consultant = auto_assigned_consultant or None
 	if not functional_consultant:
 		frappe.throw(
-			_("No consultants are available yet. Ask your Functional Team Manager to create a consultant profile (Functional Portal → Link profile) or add one in ERPNext, then try again."),
+			_("No consultants are available yet. Ask your Functional Team Manager to create a consultant profile (Functional Portal → New Consultant Profile) or add one in ERPNext, then try again."),
 			title=_("Consultant Required"),
 		)
 
@@ -1219,37 +1219,6 @@ def _guard_consultant_manager():
 			_("Only Functional Team Managers can manage consultant profiles."),
 			frappe.PermissionError,
 		)
-
-
-@frappe.whitelist()
-def get_unlinked_users():
-	"""Enabled users who do not yet have a Functional Consultant profile.
-	Used by the 'Consultant Profiles' manager card in the portal."""
-	_guard_consultant_manager()
-	linked = {
-		row[0]
-		for row in frappe.db.sql(
-			"select user from `tabFunctional Consultant` where ifnull(user, '') != ''"
-		)
-	}
-	users = frappe.get_all(
-		"User",
-		filters=[["enabled", "=", 1]],
-		fields=["name", "full_name", "email"],
-		order_by="full_name asc",
-	)
-	out = []
-	for u in users:
-		if u.name in ("Guest", "Administrator") or u.name in linked:
-			continue
-		out.append(
-			{
-				"user": u.name,
-				"full_name": u.full_name or u.name,
-				"email": u.email or "",
-			}
-		)
-	return out
 
 
 @frappe.whitelist()

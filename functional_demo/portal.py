@@ -220,8 +220,7 @@ def portal_context(context, title, required_roles, active, subtitle=""):
 	context.login_required = True
 	context.no_cache = 1
 	# Belt & braces: force a fresh render with no-store headers for every portal
-	# page so a stale cached copy (which once caused the 'User Required' popup
-	# on the Link profile button) can never be served to the browser again.
+	# page so a stale cached copy can never be served to the browser again.
 	frappe.local.no_cache = True
 	frappe.local.flags.disable_website_cache = True
 	if frappe.session.user == "Guest":
