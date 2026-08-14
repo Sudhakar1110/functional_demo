@@ -83,7 +83,6 @@
 						<button class="btn-portal danger" id="btn-toggle-cancel"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" x2="6" y1="6" y2="18"/><line x1="6" x2="18" y1="6" y2="18"/></svg> Cancel</button>
 						{% endif %}
 						{% if s.demo_status == "In Progress" %}
-						<button class="btn-portal success" id="btn-toggle-complete"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Complete Demo</button>
 						<button class="btn-portal danger" id="btn-toggle-cancel"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" x2="6" y1="6" y2="18"/><line x1="6" x2="18" y1="6" y2="18"/></svg> Cancel</button>
 						{% endif %}
 						{% if s.demo_status in ["Completed", "Follow-up Required"] %}
@@ -112,8 +111,14 @@
 						<div class="form-actions"><button class="btn-portal danger" id="btn-cancel">Cancel Demo</button></div>
 					</div>
 
-					<div id="form-complete" style="display: none;" class="portal-form">
+					<div id="form-complete" class="portal-form" {% if s.demo_status != "In Progress" %}style="display: none;"{% endif %}>
 						<div class="divider"></div>
+						{% if s.demo_status == "In Progress" %}
+						<div style="margin-bottom: 16px;">
+							<h3 style="margin: 0 0 4px; font-size: 15px;">Demo Feedback</h3>
+							<p class="text-muted" style="margin: 0;">Record the customer's feedback during the demo - it is required before completing.</p>
+						</div>
+						{% endif %}
 						<label>Overall Feedback <span class="req">*</span></label>
 						<textarea id="fb-overall" placeholder="How did the demo go?"></textarea>
 						<div class="form-row">
@@ -298,9 +303,10 @@
 		});
 	}
 
-	/* ---- complete + feedback ---- */
-	if (document.getElementById("btn-toggle-complete")) {
-		document.getElementById("btn-toggle-complete").addEventListener("click", function () { toggle("form-complete"); });
+	/* ---- complete + feedback (the form is always visible while the demo is
+	   In Progress, so the consultant records feedback during the demo and
+	   completes from the bottom of the form) ---- */
+	if (document.getElementById("btn-complete")) {
 		document.getElementById("fb-followup").addEventListener("change", function () {
 			document.getElementById("fb-followup-fields").style.display = this.checked ? "block" : "none";
 		});
