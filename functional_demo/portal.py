@@ -145,6 +145,7 @@ ICON_SESSIONS = _icon('<rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><
 ICON_FOLLOWUPS = _icon('<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>')
 ICON_MANAGER = _icon('<path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/>')
 ICON_FEEDBACK = _icon('<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>')
+ICON_CHAT = _icon('<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>')
 
 
 def sidebar_items(active):
@@ -152,7 +153,10 @@ def sidebar_items(active):
 	(sales + functional); functional team members see only functional-related
 	sections (never the sales ones); the Developer role sees only Feedback."""
 	if is_developer():
-		return [{"label": _("Feedback"), "route": "/feedback", "icon": ICON_FEEDBACK, "active": active == "feedback"}]
+		return [
+			{"label": _("Feedback"), "route": "/feedback", "icon": ICON_FEEDBACK, "active": active == "feedback"},
+			{"label": _("Chat"), "route": "/chat", "icon": ICON_CHAT, "active": active == "chat"},
+		]
 
 	items = [{"label": _("Home"), "route": "/demo_portal", "icon": ICON_HOME, "active": active == "home"}]
 
@@ -178,7 +182,8 @@ def sidebar_items(active):
 	if can_manage_consultants():
 		items += [{"label": _("Consultants"), "route": "/functional_portal/consultants", "icon": ICON_FUNCTIONAL, "active": active == "consultants"}]
 
-	# Shared section: template feedback is visible to every portal role
+	# Shared sections: chat + template feedback are visible to every portal role
+	items.append({"label": _("Chat"), "route": "/chat", "icon": ICON_CHAT, "active": active == "chat"})
 	items.append({"label": _("Feedback"), "route": "/feedback", "icon": ICON_FEEDBACK, "active": active == "feedback"})
 
 	return items

@@ -5,7 +5,7 @@
 import frappe
 from frappe import _
 
-from functional_demo.portal import can_manage_consultants
+from functional_demo.portal import can_manage_consultants, create_notification
 from functional_demo.sales_demo.doctype.demo_request.demo_request import (
 	change_status,
 	get_primary_contact,
@@ -1341,3 +1341,140 @@ def update_follow_up(follow_up=None, status=None, outcome=None, remarks=None, ne
 
 	frappe.msgprint(_("Follow-up {0} updated.").format(follow_up))
 	return {"status": doc.status, "outcome": doc.outcome}
+
+
+# ---------------------------------------------------------------------------
+# Portal chat (every role user can message every other role user)
+# ---------------------------------------------------------------------------
+
+@frappe.whitelist()
+def get_chat_users():
+	"""All enabled users the current user can chat with, each with the unread
+	message count for their conversation with the current user."""
+	user = frappe.session.user
+	if not user or user == "Guest":
+		return []
+	users = frappe.get_all(
+		"User",
+		filters=[["enabled", "=", 1], ["name", "!=", "Guest"]],
+		fields=["name", "full_name", "user_image", "email"],
+		order_by="full_name asc",
+		ignore_permissions=True,
+	) or []
+	unread_map = dict(
+		frappe.db.sql(
+			"""select from_user, count(*)
+			from `tabPortal Chat Message`
+			where to_user = %s and read = 0
+			group by from_user""",
+			user,
+		)
+	)
+	out = []
+	for u in users:
+		if u.name == user:
+			continue
+		out.append(
+			{
+				"name": u.name,
+				"full_name": u.full_name or u.name,
+				"email": u.email or "",
+				"unread": int(unread_map.get(u.name, 0) or 0),
+			}
+		)
+	return out
+
+
+@frappe.whitelist()
+def get_chat_messages(other_user=None):
+	"""The latest messages between the current user and other_user (oldest
+	first). Incoming messages are marked as read."""
+	if not other_user:
+		return {"messages": []}
+	user = frappe.session.user
+	rows = frappe.get_all(
+		"Portal Chat Message",
+		filters=[
+			["from_user", "in", [user, other_user]],
+			["to_user", "in", [user, other_user]],
+		],
+		fields=["name", "from_user", "to_user", "message", "creation", "read"],
+		order_by="creation desc",
+		limit_page_length=100,
+		ignore_permissions=True,
+	) or []
+	rows.reverse()
+
+	# mark everything the other user sent me as read
+	frappe.db.set_value(
+		"Portal Chat Message",
+		{"from_user": other_user, "to_user": user, "read": 0},
+		"read",
+		1,
+		update_modified=False,
+	)
+
+	out = []
+	for r in rows:
+		out.append(
+			{
+				"name": r.name,
+				"from_user": r.from_user,
+				"to_user": r.to_user,
+				"message": r.message,
+				"creation": frappe.utils.pretty_date(r.creation) if r.creation else "",
+				"mine": r.from_user == user,
+				"read": 1 if r.read else 0,
+			}
+		)
+	return {"messages": out}
+
+
+@frappe.whitelist()
+def send_chat_message(to_user=None, message=None):
+	"""Create a chat message from the current user and notify the recipient
+	(in-app notification + bell badge)."""
+	message = (message or "").strip()
+	if not to_user:
+		frappe.throw(_("Please pick a user to send the message to."), title=_("Recipient Required"))
+	if not message:
+		frappe.throw(_("Message cannot be empty."), title=_("Empty Message"))
+	if not frappe.db.get_value("User", to_user, "enabled"):
+		frappe.throw(
+			_("User {0} is disabled or does not exist.").format(to_user),
+			title=_("Invalid User"),
+		)
+	user = frappe.session.user
+	doc = frappe.new_doc("Portal Chat Message")
+	doc.from_user = user
+	doc.to_user = to_user
+	doc.message = message
+	doc.insert(ignore_permissions=True)
+
+	# in-app notification so the recipient's portal/desk bell lights up
+	create_notification(
+		to_user,
+		_("New message from {0}").format(frappe.utils.get_fullname(user) or user),
+		"Portal Chat Message",
+		doc.name,
+	)
+	return {
+		"name": doc.name,
+		"message": doc.message,
+		"creation": frappe.utils.now_datetime().isoformat(),
+	}
+
+
+@frappe.whitelist()
+def mark_chat_read(other_user=None):
+	"""Mark all messages from other_user to the current user as read."""
+	if not other_user:
+		return True
+	frappe.db.set_value(
+		"Portal Chat Message",
+		{"from_user": other_user, "to_user": frappe.session.user, "read": 0},
+		"read",
+		1,
+		update_modified=False,
+	)
+	return True

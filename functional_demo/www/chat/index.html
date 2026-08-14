@@ -1,0 +1,219 @@
+{% extends "templates/web.html" %}
+{% block banner %}{% endblock %}
+{% block navbar %}{% endblock %}
+{% block footer %}{% endblock %}
+{% block style %}{% include "functional_demo/templates/includes/portal_style.html" %}{% endblock %}
+{% block script %}{% include "functional_demo/templates/includes/portal_script.html" %}
+<script>
+(function () {
+	"use strict";
+
+	var ME = "{{ me }}";
+	var current = null;      /* other user's name */
+	var lastMsg = null;      /* last rendered message name */
+	var usersCache = [];
+
+	var listEl = document.getElementById("chat-user-list");
+	var searchEl = document.getElementById("chat-search");
+	var headEl = document.getElementById("chat-thread-head");
+	var emptyEl = document.getElementById("chat-thread-empty");
+	var msgsEl = document.getElementById("chat-messages");
+	var composeEl = document.getElementById("chat-compose");
+	var inputEl = document.getElementById("chat-input");
+
+	function esc(s) {
+		return String(s == null ? "" : s)
+			.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+			.replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+	}
+
+	function avatar(name, full) {
+		return '<span class="chat-avatar">' + esc((full || name || "?").trim().charAt(0).toUpperCase()) + "</span>";
+	}
+
+	/* ---------- user list ---------- */
+	function renderUsers(users) {
+		usersCache = users || [];
+		var q = (searchEl.value || "").trim().toLowerCase();
+		var rows = usersCache
+			.filter(function (u) {
+				if (!q) return true;
+				return (u.full_name || "").toLowerCase().indexOf(q) > -1
+					|| (u.email || "").toLowerCase().indexOf(q) > -1;
+			})
+			.map(function (u) {
+				var active = current === u.name ? " active" : "";
+				var badge = u.unread > 0 ? '<span class="chat-unread">' + u.unread + "</span>" : "";
+				return '<div class="chat-user-item' + active + '" data-user="' + esc(u.name) + '">'
+					+ avatar(u.name, u.full_name)
+					+ '<div class="chat-user-info"><div class="chat-user-name">' + esc(u.full_name) + "</div>"
+					+ '<div class="chat-user-meta">' + esc(u.email || "") + "</div></div>"
+					+ badge
+					+ "</div>";
+			})
+			.join("");
+		listEl.innerHTML = rows || '<div class="chat-empty-users">No users found.</div>';
+	}
+
+	function loadUsers(keepScroll) {
+		return portalCall("functional_demo.api.get_chat_users", {})
+			.then(function (data) {
+				var users = Array.isArray(data) ? data : [];
+				if (keepScroll) {
+					var old = listEl.scrollTop;
+					renderUsers(users);
+					listEl.scrollTop = old;
+				} else {
+					renderUsers(users);
+				}
+			})
+			.catch(function () { /* silent - poll keeps trying */ });
+	}
+
+	/* ---------- thread ---------- */
+	function renderThread(messages) {
+		var rows = (messages || []).map(function (m) {
+			var mine = m.mine;
+			var who = mine ? "" : avatar(m.from_user, m.from_user);
+			return '<div class="chat-bubble-row ' + (mine ? "mine" : "theirs") + '">'
+				+ who
+				+ '<div class="chat-bubble' + (mine ? " mine" : " theirs") + '">'
+				+ '<div class="chat-bubble-text">' + esc(m.message).replace(/\n/g, "<br>") + "</div>"
+				+ '<div class="chat-bubble-time">' + esc(m.creation || "") + "</div>"
+				+ "</div></div>";
+		}).join("");
+		msgsEl.innerHTML = rows || '<div class="chat-thread-empty-inline">No messages yet. Say hi!</div>';
+		msgsEl.scrollTop = msgsEl.scrollHeight;
+	}
+
+	function openThread(otherUser, otherName) {
+		current = otherUser;
+		headEl.innerHTML = avatar(otherUser, otherName)
+			+ '<div class="chat-thread-title">' + esc(otherName) + "</div>";
+		headEl.style.display = "flex";
+		emptyEl.style.display = "none";
+		composeEl.style.display = "flex";
+		lastMsg = null;
+		loadThread();
+		renderUsers(usersCache);
+	}
+
+	function loadThread() {
+		if (!current) return Promise.resolve();
+		return portalCall("functional_demo.api.get_chat_messages", { other_user: current })
+			.then(function (data) {
+				var messages = (data && data.messages) || [];
+				var latest = messages.length ? messages[messages.length - 1].name : null;
+				if (latest !== lastMsg) {
+					lastMsg = latest;
+					renderThread(messages);
+				}
+				/* refresh unread badges after marking read */
+				if (usersCache.length) {
+					usersCache.forEach(function (u) { if (u.name === current) u.unread = 0; });
+					renderUsers(usersCache);
+				}
+				return messages;
+			})
+			.catch(function () { return []; });
+	}
+
+	function sendMessage() {
+		var text = (inputEl.value || "").trim();
+		if (!text || !current) return;
+		var btn = document.getElementById("chat-send");
+		btn.disabled = true;
+		portalCall("functional_demo.api.send_chat_message", { to_user: current, message: text })
+			.then(function () {
+				inputEl.value = "";
+				btn.disabled = false;
+				return loadThread();
+			})
+			.catch(function () { btn.disabled = false; });
+	}
+
+	/* ---------- events ---------- */
+	listEl.addEventListener("click", function (e) {
+		var item = e.target.closest ? e.target.closest(".chat-user-item") : null;
+		if (item && item.getAttribute("data-user")) {
+			var name = item.getAttribute("data-user");
+			var full = item.querySelector(".chat-user-name");
+			openThread(name, full ? full.textContent : name);
+		}
+	});
+	searchEl.addEventListener("input", function () { renderUsers(usersCache); });
+	document.getElementById("chat-send").addEventListener("click", sendMessage);
+	inputEl.addEventListener("keydown", function (e) {
+		if (e.key === "Enter" && !e.shiftKey) {
+			e.preventDefault();
+			sendMessage();
+		}
+	});
+
+	/* ---------- polling (every 5s) ---------- */
+	loadUsers();
+	setInterval(function () {
+		loadUsers(true);
+		if (current) loadThread();
+	}, 5000);
+})();
+</script>
+{% endblock %}
+{% block content %}
+<div class="portal-layout">
+	<header class="portal-topbar">
+		<button class="sidebar-toggle" id="sidebar-toggle" aria-label="Menu">&#9776;</button>
+		<a class="topbar-brand" href="/demo_portal">
+			<img class="brand-logo" src="/assets/functional_demo/images/brand_logo.jpg" alt="Brand Logo" />
+			<div class="brand-text">
+				<span class="brand-name">Demo Portal</span>
+				<span class="brand-sub">Sales &amp; Functional</span>
+			</div>
+		</a>
+		<div class="topbar-title">
+			<h1>{{ title }}</h1>
+			<p>{{ subtitle }}</p>
+		</div>
+		<div class="topbar-right">
+			<span class="portal-avatar">{{ full_name[:1] }}</span>
+			<span class="portal-user-name">{{ full_name }}</span>
+			<a class="btn-desk" href="/app">Open Desk</a>
+		</div>
+	</header>
+	<div class="portal-body">
+		<aside class="portal-sidebar" id="portal-sidebar">
+			<div class="sidebar-menu">
+			{% for item in sidebar_items %}
+			<a class="sidebar-item {% if item.active %}active{% endif %}" href="{{ item.route }}">
+				<span class="sidebar-icon">{{ item.icon | safe }}</span>{{ item.label }}
+			</a>
+			{% endfor %}
+		</div>
+	</aside>
+	<div class="sidebar-overlay"></div>
+	<div class="portal-main">
+		<div class="portal-content">
+			<div class="chat-shell">
+				<div class="chat-users">
+					<input id="chat-search" class="chat-search" type="text" placeholder="Search team members..." />
+					<div class="chat-user-list" id="chat-user-list"></div>
+				</div>
+				<div class="chat-thread">
+					<div class="chat-thread-head" id="chat-thread-head" style="display:none;"></div>
+					<div class="chat-thread-empty" id="chat-thread-empty">
+						<div class="empty-icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
+						<h3>Select a team member</h3>
+						<p>Pick someone from the list to start chatting. Sales, functional consultants and developers can all message each other.</p>
+					</div>
+					<div class="chat-messages" id="chat-messages"></div>
+					<div class="chat-compose" id="chat-compose" style="display:none;">
+						<input id="chat-input" type="text" placeholder="Type a message..." />
+						<button id="chat-send" class="btn-portal">Send</button>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	</div>
+</div>
+{% endblock %}

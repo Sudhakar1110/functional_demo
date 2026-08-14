@@ -239,6 +239,7 @@
 			if (n.document_type === "Demo Request") return "/sales_portal/demo_request?name=" + esc(n.document_name);
 			if (n.document_type === "Demo Session") return "/functional_portal/session?name=" + esc(n.document_name);
 			if (n.document_type === "Demo Follow Up") return "/functional_portal/follow_ups";
+			if (n.document_type === "Portal Chat Message") return "/chat";
 			return "/demo_portal";
 		}
 		function render(data) {
@@ -275,6 +276,10 @@
 			panel.style.display = open ? "none" : "block";
 			if (!open) load();
 		});
+
+		/* keep the badge fresh while the user is on the page (e.g. new chat
+		   messages arriving) without any interaction */
+		setInterval(load, 30000);
 		document.addEventListener("click", function (e) {
 			if (!wrap.contains(e.target)) panel.style.display = "none";
 		});
