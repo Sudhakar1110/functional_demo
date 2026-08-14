@@ -329,7 +329,17 @@ class DemoSession(Document):
 					"Demo Session",
 					self.name,
 				)
-				email = frappe.db.get_value("User", consultant_user, "email")
+				# the linked User's email wins (that is where assignments are
+				# delivered); fall back to the consultant profile's email field
+				email = (
+					frappe.db.get_value("User", consultant_user, "email")
+					or (
+						frappe.db.get_value("Functional Consultant", self.functional_consultant, "email")
+						if self.functional_consultant
+						else ""
+					)
+					or ""
+				)
 				if email:
 					frappe.sendmail(
 						recipients=[email],
@@ -338,6 +348,14 @@ class DemoSession(Document):
 						reference_doctype="Demo Session",
 						reference_name=self.name,
 						now=True,
+					)
+				else:
+					# log so a missing address is never silently lost
+					frappe.log_error(
+						title=_("Consultant email missing - no mail sent for Session {0}").format(self.name),
+						message=_(
+							"The consultant {0} (user {1}) has no email on their User or consultant profile."
+						).format(self.functional_consultant, consultant_user),
 					)
 		except Exception:
 			frappe.log_error(
@@ -689,13 +707,18 @@ def create_calendar_event(session):
 # ------------------------------------------------------------------
 
 def get_permission_query_conditions(user=None):
-	"""Consultants see their own sessions; sales users see sessions of their requests;
-	managers and the read-only Developer role see everything."""
+	"""Consultants see only their own sessions; sales users see sessions of their
+	requests; managers see everything. The read-only Developer role is NOT
+	bypassed here - Feedback reads sessions directly with ignore_permissions."""
 	user = user or frappe.session.user
 	if not user or user == "Administrator":
 		return ""
 	roles = frappe.get_roles(user)
-	if any(r in roles for r in ("System Manager", "Sales Manager", "Functional Team Manager", "Developer")):
+	# Managers still see everything; the read-only Developer role must NOT
+	# bypass the list filter (it only needs Feedback, which reads sessions
+	# directly with ignore_permissions). A consultant who also carries the
+	# Developer role must still see only their own sessions.
+	if any(r in roles for r in ("System Manager", "Sales Manager", "Functional Team Manager")):
 		return ""
 	if "Functional Consultant" in roles:
 		return (

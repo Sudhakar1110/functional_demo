@@ -66,7 +66,7 @@ body {
 }
 
 /* ==========================================================================
-   Full-width dark top bar (logo left, title, user + Log Out right)
+   Full-width dark top bar (logo left, title, user + Open Desk right)
    ========================================================================== */
 .portal-topbar {
 	flex-shrink: 0;
@@ -179,11 +179,11 @@ body {
 .portal-topbar .portal-avatar { color: #ffffff !important; }
 .portal-user-name { font-size: 14px; font-weight: 600; color: #fff; }
 
-.btn-logout {
+.btn-desk {
 	display: inline-flex;
 	align-items: center;
 	gap: 6px;
-	background: transparent;
+	background: var(--bx-navy);
 	color: #fff;
 	border: 1px solid rgba(255, 255, 255, 0.35);
 	border-radius: var(--bx-radius-md);
@@ -194,11 +194,11 @@ body {
 	cursor: pointer;
 	transition: all 0.15s ease;
 }
-.btn-logout:hover {
-	background: #F43F5E;
-	border-color: #F43F5E;
+.btn-desk:hover {
+	background: var(--bx-blue);
+	border-color: var(--bx-blue);
 	color: #fff;
-	box-shadow: 0 6px 18px rgba(244, 63, 94, 0.4);
+	box-shadow: 0 6px 18px rgba(17, 78, 255, 0.4);
 	text-decoration: none;
 }
 
@@ -1183,7 +1183,7 @@ details.portal-card[open] > summary.card-head::after {
 	.portal-topbar { padding: 10px 14px; gap: 10px; }
 	.topbar-title h1 { font-size: 15px; }
 	.topbar-title p { display: none; }
-	.btn-logout { padding: 6px 12px; font-size: 12px; }
+	.btn-desk { padding: 6px 12px; font-size: 12px; }
 	.brand-text { display: none; }
 }
 @media (max-width: 640px) {

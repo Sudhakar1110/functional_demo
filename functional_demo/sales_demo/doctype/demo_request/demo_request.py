@@ -304,13 +304,21 @@ class DemoRequest(Document):
 				["user", "email"],
 				as_dict=True,
 			)
-			# the consultant's own email field wins; fall back to the linked User
+			# the linked User's email wins (that is where assignments are
+			# delivered); fall back to the consultant profile's email field
 			email = (
-				(consultant.get("email") or "").strip()
-				if consultant and consultant.get("email")
-				else frappe.db.get_value("User", user, "email") or ""
+				frappe.db.get_value("User", user, "email")
+				or ((consultant.get("email") or "").strip() if consultant else "")
+				or ""
 			)
 			if not email:
+				# log so a missing address is never silently lost
+				frappe.log_error(
+					title=_("Consultant email missing - no mail sent for Demo Request {0}").format(self.name),
+					message=_(
+						"The consultant {0} (user {1}) has no email on their User or consultant profile."
+					).format(self.functional_consultant, user),
+				)
 				return
 
 			subject = _("Demo Request {0} assigned to you").format(self.name)
