@@ -892,7 +892,7 @@ def get_demo_feedback_data():
 		out.append(
 			{
 				"name": s.name,
-				"customer": s.customer or s.lead or "-",
+				"customer": s.customer or s.sales_person or "-",
 				"date": (
 					frappe.utils.format_date(s.completed_on or s.scheduled_date, "medium")
 					if (s.completed_on or s.scheduled_date)
@@ -1068,8 +1068,8 @@ def create_demo_request(customer=None, lead=None, company=None, contact_person=N
 
 	if lead and not frappe.db.exists("Lead", lead):
 		frappe.throw(
-			_("Lead \"{0}\" was not found. Please pick a lead from the suggestions list.").format(lead),
-			title=_("Lead Not Found"),
+			_("Sales Team Member \"{0}\" was not found. Please pick a sales team member from the suggestions list.").format(lead),
+			title=_("Sales Team Member Not Found"),
 		)
 
 	# Business rule: every demo must be allocated to a Functional Consultant at
