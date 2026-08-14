@@ -69,10 +69,6 @@
 										{% endfor %}
 									</div>
 								</div>
-								<div>
-									<label>Experience (Years)</label>
-									<input type="number" id="con-experience" min="0" max="60" placeholder="e.g. 5" autocomplete="off">
-								</div>
 							</div>
 							<div class="form-row">
 								<div>
@@ -145,7 +141,6 @@
 						user: user,
 						consultant_name: document.getElementById("con-name").value.trim(),
 						templates: templates,
-						experience_years: document.getElementById("con-experience").value,
 						availability: document.getElementById("con-availability").value,
 						email: document.getElementById("con-email").value.trim(),
 						notes: document.getElementById("con-notes").value,
