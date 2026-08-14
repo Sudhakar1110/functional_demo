@@ -255,33 +255,28 @@ class DemoSession(Document):
 			frappe.log_error(title=_("Communication creation failed"), message=frappe.get_traceback())
 
 	def notify_sales_scheduled(self):
-		"""Email the sales person with the demo session details when it is
-		scheduled (new session or reschedule). Fires from after_insert and
+		"""Notify both the sales person and the assigned consultant when a demo
+		is scheduled (new session or reschedule): an in-app Notification Log
+		(everything shows in the portal bell AND the desk bell) plus an email
+		with the date / time / meeting link. Fires from after_insert and
 		reschedule_demo, so it covers the portal Schedule Demo / reschedule
-		actions and sessions created from the desk form."""
+		actions and sessions created from the desk form. A failure is logged
+		but never blocks the scheduling."""
 		try:
-			sales_person = self.sales_person
-			if self.demo_status != "Scheduled" or not sales_person:
+			if self.demo_status != "Scheduled":
 				return
-			# in-app notification (portal + desk bells) - created even when the
-			# sales person has no email (e.g. Administrator)
-			create_notification(
-				sales_person,
-				_("Demo scheduled: {0} on {1} (Session {2})").format(
-					self.customer or self.lead or self.demo_request, self.scheduled_date, self.name
-				),
-				"Demo Session",
-				self.name,
+			consultant_name = (
+				frappe.db.get_value("Functional Consultant", self.functional_consultant, "consultant_name")
+				if self.functional_consultant
+				else None
 			)
-			email = frappe.db.get_value("User", sales_person, "email")
-			if not email:
-				return
-			consultant = frappe.db.get_value(
-				"Functional Consultant", self.functional_consultant, "consultant_name"
+			consultant_user = (
+				frappe.db.get_value("Functional Consultant", self.functional_consultant, "user")
+				if self.functional_consultant
+				else None
 			)
-			subject = _("Demo scheduled: {0} on {1}").format(
-				self.customer or self.lead or self.demo_request, self.scheduled_date
-			)
+			party = self.customer or self.lead or self.demo_request
+			subject = _("Demo scheduled: {0} on {1}").format(party, self.scheduled_date)
 			message = _(
 				"Hi,\n\n"
 				"Demo Session {0} for {1} has been scheduled.\n\n"
@@ -292,27 +287,61 @@ class DemoSession(Document):
 				"Open the session: {7}\n"
 			).format(
 				self.name,
-				self.customer or self.lead or self.demo_request,
+				party,
 				self.scheduled_date,
 				self.start_time or "-",
 				self.end_time or "-",
-				consultant or "-",
+				consultant_name or "-",
 				self.meeting_link or "-",
 				frappe.utils.get_url("/app/demo-session/{0}".format(self.name)),
 			)
-			frappe.sendmail(
-				recipients=[email],
-				subject=subject,
-				message=message,
-				reference_doctype="Demo Session",
-				reference_name=self.name,
-				now=True,
-			)
+
+			# sales person: in-app notification + email
+			if self.sales_person:
+				# in-app notification (portal + desk bells) - created even when the
+				# sales person has no email (e.g. Administrator)
+				create_notification(
+					self.sales_person,
+					_("Demo scheduled: {0} on {1} (Session {2})").format(
+						party, self.scheduled_date, self.name
+					),
+					"Demo Session",
+					self.name,
+				)
+				email = frappe.db.get_value("User", self.sales_person, "email")
+				if email:
+					frappe.sendmail(
+						recipients=[email],
+						subject=subject,
+						message=message,
+						reference_doctype="Demo Session",
+						reference_name=self.name,
+						now=True,
+					)
+
+			# consultant: in-app notification + email with the same schedule details
+			if consultant_user:
+				create_notification(
+					consultant_user,
+					_("Demo scheduled for you: {0} on {1} (Session {2})").format(
+						party, self.scheduled_date, self.name
+					),
+					"Demo Session",
+					self.name,
+				)
+				email = frappe.db.get_value("User", consultant_user, "email")
+				if email:
+					frappe.sendmail(
+						recipients=[email],
+						subject=_("Demo scheduled for you: {0} on {1}").format(party, self.scheduled_date),
+						message=message,
+						reference_doctype="Demo Session",
+						reference_name=self.name,
+						now=True,
+					)
 		except Exception:
 			frappe.log_error(
-				title=_("Scheduled email to {0} failed for {1}").format(
-					self.sales_person or "-", self.name
-				),
+				title=_("Scheduled email/notification failed for {0}").format(self.name),
 				message=frappe.get_traceback(),
 			)
 
