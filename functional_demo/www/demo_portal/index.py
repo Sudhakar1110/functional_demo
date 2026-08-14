@@ -6,6 +6,7 @@ from frappe import _
 
 from functional_demo.portal import (
 	functional_stats,
+	is_developer,
 	is_functional,
 	is_manager,
 	is_sales,
