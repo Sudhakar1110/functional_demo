@@ -276,7 +276,7 @@
 				<div class="card-body">
 					<div class="detail-grid">
 						<div class="detail-item"><div class="d-label">Customer</div><div class="d-value">{{ doc.customer or "-" }}</div></div>
-						<div class="detail-item"><div class="d-label">Lead</div><div class="d-value">{{ doc.lead or "-" }}</div></div>
+						<div class="detail-item"><div class="d-label">Sales Team Member</div><div class="d-value">{{ doc.sales_person or "-" }}</div></div>
 						<div class="detail-item"><div class="d-label">Company</div><div class="d-value">{{ doc.company or "-" }}</div></div>
 						<div class="detail-item"><div class="d-label">Contact Person</div><div class="d-value">{{ doc.contact_person or "-" }}</div></div>
 						<div class="detail-item"><div class="d-label">Contact Number</div><div class="d-value">{{ doc.contact_number or "-" }}</div></div>
@@ -305,7 +305,6 @@
 				<div class="card-head"><h2>Team</h2></div>
 				<div class="card-body">
 					<div class="detail-grid">
-						<div class="detail-item"><div class="d-label">Sales Team Member</div><div class="d-value">{{ doc.sales_person or "-" }}</div></div>
 						<div class="detail-item"><div class="d-label">Functional Consultant</div><div class="d-value">{{ doc.functional_consultant or "-" }}{% if doc.functional_consultant and consultant_names.get(doc.functional_consultant) %} <span class="muted">({{ consultant_names.get(doc.functional_consultant) }})</span>{% endif %}</div></div>
 					</div>
 				</div>
