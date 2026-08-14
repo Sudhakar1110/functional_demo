@@ -323,22 +323,4 @@
 		document.head.appendChild(apple);
 	})();
 })();
-
-/* Show the current user's roles under their name in the topbar, so it is
-   always visible why a sidebar shows (or hides) sections - e.g. an account
-   carrying the Developer role correctly sees only Feedback. */
-(function () {
-	var roles = "{{ user_roles_display or '' }}";
-	var rolesFull = "{{ user_roles_full or '' }}";
-	if (!roles) return;
-	var nameEl = document.querySelector(".portal-user-name");
-	if (!nameEl || !nameEl.parentElement) return;
-	var parent = nameEl.parentElement;
-	if (parent.querySelector(".portal-user-roles")) return;
-	var el = document.createElement("div");
-	el.className = "portal-user-roles";
-	el.textContent = "Roles: " + roles;
-	if (rolesFull && rolesFull !== roles) el.title = "Full roles: " + rolesFull;
-	parent.appendChild(el);
-})();
 </script>

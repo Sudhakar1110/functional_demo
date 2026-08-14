@@ -213,16 +213,6 @@ def portal_context(context, title, required_roles, active, subtitle=""):
 	context.is_functional = is_functional()
 	context.is_manager = is_manager()
 	context.is_developer = is_developer()
-	# Show the user's actual roles in the topbar (diagnostic aid for the
-	# role-based sidebar: e.g. an account with the Developer role correctly
-	# sees only Feedback). Administrators typically carry every role, so the
-	# visible list is capped with the full list on hover.
-	roles = sorted(r for r in user_roles() if r not in {"All", "Guest", "Full Name"})
-	context.user_roles_full = ", ".join(roles) or "-"
-	if len(roles) > 4:
-		context.user_roles_display = ", ".join(roles[:4]) + ", +{0} more".format(len(roles) - 4)
-	else:
-		context.user_roles_display = context.user_roles_full
 	context.full_name = frappe.utils.get_fullname(frappe.session.user)
 	context.greeting = greeting()
 	context.today_pretty = frappe.utils.now_datetime().strftime("%A, %d %B %Y")
