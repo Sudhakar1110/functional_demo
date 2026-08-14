@@ -418,6 +418,135 @@ class DemoSession(Document):
 				message=frappe.get_traceback(),
 			)
 
+	def notify_sales_started(self):
+		"""In-app notification + email to the sales person when the demo starts."""
+		try:
+			sales_person = self.sales_person
+			if not sales_person:
+				return
+			party = self.customer or self.lead or self.demo_request
+			create_notification(
+				sales_person,
+				_("Demo started: {0} ({1})").format(party, self.name),
+				"Demo Session",
+				self.name,
+			)
+			email = frappe.db.get_value("User", sales_person, "email")
+			if not email:
+				return
+			subject = _("Demo started: {0} ({1})").format(party, self.name)
+			message = _(
+				"Hi,\n\n"
+				"Demo Session {0} for {1} has just started.\n\n"
+				"Open the session: {2}\n"
+			).format(party, self.name, frappe.utils.get_url("/app/demo-session/{0}".format(self.name)))
+			frappe.sendmail(
+				recipients=[email],
+				subject=subject,
+				message=message,
+				reference_doctype="Demo Session",
+				reference_name=self.name,
+				now=True,
+			)
+		except Exception:
+			frappe.log_error(
+				title=_("Started email to {0} failed for {1}").format(
+					self.sales_person or "-", self.name
+				),
+				message=frappe.get_traceback(),
+			)
+
+	def notify_sales_cancelled(self, reason=None):
+		"""In-app notification + email to the sales person when the demo is cancelled.
+
+		Skips self-notification when the sales person themselves cancelled it."""
+		try:
+			sales_person = self.sales_person
+			if not sales_person or frappe.session.user == sales_person:
+				return
+			party = self.customer or self.lead or self.demo_request
+			create_notification(
+				sales_person,
+				_("Demo cancelled: {0} ({1})").format(party, self.name),
+				"Demo Session",
+				self.name,
+			)
+			email = frappe.db.get_value("User", sales_person, "email")
+			if not email:
+				return
+			subject = _("Demo cancelled: {0} ({1})").format(party, self.name)
+			message = _(
+				"Hi,\n\n"
+				"Demo Session {0} for {1} has been cancelled by {2}.\n\n"
+				"Reason: {3}\n\n"
+				"Open the session: {4}\n"
+			).format(
+				self.name,
+				party,
+				frappe.utils.get_fullname(frappe.session.user),
+				reason or "Not provided",
+				frappe.utils.get_url("/app/demo-session/{0}".format(self.name)),
+			)
+			frappe.sendmail(
+				recipients=[email],
+				subject=subject,
+				message=message,
+				reference_doctype="Demo Session",
+				reference_name=self.name,
+				now=True,
+			)
+		except Exception:
+			frappe.log_error(
+				title=_("Cancelled email to {0} failed for {1}").format(
+					self.sales_person or "-", self.name
+				),
+				message=frappe.get_traceback(),
+			)
+
+	def notify_sales_final_result(self, result):
+		"""In-app notification + email to the sales person when the demo is closed
+		with a final result (Converted / Not Interested / Closed / Pending)."""
+		try:
+			sales_person = self.sales_person
+			if not sales_person:
+				return
+			party = self.customer or self.lead or self.demo_request
+			create_notification(
+				sales_person,
+				_("Demo closed with result '{0}': {1} ({2})").format(result, party, self.name),
+				"Demo Session",
+				self.name,
+			)
+			email = frappe.db.get_value("User", sales_person, "email")
+			if not email:
+				return
+			subject = _("Demo closed with result '{0}': {1}").format(result, party)
+			message = _(
+				"Hi,\n\n"
+				"Demo Session {0} for {1} has been closed with the final result '{2}'.\n\n"
+				"Open the session: {3}\n"
+			).format(
+				self.name,
+				party,
+				result,
+				frappe.utils.get_url("/app/demo-session/{0}".format(self.name)),
+			)
+			frappe.sendmail(
+				recipients=[email],
+				subject=subject,
+				message=message,
+				reference_doctype="Demo Session",
+				reference_name=self.name,
+				now=True,
+			)
+		except Exception:
+			frappe.log_error(
+				title=_("Result email to {0} failed for {1}").format(
+					self.sales_person or "-", self.name
+				),
+				message=frappe.get_traceback(),
+			)
+
 
 # ------------------------------------------------------------------
 # demo actions
@@ -433,6 +562,7 @@ class DemoSession(Document):
 			)
 		self.demo_status = "In Progress"
 		self.save(ignore_permissions=True)
+		self.notify_sales_started()
 
 	def complete_demo(self, feedback=None):
 		if self.demo_status != "In Progress":
@@ -494,6 +624,7 @@ class DemoSession(Document):
 		if reason:
 			self.consultant_remarks = reason
 		self.save(ignore_permissions=True)
+		self.notify_sales_cancelled(reason)
 
 	def reschedule_demo(self, scheduled_date, start_time=None, end_time=None, meeting_link=None):
 		if not scheduled_date:
@@ -545,6 +676,7 @@ class DemoSession(Document):
 		self.final_result = result
 		self.demo_status = "Closed"
 		self.save(ignore_permissions=True)
+		self.notify_sales_final_result(result)
 		if result in ("Converted", "Not Interested", "Closed"):
 			self._apply_request_final_result(result)
 
