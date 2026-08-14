@@ -666,7 +666,26 @@ class DemoSession(Document):
 		request.save(ignore_permissions=True)
 		from functional_demo.sales_demo.doctype.demo_request.demo_request import change_status
 
-		change_status(request, "Follow-up Required", ignore_permissions=True)
+		try:
+			change_status(request, "Follow-up Required", ignore_permissions=True)
+		except Exception:
+			# The request transition to "Follow-up Required" is role-gated in the
+			# workflow (like Converted / Not Interested / Closed), so a consultant
+			# or manager creating the follow-up may be blocked even though the
+			# follow-up itself was created. Apply the state directly (status +
+			# workflow_state, exactly what the workflow would write) and log -
+			# never fail the action or roll back the follow-up.
+			frappe.log_error(
+				title=_("Demo Request {0} could not be moved to 'Follow-up Required' from session {1}").format(
+					request.name, self.name
+				),
+				message=frappe.get_traceback(),
+			)
+			frappe.db.set_value(
+				"Demo Request",
+				request.name,
+				{"status": "Follow-up Required", "workflow_state": "Follow-up Required"},
+			)
 		return fu
 
 	def set_final_result(self, result):

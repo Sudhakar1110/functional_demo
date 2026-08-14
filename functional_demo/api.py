@@ -418,7 +418,21 @@ def create_demo_follow_up(demo_request=None, follow_up_date=None, next_action=No
 	dr.follow_up_date = follow_up_date
 	dr.next_action = next_action
 	dr.save(ignore_permissions=True)
-	change_status(dr, "Follow-up Required", ignore_permissions=True)
+	try:
+		change_status(dr, "Follow-up Required", ignore_permissions=True)
+	except Exception:
+		# The request transition to "Follow-up Required" is role-gated in the
+		# workflow, so the caller (e.g. a consultant or manager) may be blocked
+		# even though the follow-up itself was created. Apply the state directly
+		# (status + workflow_state, exactly what the workflow would write) and
+		# log - never fail the action or roll back the follow-up.
+		frappe.log_error(
+			title=_("Demo Request {0} could not be moved to 'Follow-up Required'").format(dr.name),
+			message=frappe.get_traceback(),
+		)
+		frappe.db.set_value(
+			"Demo Request", dr.name, {"status": "Follow-up Required", "workflow_state": "Follow-up Required"}
+		)
 
 	party, _consultant = _party_and_consultant(dr)
 	frappe.msgprint(
