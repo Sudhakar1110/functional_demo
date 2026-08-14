@@ -305,7 +305,7 @@
 				<div class="card-head"><h2>Team</h2></div>
 				<div class="card-body">
 					<div class="detail-grid">
-						<div class="detail-item"><div class="d-label">Sales Person</div><div class="d-value">{{ doc.sales_person or "-" }}</div></div>
+						<div class="detail-item"><div class="d-label">Sales Team Member</div><div class="d-value">{{ doc.sales_person or "-" }}</div></div>
 						<div class="detail-item"><div class="d-label">Functional Consultant</div><div class="d-value">{{ doc.functional_consultant or "-" }}{% if doc.functional_consultant and consultant_names.get(doc.functional_consultant) %} <span class="muted">({{ consultant_names.get(doc.functional_consultant) }})</span>{% endif %}</div></div>
 					</div>
 				</div>
