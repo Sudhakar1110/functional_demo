@@ -23,17 +23,6 @@ def is_sales(user=None):
 	return bool(user_roles(user) & set(SALES_ROLES))
 
 
-def is_sales_only(user=None):
-	"""Sales team member who is not part of the functional team. The portal's
-	sales sections (Sales Home, My Leads, Demo Requests, Results) are shown only
-	to these users - functional team members, including the Functional Team
-	Manager, only see functional-related content."""
-	user = user or frappe.session.user
-	return bool(user_roles(user) & set(SALES_ROLES)) and not (
-		user_roles(user) & set(FUNCTIONAL_ROLES)
-	)
-
-
 def is_functional(user=None):
 	return bool(user_roles(user) & set(FUNCTIONAL_ROLES))
 
@@ -130,12 +119,12 @@ ICON_FEEDBACK = _icon('<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2
 
 
 def sidebar_items(active):
-	"""Sidebar menu for the current user. Sales sections are shown only to the
-	sales team; functional team members (including the Functional Team Manager)
-	only see functional-related sections."""
+	"""Sidebar menu for the current user. The sales team sees all content
+	(sales + functional); functional team members see only functional-related
+	sections (never the sales ones)."""
 	items = [{"label": _("Home"), "route": "/demo_portal", "icon": ICON_HOME, "active": active == "home"}]
 
-	if is_sales_only():
+	if is_sales():
 		items += [
 			{"label": _("Sales Home"), "route": "/sales_portal", "icon": ICON_SALES, "active": active == "sales"},
 			{"label": _("My Leads"), "route": "/sales_portal/my_leads", "icon": ICON_LEADS, "active": active == "leads"},
@@ -143,7 +132,8 @@ def sidebar_items(active):
 			{"label": _("Results"), "route": "/sales_portal/results", "icon": ICON_RESULTS, "active": active == "results"},
 		]
 
-	if is_functional() or is_manager():
+	# Functional sections are shared - the sales team sees them too
+	if is_sales() or is_functional() or is_manager():
 		items += [
 			{"label": _("Functional Home"), "route": "/functional_portal", "icon": ICON_FUNCTIONAL, "active": active == "functional"},
 			{"label": _("My Sessions"), "route": "/functional_portal/my_sessions", "icon": ICON_SESSIONS, "active": active == "sessions"},

@@ -16,7 +16,7 @@ def get_context(context):
 	portal_context(
 		context,
 		_("My Demo Sessions"),
-		["Functional Consultant", "Functional Team Manager"],
+		["Sales User", "Sales Manager", "Functional Consultant", "Functional Team Manager"],
 		active="sessions",
 		subtitle=_("Sessions assigned to you"),
 	)

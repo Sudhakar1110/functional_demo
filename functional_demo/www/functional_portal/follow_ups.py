@@ -17,7 +17,7 @@ def get_context(context):
 	portal_context(
 		context,
 		_("Follow-ups"),
-		["Functional Consultant", "Functional Team Manager"],
+		["Sales User", "Sales Manager", "Functional Consultant", "Functional Team Manager"],
 		active="follow_ups",
 		subtitle=_("Follow-ups on your demos"),
 	)
