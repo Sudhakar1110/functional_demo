@@ -150,10 +150,22 @@
 		}
 	});
 
+	/* ---------- auto-open ---------- */
+	/* Incoming messages must be immediately visible: if a conversation with
+	   unread messages exists and none is open, open the most recent one. */
+	function autoOpen() {
+		if (current) return;
+		var unread = usersCache.filter(function (u) { return u.unread > 0; });
+		if (unread.length) {
+			var first = unread[0];
+			openThread(first.name, first.full_name || first.name);
+		}
+	}
+
 	/* ---------- polling (every 5s) ---------- */
-	loadUsers();
+	loadUsers().then(autoOpen);
 	setInterval(function () {
-		loadUsers(true);
+		loadUsers(true).then(autoOpen);
 		if (current) loadThread();
 	}, 5000);
 })();
