@@ -930,12 +930,16 @@ def get_portal_notifications(limit=8):
 	user = frappe.session.user
 	if not user or user == "Guest":
 		return {"unread": 0, "items": []}
+	# ignore_permissions: a user must always see their own notifications even
+	# if their role has no generic read on the Notification Log doctype - the
+	# desk bell does the same.
 	items = frappe.get_all(
 		"Notification Log",
 		filters={"for_user": user},
 		fields=["name", "subject", "type", "document_type", "document_name", "creation", "read"],
 		order_by="creation desc",
 		limit_page_length=int(limit) or 8,
+		ignore_permissions=True,
 	) or []
 	unread = frappe.db.count("Notification Log", {"for_user": user, "read": 0})
 	out = []

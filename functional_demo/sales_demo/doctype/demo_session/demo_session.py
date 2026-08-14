@@ -578,15 +578,14 @@ class DemoSession(Document):
 		# audit trail) so they can review it.
 		sales_person = request.sales_person
 		if sales_person and sales_person != "Administrator":
-			note = frappe.new_doc("Notification Log")
-			note.for_user = sales_person
-			note.type = "Alert"
-			note.document_type = "Demo Session"
-			note.document_name = self.name
-			note.subject = _(
-				"Demo Session {0} closed with result '{1}'; Demo Request {2} was updated directly."
-			).format(self.name, result, request.name)
-			note.insert(ignore_permissions=True)
+			create_notification(
+				sales_person,
+				_("Demo Session {0} closed with result '{1}'; Demo Request {2} was updated directly.").format(
+					self.name, result, request.name
+				),
+				"Demo Session",
+				self.name,
+			)
 
 	def add_comment_to_timeline(self):
 		"""Add a Communication entry so the demo completion shows on the timeline."""

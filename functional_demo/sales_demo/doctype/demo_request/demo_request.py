@@ -427,15 +427,14 @@ def _escalate_to_managers(request_name, sla_due_date):
 		)
 	}
 	for user in managers:
-		note = frappe.new_doc("Notification Log")
-		note.for_user = user
-		note.type = "Alert"
-		note.document_type = "Demo Request"
-		note.document_name = request_name
-		note.subject = _(
-			"SLA breached: {0} was due to be scheduled by {1} but has no demo yet."
-		).format(request_name, sla_due_date)
-		note.insert(ignore_permissions=True)
+		create_notification(
+			user,
+			_("SLA breached: {0} was due to be scheduled by {1} but has no demo yet.").format(
+				request_name, sla_due_date
+			),
+			"Demo Request",
+			request_name,
+		)
 
 
 def _log_sla_activity(request_name, sla_due_date):

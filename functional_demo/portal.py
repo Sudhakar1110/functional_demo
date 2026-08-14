@@ -191,6 +191,11 @@ def create_notification(for_user, subject, document_type, document_name):
 	if not for_user or for_user == "Guest":
 		return
 	try:
+		# Frappe v15+ turned Notification Log.type from a Select into a Link to
+		# the Notification Type doctype - ensure the standard 'Alert' record
+		# exists so the insert can never fail on the link (older versions just
+		# ignore this and accept 'Alert' as a Select option).
+		_ensure_notification_type("Alert")
 		note = frappe.new_doc("Notification Log")
 		note.for_user = for_user
 		note.type = "Alert"
@@ -203,6 +208,28 @@ def create_notification(for_user, subject, document_type, document_name):
 			title=_("Notification Log creation failed for {0}").format(for_user),
 			message=frappe.get_traceback(),
 		)
+
+
+def _ensure_notification_type(type_name):
+	"""Idempotently create a Notification Type record (Frappe v15+ only).
+
+	Notification Log.type used to be a Select ('Alert', 'Assignment', ...) and is
+	a Link to the Notification Type doctype in current Frappe - the record must
+	exist or inserting the Notification Log fails silently. Old versions don't
+	have the doctype at all, in which case nothing is done."""
+	if not frappe.db.exists("DocType", "Notification Type"):
+		return
+	if frappe.db.exists("Notification Type", type_name):
+		return
+	try:
+		nt = frappe.new_doc("Notification Type")
+		nt.type_name = type_name
+		nt.enabled = 1
+		nt.insert(ignore_permissions=True)
+	except Exception:
+		# created concurrently elsewhere or unavailable - the Notification Log
+		# insert below will surface any real problem
+		pass
 
 
 def greeting():
