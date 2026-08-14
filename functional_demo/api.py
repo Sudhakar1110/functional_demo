@@ -260,6 +260,7 @@ def _fmt_date(value):
 		return str(value)
 
 
+@frappe.whitelist()
 def schedule_demo(demo_request=None, scheduled_date=None, start_time=None, end_time=None, meeting_link=None, name=None):
 	"""Schedule (or reschedule) a demo for a Demo Request and create a Demo Session.
 
