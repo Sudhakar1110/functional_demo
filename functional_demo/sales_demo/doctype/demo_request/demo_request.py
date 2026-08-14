@@ -247,7 +247,8 @@ class DemoRequest(Document):
 			)
 
 	def assign_consultant_todo(self):
-		"""Create a ToDo for the assigned consultant (standard ERPNext assignment)."""
+		"""Create a ToDo for the assigned consultant (standard ERPNext assignment)
+		and email them so they know a demo has been handed to them."""
 		before = self.get_doc_before_save()
 		old = before.get("functional_consultant") if before else None
 		if not self.functional_consultant or old == self.functional_consultant:
@@ -255,6 +256,9 @@ class DemoRequest(Document):
 		user = frappe.db.get_value("Functional Consultant", self.functional_consultant, "user")
 		if not user or user == "Administrator":
 			return
+		# email on every (re)assignment - independent of the ToDo dedupe below
+		self.notify_consultant_assigned(user)
+
 		if frappe.db.exists(
 			"ToDo",
 			{
@@ -274,6 +278,65 @@ class DemoRequest(Document):
 		todo.role = "Functional Consultant"
 		todo.owner = user
 		todo.insert(ignore_permissions=True)
+
+	def notify_consultant_assigned(self, user):
+		"""Email the assigned consultant the details of the demo request.
+
+		Fires from on_update whenever the consultant changes (assign or
+		reassign), so it covers the desk form, the portal's assign / bulk
+		assign and the auto-assign at request creation. A mail failure is
+		logged but must never block the assignment itself."""
+		try:
+			consultant = frappe.db.get_value(
+				"Functional Consultant",
+				self.functional_consultant,
+				["user", "email"],
+				as_dict=True,
+			)
+			# the consultant's own email field wins; fall back to the linked User
+			email = (
+				(consultant.get("email") or "").strip()
+				if consultant and consultant.get("email")
+				else frappe.db.get_value("User", user, "email") or ""
+			)
+			if not email:
+				return
+
+			subject = _("Demo Request {0} assigned to you").format(self.name)
+			message = _(
+				"Hi,\n\n"
+				"You have been assigned Demo Request {0} by {1}.\n\n"
+				"Customer / Lead: {2}\n"
+				"Interested Template: {3}\n"
+				"Priority: {4}\n"
+				"Preferred Date: {5}\n\n"
+				"Please review the customer requirements and confirm your availability.\n\n"
+				"Open the request: {6}\n"
+			).format(
+				self.name,
+				frappe.session.user,
+				self.customer or self.lead or "-",
+				self.interested_module or "-",
+				self.priority or "-",
+				self.preferred_demo_date or "-",
+				frappe.utils.get_url("/app/demo-request/{0}".format(self.name)),
+			)
+			frappe.sendmail(
+				recipients=[email],
+				subject=subject,
+				message=message,
+				reference_doctype="Demo Request",
+				reference_name=self.name,
+				now=True,
+			)
+		except Exception:
+			# never block the assignment because the email could not be sent
+			frappe.log_error(
+				title=_("Assignment email to {0} failed for Demo Request {1}").format(
+					user, self.name
+				),
+				message=frappe.get_traceback(),
+			)
 
 
 # ------------------------------------------------------------------

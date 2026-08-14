@@ -25,6 +25,7 @@ class DemoSession(Document):
 		# Every scheduled demo gets a calendar Event - including sessions that
 		# were created manually from the desk form (not just via Schedule Demo).
 		create_calendar_event(self)
+		self.notify_sales_scheduled()
 
 	def on_update(self):
 		self.log_session_status_activity()
@@ -248,13 +249,110 @@ class DemoSession(Document):
 			communication.reference_name = request.name
 			communication.sender = frappe.session.user
 			communication.sent_or_received = "Sent"
-			communication.insert(ignore_permissions=True)
-		except Exception:
+			communication.insert(ignore_permissions=True)		except Exception:
 			frappe.log_error(title=_("Communication creation failed"), message=frappe.get_traceback())
 
-	# ------------------------------------------------------------------
-	# demo actions
-	# ------------------------------------------------------------------
+	def notify_sales_scheduled(self):
+		"""Email the sales person with the demo session details when it is
+		scheduled (new session or reschedule). Fires from after_insert and
+		reschedule_demo, so it covers the portal Schedule Demo / reschedule
+		actions and sessions created from the desk form."""
+		try:
+			sales_person = self.sales_person
+			if self.demo_status != "Scheduled" or not sales_person or sales_person == "Administrator":
+				return
+			email = frappe.db.get_value("User", sales_person, "email")
+			if not email:
+				return
+			consultant = frappe.db.get_value(
+				"Functional Consultant", self.functional_consultant, "consultant_name"
+			)
+			subject = _("Demo scheduled: {0} on {1}").format(
+				self.customer or self.lead or self.demo_request, self.scheduled_date
+			)
+			message = _(
+				"Hi,\n\n"
+				"Demo Session {0} for {1} has been scheduled.\n\n"
+				"Date: {2}\n"
+				"Time: {3} - {4}\n"
+				"Consultant: {5}\n"
+				"Meeting link: {6}\n\n"
+				"Open the session: {7}\n"
+			).format(
+				self.name,
+				self.customer or self.lead or self.demo_request,
+				self.scheduled_date,
+				self.start_time or "-",
+				self.end_time or "-",
+				consultant or "-",
+				self.meeting_link or "-",
+				frappe.utils.get_url("/app/demo-session/{0}".format(self.name)),
+			)
+			frappe.sendmail(
+				recipients=[email],
+				subject=subject,
+				message=message,
+				reference_doctype="Demo Session",
+				reference_name=self.name,
+				now=True,
+			)
+		except Exception:
+			frappe.log_error(
+				title=_("Scheduled email to {0} failed for {1}").format(
+					self.sales_person or "-", self.name
+				),
+				message=frappe.get_traceback(),
+			)
+
+	def notify_sales_completed(self):
+		"""Email the sales person the demo outcome after the session is completed."""
+		try:
+			sales_person = self.sales_person
+			if not sales_person or sales_person == "Administrator":
+				return
+			email = frappe.db.get_value("User", sales_person, "email")
+			if not email:
+				return
+			subject = _("Demo completed: {0} ({1})").format(
+				self.customer or self.lead or self.demo_request, self.name
+			)
+			message = _(
+				"Hi,\n\n"
+				"Demo Session {0} for {1} has been completed.\n\n"
+				"Interested: {2}\n"
+				"Requirements met: {3}\n"
+				"Overall feedback: {4}\n"
+				"Follow-up required: {5}\n\n"
+				"Open the session: {6}\n"
+			).format(
+				self.name,
+				self.customer or self.lead or self.demo_request,
+				self.interested or "-",
+				self.requirements_met or "-",
+				self.overall_feedback or "-",
+				"Yes" if self.follow_up_required else "No",
+				frappe.utils.get_url("/app/demo-session/{0}".format(self.name)),
+			)
+			frappe.sendmail(
+				recipients=[email],
+				subject=subject,
+				message=message,
+				reference_doctype="Demo Session",
+				reference_name=self.name,
+				now=True,
+			)
+		except Exception:
+			frappe.log_error(
+				title=_("Completed email to {0} failed for {1}").format(
+					self.sales_person or "-", self.name
+				),
+				message=frappe.get_traceback(),
+			)
+
+
+# ------------------------------------------------------------------
+# demo actions
+# ------------------------------------------------------------------
 
 	def start_demo(self):
 		if self.demo_status in ("Completed", "Cancelled", "Closed"):
@@ -318,6 +416,7 @@ class DemoSession(Document):
 			self.create_follow_up(
 				self.follow_up_date or add_days(today(), 7), self.next_action, self.sales_person
 			)
+		self.notify_sales_completed()
 
 	def cancel_demo(self, reason=None):
 		if self.demo_status == "Completed":
@@ -341,6 +440,7 @@ class DemoSession(Document):
 			"Demo Rescheduled", remarks="Session {0} rescheduled to {1}".format(self.name, scheduled_date)
 		)
 		create_calendar_event(self)
+		self.notify_sales_scheduled()
 
 	def create_follow_up(self, follow_up_date, next_action=None, assigned_to=None):
 		"""Create a Demo Follow Up + ToDo, and move the Demo Request to Follow-up Required."""
