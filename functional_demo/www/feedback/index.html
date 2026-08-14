@@ -67,7 +67,7 @@
 							<tbody>
 								{% for f in feedback %}
 								<tr>
-									<td><a href="/app/demo-session/{{ f.name }}" target="_blank" rel="noopener">{{ f.name }}</a></td>
+									<td><a href="/functional_portal/session?name={{ f.name }}">{{ f.name }}</a></td>
 									<td><strong>{{ f.customer }}</strong><div class="muted">{{ f.consultant }}</div></td>
 									<td class="muted">{{ f.date }}</td>
 									<td class="wrap" style="max-width: 320px;">{{ f.overall_feedback or "-" }}</td>

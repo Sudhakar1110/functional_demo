@@ -125,7 +125,7 @@
 						<tbody>
 							{% for r in results %}
 							<tr>
-								<td><a href="/app/demo-session/{{ r.name }}" target="_blank" rel="noopener">{{ r.name }}</a></td>
+								<td><a href="/functional_portal/session?name={{ r.name }}">{{ r.name }}</a></td>
 								<td>{{ r.customer or "-" }}</td>
 								<td>{{ r.scheduled_date or "-" }}</td>
 								<td>{{ r.functional_consultant or "-" }}</td>
