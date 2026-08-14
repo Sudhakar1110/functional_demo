@@ -48,19 +48,6 @@ def _clean_error():
 	)
 
 
-def _default_sales_person():
-	"""First enabled Sales User - used for customer self-bookings where the
-	caller (a guest) has no sales role of their own."""
-	user = frappe.db.sql(
-		"""select u.name from `tabUser` u
-		join `tabHas Role` hr on hr.parent = u.name
-		where hr.role = 'Sales User' and u.enabled = 1
-			and u.name not in ('Guest', 'Administrator')
-		order by u.name asc limit 1"""
-	)
-	return user[0][0] if user else "Administrator"
-
-
 def _ensure_customer(customer_name, contact_person=None, contact_number=None, email=None):
 	"""Return an existing Customer matching the name, or create it (with a
 	linked Contact carrying the provided details) so the portal can auto-create
@@ -966,6 +953,76 @@ def mark_portal_notifications_read():
 # ---------------------------------------------------------------------------
 
 @frappe.whitelist()
+def create_lead(lead_name=None, company_name=None, email=None, phone=None, status=None, source=None, notes=None):
+	"""Create a Lead from the Sales Portal - the record lives in ERPNext but the
+	sales user never has to leave the portal to create it.
+
+	Arguments are optional so a client that fires the call without a value gets
+	a clear popup instead of a TypeError 500."""
+	lead_name = (lead_name or "").strip()
+	if not lead_name:
+		frappe.throw(_("Please enter a lead name."), title=_("Name Required"))
+
+	# Keep the lead list clean: when a Lead with the same email (or, if no
+	# email was given, the same company) already exists, reuse it instead of
+	# creating a duplicate - the portal shows the note as a success toast.
+	company_name = (company_name or "").strip()
+	email = (email or "").strip()
+	existing = None
+	if email:
+		existing = frappe.db.get_value("Lead", {"email_id": email}, "name")
+	if not existing and company_name:
+		existing = frappe.db.get_value("Lead", {"company_name": company_name}, "name")
+	if existing:
+		return {
+			"name": existing,
+			"note": _("A lead with the same email or company already exists, so {0} was reused instead of creating a duplicate.").format(existing),
+		}
+
+	doc = frappe.new_doc("Lead")
+	doc.lead_name = lead_name
+	if company_name:
+		doc.company_name = company_name
+	doc.email_id = email
+	doc.mobile_no = (phone or "").strip()
+	doc.status = status or "Lead"
+	if source:
+		doc.source = source
+	doc.notes = notes
+	# insert() (not ignore_permissions) so the standard ERPNext role checks
+	# apply - the Sales User role already has create rights on Lead. owner and
+	# lead_owner default to the session user, so the lead shows up under My Leads.
+	doc.insert()
+
+	# Link a Contact carrying the email/phone so the portal's auto-fetch
+	# (get_lead_details) can pre-fill demo requests from this lead later.
+	try:
+		contact = frappe.new_doc("Contact")
+		contact.first_name = lead_name
+		contact.is_primary_contact = 1
+		contact.append(
+			"links",
+			{"link_doctype": "Lead", "link_name": doc.name, "link_title": company_name or lead_name},
+		)
+		if doc.email_id:
+			contact.email_id = doc.email_id
+		if doc.mobile_no:
+			contact.mobile_no = doc.mobile_no
+		contact.insert(ignore_permissions=True)
+	except Exception:
+		# the lead is already created - a missing Contact must never block it
+		frappe.log_error(
+			title=_("Could not create Contact for new lead {0}").format(doc.name),
+			message=frappe.get_traceback(),
+		)
+
+	# NOTE: never call frappe.msgprint() here - if anything below raised, Frappe
+	# would promote the msgprint text to the error message and hide the real
+	# failure. The portal shows its own success toast from the response.
+	return {"name": doc.name}
+
+
+@frappe.whitelist()
 def create_demo_request(customer=None, lead=None, company=None, contact_person=None, contact_number=None, email=None, interested_module=None, customer_requirements=None, business_process_requirements=None, priority="Medium", preferred_demo_date=None, preferred_demo_time=None, demo_type=None, sales_remarks=None, functional_consultant=None):
 	"""Create a Demo Request from the Sales Portal web form."""
 	from functional_demo.sales_demo.doctype.demo_request.demo_request import change_status
@@ -1260,105 +1317,3 @@ def update_follow_up(follow_up=None, status=None, outcome=None, remarks=None, ne
 
 	frappe.msgprint(_("Follow-up {0} updated.").format(follow_up))
 	return {"status": doc.status, "outcome": doc.outcome}
-
-
-# ---------------------------------------------------------------------------
-# Customer self-service booking (public, no login required)
-# ---------------------------------------------------------------------------
-
-BOOKING_SLOTS = ["10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00"]
-
-
-@frappe.whitelist(allow_guest=True)
-def get_available_slots(consultant=None, date=None):
-	"""Time slots still free for a consultant on a date (hourly slots between
-	10:00 and 16:00, minus already-scheduled sessions and past times)."""
-	if not consultant or not date:
-		return BOOKING_SLOTS
-	booked = {
-		row[0]
-		for row in frappe.db.sql(
-			"""select ifnull(start_time, '') from `tabDemo Session`
-			where functional_consultant = %s and scheduled_date = %s
-				and demo_status in ('Scheduled', 'In Progress')""",
-			(consultant, date),
-		)
-	}
-	slots = [s for s in BOOKING_SLOTS if s not in booked]
-	if str(date) == frappe.utils.today():
-		now = frappe.utils.now_datetime().strftime("%H:%M")
-		slots = [s for s in slots if s >= now]
-	return slots
-
-
-@frappe.whitelist(allow_guest=True)
-def book_demo_slot(customer_name=None, email=None, contact_number=None, company_name=None,
-				   interested_module=None, functional_consultant=None,
-				   preferred_demo_date=None, preferred_demo_time=None,
-				   customer_requirements=None, business_process_requirements=None):
-	"""Create a Demo Request from the public booking page (no login needed).
-
-	The request is created with the chosen consultant and preferred slot and
-	goes straight to Assigned (assignment is direct - no manager approval
-	step), so the sales team can confirm and schedule it."""
-	if not customer_name:
-		frappe.throw(_("Please enter your name."))
-	if not email and not contact_number:
-		frappe.throw(_("Please enter an email address or phone number so we can reach you."))
-	if not interested_module:
-		frappe.throw(_("Please choose the template / module you are interested in."))
-	if not functional_consultant:
-		frappe.throw(_("Please choose a consultant."))
-	if not preferred_demo_date or not preferred_demo_time:
-		frappe.throw(_("Please pick a date and a time slot."))
-	if not frappe.db.exists("Functional Consultant", functional_consultant):
-		frappe.throw(_("Consultant {0} was not found.").format(functional_consultant))
-
-	doc = frappe.new_doc("Demo Request")
-	doc.contact_number = contact_number
-	doc.email = email
-	doc.interested_module = interested_module
-	doc.customer_requirements = customer_requirements
-	doc.business_process_requirements = business_process_requirements
-	doc.functional_consultant = functional_consultant
-	doc.consultant_user = frappe.db.get_value("Functional Consultant", functional_consultant, "user")
-	doc.preferred_demo_date = preferred_demo_date
-	doc.preferred_demo_time = preferred_demo_time
-	doc.sales_person = _default_sales_person()
-	doc.priority = "Medium"
-	doc.sales_remarks = _("Customer booked this demo from the public booking page.") + (
-		" " + _("Name: {0}").format(customer_name) if customer_name else ""
-	) + (
-		" " + _("Company: {0}").format(company_name) if company_name else ""
-	)
-	doc.insert(ignore_permissions=True)
-
-	# move straight to Assigned - the customer always picks a consultant at
-	# booking, and assignment is direct (no approval step). The workflow action
-	# buttons are not available to guests, so set the state directly.
-	frappe.db.set_value(
-		"Demo Request", doc.name, {"status": "Assigned", "workflow_state": "Assigned"}
-	)
-
-	row = frappe.new_doc("Demo Request Activity")
-	row.update(
-		{
-			"parent": doc.name,
-			"parentfield": "demo_request_activity",
-			"parenttype": "Demo Request",
-			"activity_type": "Booked via Customer Portal",
-			"activity_date": frappe.utils.now_datetime(),
-			"user": "Guest",
-			"status": "Assigned",
-			"remarks": _("Customer booked a demo slot from the public booking page."),
-		}
-	)
-	row.db_insert()
-	frappe.db.commit()
-
-	frappe.msgprint(
-		_("Your demo request {0} has been received. Our team will review it and confirm your slot shortly.").format(
-			doc.name
-		)
-	)
-	return {"name": doc.name, "status": "Assigned"}

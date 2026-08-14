@@ -281,7 +281,7 @@ class DemoRequest(Document):
 # ------------------------------------------------------------------
 
 def suggested_priority(lead=None, customer=None):
-	"""Priority rule shared by the desk form, the portal and the booking page:
+	"""Priority rule shared by the desk form and the portal:
 
 	- Leads with an opportunity amount >= 1,00,000  -> High
 	- Leads with an amount below 10,000              -> Low

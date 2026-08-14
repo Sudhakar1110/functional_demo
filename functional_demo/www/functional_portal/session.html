@@ -249,7 +249,7 @@
 (function () {
 	"use strict";
 	{% if not missing and data.can_write %}
-	var SESSION = "{{ s.name }}";
+	var SESSION = "{{ data.session.name }}";
 
 	function toggle(id) {
 		var el = document.getElementById(id);
