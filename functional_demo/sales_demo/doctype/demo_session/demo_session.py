@@ -249,7 +249,8 @@ class DemoSession(Document):
 			communication.reference_name = request.name
 			communication.sender = frappe.session.user
 			communication.sent_or_received = "Sent"
-			communication.insert(ignore_permissions=True)		except Exception:
+			communication.insert(ignore_permissions=True)
+		except Exception:
 			frappe.log_error(title=_("Communication creation failed"), message=frappe.get_traceback())
 
 	def notify_sales_scheduled(self):
