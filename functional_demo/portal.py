@@ -181,6 +181,27 @@ def sidebar_items(active):
 	return items
 
 
+def create_notification(for_user, subject, document_type, document_name):
+	"""Create an in-app Notification Log for the user - it shows in the portal
+	notification bell and in the ERPNext desk bell (both read Notification Log).
+	A failure is logged but never blocks the action that triggered it."""
+	if not for_user or for_user == "Guest":
+		return
+	try:
+		note = frappe.new_doc("Notification Log")
+		note.for_user = for_user
+		note.type = "Alert"
+		note.document_type = document_type
+		note.document_name = document_name
+		note.subject = subject
+		note.insert(ignore_permissions=True)
+	except Exception:
+		frappe.log_error(
+			title=_("Notification Log creation failed for {0}").format(for_user),
+			message=frappe.get_traceback(),
+		)
+
+
 def greeting():
 	"""Time-of-day greeting, e.g. 'Good morning'."""
 	hour = frappe.utils.now_datetime().hour

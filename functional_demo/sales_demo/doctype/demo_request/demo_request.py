@@ -6,6 +6,8 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.utils import add_days, now_datetime, today
 
+from functional_demo.portal import create_notification
+
 
 class DemoRequest(Document):
 	def validate(self):
@@ -254,8 +256,17 @@ class DemoRequest(Document):
 		if not self.functional_consultant or old == self.functional_consultant:
 			return
 		user = frappe.db.get_value("Functional Consultant", self.functional_consultant, "user")
-		if not user or user == "Administrator":
+		if not user:
 			return
+		# in-app notification (portal + desk bells) on every (re)assignment
+		create_notification(
+			user,
+			_("Demo Request {0} assigned to you ({1})").format(
+				self.name, self.customer or self.lead or "-"
+			),
+			"Demo Request",
+			self.name,
+		)
 		# email on every (re)assignment - independent of the ToDo dedupe below
 		self.notify_consultant_assigned(user)
 

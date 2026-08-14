@@ -6,6 +6,7 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.utils import add_days, now_datetime, today
 
+from functional_demo.portal import create_notification
 from functional_demo.sales_demo.doctype.functional_demo_template.functional_demo_template import (
 	get_template_snapshot,
 )
@@ -260,8 +261,18 @@ class DemoSession(Document):
 		actions and sessions created from the desk form."""
 		try:
 			sales_person = self.sales_person
-			if self.demo_status != "Scheduled" or not sales_person or sales_person == "Administrator":
+			if self.demo_status != "Scheduled" or not sales_person:
 				return
+			# in-app notification (portal + desk bells) - created even when the
+			# sales person has no email (e.g. Administrator)
+			create_notification(
+				sales_person,
+				_("Demo scheduled: {0} on {1} (Session {2})").format(
+					self.customer or self.lead or self.demo_request, self.scheduled_date, self.name
+				),
+				"Demo Session",
+				self.name,
+			)
 			email = frappe.db.get_value("User", sales_person, "email")
 			if not email:
 				return
@@ -309,8 +320,18 @@ class DemoSession(Document):
 		"""Email the sales person the demo outcome after the session is completed."""
 		try:
 			sales_person = self.sales_person
-			if not sales_person or sales_person == "Administrator":
+			if not sales_person:
 				return
+			# in-app notification (portal + desk bells) - created even when the
+			# sales person has no email (e.g. Administrator)
+			create_notification(
+				sales_person,
+				_("Demo completed: {0} ({1})").format(
+					self.customer or self.lead or self.demo_request, self.name
+				),
+				"Demo Session",
+				self.name,
+			)
 			email = frappe.db.get_value("User", sales_person, "email")
 			if not email:
 				return

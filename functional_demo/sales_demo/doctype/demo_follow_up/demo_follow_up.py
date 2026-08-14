@@ -6,6 +6,8 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.utils import now_datetime
 
+from functional_demo.portal import create_notification
+
 
 class DemoFollowUp(Document):
 	def validate(self):
@@ -56,8 +58,18 @@ class DemoFollowUp(Document):
 		is logged but never blocks the follow-up creation."""
 		try:
 			sales_person = self.sales_person or self.assigned_to
-			if not sales_person or sales_person == "Administrator":
+			if not sales_person:
 				return
+			# in-app notification (portal + desk bells) - created even when the
+			# sales person has no email (e.g. Administrator)
+			create_notification(
+				sales_person,
+				_("Follow-up created for {0} (Demo Request {1})").format(
+					self.customer or "-", self.demo_request or "-"
+				),
+				"Demo Follow Up",
+				self.name,
+			)
 			email = frappe.db.get_value("User", sales_person, "email")
 			if not email:
 				return
