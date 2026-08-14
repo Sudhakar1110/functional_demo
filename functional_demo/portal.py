@@ -159,7 +159,7 @@ def sidebar_items(active):
 	if is_sales():
 		items += [
 			{"label": _("Sales Home"), "route": "/sales_portal", "icon": ICON_SALES, "active": active == "sales"},
-			{"label": _("My Leads"), "route": "/sales_portal/my_leads", "icon": ICON_LEADS, "active": active == "leads"},
+			{"label": _("Sales"), "route": "/sales_portal/my_leads", "icon": ICON_LEADS, "active": active == "leads"},
 			{"label": _("Demo Requests"), "route": "/sales_portal/demo_requests", "icon": ICON_REQUESTS, "active": active == "requests"},
 			{"label": _("Results"), "route": "/sales_portal/results", "icon": ICON_RESULTS, "active": active == "results"},
 		]

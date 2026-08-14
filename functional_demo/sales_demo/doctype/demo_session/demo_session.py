@@ -641,12 +641,12 @@ def create_calendar_event(session):
 
 def get_permission_query_conditions(user=None):
 	"""Consultants see their own sessions; sales users see sessions of their requests;
-	managers see everything."""
+	managers and the read-only Developer role see everything."""
 	user = user or frappe.session.user
 	if not user or user == "Administrator":
 		return ""
 	roles = frappe.get_roles(user)
-	if any(r in roles for r in ("System Manager", "Sales Manager", "Functional Team Manager")):
+	if any(r in roles for r in ("System Manager", "Sales Manager", "Functional Team Manager", "Developer")):
 		return ""
 	if "Functional Consultant" in roles:
 		return (
@@ -670,6 +670,10 @@ def has_permission(doc, ptype="read", user=None):
 	roles = frappe.get_roles(user)
 	if any(r in roles for r in ("System Manager", "Sales Manager", "Functional Team Manager")):
 		return True
+	if "Developer" in roles:
+		# Developer is read-only: it can open session details (from Demo
+		# Feedback) but never start/complete/cancel a demo.
+		return ptype == "read"
 	if "Functional Consultant" in roles:
 		if doc.get("functional_consultant"):
 			consultant_user = frappe.db.get_value(

@@ -12,10 +12,10 @@ LEAD_STATUSES = ["Lead", "Open", "Replied", "Opportunity", "Quotation", "Interes
 def get_context(context):
 	portal_context(
 		context,
-		_("My Leads"),
+		_("Sales"),
 		["Sales User", "Sales Manager"],
 		active="leads",
-		subtitle=_("Search and manage your leads"),
+		subtitle=_("Search and manage your sales"),
 	)
 	q = (frappe.form_dict.get("q") or "").strip()
 	status = frappe.form_dict.get("status") or ""

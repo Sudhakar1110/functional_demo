@@ -13,6 +13,6 @@ def get_context(context):
 		_("Sales Home"),
 		["Sales User", "Sales Manager"],
 		active="sales",
-		subtitle=_("Leads, demo requests, scheduling and results"),
+		subtitle=_("Sales, demo requests, scheduling and results"),
 	)
 	context.stats = sales_stats()
