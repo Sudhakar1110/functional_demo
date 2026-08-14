@@ -835,6 +835,106 @@ def create_calendar_event(session):
 
 
 # ------------------------------------------------------------------
+# reminders (daily scheduled job)
+# ------------------------------------------------------------------
+
+def send_demo_reminders():
+	"""Daily job: remind the consultant and the sales person (in-app
+	notification + email) about every demo scheduled for tomorrow.
+
+	Idempotent: a session is only reminded once per target date - rescheduling
+	to a different day triggers a fresh reminder for the new date."""
+	if not frappe.db.exists("DocType", "Demo Session"):
+		return
+	tomorrow = frappe.utils.add_days(frappe.utils.today(), 1)
+	sessions = frappe.get_all(
+		"Demo Session",
+		filters={"demo_status": "Scheduled", "scheduled_date": tomorrow},
+		fields=[
+			"name", "customer", "lead", "demo_request", "sales_person",
+			"functional_consultant", "start_time", "end_time", "meeting_link",
+		],
+		limit_page_length=500,
+	) or []
+	sent = 0
+	for row in sessions:
+		sent += _send_session_reminder(row, tomorrow)
+	if sent:
+		frappe.db.commit()
+
+
+def _send_session_reminder(row, tomorrow):
+	"""Send the day-before reminder for one session to both the sales person
+	and the consultant; returns how many notifications were created."""
+	party = row.customer or row.lead or row.demo_request or row.name
+	subject = _("Reminder: demo for {0} tomorrow ({1}) - {2}").format(
+		party, tomorrow, row.name
+	)
+	message = _(
+		"Hi,\n\n"
+		"This is a reminder that Demo Session {0} for {1} is scheduled for tomorrow ({2}).\n\n"
+		"Time: {3} - {4}\n"
+		"Meeting link: {5}\n\n"
+		"Open the session: {6}\n"
+	).format(
+		row.name,
+		party,
+		tomorrow,
+		row.start_time or "-",
+		row.end_time or "-",
+		row.meeting_link or "-",
+		frappe.utils.get_url("/app/demo-session/{0}".format(row.name)),
+	)
+	recipients = [row.sales_person]
+	consultant_user = (
+		frappe.db.get_value("Functional Consultant", row.functional_consultant, "user")
+		if row.functional_consultant
+		else None
+	)
+	if consultant_user:
+		recipients.append(consultant_user)
+
+	sent = 0
+	for user in {r for r in recipients if r and r != "Guest"}:
+		if _reminder_already_sent(user, row.name, tomorrow):
+			continue
+		create_notification(user, subject, "Demo Session", row.name)
+		sent += 1
+		email = frappe.db.get_value("User", user, "email")
+		if not email:
+			continue
+		try:
+			frappe.sendmail(
+				recipients=[email],
+				subject=subject,
+				message=message,
+				reference_doctype="Demo Session",
+				reference_name=row.name,
+				now=True,
+			)
+		except Exception:
+			frappe.log_error(
+				title=_("Reminder email to {0} failed for {1}").format(user, row.name),
+				message=frappe.get_traceback(),
+			)
+	return sent
+
+
+def _reminder_already_sent(user, session_name, tomorrow):
+	"""True when a reminder for this session's target date already exists for
+	the user (dedupes repeated daily-job runs / same-day reschedules)."""
+	return frappe.db.exists(
+		"Notification Log",
+		{
+			"for_user": user,
+			"document_type": "Demo Session",
+			"document_name": session_name,
+			"subject": ["like", "%{0}%".format(tomorrow)],
+		},
+	)
+
+
+# ------------------------------------------------------------------
 # permission filters
 # ------------------------------------------------------------------
 
