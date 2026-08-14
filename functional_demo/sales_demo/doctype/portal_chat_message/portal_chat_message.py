@@ -15,9 +15,12 @@ class PortalChatMessage(Document):
 
 
 def get_permission_query_conditions(user=None):
-	"""Users can only see messages they sent or received (Administrator sees all)."""
+	"""Users can only see messages they sent or received. Only the site admin
+	(Administrator / System Manager) sees everything."""
 	user = user or frappe.session.user
 	if not user or user == "Administrator":
+		return ""
+	if "System Manager" in frappe.get_roles(user):
 		return ""
 	return (
 		"(`tabPortal Chat Message`.`from_user` = {0} or `tabPortal Chat Message`.`to_user` = {0})"
@@ -27,5 +30,7 @@ def get_permission_query_conditions(user=None):
 def has_permission(doc, ptype="read", user=None):
 	user = user or frappe.session.user
 	if user == "Administrator":
+		return True
+	if "System Manager" in frappe.get_roles(user):
 		return True
 	return doc.get("from_user") == user or doc.get("to_user") == user
