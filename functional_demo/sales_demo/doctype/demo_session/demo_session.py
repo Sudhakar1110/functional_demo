@@ -377,9 +377,65 @@ class DemoSession(Document):
 		self.demo_status = "Closed"
 		self.save(ignore_permissions=True)
 		if result in ("Converted", "Not Interested", "Closed"):
-			from functional_demo.sales_demo.doctype.demo_request.demo_request import change_status
+			self._apply_request_final_result(result)
 
-			change_status(frappe.get_doc("Demo Request", self.demo_request), result, ignore_permissions=True)
+	def _apply_request_final_result(self, result):
+		"""Move the Demo Request to the matching final state without letting the
+		caller's role block the session's result.
+
+		The session's final result is the source of truth, but the request
+		transitions (Converted / Not Interested / Closed) are gated to Sales
+		roles in the workflow while this action runs from the consultant's
+		Conduct Demo page - so try the normal workflow first and fall back to
+		applying the state directly (status + workflow_state, exactly what the
+		workflow would write) when the save is blocked. The failure is logged
+		and the sales team is notified so nothing is silently lost."""
+		from functional_demo.sales_demo.doctype.demo_request.demo_request import change_status
+
+		request = frappe.get_doc("Demo Request", self.demo_request)
+		try:
+			change_status(request, result, ignore_permissions=True)
+			return
+		except Exception:
+			# never fail the result - the session is already Closed and the
+			# request transition may simply not be allowed for this role
+			frappe.log_error(
+				title=_("Demo Request {0} could not be moved to '{1}' from session {2}").format(
+					request.name, result, self.name
+				),
+				message=frappe.get_traceback(),
+			)
+
+		# Direct fallback: the request transition is role-gated to Sales, so
+		# apply the final state the same way the workflow itself would.
+		frappe.db.set_value(
+			"Demo Request", request.name, {"status": result, "workflow_state": result}
+		)
+
+		if result == "Converted":
+			try:
+				# on_update (create_opportunity_on_conversion) is skipped when the
+				# state is applied directly - run it explicitly; it is idempotent.
+				frappe.get_doc("Demo Request", request.name).create_opportunity_on_conversion()
+			except Exception:
+				frappe.log_error(
+					title=_("Opportunity creation failed for converted demo {0}").format(request.name),
+					message=frappe.get_traceback(),
+				)
+
+		# Let the sales team know the request was updated directly (no workflow
+		# audit trail) so they can review it.
+		sales_person = request.sales_person
+		if sales_person and sales_person != "Administrator":
+			note = frappe.new_doc("Notification Log")
+			note.for_user = sales_person
+			note.type = "Alert"
+			note.document_type = "Demo Session"
+			note.document_name = self.name
+			note.subject = _(
+				"Demo Session {0} closed with result '{1}'; Demo Request {2} was updated directly."
+			).format(self.name, result, request.name)
+			note.insert(ignore_permissions=True)
 
 	def add_comment_to_timeline(self):
 		"""Add a Communication entry so the demo completion shows on the timeline."""
