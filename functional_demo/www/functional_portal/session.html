@@ -214,7 +214,7 @@
 						<div class="detail-item"><div class="d-label">Date</div><div class="d-value">{{ s.scheduled_date or "-" }}</div></div>
 						<div class="detail-item"><div class="d-label">Time</div><div class="d-value">{% if s.start_time %}{{ s.start_time }}{% if s.end_time %} – {{ s.end_time }}{% endif %}{% else %}-{% endif %}</div></div>
 						<div class="detail-item"><div class="d-label">Demo Type</div><div class="d-value">{{ s.demo_type or "-" }}</div></div>
-						<div class="detail-item"><div class="d-label">Sales Team Member</div><div class="d-value">{{ t.sales_person or "-" }}</div></div>
+						<div class="detail-item"><div class="d-label">Sales Person</div><div class="d-value">{{ t.sales_person or "-" }}</div></div>
 						<div class="detail-item"><div class="d-label">Consultant</div><div class="d-value">{{ t.consultant_name or t.functional_consultant or "-" }}{% if t.consultant_specialization %} <span class="muted">({{ t.consultant_specialization }})</span>{% endif %}</div></div>
 						{% if r.priority %}<div class="detail-item"><div class="d-label">Priority</div><div class="d-value"><span class="chip {{ r.priority|lower }}">{{ r.priority }}</span></div></div>{% endif %}
 					</div>

@@ -56,7 +56,7 @@
 							</datalist>
 						</div>
 						<div>
-							<label>Sales Team Member <span class="form-hint">(optional - or pick a sales team member instead)</span></label>
+							<label>Sales Person <span class="form-hint">(optional - or pick a sales person instead)</span></label>
 							<input type="text" id="lead" name="lead" list="leads-list" placeholder="Type &amp; pick a sales team member..." value="{{ prefill.lead }}" autocomplete="off">
 							<datalist id="leads-list">
 								{% for l in leads %}<option value="{{ l.name }}">{{ l.lead_name }} ({{ l.company_name or 'no company' }})</option>{% endfor %}
@@ -88,7 +88,7 @@
 						</div>
 					</div>
 					<div class="form-row">
-						<div><label>Contact Person <span class="form-hint">(name, if no Customer/Sales Team Member yet)</span></label><input type="text" id="contact_person" name="contact_person" value="{{ prefill.contact_person }}"></div>
+						<div><label>Contact Person <span class="form-hint">(name, if no Customer/Sales Person yet)</span></label><input type="text" id="contact_person" name="contact_person" value="{{ prefill.contact_person }}"></div>
 						<div><label>Contact Number</label><input type="text" id="contact_number" name="contact_number" value="{{ prefill.contact_number }}"></div>
 						<div><label>Email</label><input type="email" id="email" name="email" value="{{ prefill.email }}"></div>
 					</div>
@@ -111,7 +111,7 @@
 						<div class="form-row">
 							<div><label>Priority</label>
 								<select id="priority" name="priority">
-									<option value="Auto" selected>Auto (lead value / customer tier)</option>
+									<option value="Auto" selected>Auto (sales value / customer tier)</option>
 									{% for p in priorities %}<option value="{{ p }}">{{ p }}</option>{% endfor %}
 								</select>
 							</div>
@@ -276,7 +276,7 @@
 				<div class="card-body">
 					<div class="detail-grid">
 						<div class="detail-item"><div class="d-label">Customer</div><div class="d-value">{{ doc.customer or "-" }}</div></div>
-						<div class="detail-item"><div class="d-label">Sales Team Member</div><div class="d-value">{{ doc.sales_person or "-" }}</div></div>
+						<div class="detail-item"><div class="d-label">Sales Person</div><div class="d-value">{{ doc.sales_person or "-" }}</div></div>
 						<div class="detail-item"><div class="d-label">Company</div><div class="d-value">{{ doc.company or "-" }}</div></div>
 						<div class="detail-item"><div class="d-label">Contact Person</div><div class="d-value">{{ doc.contact_person or "-" }}</div></div>
 						<div class="detail-item"><div class="d-label">Contact Number</div><div class="d-value">{{ doc.contact_number or "-" }}</div></div>
@@ -415,7 +415,7 @@
 				return;
 			}
 		}
-		if (lead && lead !== preLead && !isKnown("leads-list", lead)) {							portalAlert("Sales Team Member \"" + lead + "\" was not found. Please pick a sales team member from the suggestions list.", "err");
+		if (lead && lead !== preLead && !isKnown("leads-list", lead)) {							portalAlert("Sales Person \"" + lead + "\" was not found. Please pick a sales person from the suggestions list.", "err");
 			return;
 		}
 		if (!consultant) {

@@ -39,14 +39,14 @@
 			<div class="portal-content">
 				<div class="portal-card">
 					<div class="card-head">
-						<h2>New Sales Team Member</h2>
+						<h2>New Sales Person</h2>
 						<a class="btn-portal secondary sm" href="/sales_portal/my_leads">&larr; Back to Sales</a>
 					</div>
 					<div class="card-body">
 						<form class="portal-form" id="lead-form">
 							<div class="form-row">
 								<div>
-									<label>Sales Team Member Name <span class="req">*</span></label>
+									<label>Sales Person Name <span class="req">*</span></label>
 									<input type="text" id="lead_name" name="lead_name" value="{{ prefill.lead_name }}" placeholder="e.g. Ramesh Iyer" required autocomplete="off">
 								</div>
 								<div>
@@ -82,7 +82,7 @@
 							<label>Notes</label>
 							<textarea id="notes" name="notes" placeholder="Any background on this sales team member..."></textarea>
 							<div class="form-actions">
-								<button class="btn-portal" type="submit" id="btn-create">Create Sales Team Member</button>
+								<button class="btn-portal" type="submit" id="btn-create">Create Sales Person</button>
 								<a class="btn-portal secondary" href="/sales_portal/my_leads">Cancel</a>
 							</div>
 						</form>
@@ -124,10 +124,10 @@
 					window.location.href = "/sales_portal/my_leads";
 				}
 			} else {
-				btn.disabled = false; btn.textContent = "Create Sales Team Member";
+				btn.disabled = false; btn.textContent = "Create Sales Person";
 			}
 		}).catch(function () {
-			btn.disabled = false; btn.textContent = "Create Sales Team Member";
+			btn.disabled = false; btn.textContent = "Create Sales Person";
 		});
 	});
 })();

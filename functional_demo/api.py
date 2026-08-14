@@ -623,7 +623,7 @@ def export_demo_requests(status=None):
 	buf = io.StringIO()
 	writer = csv.writer(buf)
 	writer.writerow(
-		["Request", "Customer", "Lead", "Company", "Contact Person", "Email",
+		["Request", "Customer", "Sales Person", "Company", "Contact Person", "Email",
 		 "Interested Template", "Priority", "Functional Consultant", "Sales Person",
 		 "Preferred Date", "Preferred Time", "Demo Type", "Status", "SLA Due Date",
 		 "SLA Breached", "Created"]
@@ -982,7 +982,7 @@ def create_lead(lead_name=None, company_name=None, email=None, phone=None, statu
 	a clear popup instead of a TypeError 500."""
 	lead_name = (lead_name or "").strip()
 	if not lead_name:
-		frappe.throw(_("Please enter a lead name."), title=_("Name Required"))
+		frappe.throw(_("Please enter a sales person name."), title=_("Name Required"))
 
 	# Keep the lead list clean: when a Lead with the same email (or, if no
 	# email was given, the same company) already exists, reuse it instead of
@@ -997,7 +997,7 @@ def create_lead(lead_name=None, company_name=None, email=None, phone=None, statu
 	if existing:
 		return {
 			"name": existing,
-			"note": _("A lead with the same email or company already exists, so {0} was reused instead of creating a duplicate.").format(existing),
+			"note": _("A sales person with the same email or company already exists, so {0} was reused instead of creating a duplicate.").format(existing),
 		}
 
 	doc = frappe.new_doc("Lead")
@@ -1033,7 +1033,7 @@ def create_lead(lead_name=None, company_name=None, email=None, phone=None, statu
 	except Exception:
 		# the lead is already created - a missing Contact must never block it
 		frappe.log_error(
-			title=_("Could not create Contact for new lead {0}").format(doc.name),
+			title=_("Could not create Contact for new sales person {0}").format(doc.name),
 			message=frappe.get_traceback(),
 		)
 
@@ -1072,8 +1072,8 @@ def create_demo_request(customer=None, lead=None, company=None, contact_person=N
 
 	if lead and not frappe.db.exists("Lead", lead):
 		frappe.throw(
-			_("Sales Team Member \"{0}\" was not found. Please pick a sales team member from the suggestions list.").format(lead),
-			title=_("Sales Team Member Not Found"),
+			_("Sales Person \"{0}\" was not found. Please pick a sales person from the suggestions list.").format(lead),
+			title=_("Sales Person Not Found"),
 		)
 
 	# Business rule: every demo must be allocated to a Functional Consultant at

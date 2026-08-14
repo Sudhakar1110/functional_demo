@@ -14,10 +14,10 @@ DEFAULT_SOURCES = ["Website", "Referral", "Cold Call", "Existing Customer", "Soc
 def get_context(context):
 	portal_context(
 		context,
-		_("New Sales Team Member"),
+		_("New Sales Person"),
 		["Sales User", "Sales Manager"],
 		active="leads",
-		subtitle=_("Create a sales team member right here - no need to open ERPNext"),
+		subtitle=_("Create a sales person right here - no need to open ERPNext"),
 	)
 	# Source options come from the Lead doctype itself (the same list the desk
 	# accepts), so the dropdown can never drift from what ERPNext validates.
