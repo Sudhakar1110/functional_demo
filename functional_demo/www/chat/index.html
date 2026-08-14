@@ -9,17 +9,17 @@
 	"use strict";
 
 	var ME = "{{ me }}";
-	var current = null;      /* other user's name */
-	var lastMsg = null;      /* last rendered message name */
-	var usersCache = [];
+	var members = [];     /* all enabled users */
+	var nameMap = {};     /* user name -> full name */
+	var lastMsg = null;   /* last rendered message name */
 
-	var listEl = document.getElementById("chat-user-list");
-	var searchEl = document.getElementById("chat-search");
-	var headEl = document.getElementById("chat-thread-head");
-	var emptyEl = document.getElementById("chat-thread-empty");
+	var listEl = document.getElementById("chat-member-list");
+	var countEl = document.getElementById("chat-member-count");
 	var msgsEl = document.getElementById("chat-messages");
-	var composeEl = document.getElementById("chat-compose");
 	var inputEl = document.getElementById("chat-input");
+	var pickerEl = document.getElementById("mention-picker");
+	var pickerUsers = [];
+	var pickerIndex = 0;
 
 	function esc(s) {
 		return String(s == null ? "" : s)
@@ -31,76 +31,59 @@
 		return '<span class="chat-avatar">' + esc((full || name || "?").trim().charAt(0).toUpperCase()) + "</span>";
 	}
 
-	/* ---------- user list ---------- */
-	function renderUsers(users) {
-		usersCache = users || [];
-		var q = (searchEl.value || "").trim().toLowerCase();
-		var rows = usersCache
-			.filter(function (u) {
-				if (!q) return true;
-				return (u.full_name || "").toLowerCase().indexOf(q) > -1
-					|| (u.email || "").toLowerCase().indexOf(q) > -1;
-			})
-			.map(function (u) {
-				var active = current === u.name ? " active" : "";
-				var badge = u.unread > 0 ? '<span class="chat-unread">' + u.unread + "</span>" : "";
-				return '<div class="chat-user-item' + active + '" data-user="' + esc(u.name) + '">'
-					+ avatar(u.name, u.full_name)
-					+ '<div class="chat-user-info"><div class="chat-user-name">' + esc(u.full_name) + "</div>"
-					+ '<div class="chat-user-meta">' + esc(u.email || "") + "</div></div>"
-					+ badge
-					+ "</div>";
-			})
-			.join("");
-		listEl.innerHTML = rows || '<div class="chat-empty-users">No users found.</div>';
+	/* ---------- members ---------- */
+	function renderMembers() {
+		listEl.innerHTML = members.map(function (u) {
+			return '<div class="chat-user-item' + (u.me ? " me" : "") + '">'
+				+ avatar(u.name, u.full_name)
+				+ '<div class="chat-user-info"><div class="chat-user-name">' + esc(u.full_name) + (u.me ? ' <span class="muted">(you)</span>' : "") + "</div>"
+				+ '<div class="chat-user-meta">' + esc(u.email || "") + "</div></div>"
+				+ "</div>";
+		}).join("") || '<div class="chat-empty-users">No members found.</div>';
+		if (countEl) countEl.textContent = members.length ? "(" + members.length + ")" : "";
 	}
 
-	function loadUsers(keepScroll) {
+	function loadMembers() {
 		return portalCall("functional_demo.api.get_chat_users", {}, { silent: true })
 			.then(function (data) {
-				var users = Array.isArray(data) ? data : [];
-				if (keepScroll) {
-					var old = listEl.scrollTop;
-					renderUsers(users);
-					listEl.scrollTop = old;
-				} else {
-					renderUsers(users);
-				}
+				members = Array.isArray(data) ? data : [];
+				nameMap = {};
+				members.forEach(function (u) { nameMap[u.name] = u.full_name || u.name; });
+				renderMembers();
 			})
 			.catch(function () { /* silent - poll keeps trying */ });
 	}
 
-	/* ---------- thread ---------- */
+	/* ---------- group thread ---------- */
+	function highlight(text) {
+		var html = esc(text || "");
+		Object.keys(nameMap).forEach(function (name) {
+			var token = "@" + name;
+			var rep = token;
+			var i = html.indexOf(rep);
+			if (i > -1) {
+				html = html.split(rep).join('<span class="chat-mention">' + esc("@" + (nameMap[name] || name)) + "</span>");
+			}
+		});
+		return html.replace(/\n/g, "<br>");
+	}
+
 	function renderThread(messages) {
-		var rows = (messages || []).map(function (m) {
-			var mine = m.mine;
-			var who = mine ? "" : avatar(m.from_user, m.from_user);
+		msgsEl.innerHTML = messages.map(function (m) {
+			var mine = m.from_user === ME;
 			return '<div class="chat-bubble-row ' + (mine ? "mine" : "theirs") + '">'
-				+ who
+				+ (mine ? "" : avatar(m.from_user, m.from_name))
 				+ '<div class="chat-bubble' + (mine ? " mine" : " theirs") + '">'
-				+ '<div class="chat-bubble-text">' + esc(m.message).replace(/\n/g, "<br>") + "</div>"
+				+ (mine ? "" : '<div class="chat-bubble-name">' + esc(m.from_name || m.from_user) + "</div>")
+				+ '<div class="chat-bubble-text">' + highlight(m.message) + "</div>"
 				+ '<div class="chat-bubble-time">' + esc(m.creation || "") + "</div>"
 				+ "</div></div>";
-		}).join("");
-		msgsEl.innerHTML = rows || '<div class="chat-thread-empty-inline">No messages yet. Say hi!</div>';
+		}).join("") || '<div class="chat-thread-empty-inline">No messages yet. Say hi! Use @ to mention someone.</div>';
 		msgsEl.scrollTop = msgsEl.scrollHeight;
 	}
 
-	function openThread(otherUser, otherName) {
-		current = otherUser;
-		headEl.innerHTML = avatar(otherUser, otherName)
-			+ '<div class="chat-thread-title">' + esc(otherName) + "</div>";
-		headEl.style.display = "flex";
-		emptyEl.style.display = "none";
-		composeEl.style.display = "flex";
-		lastMsg = null;
-		loadThread();
-		renderUsers(usersCache);
-	}
-
 	function loadThread() {
-		if (!current) return Promise.resolve();
-		return portalCall("functional_demo.api.get_chat_messages", { other_user: current }, { silent: true })
+		return portalCall("functional_demo.api.get_chat_messages", {}, { silent: true })
 			.then(function (data) {
 				var messages = (data && data.messages) || [];
 				var latest = messages.length ? messages[messages.length - 1].name : null;
@@ -108,22 +91,79 @@
 					lastMsg = latest;
 					renderThread(messages);
 				}
-				/* refresh unread badges after marking read */
-				if (usersCache.length) {
-					usersCache.forEach(function (u) { if (u.name === current) u.unread = 0; });
-					renderUsers(usersCache);
-				}
 				return messages;
 			})
 			.catch(function () { return []; });
 	}
 
+	/* ---------- @mention picker ---------- */
+	function mentionQuery() {
+		var val = inputEl.value;
+		var pos = inputEl.selectionStart || val.length;
+		var before = val.slice(0, pos);
+		var lastSpace = Math.max(before.lastIndexOf(" "), before.lastIndexOf("\n"));
+		var token = before.slice(lastSpace + 1);
+		var at = token.indexOf("@");
+		if (at === -1) return null;
+		return { start: lastSpace + 1 + at, query: token.slice(at + 1).toLowerCase() };
+	}
+
+	function closePicker() {
+		pickerEl.style.display = "none";
+		pickerUsers = [];
+	}
+
+	function openPicker() {
+		var mq = mentionQuery();
+		if (!mq) { closePicker(); return; }
+		pickerUsers = members.filter(function (u) {
+			return !u.me
+				&& (u.name.toLowerCase().indexOf(mq.query) > -1
+					|| (u.full_name || "").toLowerCase().indexOf(mq.query) > -1);
+		}).slice(0, 8);
+		if (!pickerUsers.length) { closePicker(); return; }
+		if (pickerIndex >= pickerUsers.length) pickerIndex = 0;
+		pickerEl.innerHTML = pickerUsers.map(function (u, i) {
+			return '<div class="mention-item' + (i === pickerIndex ? " active" : "") + '" data-name="' + esc(u.name) + '">'
+				+ avatar(u.name, u.full_name)
+				+ '<span>' + esc(u.full_name) + ' <span class="muted">@' + esc(u.name) + "</span></span>"
+				+ "</div>";
+		}).join("");
+		pickerEl.style.display = "block";
+	}
+
+	function applyMention(userName) {
+		var val = inputEl.value;
+		var pos = inputEl.selectionStart || val.length;
+		var before = val.slice(0, pos);
+		var lastSpace = Math.max(before.lastIndexOf(" "), before.lastIndexOf("\n"));
+		var token = before.slice(lastSpace + 1);
+		var at = token.indexOf("@");
+		if (at === -1) { closePicker(); return; }
+		var start = lastSpace + 1 + at;
+		var inserted = "@" + userName + " ";
+		inputEl.value = val.slice(0, start) + inserted + val.slice(pos);
+		closePicker();
+		inputEl.focus();
+		var caret = start + inserted.length;
+		inputEl.setSelectionRange(caret, caret);
+	}
+
+	/* ---------- send ---------- */
+	function parseMentions(text) {
+		var found = [];
+		members.forEach(function (u) {
+			if (!u.me && text.indexOf("@" + u.name) > -1) found.push(u.name);
+		});
+		return found;
+	}
+
 	function sendMessage() {
 		var text = (inputEl.value || "").trim();
-		if (!text || !current) return;
+		if (!text) return;
 		var btn = document.getElementById("chat-send");
 		btn.disabled = true;
-		portalCall("functional_demo.api.send_chat_message", { to_user: current, message: text })
+		portalCall("functional_demo.api.send_chat_message", { message: text, mentions: parseMentions(text) })
 			.then(function () {
 				inputEl.value = "";
 				btn.disabled = false;
@@ -133,40 +173,34 @@
 	}
 
 	/* ---------- events ---------- */
-	listEl.addEventListener("click", function (e) {
-		var item = e.target.closest ? e.target.closest(".chat-user-item") : null;
-		if (item && item.getAttribute("data-user")) {
-			var name = item.getAttribute("data-user");
-			var full = item.querySelector(".chat-user-name");
-			openThread(name, full ? full.textContent : name);
-		}
-	});
-	searchEl.addEventListener("input", function () { renderUsers(usersCache); });
 	document.getElementById("chat-send").addEventListener("click", sendMessage);
+	inputEl.addEventListener("input", openPicker);
 	inputEl.addEventListener("keydown", function (e) {
+		if (pickerEl.style.display === "block") {
+			if (e.key === "ArrowDown") { e.preventDefault(); pickerIndex = (pickerIndex + 1) % pickerUsers.length; openPicker(); return; }
+			if (e.key === "ArrowUp") { e.preventDefault(); pickerIndex = (pickerIndex - 1 + pickerUsers.length) % pickerUsers.length; openPicker(); return; }
+			if (e.key === "Enter" || e.key === "Tab") { e.preventDefault(); applyMention(pickerUsers[pickerIndex].name); return; }
+			if (e.key === "Escape") { closePicker(); return; }
+		}
 		if (e.key === "Enter" && !e.shiftKey) {
 			e.preventDefault();
 			sendMessage();
 		}
 	});
-
-	/* ---------- auto-open ---------- */
-	/* Incoming messages must be immediately visible: if a conversation with
-	   unread messages exists and none is open, open the most recent one. */
-	function autoOpen() {
-		if (current) return;
-		var unread = usersCache.filter(function (u) { return u.unread > 0; });
-		if (unread.length) {
-			var first = unread[0];
-			openThread(first.name, first.full_name || first.name);
+	pickerEl.addEventListener("mousedown", function (e) {
+		var item = e.target.closest ? e.target.closest(".mention-item") : null;
+		if (item && item.getAttribute("data-name")) {
+			e.preventDefault();
+			applyMention(item.getAttribute("data-name"));
 		}
-	}
+	});
 
 	/* ---------- polling (every 5s) ---------- */
-	loadUsers().then(autoOpen);
+	loadMembers();
+	loadThread();
 	setInterval(function () {
-		loadUsers(true).then(autoOpen);
-		if (current) loadThread();
+		loadMembers();
+		loadThread();
 	}, 5000);
 })();
 </script>
@@ -207,19 +241,18 @@
 		<div class="portal-content">
 			<div class="chat-shell">
 				<div class="chat-users">
-					<input id="chat-search" class="chat-search" type="text" placeholder="Search team members..." />
-					<div class="chat-user-list" id="chat-user-list"></div>
+					<div class="chat-users-head">Team Members <span id="chat-member-count"></span></div>
+					<div class="chat-user-list" id="chat-member-list"></div>
 				</div>
 				<div class="chat-thread">
-					<div class="chat-thread-head" id="chat-thread-head" style="display:none;"></div>
-					<div class="chat-thread-empty" id="chat-thread-empty">
-						<div class="empty-icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
-						<h3>Select a team member</h3>
-						<p>Pick someone from the list to start chatting. Sales, functional consultants and developers can all message each other.</p>
+					<div class="chat-thread-head">
+						<div class="chat-thread-title">Group Chat</div>
+						<div class="chat-thread-sub">Everyone in the portal (sales, functional, developers) &middot; type @ to mention someone</div>
 					</div>
 					<div class="chat-messages" id="chat-messages"></div>
-					<div class="chat-compose" id="chat-compose" style="display:none;">
-						<input id="chat-input" type="text" placeholder="Type a message..." />
+					<div class="chat-compose" id="chat-compose">
+						<div class="mention-picker" id="mention-picker" style="display:none;"></div>
+						<input id="chat-input" type="text" placeholder="Type a message... use @ to mention someone" autocomplete="off" />
 						<button id="chat-send" class="btn-portal">Send</button>
 					</div>
 				</div>

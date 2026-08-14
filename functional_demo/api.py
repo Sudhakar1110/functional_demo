@@ -1344,18 +1344,16 @@ def update_follow_up(follow_up=None, status=None, outcome=None, remarks=None, ne
 
 
 # ---------------------------------------------------------------------------
-# Portal chat (every role user can message every other role user)
+# Portal chat (GROUP chat: every role user - sales / functional / developers -
+# chats together; @mentions alert the mentioned user)
 # ---------------------------------------------------------------------------
 
 @frappe.whitelist()
 def get_chat_users():
-	"""All enabled users the current user can chat with, each with the unread
-	message count for their conversation with the current user."""
+	"""All enabled users in the group chat - used for the members list and the
+	@mention suggestions."""
 	user = frappe.session.user
 	if not user or user == "Guest":
-		return []
-	if not frappe.db.table_exists("Portal Chat Message"):
-		# new doctype - table is created by 'bench migrate'; never crash the page
 		return []
 	users = frappe.get_all(
 		"User",
@@ -1364,75 +1362,46 @@ def get_chat_users():
 		order_by="full_name asc",
 		ignore_permissions=True,
 	) or []
-	try:
-		unread_map = dict(
-			frappe.db.sql(
-				"""select from_user, count(*)
-				from `tabPortal Chat Message`
-				where to_user = %s and read = 0
-				group by from_user""",
-				user,
-			)
-		)
-	except Exception:
-		# never break the chat page - log the real cause and show zero unread
-		frappe.log_error(
-			title=_("Chat unread query failed for {0}").format(user),
-			message=frappe.get_traceback(),
-		)
-		unread_map = {}
-	out = []
-	for u in users:
-		if u.name == user:
-			continue
-		out.append(
-			{
-				"name": u.name,
-				"full_name": u.full_name or u.name,
-				"email": u.email or "",
-				"unread": int(unread_map.get(u.name, 0) or 0),
-			}
-		)
-	return out
+	return [
+		{
+			"name": u.name,
+			"full_name": u.full_name or u.name,
+			"email": u.email or "",
+			"me": u.name == user,
+		}
+		for u in users
+	]
 
 
 @frappe.whitelist()
-def get_chat_messages(other_user=None):
-	"""The latest messages between the current user and other_user (oldest
-	first). Incoming messages are marked as read."""
-	if not other_user:
-		return {"messages": []}
+def get_chat_messages(limit=100):
+	"""The group chat feed: the latest messages from everyone (oldest first)."""
 	if not frappe.db.table_exists("Portal Chat Message"):
 		return {"messages": []}
-	user = frappe.session.user
 	try:
 		rows = frappe.get_all(
 			"Portal Chat Message",
-			filters=[
-				["from_user", "in", [user, other_user]],
-				["to_user", "in", [user, other_user]],
-			],
-			fields=["name", "from_user", "to_user", "message", "creation", "read"],
+			fields=["name", "from_user", "message", "creation"],
 			order_by="creation desc",
-			limit_page_length=100,
+			limit_page_length=int(limit) or 100,
 			ignore_permissions=True,
 		) or []
 		rows.reverse()
-
-		# mark everything the other user sent me as read
-		frappe.db.set_value(
-			"Portal Chat Message",
-			{"from_user": other_user, "to_user": user, "read": 0},
-			"read",
-			1,
-			update_modified=False,
-		)
 	except Exception:
-		frappe.log_error(
-			title=_("Chat thread query failed for {0} -> {1}").format(user, other_user),
-			message=frappe.get_traceback(),
-		)
+		frappe.log_error(title=_("Chat feed query failed"), message=frappe.get_traceback())
 		return {"messages": []}
+
+	# bulk resolve display names
+	name_map = {}
+	from_users = {r.from_user for r in rows if r.from_user}
+	if from_users:
+		for u in frappe.get_all(
+			"User",
+			filters={"name": ["in", list(from_users)]},
+			fields=["name", "full_name"],
+			ignore_permissions=True,
+		):
+			name_map[u.name] = u.full_name or u.name
 
 	out = []
 	for r in rows:
@@ -1440,30 +1409,21 @@ def get_chat_messages(other_user=None):
 			{
 				"name": r.name,
 				"from_user": r.from_user,
-				"to_user": r.to_user,
+				"from_name": name_map.get(r.from_user, r.from_user),
 				"message": r.message,
 				"creation": frappe.utils.pretty_date(r.creation) if r.creation else "",
-				"mine": r.from_user == user,
-				"read": 1 if r.read else 0,
 			}
 		)
 	return {"messages": out}
 
 
 @frappe.whitelist()
-def send_chat_message(to_user=None, message=None):
-	"""Create a chat message from the current user and notify the recipient
-	(in-app notification + bell badge)."""
+def send_chat_message(message=None, mentions=None):
+	"""Post a message to the group chat. Any @mentioned users (passed as a list
+	of user names) get an in-app notification."""
 	message = (message or "").strip()
-	if not to_user:
-		frappe.throw(_("Please pick a user to send the message to."), title=_("Recipient Required"))
 	if not message:
 		frappe.throw(_("Message cannot be empty."), title=_("Empty Message"))
-	if not frappe.db.get_value("User", to_user, "enabled"):
-		frappe.throw(
-			_("User {0} is disabled or does not exist.").format(to_user),
-			title=_("Invalid User"),
-		)
 	if not frappe.db.table_exists("Portal Chat Message"):
 		frappe.throw(
 			_("Chat is not ready yet - please run 'bench migrate' and restart, then try again."),
@@ -1472,34 +1432,24 @@ def send_chat_message(to_user=None, message=None):
 	user = frappe.session.user
 	doc = frappe.new_doc("Portal Chat Message")
 	doc.from_user = user
-	doc.to_user = to_user
 	doc.message = message
 	doc.insert(ignore_permissions=True)
 
-	# in-app notification so the recipient's portal/desk bell lights up
-	create_notification(
-		to_user,
-		_("New message from {0}").format(frappe.utils.get_fullname(user) or user),
-		"Portal Chat Message",
-		doc.name,
-	)
+	# notify each mentioned user (bell notification, opens /chat)
+	sender = frappe.utils.get_fullname(user) or user
+	for name in set(mentions or []):
+		if not name or name in (user, "Guest"):
+			continue
+		if not frappe.db.get_value("User", name, "enabled"):
+			continue
+		create_notification(
+			name,
+			_("{0} mentioned you in chat: {1}").format(sender, message[:80]),
+			"Portal Chat Message",
+			doc.name,
+		)
 	return {
 		"name": doc.name,
 		"message": doc.message,
 		"creation": frappe.utils.now_datetime().isoformat(),
 	}
-
-
-@frappe.whitelist()
-def mark_chat_read(other_user=None):
-	"""Mark all messages from other_user to the current user as read."""
-	if not other_user or not frappe.db.table_exists("Portal Chat Message"):
-		return True
-	frappe.db.set_value(
-		"Portal Chat Message",
-		{"from_user": other_user, "to_user": frappe.session.user, "read": 0},
-		"read",
-		1,
-		update_modified=False,
-	)
-	return True

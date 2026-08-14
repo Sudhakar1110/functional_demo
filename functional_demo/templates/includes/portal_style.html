@@ -1315,6 +1315,14 @@ details.portal-card[open] > summary.card-head::after {
 	outline: none;
 }
 .chat-search:focus { border-color: var(--bx-blue); }
+.chat-users-head {
+	padding: 14px 14px 6px;
+	font-size: 12px;
+	font-weight: 700;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+	color: #64748B;
+}
 .chat-user-list {
 	flex: 1;
 	overflow-y: auto;
@@ -1376,6 +1384,7 @@ details.portal-card[open] > summary.card-head::after {
 	background: #fff;
 }
 .chat-thread-title { font-size: 14px; font-weight: 700; color: #0F172A; }
+.chat-thread-sub { font-size: 11px; color: #94A3B8; margin-top: 2px; }
 .chat-thread-empty {
 	flex: 1;
 	display: flex;
@@ -1422,7 +1431,10 @@ details.portal-card[open] > summary.card-head::after {
 	color: #fff;
 	border-bottom-right-radius: 4px;
 }
+.chat-bubble-name { font-size: 11px; font-weight: 700; color: #114EFF; margin-bottom: 2px; }
 .chat-bubble-text { white-space: pre-wrap; word-break: break-word; }
+.chat-mention { font-weight: 700; color: #114EFF; background: #E3EBFF; border-radius: 4px; padding: 0 4px; }
+.chat-bubble.mine .chat-mention { color: #fff; background: rgba(255, 255, 255, 0.22); }
 .chat-bubble-time { font-size: 10px; opacity: 0.7; margin-top: 4px; }
 .chat-thread-empty-inline { color: #94A3B8; font-size: 13px; text-align: center; padding: 24px; }
 .chat-compose {
@@ -1441,6 +1453,32 @@ details.portal-card[open] > summary.card-head::after {
 	outline: none;
 }
 .chat-compose input:focus { border-color: var(--bx-blue); }
+.mention-picker {
+	position: absolute;
+	bottom: 100%;
+	left: 0;
+	right: 0;
+	max-height: 180px;
+	overflow-y: auto;
+	background: #fff;
+	border: 1px solid var(--bx-gray-300);
+	border-radius: 10px;
+	box-shadow: 0 10px 30px rgba(5, 19, 60, 0.12);
+	z-index: 30;
+}
+.mention-item {
+	padding: 8px 12px;
+	font-size: 13px;
+	color: #0F172A;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+.mention-item:hover,
+.mention-item.active { background: #E3EBFF; }
+.mention-item .chat-avatar { width: 26px; height: 26px; min-width: 26px; font-size: 12px; }
+.chat-compose { position: relative; }
 @media (max-width: 768px) {
 	.chat-shell { height: calc(100vh - 190px); }
 	.chat-users { width: 100%; min-width: 100%; border-right: none; border-bottom: 1px solid var(--bx-gray-300); }
