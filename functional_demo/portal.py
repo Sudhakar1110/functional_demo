@@ -342,16 +342,22 @@ def functional_stats(user=None):
 		limit_page_length=1000,
 	) or []
 
+	# get_all returns Date fields as datetime.date on some drivers and as
+	# strings on others - normalize both sides to 'YYYY-MM-DD' strings so the
+	# comparison never raises (date >= str -> TypeError) and always matches.
+	def _day(value):
+		return str(value or "")[:10]
+
 	todays = sum(
 		1
 		for s in sessions
-		if s.get("demo_status") in ("Scheduled", "In Progress") and s.get("scheduled_date") == today
+		if s.get("demo_status") in ("Scheduled", "In Progress") and _day(s.get("scheduled_date")) == today
 	)
 	in_progress = sum(1 for s in sessions if s.get("demo_status") == "In Progress")
 	upcoming = sum(
 		1
 		for s in sessions
-		if s.get("demo_status") == "Scheduled" and (s.get("scheduled_date") or "") >= today
+		if s.get("demo_status") == "Scheduled" and _day(s.get("scheduled_date")) >= today
 	)
 	completed = sum(1 for s in sessions if s.get("demo_status") == "Completed")
 
