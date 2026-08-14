@@ -60,6 +60,7 @@ permission_query_conditions = {
 	"Functional Demo Template": "functional_demo.sales_demo.doctype.functional_demo_template.functional_demo_template.get_permission_query_conditions",
 	"Demo Follow Up": "functional_demo.sales_demo.doctype.demo_follow_up.demo_follow_up.get_permission_query_conditions",
 	"Functional Consultant": "functional_demo.sales_demo.doctype.functional_consultant.functional_consultant.get_permission_query_conditions",
+	"Portal Chat Message": "functional_demo.sales_demo.doctype.portal_chat_message.portal_chat_message.get_permission_query_conditions",
 }
 
 # Document-level permission checks
@@ -69,6 +70,7 @@ has_permission = {
 	"Functional Demo Template": "functional_demo.sales_demo.doctype.functional_demo_template.functional_demo_template.has_permission",
 	"Demo Follow Up": "functional_demo.sales_demo.doctype.demo_follow_up.demo_follow_up.has_permission",
 	"Functional Consultant": "functional_demo.sales_demo.doctype.functional_consultant.functional_consultant.has_permission",
+	"Portal Chat Message": "functional_demo.sales_demo.doctype.portal_chat_message.portal_chat_message.has_permission",
 }
 
 # Scheduled jobs
