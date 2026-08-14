@@ -1354,6 +1354,9 @@ def get_chat_users():
 	user = frappe.session.user
 	if not user or user == "Guest":
 		return []
+	if not frappe.db.table_exists("Portal Chat Message"):
+		# new doctype - table is created by 'bench migrate'; never crash the page
+		return []
 	users = frappe.get_all(
 		"User",
 		filters=[["enabled", "=", 1], ["name", "!=", "Guest"]],
@@ -1390,6 +1393,8 @@ def get_chat_messages(other_user=None):
 	"""The latest messages between the current user and other_user (oldest
 	first). Incoming messages are marked as read."""
 	if not other_user:
+		return {"messages": []}
+	if not frappe.db.table_exists("Portal Chat Message"):
 		return {"messages": []}
 	user = frappe.session.user
 	rows = frappe.get_all(
@@ -1444,6 +1449,11 @@ def send_chat_message(to_user=None, message=None):
 			_("User {0} is disabled or does not exist.").format(to_user),
 			title=_("Invalid User"),
 		)
+	if not frappe.db.table_exists("Portal Chat Message"):
+		frappe.throw(
+			_("Chat is not ready yet - please run 'bench migrate' and restart, then try again."),
+			title=_("Chat Not Ready"),
+		)
 	user = frappe.session.user
 	doc = frappe.new_doc("Portal Chat Message")
 	doc.from_user = user
@@ -1468,7 +1478,7 @@ def send_chat_message(to_user=None, message=None):
 @frappe.whitelist()
 def mark_chat_read(other_user=None):
 	"""Mark all messages from other_user to the current user as read."""
-	if not other_user:
+	if not other_user or not frappe.db.table_exists("Portal Chat Message"):
 		return True
 	frappe.db.set_value(
 		"Portal Chat Message",
