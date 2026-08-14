@@ -20,7 +20,7 @@ def get_context(context):
 		"Demo Session",
 		filters={"demo_status": ["in", ["Completed", "Follow-up Required", "Closed"]]},
 		fields=[
-			"name", "customer", "scheduled_date", "demo_status", "interested",
+			"name", "customer", "sales_person", "scheduled_date", "demo_status", "interested",
 			"requirements_met", "overall_feedback", "follow_up_required",
 			"final_result", "functional_consultant", "demo_request",
 		],

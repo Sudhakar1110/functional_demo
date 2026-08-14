@@ -83,7 +83,7 @@
 							{% for c in converted %}
 							<tr>
 								<td><a href="/sales_portal/demo_request?name={{ c.name }}">{{ c.name }}</a></td>
-								<td>{{ c.customer or c.lead }}</td>
+								<td>{{ c.customer or c.sales_person or "-" }}</td>
 								<td>{{ c.functional_consultant or "-" }}</td>
 								<td>{% if c.priority %}<span class="chip {{ c.priority|lower }}">{{ c.priority }}</span>{% else %}-{% endif %}</td>
 								<td>{{ c.creation_display }}</td>

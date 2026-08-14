@@ -67,7 +67,7 @@
 							{% for s in sessions %}
 							<tr>
 								<td><a href="/functional_portal/session?name={{ s.name }}">{{ s.name }}</a></td>
-								<td>{{ s.customer or s.lead or "-" }}</td>
+								<td>{{ s.customer or s.sales_person or "-" }}</td>
 								<td>{{ s.scheduled_date or "-" }}</td>
 								<td>{% if s.start_time %}{{ s.start_time }}{% if s.end_time %} – {{ s.end_time }}{% endif %}{% else %}-{% endif %}</td>
 								<td>{{ s.demo_type or "-" }}</td>

@@ -47,7 +47,7 @@
 					<form method="get" class="portal-form" style="display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap;">
 						<div style="flex: 1; min-width: 240px;">
 							<label>Search by name or company</label>
-							<input type="text" name="q" value="{{ q }}" placeholder="Type to search leads...">
+							<input type="text" name="q" value="{{ q }}" placeholder="Type to search sales team members...">
 						</div>
 						<div style="min-width: 180px;">
 							<label>Status</label>
@@ -75,7 +75,7 @@
 					<table class="table-portal">
 						<thead>
 							<tr>
-								<th>Lead</th>
+								<th>Sales Team Member</th>
 								<th>Name</th>
 								<th>Company</th>
 								<th>Email</th>
@@ -104,8 +104,8 @@
 				{% else %}
 				<div class="empty-state">
 					<div class="empty-icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 15-4-4 6.75-6.77a7.79 7.79 0 0 1 11 11L13 22l-4-4 6.39-6.36a2.14 2.14 0 0 0-3-3L6 15"/><path d="m5 8 4 4"/><path d="m12 15 4 4"/></svg></div>
-					<h3>No leads found</h3>
-					<p>Try a different search, or create a new lead from the portal.</p>
+					<h3>No sales team members found</h3>
+					<p>Try a different search, or create a new sales team member from the portal.</p>
 					<a class="btn-portal" href="/sales_portal/new_lead">+ New Lead</a>
 				</div>
 				{% endif %}

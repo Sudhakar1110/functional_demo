@@ -266,7 +266,7 @@ def sales_stats(user=None):
 		"conversion_rate": round((converted / total * 100), 1) if total else 0,
 		"recent_requests": frappe.get_all(
 			"Demo Request",
-			fields=["name", "customer", "lead", "status", "priority", "interested_module", "preferred_demo_date", "functional_consultant", "creation"],
+			fields=["name", "customer", "lead", "sales_person", "status", "priority", "interested_module", "preferred_demo_date", "functional_consultant", "creation"],
 			order_by="creation desc",
 			limit_page_length=8,
 		) or [],

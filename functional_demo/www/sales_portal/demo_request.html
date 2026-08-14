@@ -56,8 +56,8 @@
 							</datalist>
 						</div>
 						<div>
-							<label>Lead <span class="form-hint">(optional - or pick a lead instead)</span></label>
-							<input type="text" id="lead" name="lead" list="leads-list" placeholder="Type &amp; pick a lead..." value="{{ prefill.lead }}" autocomplete="off">
+							<label>Sales Team Member <span class="form-hint">(optional - or pick a sales team member instead)</span></label>
+							<input type="text" id="lead" name="lead" list="leads-list" placeholder="Type &amp; pick a sales team member..." value="{{ prefill.lead }}" autocomplete="off">
 							<datalist id="leads-list">
 								{% for l in leads %}<option value="{{ l.name }}">{{ l.lead_name }} ({{ l.company_name or 'no company' }})</option>{% endfor %}
 							</datalist>
@@ -88,7 +88,7 @@
 						</div>
 					</div>
 					<div class="form-row">
-						<div><label>Contact Person <span class="form-hint">(name, if no Customer/Lead yet)</span></label><input type="text" id="contact_person" name="contact_person" value="{{ prefill.contact_person }}"></div>
+						<div><label>Contact Person <span class="form-hint">(name, if no Customer/Sales Team Member yet)</span></label><input type="text" id="contact_person" name="contact_person" value="{{ prefill.contact_person }}"></div>
 						<div><label>Contact Number</label><input type="text" id="contact_number" name="contact_number" value="{{ prefill.contact_number }}"></div>
 						<div><label>Email</label><input type="email" id="email" name="email" value="{{ prefill.email }}"></div>
 					</div>
@@ -415,8 +415,7 @@
 				return;
 			}
 		}
-		if (lead && lead !== preLead && !isKnown("leads-list", lead)) {
-			portalAlert("Lead \"" + lead + "\" was not found. Please pick a lead from the suggestions list.", "err");
+		if (lead && lead !== preLead && !isKnown("leads-list", lead)) {							portalAlert("Sales Team Member \"" + lead + "\" was not found. Please pick a sales team member from the suggestions list.", "err");
 			return;
 		}
 		if (!consultant) {
