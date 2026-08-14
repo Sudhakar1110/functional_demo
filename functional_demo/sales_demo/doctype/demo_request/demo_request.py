@@ -290,11 +290,17 @@ def suggested_priority(lead=None, customer=None):
 	"""
 	amount = 0
 	if lead:
-		value = frappe.db.get_value("Lead", lead, "opportunity_amount")
-		try:
-			amount = float(value or 0)
-		except Exception:
-			amount = 0
+		# opportunity_amount is a standard ERPNext Lead field, but the column may
+		# be missing on sites whose Lead doctype was never synced with it - a
+		# missing column must never break priority calculation (or the whole demo
+		# request creation), so skip the read and fall back to the customer tier
+		# rule instead.
+		if frappe.db.has_column("Lead", "opportunity_amount"):
+			try:
+				value = frappe.db.get_value("Lead", lead, "opportunity_amount")
+				amount = float(value or 0)
+			except Exception:
+				amount = 0
 	if amount >= 100000:
 		return "High"
 	if lead and 0 < amount < 10000:
