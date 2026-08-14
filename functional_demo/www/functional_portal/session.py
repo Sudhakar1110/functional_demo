@@ -34,5 +34,11 @@ def get_context(context):
 		data["session"]["scheduled_date"] = frappe.utils.format_date(
 			data["session"]["scheduled_date"], "medium"
 		)
+	# A follow-up already exists for this session - the Create Follow-up
+	# button must not show again (no duplicate follow-ups).
+	session_name = (data.get("session") or {}).get("name")
+	context.has_follow_up = bool(
+		frappe.db.exists("Demo Follow Up", {"demo_session": session_name}) if session_name else False
+	)
 	context.data = data
 	return context

@@ -103,6 +103,11 @@ def get_context(context):
 	)
 	context.consultants = _consultants_with_templates()
 	context.consultant_names = {c["name"]: c["consultant_name"] for c in context.consultants}
+	# A follow-up already exists for this request - the Create Follow-up
+	# button must not show again (no duplicate follow-ups).
+	context.has_follow_up = bool(
+		frappe.db.exists("Demo Follow Up", {"demo_request": doc.name})
+	)
 	return context
 
 
