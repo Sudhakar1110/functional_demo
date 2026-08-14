@@ -80,8 +80,6 @@
 					<div style="display: flex; gap: 8px; flex-wrap: wrap;">
 						{% if is_developer %}
 						<a class="btn-portal secondary sm" href="/feedback">&larr; Demo Feedback</a>
-						{% else %}
-						<a class="btn-portal secondary sm" href="/functional_portal/my_sessions">&larr; My Sessions</a>
 						{% endif %}
 						{% if s.meeting_link %}
 						<a class="btn-portal sm" href="{{ s.meeting_link }}" target="_blank" rel="noopener"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg> Join Meeting</a>
