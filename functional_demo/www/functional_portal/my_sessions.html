@@ -73,7 +73,11 @@
 								<td>{{ s.demo_type or "-" }}</td>
 								<td><span class="badge b-{{ s.demo_status|lower|replace(' ', '-') }}">{{ s.demo_status }}</span></td>
 								<td>{{ s.final_result or "-" }}</td>
-								<td><a class="btn-portal sm" href="/functional_portal/session?name={{ s.name }}">Conduct Demo &rarr;</a></td>
+								<td>
+									{% if s.demo_status in ["Scheduled", "In Progress", "Rescheduled"] %}
+									<a class="btn-portal sm" href="/functional_portal/session?name={{ s.name }}">Conduct Demo &rarr;</a>
+									{% endif %}
+								</td>
 							</tr>
 							{% endfor %}
 						</tbody>
