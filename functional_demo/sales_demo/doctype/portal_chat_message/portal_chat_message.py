@@ -2,6 +2,16 @@
 # License: GNU General Public License (v3). See LICENSE
 
 import frappe
+from frappe.model.document import Document
+
+
+class PortalChatMessage(Document):
+	"""Chat messages between portal users (one-to-one).
+
+	The controller class is REQUIRED: Frappe's migrate deletes any doctype
+	whose controller module has no matching class (get_controller raises
+	ImportError -> treated as an orphaned doctype)."""
+	pass
 
 
 def get_permission_query_conditions(user=None):
