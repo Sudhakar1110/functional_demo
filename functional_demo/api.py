@@ -1253,9 +1253,18 @@ def get_unlinked_users():
 
 
 @frappe.whitelist()
-def create_consultant_profile(user=None, consultant_name=None, specialization=None):
-	"""One-click: create a Functional Consultant profile linked to a User.
-	The doctype's on_update hook grants the Functional Consultant role.
+def create_consultant_profile(
+	user=None,
+	consultant_name=None,
+	specialization=None,
+	experience_years=None,
+	availability=None,
+	email=None,
+	notes=None,
+):
+	"""Create a Functional Consultant profile linked to a User.
+	The doctype's on_update hook grants the Functional Consultant role, so the
+	profile exists in the desk (ERPNext) exactly like one created there.
 
 	The user argument is optional so a client that fires the call without a
 	value (e.g. a stale cached page) gets a clear popup instead of a TypeError
@@ -1294,7 +1303,16 @@ def create_consultant_profile(user=None, consultant_name=None, specialization=No
 	doc.user = user
 	doc.specialization = specialization or ""
 	doc.status = "Active"
-	doc.availability = "Available"
+	doc.availability = availability or "Available"
+	if experience_years:
+		try:
+			doc.experience_years = int(experience_years)
+		except (TypeError, ValueError):
+			frappe.throw(_("Experience must be a whole number of years."))
+	if email:
+		doc.email = email
+	if notes:
+		doc.notes = notes
 	doc.insert(ignore_permissions=True)  # role guard enforced above
 
 	frappe.msgprint(

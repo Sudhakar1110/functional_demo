@@ -175,6 +175,9 @@ def sidebar_items(active):
 	if is_manager():
 		items += [{"label": _("Manager Dashboard"), "route": "/manager_portal", "icon": ICON_MANAGER, "active": active == "manager"}]
 
+	if can_manage_consultants():
+		items += [{"label": _("Consultants"), "route": "/functional_portal/new_consultant", "icon": ICON_FUNCTIONAL, "active": active == "consultants"}]
+
 	# Shared section: template feedback is visible to every portal role
 	items.append({"label": _("Feedback"), "route": "/feedback", "icon": ICON_FEEDBACK, "active": active == "feedback"})
 

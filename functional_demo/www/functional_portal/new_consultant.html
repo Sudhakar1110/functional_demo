@@ -1,0 +1,154 @@
+{% extends "templates/web.html" %}
+{% block banner %}{% endblock %}
+{% block navbar %}{% endblock %}
+{% block footer %}{% endblock %}
+{% block style %}{% include "functional_demo/templates/includes/portal_style.html" %}{% endblock %}
+{% block content %}
+<div class="portal-layout">
+	<header class="portal-topbar">
+		<button class="sidebar-toggle" id="sidebar-toggle" aria-label="Menu">&#9776;</button>
+		<a class="topbar-brand" href="/demo_portal">
+			<img class="brand-logo" src="/assets/functional_demo/images/brand_logo.jpg" alt="Brand Logo" />
+			<div class="brand-text">
+				<span class="brand-name">Demo Portal</span>
+				<span class="brand-sub">Sales &amp; Functional</span>
+			</div>
+		</a>
+		<div class="topbar-title">
+			<h1>{{ title }}</h1>
+			<p>{{ subtitle }}</p>
+		</div>
+		<div class="topbar-right">
+			<span class="portal-avatar">{{ full_name[:1] }}</span>
+			<span class="portal-user-name">{{ full_name }}</span>
+			<a class="btn-logout" href="/logout">Log Out</a>
+		</div>
+	</header>
+	<div class="portal-body">
+		<aside class="portal-sidebar" id="portal-sidebar">
+			<div class="sidebar-menu">
+			{% for item in sidebar_items %}
+			<a class="sidebar-item {% if item.active %}active{% endif %}" href="{{ item.route }}">
+				<span class="sidebar-icon">{{ item.icon | safe }}</span>{{ item.label }}
+			</a>
+			{% endfor %}
+			</div>
+		</aside>
+		<div class="sidebar-overlay"></div>
+		<div class="portal-main">
+			<div class="portal-content">
+				<div class="portal-card">
+					<div class="card-head">
+						<h2>New Consultant Profile</h2>
+						<a class="btn-portal secondary sm" href="/functional_portal">&larr; Functional Home</a>
+					</div>
+					<div class="card-body">
+						{% if users %}
+						<form class="portal-form" id="consultant-form">
+							<div class="form-row">
+								<div>
+									<label>User <span class="req">*</span></label>
+									<select id="con-user" required>
+										<option value="">— Select user —</option>
+										{% for u in users %}<option value="{{ u.user }}" data-name="{{ u.full_name }}" data-email="{{ u.email }}">{{ u.full_name }} ({{ u.user }})</option>{% endfor %}
+									</select>
+									<p class="hint">The consultant must be an existing user - they log in with it to conduct demos.</p>
+								</div>
+								<div>
+									<label>Consultant Name <span class="req">*</span></label>
+									<input type="text" id="con-name" placeholder="e.g. Priya Sharma" required autocomplete="off">
+								</div>
+							</div>
+							<div class="form-row">
+								<div>
+									<label>Specialization</label>
+									<select id="con-specialization">
+										<option value="">— Select —</option>
+										{% for s in specializations %}<option value="{{ s }}">{{ s }}</option>{% endfor %}
+									</select>
+								</div>
+								<div>
+									<label>Experience (Years)</label>
+									<input type="number" id="con-experience" min="0" max="60" placeholder="e.g. 5" autocomplete="off">
+								</div>
+							</div>
+							<div class="form-row">
+								<div>
+									<label>Availability</label>
+									<select id="con-availability">
+										<option value="Available" selected>Available</option>
+										<option value="Busy">Busy</option>
+										<option value="On Leave">On Leave</option>
+										<option value="Unavailable">Unavailable</option>
+									</select>
+								</div>
+								<div>
+									<label>Email</label>
+									<input type="email" id="con-email" placeholder="name@company.com" autocomplete="off">
+								</div>
+							</div>
+							<label>Notes</label>
+							<textarea id="con-notes" placeholder="Anything worth knowing about this consultant..."></textarea>
+							<div class="form-actions">
+								<button class="btn-portal" type="submit" id="btn-create">Create Consultant Profile</button>
+								<a class="btn-portal secondary" href="/functional_portal">Cancel</a>
+							</div>
+						</form>
+						{% else %}
+						<div class="empty-state">
+							<div class="empty-icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+							<h3>No users available</h3>
+							<p>All enabled users already have a consultant profile. Create a new user in ERPNext first.</p>
+							<a class="btn-portal" href="/functional_portal">&larr; Back to Functional Home</a>
+						</div>
+						{% endif %}
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+{% endblock %}
+
+{% block script %}
+{% include "functional_demo/templates/includes/portal_script.html" %}
+<script>
+(function () {
+	"use strict";
+	(function () {
+		var userEl = document.getElementById("con-user");
+		if (!userEl) return;
+		var nameEl = document.getElementById("con-name");
+		var emailEl = document.getElementById("con-email");
+		userEl.addEventListener("change", function () {
+			var opt = userEl.options[userEl.selectedIndex];
+			if (!opt || !opt.value) return;
+			if (nameEl && !nameEl.value.trim()) nameEl.value = opt.getAttribute("data-name") || opt.value;
+			if (emailEl && !emailEl.value.trim()) emailEl.value = opt.getAttribute("data-email") || "";
+		});
+	})();
+	var form = document.getElementById("consultant-form");
+	if (!form) return;
+	form.addEventListener("submit", function (e) {
+		e.preventDefault();
+		var btn = document.getElementById("btn-create");
+		var user = document.getElementById("con-user").value;
+		if (!user) { window.portalAlert("Please select a user.", "err"); return; }
+		btn.disabled = true; btn.textContent = "Creating...";
+		window.portalCall("functional_demo.api.create_consultant_profile", {
+			user: user,
+			consultant_name: document.getElementById("con-name").value.trim(),
+			specialization: document.getElementById("con-specialization").value,
+			experience_years: document.getElementById("con-experience").value,
+			availability: document.getElementById("con-availability").value,
+			email: document.getElementById("con-email").value.trim(),
+			notes: document.getElementById("con-notes").value,
+		}).then(function () {
+			window.location.href = "/functional_portal";
+		}).catch(function () {
+			btn.disabled = false; btn.textContent = "Create Consultant Profile";
+		});
+	});
+})();
+</script>
+{% endblock %}
