@@ -1364,15 +1364,23 @@ def get_chat_users():
 		order_by="full_name asc",
 		ignore_permissions=True,
 	) or []
-	unread_map = dict(
-		frappe.db.sql(
-			"""select from_user, count(*)
-			from `tabPortal Chat Message`
-			where to_user = %s and read = 0
-			group by from_user""",
-			user,
+	try:
+		unread_map = dict(
+			frappe.db.sql(
+				"""select from_user, count(*)
+				from `tabPortal Chat Message`
+				where to_user = %s and read = 0
+				group by from_user""",
+				user,
+			)
 		)
-	)
+	except Exception:
+		# never break the chat page - log the real cause and show zero unread
+		frappe.log_error(
+			title=_("Chat unread query failed for {0}").format(user),
+			message=frappe.get_traceback(),
+		)
+		unread_map = {}
 	out = []
 	for u in users:
 		if u.name == user:
@@ -1397,27 +1405,34 @@ def get_chat_messages(other_user=None):
 	if not frappe.db.table_exists("Portal Chat Message"):
 		return {"messages": []}
 	user = frappe.session.user
-	rows = frappe.get_all(
-		"Portal Chat Message",
-		filters=[
-			["from_user", "in", [user, other_user]],
-			["to_user", "in", [user, other_user]],
-		],
-		fields=["name", "from_user", "to_user", "message", "creation", "read"],
-		order_by="creation desc",
-		limit_page_length=100,
-		ignore_permissions=True,
-	) or []
-	rows.reverse()
+	try:
+		rows = frappe.get_all(
+			"Portal Chat Message",
+			filters=[
+				["from_user", "in", [user, other_user]],
+				["to_user", "in", [user, other_user]],
+			],
+			fields=["name", "from_user", "to_user", "message", "creation", "read"],
+			order_by="creation desc",
+			limit_page_length=100,
+			ignore_permissions=True,
+		) or []
+		rows.reverse()
 
-	# mark everything the other user sent me as read
-	frappe.db.set_value(
-		"Portal Chat Message",
-		{"from_user": other_user, "to_user": user, "read": 0},
-		"read",
-		1,
-		update_modified=False,
-	)
+		# mark everything the other user sent me as read
+		frappe.db.set_value(
+			"Portal Chat Message",
+			{"from_user": other_user, "to_user": user, "read": 0},
+			"read",
+			1,
+			update_modified=False,
+		)
+	except Exception:
+		frappe.log_error(
+			title=_("Chat thread query failed for {0} -> {1}").format(user, other_user),
+			message=frappe.get_traceback(),
+		)
+		return {"messages": []}
 
 	out = []
 	for r in rows:

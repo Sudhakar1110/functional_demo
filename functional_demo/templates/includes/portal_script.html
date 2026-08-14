@@ -87,7 +87,11 @@
 	};
 
 	/* Call a whitelisted API method: window.portalCall("functional_demo.api.x", {..}) */
-	window.portalCall = function (method, args) {
+	window.portalCall = function (method, args, opts) {
+		/* opts.silent: background/polling calls must never pop an error modal -
+		   the caller decides (e.g. the chat page polls every 5s and should stay
+		   quiet even if the endpoint is temporarily unavailable). */
+		opts = opts || {};
 		return csrfReady().then(function (token) {
 			return fetch("/api/method/" + method, {
 				method: "POST",
@@ -168,7 +172,9 @@
 					(serverMsgs.length ? plain(serverMsgs[0]) : "") ||
 					rawHint() ||
 					"Something went wrong. Please try again.";
-				window.portalModal(data.title || "Something went wrong", errMsg, "err");
+				if (!opts.silent) {
+					window.portalModal(data.title || "Something went wrong", errMsg, "err");
+				}
 				var err = new Error(errMsg);
 				err.exc_type = data.exc_type;
 				throw err;
@@ -180,7 +186,7 @@
 				return data.message;
 			})
 			.catch(function (err) {
-				if (err instanceof TypeError) {
+				if (err instanceof TypeError && !opts.silent) {
 					window.portalModal("Network error", "Please check your connection and try again.", "err");
 				}
 				throw err;

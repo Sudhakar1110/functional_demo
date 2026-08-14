@@ -56,7 +56,7 @@
 	}
 
 	function loadUsers(keepScroll) {
-		return portalCall("functional_demo.api.get_chat_users", {})
+		return portalCall("functional_demo.api.get_chat_users", {}, { silent: true })
 			.then(function (data) {
 				var users = Array.isArray(data) ? data : [];
 				if (keepScroll) {
@@ -100,7 +100,7 @@
 
 	function loadThread() {
 		if (!current) return Promise.resolve();
-		return portalCall("functional_demo.api.get_chat_messages", { other_user: current })
+		return portalCall("functional_demo.api.get_chat_messages", { other_user: current }, { silent: true })
 			.then(function (data) {
 				var messages = (data && data.messages) || [];
 				var latest = messages.length ? messages[messages.length - 1].name : null;
