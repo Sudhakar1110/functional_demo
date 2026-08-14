@@ -15,6 +15,11 @@ from functional_demo.portal import (
 
 
 def get_context(context):
+	# The Developer role is feedback-only: it never sees the home dashboard,
+	# it is sent straight to the Feedback page.
+	if is_developer():
+		frappe.local.flags.redirect_location = "/feedback"
+		raise frappe.Redirect
 	portal_context(
 		context,
 		_("Demo Portal"),

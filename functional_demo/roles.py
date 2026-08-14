@@ -5,4 +5,4 @@
 'Sales User' and 'Sales Manager' are standard ERPNext roles and are reused.
 """
 
-ROLES = ["Functional Consultant", "Functional Team Manager"]
+ROLES = ["Functional Consultant", "Functional Team Manager", "Developer"]

@@ -39,10 +39,6 @@ app_include_css = [
 # the role-based portal menu for the website navbar.
 get_standard_portal_menu_items = "functional_demo.portal.get_standard_portal_menu_items"
 
-# Desk: leads are managed from the sales portal (My Leads) only, so keep the
-# Lead workspace out of the ERPNext desk sidebar.
-boot_session = "functional_demo.desk.hide_lead_from_desk"
-
 # Per-doctype form customizations
 doctype_js = {
 	"Demo Request": "public/js/demo_request.js",

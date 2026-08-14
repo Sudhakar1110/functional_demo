@@ -37,6 +37,7 @@ def after_migrate():
 	backfill_session_consultants()
 	move_approved_requests_forward()
 	sync_sales_workspace()
+	create_developer_user()
 
 
 def backfill_consultant_statuses():
@@ -76,7 +77,7 @@ def create_roles():
 	"""Create the custom roles used by this app (idempotent).
 
 	Note: 'Sales User' and 'Sales Manager' are standard ERPNext roles and are
-	reused as-is. Only the functional team roles are custom.
+	reused as-is. Only the functional team roles and Developer are custom.
 	"""
 	from functional_demo.roles import ROLES
 
@@ -148,8 +149,7 @@ def sync_sales_workspace():
 	The standard workspace sync only applies when the JSON's `modified` is
 	newer than the record in the database, which is not guaranteed on
 	already-installed sites. A force import makes sure workspace changes
-	(removed Lead shortcut/link, new shortcuts like Demo Feedback) actually
-	appear in the live desk.
+	(Lead shortcut/link, Demo Feedback, …) actually appear in the live desk.
 	"""
 	from frappe.modules.import_file import import_file_by_path
 
@@ -231,6 +231,39 @@ def move_approved_requests_forward():
 		where workflow_state = 'Approved'"""
 	)
 	frappe.db.commit()
+
+
+def create_developer_user():
+	"""Idempotently create the 'developer' user with the Developer role.
+
+	The Developer role sees only the portal Feedback page (feedback-only
+	access). The user is created on first migrate if missing; if the user
+	already exists the Developer role is just ensured. Default password is
+	'Developer@123' - change it after first login.
+	"""
+	if not frappe.db.exists("User", "developer"):
+		try:
+			doc = frappe.new_doc("User")
+			doc.email = "developer@example.com"
+			doc.first_name = "Developer"
+			doc.username = "developer"
+			doc.enabled = 1
+			doc.new_password = "Developer@123"
+			doc.send_welcome_email = 0
+			doc.add_roles("Developer")
+			doc.insert(ignore_permissions=True)
+			print("Created User: developer (role: Developer, default password: Developer@123)")
+		except Exception:
+			frappe.log_error(
+				title=_("functional_demo: failed to create the developer user"),
+				message=frappe.get_traceback(),
+			)
+			return
+	else:
+		if "Developer" not in frappe.get_roles("developer"):
+			user = frappe.get_doc("User", "developer")
+			user.add_roles("Developer")
+			user.save(ignore_permissions=True)
 
 
 def mark_overdue_follow_ups():

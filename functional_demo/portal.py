@@ -8,6 +8,7 @@ from frappe import _
 SALES_ROLES = ("Sales User", "Sales Manager")
 FUNCTIONAL_ROLES = ("Functional Consultant", "Functional Team Manager")
 MANAGER_ROLES = ("Sales Manager", "Functional Team Manager")
+DEVELOPER_ROLES = ("Developer",)
 
 
 # ---------------------------------------------------------------------------
@@ -29,6 +30,12 @@ def is_functional(user=None):
 
 def is_manager(user=None):
 	return bool(user_roles(user) & set(MANAGER_ROLES))
+
+
+def is_developer(user=None):
+	"""The Developer role is feedback-only: it may view the portal Feedback
+	page and nothing else."""
+	return bool(user_roles(user) & set(DEVELOPER_ROLES))
 
 
 def can_manage_consultants(user=None):
@@ -121,7 +128,10 @@ ICON_FEEDBACK = _icon('<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2
 def sidebar_items(active):
 	"""Sidebar menu for the current user. The sales team sees all content
 	(sales + functional); functional team members see only functional-related
-	sections (never the sales ones)."""
+	sections (never the sales ones); the Developer role sees only Feedback."""
+	if is_developer():
+		return [{"label": _("Feedback"), "route": "/feedback", "icon": ICON_FEEDBACK, "active": active == "feedback"}]
+
 	items = [{"label": _("Home"), "route": "/demo_portal", "icon": ICON_HOME, "active": active == "home"}]
 
 	if is_sales():
@@ -180,6 +190,7 @@ def portal_context(context, title, required_roles, active, subtitle=""):
 	context.is_sales = is_sales()
 	context.is_functional = is_functional()
 	context.is_manager = is_manager()
+	context.is_developer = is_developer()
 	context.full_name = frappe.utils.get_fullname(frappe.session.user)
 	context.greeting = greeting()
 	context.today_pretty = frappe.utils.now_datetime().strftime("%A, %d %B %Y")
@@ -376,4 +387,5 @@ def get_standard_portal_menu_items():
 		{"title": _("Demo Portal"), "route": "/demo_portal", "role": "Sales Manager"},
 		{"title": _("Demo Portal"), "route": "/demo_portal", "role": "Functional Consultant"},
 		{"title": _("Demo Portal"), "route": "/demo_portal", "role": "Functional Team Manager"},
+		{"title": _("Demo Feedback"), "route": "/feedback", "role": "Developer"},
 	]
