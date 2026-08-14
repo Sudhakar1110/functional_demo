@@ -420,7 +420,7 @@ def create_demo_follow_up(demo_request=None, follow_up_date=None, next_action=No
 	dr.save(ignore_permissions=True)
 	change_status(dr, "Follow-up Required", ignore_permissions=True)
 
-	party, _ = _party_and_consultant(dr)
+	party, _consultant = _party_and_consultant(dr)
 	frappe.msgprint(
 		_("Follow-up {0} created for {1}. Assigned to {2}.").format(
 			fu.name, party or dr.name, fu.assigned_to or dr.sales_person or "-"
@@ -449,7 +449,7 @@ def set_demo_result(demo_request=None, result=None):
 	dr = frappe.get_doc("Demo Request", demo_request)
 	frappe.has_permission("Demo Request", "write", doc=dr, throw=True)
 	dr = change_status(dr, result, ignore_permissions=True)
-	party, _ = _party_and_consultant(dr)
+	party, _consultant = _party_and_consultant(dr)
 	frappe.msgprint(_("Demo {0} for {1} marked as {2}.").format(dr.name, party or "-", result))
 	return dr.status
 
@@ -526,7 +526,7 @@ def cancel_demo_request(demo_request=None, reason=None, name=None):
 			)
 		session.save(ignore_permissions=True)
 
-	party, _ = _party_and_consultant(doc)
+	party, _consultant = _party_and_consultant(doc)
 	frappe.msgprint(_("Demo {0} for {1} cancelled.").format(doc.name, party or "-"))
 	return {"status": doc.get("status") or doc.get("workflow_state")}
 
@@ -835,7 +835,7 @@ def complete_demo_session(demo_session=None, feedback=None):
 	"""Complete a demo and record customer feedback."""
 	ds = _get_session(demo_session)
 	ds.complete_demo(feedback or {})
-	party, _ = _party_and_consultant(ds)
+	party, _consultant = _party_and_consultant(ds)
 	frappe.msgprint(_("Demo {0} for {1} completed and feedback recorded.").format(ds.name, party or "-"))
 	return {
 		"demo_status": ds.demo_status,
@@ -847,7 +847,7 @@ def complete_demo_session(demo_session=None, feedback=None):
 def cancel_demo_session(demo_session=None, reason=None):
 	ds = _get_session(demo_session)
 	ds.cancel_demo(reason)
-	party, _ = _party_and_consultant(ds)
+	party, _consultant = _party_and_consultant(ds)
 	frappe.msgprint(_("Demo {0} for {1} cancelled.").format(ds.name, party or "-"))
 	return {"demo_status": ds.demo_status}
 
@@ -877,7 +877,7 @@ def create_follow_up_from_session(demo_session=None, follow_up_date=None, next_a
 		frappe.throw(_("Please select a follow-up date."))
 	ds = _get_session(demo_session)
 	fu = ds.create_follow_up(follow_up_date, next_action, assigned_to)
-	party, _ = _party_and_consultant(ds)
+	party, _consultant = _party_and_consultant(ds)
 	frappe.msgprint(
 		_("Follow-up {0} created for {1}.").format(fu.name, party or ds.customer or ds.demo_request)
 	)
@@ -894,7 +894,7 @@ def set_session_final_result(demo_session=None, result=None):
 		frappe.throw(_("Please choose a final result."))
 	ds = _get_session(demo_session)
 	ds.set_final_result(result)
-	party, _ = _party_and_consultant(ds)
+	party, _consultant = _party_and_consultant(ds)
 	frappe.msgprint(_("Demo {0} for {1} marked as {2}.").format(ds.name, party or "-", result))
 	return {"final_result": ds.final_result}
 
