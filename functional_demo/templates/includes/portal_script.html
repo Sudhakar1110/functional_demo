@@ -245,7 +245,6 @@
 			if (n.document_type === "Demo Request") return "/sales_portal/demo_request?name=" + esc(n.document_name);
 			if (n.document_type === "Demo Session") return "/functional_portal/session?name=" + esc(n.document_name);
 			if (n.document_type === "Demo Follow Up") return "/functional_portal/follow_ups";
-			if (n.document_type === "Portal Chat Message") return "/chat";
 			return "/demo_portal";
 		}
 		function render(data) {
