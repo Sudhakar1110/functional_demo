@@ -16,6 +16,29 @@ PRIORITIES = ["Low", "Medium", "High", "Critical"]
 DEMO_TYPES = ["Standard Demo", "Customized Demo", "Walkthrough", "Deep Dive", "Follow-up Demo"]
 
 
+def _consultants_with_templates():
+	"""Active consultants with their templates (child table) for dropdowns."""
+	_consultants = frappe.get_all(
+		"Functional Consultant",
+		fields=["name", "consultant_name", "specialization", "availability", "experience_years", "status"],
+		order_by="consultant_name asc",
+		ignore_permissions=True,
+	) or []
+	consultants = [c for c in _consultants if (c.get("status") or "") != "Inactive"]
+	names = [c["name"] for c in consultants]
+	if names:
+		templates = {}
+		for row in frappe.get_all(
+			"Consultant Module",
+			filters={"parent": ["in", names]},
+			fields=["parent", "module"],
+		):
+			templates.setdefault(row.parent, []).append(row.module)
+		for c in consultants:
+			c["modules"] = templates.get(c["name"]) or []
+	return consultants
+
+
 def get_context(context):
 	portal_context(
 		context,
@@ -54,15 +77,7 @@ def get_context(context):
 
 		# Availability is filtered in Python: an unset status is stored as NULL
 		# and SQL status filters would silently hide those consultants.
-		_consultants = frappe.get_all(
-			"Functional Consultant",
-			fields=["name", "consultant_name", "specialization", "availability", "experience_years", "status"],
-			order_by="consultant_name asc",
-			# ignore_permissions: the portal page is already role-gated - a
-			# consultant with an unusual role setup must never disappear.
-			ignore_permissions=True,
-		) or []
-		context.consultants = [c for c in _consultants if (c.get("status") or "") != "Inactive"]
+		context.consultants = _consultants_with_templates()
 		# Diagnostic: every consultant record (incl. Inactive / no status) so the
 		# form can show exactly what the portal sees when the dropdown is empty
 		context.consultant_diag = frappe.get_all(
@@ -86,13 +101,7 @@ def get_context(context):
 		{"demo_request": doc.name, "demo_status": ["in", ["Scheduled", "In Progress"]]},
 		"name",
 	)
-	_consultants = frappe.get_all(
-		"Functional Consultant",
-		fields=["name", "consultant_name", "specialization", "availability", "experience_years", "status"],
-		order_by="consultant_name asc",
-		ignore_permissions=True,
-	) or []
-	context.consultants = [c for c in _consultants if (c.get("status") or "") != "Inactive"]
+	context.consultants = _consultants_with_templates()
 	context.consultant_names = {c["name"]: c["consultant_name"] for c in context.consultants}
 	return context
 

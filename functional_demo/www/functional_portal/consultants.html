@@ -47,11 +47,10 @@
 					{% if consultants %}
 					<div class="card-body flush">
 						<table class="table-portal">
-							<thead>
-								<tr>
+							<thead>									<tr>
 									<th>Consultant</th>
 									<th>User</th>
-									<th>Specialization</th>
+									<th>Templates</th>
 									<th>Experience</th>
 									<th>Availability</th>
 									<th>Status</th>
@@ -67,7 +66,11 @@
 										{% if c.phone %}<div class="muted">{{ c.phone }}</div>{% endif %}
 									</td>
 									<td class="muted">{{ c.user }}</td>
-									<td>{{ c.specialization or "-" }}</td>
+									<td>
+										{% if c.templates %}
+										{% for t in c.templates %}<span class="chip b-scheduled">{{ t }}</span> {% endfor %}
+										{% else %}{{ c.specialization or "-" }}{% endif %}
+									</td>
 									<td>{% if c.experience_years %}{{ c.experience_years }} yrs{% else %}-{% endif %}</td>
 									<td><span class="chip {{ (c.availability or 'Available')|lower|replace(' ', '-') }}">{{ c.availability or "Available" }}</span></td>
 									<td>

@@ -112,7 +112,7 @@
 					<select id="bulk-consultant" style="width: 100%; margin-bottom: 14px;">
 						<option value="">— Select consultant —</option>
 						{% for c in consultants %}
-						<option value="{{ c.name }}">{{ c.consultant_name }} · {{ c.specialization or 'Generalist' }}</option>
+						<option value="{{ c.name }}">{{ c.consultant_name }}{% if c.modules %} · {{ c.modules|join(', ') }}{% else %} · {{ c.specialization or 'Generalist' }}{% endif %}</option>
 						{% endfor %}
 					</select>
 					<div style="display: flex; gap: 10px; justify-content: flex-end;">

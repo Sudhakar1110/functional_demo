@@ -16,8 +16,8 @@
    "fieldname": "module",
    "fieldtype": "Select",
    "in_list_view": 1,
-   "label": "ERPNext Module",
-   "options": "Accounting\nCRM\nSelling\nBuying\nStock\nManufacturing\nHR & Payroll\nProjects\nHealthcare\nEducation\nAgriculture\nCustom Application",
+   "label": "Template",
+   "options": "\nLaw Management\nHospitality\nMedical Store\nRetail & Supermarket\nManufacturing\nEducation\nHealthcare\nReal Estate\nLogistics & Transport\nAgriculture\nIT Services\nBanking & Finance\nFood & Beverage\nConstruction\nEnergy & Utilities\nOther",
    "reqd": 1
   },
   {

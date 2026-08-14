@@ -700,6 +700,36 @@ details.portal-card[open] > summary.card-head::after {
 .chip.medium { background: #FEF6D8; color: #A16207; }
 .chip.low { background: var(--bx-gray-100); color: var(--bx-gray-400); }
 
+/* multi-select template chips (New Consultant Profile form) */
+.template-grid {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin-top: 4px;
+}
+.template-chip {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 6px 12px;
+	border: 1px solid var(--bx-gray-200);
+	border-radius: 999px;
+	font-size: 13px;
+	font-weight: 500;
+	color: var(--bx-gray-500);
+	background: #fff;
+	cursor: pointer;
+	user-select: none;
+	transition: all 0.15s ease;
+}
+.template-chip input { margin: 0; accent-color: var(--bx-navy); }
+.template-chip:hover { border-color: var(--bx-navy); color: var(--bx-navy); }
+.template-chip:has(input:checked) {
+	background: var(--bx-navy);
+	border-color: var(--bx-navy);
+	color: #fff;
+}
+
 /* ==========================================================================
    Empty states
    ========================================================================== */

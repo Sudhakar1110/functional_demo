@@ -33,6 +33,17 @@ def get_context(context):
 		order_by="consultant_name asc",
 	) or []
 
+	# templates per consultant (child table)
+	names = [c.name for c in consultants]
+	templates_map = {}
+	if names:
+		for row in frappe.get_all(
+			"Consultant Module",
+			filters={"parent": ["in", names]},
+			fields=["parent", "module"],
+		):
+			templates_map.setdefault(row.parent, []).append(row.module)
+
 	# count active (scheduled / in progress) demos per consultant
 	active_counts = dict(
 		frappe.db.sql(
@@ -47,6 +58,7 @@ def get_context(context):
 
 	for c in consultants:
 		c["active_demos"] = active_counts.get(c.name, 0) or 0
+		c["templates"] = templates_map.get(c.name) or []
 		c["email"] = c.get("email") or frappe.db.get_value("User", c.get("user"), "email") or ""
 		c["phone"] = c.get("phone") or frappe.db.get_value("User", c.get("user"), "mobile_no") or ""
 

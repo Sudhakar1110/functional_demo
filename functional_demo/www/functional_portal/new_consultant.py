@@ -41,10 +41,12 @@ def get_context(context):
 		if u.name not in ("Guest", "Administrator") and u.name not in linked
 	]
 
-	context.specializations = [
+	# Templates come from the Consultant Module child table options so the
+	# portal can never drift from what the desk accepts.
+	context.templates = [
 		s
 		for s in (
-			frappe.get_meta("Functional Consultant").get_field("specialization").options or ""
+			frappe.get_meta("Consultant Module").get_field("module").options or ""
 		).split("\n")
 		if s
 	]

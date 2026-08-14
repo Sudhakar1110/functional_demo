@@ -1226,6 +1226,7 @@ def create_consultant_profile(
 	user=None,
 	consultant_name=None,
 	specialization=None,
+	templates=None,
 	experience_years=None,
 	availability=None,
 	email=None,
@@ -1267,12 +1268,27 @@ def create_consultant_profile(
 	if specialization and specialization not in SPECIALIZATIONS:
 		frappe.throw(_("Invalid specialization."))
 
+	# templates = the multi-select template list (Law Management, Hospitality, ...)
+	# saved into the erpnext_modules child table so matching against a demo
+	# request's interested_module works. A single specialization is still
+	# honoured for backward compatibility with the desk-side form.
+	template_list = templates or []
+	if isinstance(template_list, str):
+		template_list = [template_list]
+	if not template_list and specialization:
+		template_list = [specialization]
+
 	doc = frappe.new_doc("Functional Consultant")
 	doc.consultant_name = consultant_name
 	doc.user = user
+	# specialization is a desk-side Select with its own options (Accounting,
+	# CRM, ...) - only set it when the caller explicitly passes a valid one;
+	# templates are what drives consultant-to-demo matching.
 	doc.specialization = specialization or ""
 	doc.status = "Active"
 	doc.availability = availability or "Available"
+	for t in template_list:
+		doc.append("erpnext_modules", {"module": t})
 	if experience_years:
 		try:
 			doc.experience_years = int(experience_years)

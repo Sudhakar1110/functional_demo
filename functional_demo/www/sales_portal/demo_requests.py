@@ -51,3 +51,16 @@ def get_context(context):
 		ignore_permissions=True,
 	) or []
 	context.consultants = [c for c in _consultants if (c.get("status") or "") != "Inactive"]
+
+	# templates per consultant (child table) for the assign dropdown
+	_consultant_names = [c["name"] for c in context.consultants]
+	if _consultant_names:
+		_templates = {}
+		for row in frappe.get_all(
+			"Consultant Module",
+			filters={"parent": ["in", _consultant_names]},
+			fields=["parent", "module"],
+		):
+			_templates.setdefault(row.parent, []).append(row.module)
+		for c in context.consultants:
+			c["modules"] = _templates.get(c["name"]) or []

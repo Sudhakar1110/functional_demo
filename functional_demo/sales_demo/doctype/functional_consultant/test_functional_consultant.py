@@ -13,7 +13,7 @@ def make_consultant(user="Administrator", consultant_name=None, **kwargs):
 	doc.consultant_name = consultant_name or "Test Consultant"
 	doc.user = user
 	doc.specialization = "Accounting"
-	doc.append("erpnext_modules", {"module": "Accounting", "experience_level": "Expert"})
+	doc.append("erpnext_modules", {"module": "Law Management", "experience_level": "Expert"})
 	doc.update(kwargs)
 	doc.insert(ignore_permissions=True)
 	return doc
@@ -23,7 +23,7 @@ class TestFunctionalConsultant(FrappeTestCase):
 	def test_consultant_creation(self):
 		consultant = make_consultant()
 		self.assertEqual(consultant.status, "Active")
-		self.assertEqual(consultant.erpnext_modules[0].module, "Accounting")
+		self.assertEqual(consultant.erpnext_modules[0].module, "Law Management")
 
 	def test_inactive_consultant_flag(self):
 		consultant = make_consultant(consultant_name="Test Consultant 2")

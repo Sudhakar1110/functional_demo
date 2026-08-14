@@ -69,7 +69,7 @@
 							<select id="functional_consultant" name="functional_consultant">
 								<option value="">— Select consultant —</option>
 								{% for c in consultants %}
-								<option value="{{ c.name }}">{{ c.consultant_name }} · {{ c.specialization or 'Generalist' }} · {{ c.availability }}{% if c.experience_years %} · {{ c.experience_years }} yrs exp{% endif %}</option>
+								<option value="{{ c.name }}">{{ c.consultant_name }}{% if c.modules %} · {{ c.modules|join(', ') }}{% else %} · {{ c.specialization or 'Generalist' }}{% endif %} · {{ c.availability }}{% if c.experience_years %} · {{ c.experience_years }} yrs exp{% endif %}</option>
 								{% endfor %}
 							</select>
 							{% if not consultants %}
@@ -164,13 +164,13 @@
 			<div class="portal-card" id="card-assign">
 				<div class="card-head"><h2>Assign Functional Consultant</h2></div>
 				<div class="card-body">
-					<p class="text-muted" style="margin-top: 0;">Pick the consultant for this demo. Only active consultants are shown, with their specialization and current workload.</p>
+					<p class="text-muted" style="margin-top: 0;">Pick the consultant for this demo. Only active consultants are shown, with their templates and current workload.</p>
 					<div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end;">
 						<div style="flex: 1; min-width: 280px;">
 							<select id="assign-consultant">
 								<option value="">— Select consultant —</option>
 								{% for c in consultants %}
-								<option value="{{ c.name }}">{{ c.consultant_name }} · {{ c.specialization or 'Generalist' }} · Availability: {{ c.availability }}{% if c.experience_years %} · {{ c.experience_years }} yrs exp{% endif %}</option>
+								<option value="{{ c.name }}">{{ c.consultant_name }}{% if c.modules %} · {{ c.modules|join(', ') }}{% else %} · {{ c.specialization or 'Generalist' }}{% endif %} · Availability: {{ c.availability }}{% if c.experience_years %} · {{ c.experience_years }} yrs exp{% endif %}</option>
 								{% endfor %}
 							</select>
 						</div>

@@ -61,11 +61,13 @@
 							</div>
 							<div class="form-row">
 								<div>
-									<label>Specialization</label>
-									<select id="con-specialization">
-										<option value="">— Select —</option>
-										{% for s in specializations %}<option value="{{ s }}">{{ s }}</option>{% endfor %}
-									</select>
+									<label>Templates <span class="req">*</span></label>
+									<p class="hint">Choose one or more templates this consultant can demo (e.g. Law Management, Hospitality).</p>
+									<div class="template-grid">
+										{% for t in templates %}
+										<label class="template-chip"><input type="checkbox" name="templates" value="{{ t }}"> {{ t }}</label>
+										{% endfor %}
+									</div>
 								</div>
 								<div>
 									<label>Experience (Years)</label>
@@ -133,17 +135,21 @@
 		e.preventDefault();
 		var btn = document.getElementById("btn-create");
 		var user = document.getElementById("con-user").value;
-		if (!user) { window.portalAlert("Please select a user.", "err"); return; }
-		btn.disabled = true; btn.textContent = "Creating...";
-		window.portalCall("functional_demo.api.create_consultant_profile", {
-			user: user,
-			consultant_name: document.getElementById("con-name").value.trim(),
-			specialization: document.getElementById("con-specialization").value,
-			experience_years: document.getElementById("con-experience").value,
-			availability: document.getElementById("con-availability").value,
-			email: document.getElementById("con-email").value.trim(),
-			notes: document.getElementById("con-notes").value,
-		}).then(function () {
+		if (!user) { window.portalAlert("Please select a user.", "err"); return; }					var templates = Array.prototype.map.call(
+						document.querySelectorAll("input[name='templates']:checked"),
+						function (el) { return el.value; }
+					);
+					if (!templates.length) { window.portalAlert("Please select at least one template.", "err"); btn.disabled = false; return; }
+					btn.disabled = true; btn.textContent = "Creating...";
+					window.portalCall("functional_demo.api.create_consultant_profile", {
+						user: user,
+						consultant_name: document.getElementById("con-name").value.trim(),
+						templates: templates,
+						experience_years: document.getElementById("con-experience").value,
+						availability: document.getElementById("con-availability").value,
+						email: document.getElementById("con-email").value.trim(),
+						notes: document.getElementById("con-notes").value,
+					}).then(function () {
 			window.location.href = "/functional_portal";
 		}).catch(function () {
 			btn.disabled = false; btn.textContent = "Create Consultant Profile";
