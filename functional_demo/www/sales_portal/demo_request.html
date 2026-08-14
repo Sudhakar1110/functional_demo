@@ -33,9 +33,6 @@
 			</a>
 			{% endfor %}
 		</div>
-		<div class="sidebar-footer">
-			<a class="sidebar-desk" href="/app" target="_blank" rel="noopener">Open ERPNext &nearr;</a>
-		</div>
 	</aside>
 	<div class="sidebar-overlay"></div>
 	<div class="portal-main">
@@ -156,7 +153,6 @@
 					</div>
 					<div style="display: flex; gap: 8px; flex-wrap: wrap;">
 						<a class="btn-portal secondary sm" href="/sales_portal/demo_requests">&larr; List</a>
-						<a class="btn-portal secondary sm" href="/app/demo-request/{{ doc.name }}" target="_blank" rel="noopener">Open in ERPNext</a>
 						{% if session_name %}
 						<a class="btn-portal sm" href="/functional_portal/session?name={{ session_name }}">Open Demo Session</a>
 						{% endif %}

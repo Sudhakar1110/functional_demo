@@ -34,9 +34,6 @@
 			</a>
 			{% endfor %}
 		</div>
-		<div class="sidebar-footer">
-			<a class="sidebar-desk" href="/app" target="_blank" rel="noopener">Open ERPNext &nearr;</a>
-		</div>
 	</aside>
 	<div class="sidebar-overlay"></div>
 	<div class="portal-main">
@@ -91,7 +88,7 @@
 						<tbody>
 							{% for lead in leads %}
 							<tr>
-								<td><a href="/app/lead/{{ lead.name }}" target="_blank" rel="noopener">{{ lead.name }}</a></td>
+								<td>{{ lead.name }}</td>
 								<td>{{ lead.lead_name }}</td>
 								<td>{{ lead.company_name or "-" }}</td>
 								<td>{{ lead.email_id or "-" }}</td>

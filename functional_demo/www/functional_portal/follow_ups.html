@@ -33,9 +33,6 @@
 			</a>
 			{% endfor %}
 		</div>
-		<div class="sidebar-footer">
-			<a class="sidebar-desk" href="/app" target="_blank" rel="noopener">Open ERPNext &nearr;</a>
-		</div>
 	</aside>
 	<div class="sidebar-overlay"></div>
 	<div class="portal-main">
@@ -69,7 +66,7 @@
 							{% if fu.demo_session %}
 							<a class="btn-portal sm" href="/functional_portal/session?name={{ fu.demo_session }}">Session</a>
 							{% endif %}
-							<a class="btn-portal secondary sm" href="/app/demo-request/{{ fu.demo_request }}" target="_blank" rel="noopener">Request</a>
+							<a class="btn-portal secondary sm" href="/sales_portal/demo_request?name={{ fu.demo_request }}">Request</a>
 							<button class="btn-portal warning sm" type="button" data-toggle-note="{{ fu.name }}"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg> Update</button>
 						</div>
 

@@ -234,8 +234,12 @@
 				.replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 		}
 		function docHref(n) {
-			if (!n.document_type || !n.document_name) return "/app/notification-log";
-			return "/app/" + esc(n.document_type.replace(/ /g, "-").toLowerCase()) + "/" + esc(n.document_name);
+			/* Stay inside the portal - notification links never open the desk */
+			if (!n.document_type || !n.document_name) return "/demo_portal";
+			if (n.document_type === "Demo Request") return "/sales_portal/demo_request?name=" + esc(n.document_name);
+			if (n.document_type === "Demo Session") return "/functional_portal/session?name=" + esc(n.document_name);
+			if (n.document_type === "Demo Follow Up") return "/functional_portal/follow_ups";
+			return "/demo_portal";
 		}
 		function render(data) {
 			var items = data.items || [];
@@ -256,8 +260,7 @@
 				+ "<span>Notifications</span>"
 				+ (unread ? '<button type="button" class="portal-notif-markall" id="portal-notif-markall">Mark all read</button>' : "")
 				+ "</div>"
-				+ (rows || '<div class="portal-notif-empty">No notifications yet.</div>')
-				+ '<a class="portal-notif-viewall" href="/app/notification-log">View all in ERPNext &rarr;</a>';
+				+ (rows || '<div class="portal-notif-empty">No notifications yet.</div>');
 		}
 		function load() {
 			portalCall("functional_demo.api.get_portal_notifications", {})

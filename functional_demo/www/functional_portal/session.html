@@ -33,9 +33,6 @@
 			</a>
 			{% endfor %}
 		</div>
-		<div class="sidebar-footer">
-			<a class="sidebar-desk" href="/app" target="_blank" rel="noopener">Open ERPNext &nearr;</a>
-		</div>
 	</aside>
 	<div class="sidebar-overlay"></div>
 	<div class="portal-main">
@@ -77,7 +74,6 @@
 					</div>
 					<div style="display: flex; gap: 8px; flex-wrap: wrap;">
 						<a class="btn-portal secondary sm" href="/functional_portal/my_sessions">&larr; My Sessions</a>
-						<a class="btn-portal secondary sm" href="/app/demo-execution#demo_session={{ s.name }}" target="_blank" rel="noopener"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="22" x2="18" y1="12" y2="12"/><line x1="6" x2="2" y1="12" y2="12"/><line x1="12" x2="12" y1="6" y2="2"/><line x1="12" x2="12" y1="22" y2="18"/></svg> Execution Screen</a>
 						{% if s.meeting_link %}
 						<a class="btn-portal sm" href="{{ s.meeting_link }}" target="_blank" rel="noopener"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg> Join Meeting</a>
 						{% endif %}
@@ -230,6 +226,23 @@
 						<div class="detail-item"><div class="d-label">Requirements</div><div class="d-value wrap">{{ r.customer_requirements or "-" }}</div></div>
 						<div class="detail-item"><div class="d-label">Business Processes</div><div class="d-value wrap">{{ r.business_process_requirements or "-" }}</div></div>
 					</div>
+				</div>
+			</div>
+
+			<div class="portal-card">
+				<div class="card-head"><h2>Demo Template{% if data.template and data.template.template_name %} &mdash; {{ data.template.template_name }}{% endif %}</h2></div>
+				<div class="card-body">
+					{% if data.template and data.template.sections %}
+						{% for sec in data.template.sections %}
+						<div style="margin-bottom: 14px; padding: 12px 14px; border-radius: 10px; background: #F8FAFC; border: 1px solid #E2E8F0;">
+							<strong>{{ sec.section }}</strong>
+							<div style="margin-top: 6px; line-height: 1.6; color: #334155;">{{ sec.content }}</div>
+						</div>
+						{% endfor %}
+						{% if data.template.snapshot_date %}<p class="muted" style="margin: 4px 0 0;">Template snapshot taken on {{ data.template.snapshot_date }}.</p>{% endif %}
+					{% else %}
+						<p class="text-muted" style="margin: 0;">No template selected for this session yet.</p>
+					{% endif %}
 				</div>
 			</div>
 
