@@ -84,7 +84,7 @@
    "fetch_if_empty": 1,
    "fieldname": "lead",
    "fieldtype": "Link",
-   "label": "Lead",
+   "label": "Sales Person",
    "options": "Lead",
    "read_only": 1
   },
