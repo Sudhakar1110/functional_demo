@@ -40,15 +40,19 @@ indicators — while the backend follows proper Frappe v15 / ERPNext v15 standar
 - **Converted → Opportunity** — marking a Demo Request *Converted* automatically
   creates an ERPNext **Opportunity** (linked via a custom field) so the win flows
   into the standard sales pipeline.
-- **Role-based access** (row-level permission filters + doc-level checks).
+- **Role-based access** (row-level permission filters + doc-level checks) with a
+  role-aware **web portal**: Sales sees all content, the Functional team sees
+  functional-only sections, and the **Developer** role sees feedback only.
 - **Workspaces** — dedicated **Sales Demo Workspace** and **Functional Demo
   Workspace** with shortcuts, cards, number cards and charts.
-- **13 reports** with filters (demo requests, sessions, consultant-wise,
+- **12 reports** with filters (demo requests, sessions, consultant-wise,
   sales-person-wise, customer history, status, upcoming, completed, follow-ups,
   workload, template usage, module-wise, conversion funnel).
-- **10 notifications** (created, assigned, scheduled, rescheduled, cancelled,
-  starting soon, completed, follow-up required, follow-up due, reassigned) —
-  email + in-app, using Frappe's standard Notification mechanism.
+- **Notifications + emails** — in-app bell notifications (portal + desk) and
+  direct emails built into the workflow code: consultant assignment/reassignment,
+  demo scheduled/rescheduled, started, completed, cancelled, final result,
+  follow-up created, plus a daily day-before-demo reminder and SLA escalation.
+  (Legacy standard Notification doctypes are shipped disabled.)
 - **Audit trail** — track_changes versioning, activity history child table and
   timeline Communication entries.
 - **Schedule-conflict prevention** for consultants.

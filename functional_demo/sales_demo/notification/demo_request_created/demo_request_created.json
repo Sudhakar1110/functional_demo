@@ -1,32 +1,32 @@
 {
- "attach_print": 0,
- "channel": "Email",
- "condition": "doc.status in (\"Draft\", \"Requested\")",
- "creation": "2026-08-11 10:00:00.000000",
- "days_in_advance": 0,
- "docstatus": 0,
- "doctype": "Notification",
- "document_type": "Demo Request",
- "enabled": 1,
- "event": "New",
- "idx": 0,
- "is_standard": 1,
- "message": "<h4>{{ _(\"New Demo Request {0}\").format(doc.name) }}</h4><p>{{ _(\"A new demo request has been created for\") }} <b>{{ doc.customer or doc.lead }}</b>.</p><ul><li>{{ _(\"Sales Person\") }}: {{ doc.sales_person }}</li><li>{{ _(\"Interested Template\") }}: {{ doc.interested_module or \"-\" }}</li><li>{{ _(\"Priority\") }}: {{ doc.priority }}</li><li>{{ _(\"Preferred Date\") }}: {{ doc.preferred_demo_date or \"-\" }}</li></ul><p><a href=\"/app/demo-request/{{ doc.name }}\">{{ _(\"Open Demo Request\") }}</a></p>",
- "message_type": "HTML",
- "modified": "2026-08-11 10:00:00.000000",
- "modified_by": "Administrator",
- "module": "Sales Demo",
- "name": "Demo Request Created",
- "owner": "Administrator",
- "recipients": [
-  {
-   "receiver_by_document_field": "sales_person"
-  },
-  {
-   "receiver_by_role": "Sales Manager"
-  }
- ],
- "send_system_notification": 1,
- "send_to_all_assignees": 0,
- "subject": "{{ _(\"New Demo Request {0} - {1}\").format(doc.name, doc.customer or doc.lead) }}"
+	"attach_print": 0,
+	"channel": "Email",
+	"condition": "doc.status in (\"Draft\", \"Requested\")",
+	"creation": "2026-08-11 10:00:00.000000",
+	"days_in_advance": 0,
+	"docstatus": 0,
+	"doctype": "Notification",
+	"document_type": "Demo Request",
+	"enabled": 0,
+	"event": "New",
+	"idx": 0,
+	"is_standard": 1,
+	"message": "<h4>{{ _(\"New Demo Request {0}\").format(doc.name) }}</h4><p>{{ _(\"A new demo request has been created for\") }} <b>{{ doc.customer or doc.lead }}</b>.</p><ul><li>{{ _(\"Sales Person\") }}: {{ doc.sales_person }}</li><li>{{ _(\"Interested Template\") }}: {{ doc.interested_module or \"-\" }}</li><li>{{ _(\"Priority\") }}: {{ doc.priority }}</li><li>{{ _(\"Preferred Date\") }}: {{ doc.preferred_demo_date or \"-\" }}</li></ul><p><a href=\"/app/demo-request/{{ doc.name }}\">{{ _(\"Open Demo Request\") }}</a></p>",
+	"message_type": "HTML",
+	"modified": "2026-08-14 12:00:00.000000",
+	"modified_by": "Administrator",
+	"module": "Sales Demo",
+	"name": "Demo Request Created",
+	"owner": "Administrator",
+	"recipients": [
+		{
+			"receiver_by_document_field": "sales_person"
+		},
+		{
+			"receiver_by_role": "Sales Manager"
+		}
+	],
+	"send_system_notification": 1,
+	"send_to_all_assignees": 0,
+	"subject": "{{ _(\"New Demo Request {0} - {1}\").format(doc.name, doc.customer or doc.lead) }}"
 }

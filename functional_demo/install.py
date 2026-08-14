@@ -37,7 +37,9 @@ def after_migrate():
 	backfill_session_consultants()
 	move_approved_requests_forward()
 	sync_sales_workspace()
+	import_module_docs()
 	create_developer_user()
+	disable_legacy_notifications()
 
 
 def backfill_consultant_statuses():
@@ -233,13 +235,42 @@ def move_approved_requests_forward():
 	frappe.db.commit()
 
 
+def disable_legacy_notifications():
+	"""Disable the legacy standard Notification doctypes shipped before the
+	custom notification path (create_notification + direct email) replaced
+	them. Both systems used to fire on the same events - e.g. 'Demo Scheduled'
+	would email AND bell the sales person and consultant twice. The JSON files
+	are already synced with enabled=0; this is a belt-and-braces step that
+	force-disables any record left enabled on an already-installed site."""
+	legacy = [
+		"Consultant Assigned",
+		"Consultant Reassigned",
+		"Demo Cancelled",
+		"Demo Completed",
+		"Demo Request Created",
+		"Demo Rescheduled",
+		"Demo Scheduled",
+		"Demo Starting Soon",
+		"Follow-up Due",
+		"Follow-up Required",
+	]
+	for name in legacy:
+		if frappe.db.exists("Notification", name):
+			cur = frappe.db.get_value("Notification", name, "enabled")
+			if cur:
+				frappe.db.set_value("Notification", name, "enabled", 0)
+	frappe.db.commit()
+
+
 def create_developer_user():
 	"""Idempotently create the 'developer' user with the Developer role.
 
 	The Developer role sees only the portal Feedback page (feedback-only
 	access). The user is created on first migrate if missing; if the user
-	already exists the Developer role is just ensured. Default password is
-	'Developer@123' - change it after first login.
+	already exists the Developer role is just ensured. The initial password
+	is randomly generated and printed to the console (and stored on the user)
+	so there is never a hardcoded default credential in the codebase - the
+	operator sets a proper password afterwards if needed.
 	"""
 	if not frappe.db.exists("User", "developer"):
 		try:
@@ -248,11 +279,15 @@ def create_developer_user():
 			doc.first_name = "Developer"
 			doc.username = "developer"
 			doc.enabled = 1
-			doc.new_password = "Developer@123"
+			password = frappe.generate_hash(length=12)
+			doc.new_password = password
 			doc.send_welcome_email = 0
 			doc.add_roles("Developer")
 			doc.insert(ignore_permissions=True)
-			print("Created User: developer (role: Developer, default password: Developer@123)")
+			print(
+				f"Created User: developer (role: Developer, generated password: {password}) - "
+				"change it after first login."
+			)
 		except Exception:
 			frappe.log_error(
 				title=_("functional_demo: failed to create the developer user"),

@@ -1,33 +1,33 @@
 {
- "attach_print": 0,
- "channel": "Email",
- "condition": "doc.status in ('Open', 'In Progress')",
- "creation": "2026-08-11 10:00:00.000000",
- "days_in_advance": 0,
- "docstatus": 0,
- "doctype": "Notification",
- "document_type": "Demo Follow Up",
- "enabled": 1,
- "event": "Days Before",
- "idx": 0,
- "is_standard": 1,
- "message": "<h4>{{ _(\"Follow-up Due\") }}</h4><p>{{ _(\"Your follow-up for\") }} <b>{{ doc.customer or doc.demo_request }}</b> {{ _(\"is due today.\") }}</p><ul><li>{{ _(\"Demo Request\") }}: {{ doc.demo_request }}</li><li>{{ _(\"Next Action\") }}: {{ doc.next_action or \"-\" }}</li></ul><p><a href=\"/app/demo-follow-up/{{ doc.name }}\">{{ _(\"Open Follow-up\") }}</a></p>",
- "message_type": "HTML",
- "modified": "2026-08-11 10:00:00.000000",
- "modified_by": "Administrator",
- "module": "Sales Demo",
- "name": "Follow-up Due",
- "owner": "Administrator",
- "recipients": [
-  {
-   "receiver_by_document_field": "assigned_to"
-  },
-  {
-   "receiver_by_role": "Sales Manager"
-  }
- ],
- "send_system_notification": 1,
- "send_to_all_assignees": 0,
- "subject": "{{ _(\"Follow-up Due Today: {0}\").format(doc.customer or doc.demo_request) }}",
- "date_changed": "follow_up_date"
+	"attach_print": 0,
+	"channel": "Email",
+	"condition": "doc.status in ('Open', 'In Progress')",
+	"creation": "2026-08-11 10:00:00.000000",
+	"days_in_advance": 0,
+	"docstatus": 0,
+	"doctype": "Notification",
+	"document_type": "Demo Follow Up",
+	"enabled": 0,
+	"event": "Days Before",
+	"idx": 0,
+	"is_standard": 1,
+	"message": "<h4>{{ _(\"Follow-up Due\") }}</h4><p>{{ _(\"Your follow-up for\") }} <b>{{ doc.customer or doc.demo_request }}</b> {{ _(\"is due today.\") }}</p><ul><li>{{ _(\"Demo Request\") }}: {{ doc.demo_request }}</li><li>{{ _(\"Next Action\") }}: {{ doc.next_action or \"-\" }}</li></ul><p><a href=\"/app/demo-follow-up/{{ doc.name }}\">{{ _(\"Open Follow-up\") }}</a></p>",
+	"message_type": "HTML",
+	"modified": "2026-08-14 12:00:00.000000",
+	"modified_by": "Administrator",
+	"module": "Sales Demo",
+	"name": "Follow-up Due",
+	"owner": "Administrator",
+	"recipients": [
+		{
+			"receiver_by_document_field": "assigned_to"
+		},
+		{
+			"receiver_by_role": "Sales Manager"
+		}
+	],
+	"send_system_notification": 1,
+	"send_to_all_assignees": 0,
+	"subject": "{{ _(\"Follow-up Due Today: {0}\").format(doc.customer or doc.demo_request) }}",
+	"date_changed": "follow_up_date"
 }

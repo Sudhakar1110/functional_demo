@@ -89,8 +89,8 @@
 	/* Call a whitelisted API method: window.portalCall("functional_demo.api.x", {..}) */
 	window.portalCall = function (method, args, opts) {
 		/* opts.silent: background/polling calls must never pop an error modal -
-		   the caller decides (e.g. the chat page polls every 5s and should stay
-		   quiet even if the endpoint is temporarily unavailable). */
+		   the caller decides (e.g. silent background refreshes should stay quiet
+		   even if the endpoint is temporarily unavailable). */
 		opts = opts || {};
 		return csrfReady().then(function (token) {
 			return fetch("/api/method/" + method, {
@@ -282,8 +282,7 @@
 			if (!open) load();
 		});
 
-		/* keep the badge fresh while the user is on the page (e.g. new chat
-		   messages arriving) without any interaction */
+		/* keep the badge fresh while the user is on the page without any interaction */
 		setInterval(load, 30000);
 		document.addEventListener("click", function (e) {
 			if (!wrap.contains(e.target)) panel.style.display = "none";
