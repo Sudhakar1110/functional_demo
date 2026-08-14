@@ -75,7 +75,7 @@
 								<div>
 									<label>Status</label>
 									<select id="status" name="status">
-										{% for s in status_options %}<option value="{{ s }}" {% if s == "Lead" %}selected{% endif %}>{{ s }}</option>{% endfor %}
+										{% for s in status_options %}<option value="{{ s }}" {% if s == "Lead" %}selected{% endif %}>{{ "Sales Person" if s == "Lead" else s }}</option>{% endfor %}
 									</select>
 								</div>
 							</div>

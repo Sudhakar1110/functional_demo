@@ -34,6 +34,9 @@ def get_context(context):
 	) or []
 	for lead in context.leads:
 		lead["created_display"] = frappe.utils.format_date(lead.get("creation"), "medium") if lead.get("creation") else "-"
+		# The ERPNext Lead doctype stores its default status as "Lead"; show it
+		# as "Sales Person" in the portal (stored value stays untouched).
+		lead["status_display"] = "Sales Person" if lead.get("status") == "Lead" else (lead.get("status") or "-")
 	context.q = q
 	context.status = status
 	context.status_options = LEAD_STATUSES

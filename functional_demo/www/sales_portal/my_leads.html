@@ -54,7 +54,7 @@
 							<select name="status">
 								<option value="">All statuses</option>
 								{% for s in status_options %}
-								<option value="{{ s }}" {% if status == s %}selected{% endif %}>{{ s }}</option>
+								<option value="{{ s }}" {% if status == s %}selected{% endif %}>{{ "Sales Person" if s == "Lead" else s }}</option>
 								{% endfor %}
 							</select>
 						</div>
@@ -93,7 +93,7 @@
 								<td>{{ lead.company_name or "-" }}</td>
 								<td>{{ lead.email_id or "-" }}</td>
 								<td>{{ lead.source or "-" }}</td>
-								<td><span class="badge b-{{ lead.status|lower|replace(' ', '-') }}">{{ lead.status }}</span></td>
+								<td><span class="badge b-{{ lead.status|lower|replace(' ', '-') }}">{{ lead.status_display }}</span></td>
 								<td class="muted">{{ lead.created_display }}</td>
 								<td><a class="btn-portal sm" href="/sales_portal/demo_request?new=1&lead={{ lead.name }}">Demo Request &rarr;</a></td>
 							</tr>
