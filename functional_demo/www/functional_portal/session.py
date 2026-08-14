@@ -21,9 +21,10 @@ def get_context(context):
 		context.missing = True
 		return context
 
-	# get_demo_execution_data enforces document-level read permission. When the
-	# page is opened from Demo Feedback or Results for a session the current
-	# user cannot read, show a friendly card instead of a raw error.
+	# get_demo_execution_data lets every portal role view session details
+	# read-only (Demo Feedback / Results list every session). An error here
+	# means the session is missing/invalid - show a friendly card instead of
+	# a raw error.
 	try:
 		data = get_demo_execution_data(name)
 	except Exception:

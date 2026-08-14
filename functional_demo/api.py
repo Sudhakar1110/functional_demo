@@ -668,8 +668,25 @@ def get_demo_execution_data(demo_session=None):
 			_("Demo Session is missing. Please refresh the page and try again."),
 			title=_("Missing Session"),
 		)
+	# Session details are shared reference data - Demo Feedback / Results list
+	# every session, so any portal role may open a session's details read-only
+	# (demo ID, template, consultant, requirements). Write actions stay gated
+	# by can_write below, so document-level read permission is not enforced
+	# here.
+	from functional_demo.portal import is_developer, is_functional, is_manager, is_sales
+
 	ds = frappe.get_doc("Demo Session", demo_session)
-	frappe.has_permission("Demo Session", "read", doc=ds, throw=True)
+	if not (
+		frappe.session.user == "Administrator"
+		or is_sales()
+		or is_functional()
+		or is_manager()
+		or is_developer()
+	):
+		frappe.throw(
+			_("You do not have permission to view this demo session."),
+			frappe.PermissionError,
+		)
 
 	request_doc = frappe.get_doc("Demo Request", ds.demo_request) if ds.demo_request else None
 	consultant = None
