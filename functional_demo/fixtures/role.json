@@ -23,7 +23,7 @@
 		"docstatus": 0,
 		"doctype": "Role",
 		"is_custom": 0,
-		"name": "Developer",
-		"role_name": "Developer"
+		"name": "Feedback Viewer",
+		"role_name": "Feedback Viewer"
 	}
 ]

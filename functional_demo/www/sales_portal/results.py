@@ -4,7 +4,7 @@
 import frappe
 from frappe import _
 
-from functional_demo.portal import portal_context, sales_stats
+from functional_demo.portal import list_note, portal_context, sales_stats
 
 
 def get_context(context):
@@ -25,17 +25,25 @@ def get_context(context):
 			"final_result", "functional_consultant", "demo_request",
 		],
 		order_by="scheduled_date desc",
-		limit_page_length=100,
+		limit_page_length=1000,
 	) or []
 	context.converted = frappe.get_all(
 		"Demo Request",
 		filters={"status": "Converted"},
 		fields=["name", "customer", "lead", "functional_consultant", "priority", "creation"],
 		order_by="creation desc",
-		limit_page_length=50,
+		limit_page_length=1000,
 	) or []
 	for c in context.converted:
 		c["creation_display"] = (
 			frappe.utils.format_date(c.get("creation"), "medium") if c.get("creation") else "-"
 		)
+	context.list_note = list_note(
+		len(context.results),
+		frappe.db.count(
+			"Demo Session",
+			{"demo_status": ["in", ["Completed", "Follow-up Required", "Closed"]]},
+		),
+		_("completed demos"),
+	)
 	return context

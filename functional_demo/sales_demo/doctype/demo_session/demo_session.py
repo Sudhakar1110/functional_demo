@@ -80,7 +80,7 @@ class DemoSession(Document):
 		"""Prevent overlapping demos for the same consultant on the same date."""
 		if not (self.functional_consultant and self.scheduled_date):
 			return
-		if self.demo_status not in ("Scheduled", "In Progress"):
+		if self.demo_status not in ("Scheduled", "Rescheduled", "In Progress"):
 			return
 		conflicts = frappe.db.sql(
 			"""
@@ -115,6 +115,12 @@ class DemoSession(Document):
 		old_template = self.db_get("demo_template")
 		if not self.demo_template:
 			return
+		# Auto-fill the agenda from the template so the session form and the
+		# execution screen always show it without the consultant retyping it.
+		if not self.agenda:
+			self.agenda = frappe.db.get_value(
+				"Functional Demo Template", self.demo_template, "demo_agenda"
+			)
 		if old_template != self.demo_template or not self.template_sections:
 			self.template_sections = []
 			for section in get_template_snapshot(self.demo_template):
@@ -263,7 +269,7 @@ class DemoSession(Document):
 		actions and sessions created from the desk form. A failure is logged
 		but never blocks the scheduling."""
 		try:
-			if self.demo_status != "Scheduled":
+			if self.demo_status not in ("Scheduled", "Rescheduled"):
 				return
 			consultant_name = (
 				frappe.db.get_value("Functional Consultant", self.functional_consultant, "consultant_name")
@@ -552,7 +558,28 @@ class DemoSession(Document):
 # demo actions
 # ------------------------------------------------------------------
 
+	def _guard_consultant_action(self, allow_cancel=False):
+		"""Demo execution actions (start / complete / cancel / final result) are
+		functional-team actions. Sales users may only cancel a session that is
+		still Scheduled (matching the request workflow, where Sales User can
+		cancel before the demo starts); Sales Managers may also cancel an
+		in-progress demo. Everyone else must be a functional role."""
+		if allow_cancel:
+			if can_cancel_session(self):
+				return
+			frappe.throw(
+				_("You do not have permission to cancel this demo."),
+				frappe.PermissionError,
+			)
+		if can_execute_session_action(self):
+			return
+		frappe.throw(
+			_("Only Functional Consultants can perform this action."),
+			frappe.PermissionError,
+		)
+
 	def start_demo(self):
+		self._guard_consultant_action()
 		if self.demo_status in ("Completed", "Cancelled", "Closed"):
 			frappe.throw(
 				_("A {0} demo cannot be started. Please create a new session.").format(
@@ -565,6 +592,7 @@ class DemoSession(Document):
 		self.notify_sales_started()
 
 	def complete_demo(self, feedback=None):
+		self._guard_consultant_action()
 		if self.demo_status != "In Progress":
 			frappe.throw(
 				_("Please start the demo first (use 'Start Demo'), then complete it."),
@@ -618,6 +646,7 @@ class DemoSession(Document):
 		self.notify_sales_completed()
 
 	def cancel_demo(self, reason=None):
+		self._guard_consultant_action(allow_cancel=True)
 		if self.demo_status == "Completed":
 			frappe.throw(_("A completed demo cannot be cancelled."), title=_("Cannot Cancel"))
 		self.demo_status = "Cancelled"
@@ -634,7 +663,9 @@ class DemoSession(Document):
 		self.end_time = end_time
 		self.meeting_link = meeting_link or self.meeting_link
 		self.reschedule_count = int(self.reschedule_count or 0) + 1
-		self.demo_status = "Scheduled"
+		# mark the session as Rescheduled so it is clearly distinguishable from
+		# a first-time schedule (it is still an active, startable session)
+		self.demo_status = "Rescheduled"
 		self.save(ignore_permissions=True)
 		self.log_request_activity(
 			"Demo Rescheduled", remarks="Session {0} rescheduled to {1}".format(self.name, scheduled_date)
@@ -689,6 +720,7 @@ class DemoSession(Document):
 		return fu
 
 	def set_final_result(self, result):
+		self._guard_consultant_action()
 		allowed = ("Pending", "Converted", "Not Interested", "Closed")
 		if result not in allowed:
 			frappe.throw(_("Invalid result. Choose from {0}.").format(", ".join(allowed)))
@@ -785,6 +817,31 @@ class DemoSession(Document):
 # helpers
 # ------------------------------------------------------------------
 
+def can_execute_session_action(session, user=None):
+	"""True when the user may run consultant actions (start / complete / final
+	result) on a Demo Session. Functional roles and site admins only - sales
+	users create, schedule and follow up, they do not execute demos."""
+	user = user or frappe.session.user
+	if user == "Administrator":
+		return True
+	roles = frappe.get_roles(user)
+	return bool(set(roles) & {"System Manager", "Functional Consultant", "Functional Team Manager"})
+
+
+def can_cancel_session(session, user=None):
+	"""True when the user may cancel a Demo Session: functional roles and
+	Sales Managers always; a plain Sales User only while the session is still
+	Scheduled (mirrors the request workflow, which lets Sales User cancel
+	before the demo starts)."""
+	user = user or frappe.session.user
+	if user == "Administrator":
+		return True
+	roles = frappe.get_roles(user)
+	if set(roles) & {"System Manager", "Functional Consultant", "Functional Team Manager", "Sales Manager"}:
+		return True
+	return "Sales User" in roles and session.demo_status == "Scheduled"
+
+
 def times_overlap(start1, end1, start2, end2):
 	"""Return True if two HH:MM:SS time ranges overlap (missing end = same time)."""
 	s1 = _to_seconds(start1)
@@ -861,22 +918,34 @@ def send_demo_reminders():
 	"""Daily job: remind the consultant and the sales person (in-app
 	notification + email) about every demo scheduled for tomorrow.
 
-	Idempotent: a session is only reminded once per target date - rescheduling
-	to a different day triggers a fresh reminder for the new date."""
+	Idempotent: a session is only reminded once per target date, tracked in
+	Demo Session.last_reminder_date - rescheduling to a different day triggers
+	a fresh reminder for the new date, and re-runs of the same job never
+	double-send. (The previous subject-text match was brittle: it could
+	suppress a reminder when a 'demo scheduled' email happened to mention the
+	same date.)"""
 	if not frappe.db.exists("DocType", "Demo Session"):
 		return
 	tomorrow = frappe.utils.add_days(frappe.utils.today(), 1)
 	sessions = frappe.get_all(
 		"Demo Session",
-		filters={"demo_status": "Scheduled", "scheduled_date": tomorrow},
+		filters={
+			"demo_status": ["in", ["Scheduled", "Rescheduled"]],
+			"scheduled_date": tomorrow,
+		},
 		fields=[
 			"name", "customer", "lead", "demo_request", "sales_person",
 			"functional_consultant", "start_time", "end_time", "meeting_link",
+			"last_reminder_date",
 		],
 		limit_page_length=500,
 	) or []
 	sent = 0
 	for row in sessions:
+		# date fields come back as date objects on some drivers and as strings
+		# on others - normalize before comparing
+		if str(row.get("last_reminder_date") or "")[:10] == str(tomorrow)[:10]:
+			continue
 		sent += _send_session_reminder(row, tomorrow)
 	if sent:
 		frappe.db.commit()
@@ -915,8 +984,6 @@ def _send_session_reminder(row, tomorrow):
 
 	sent = 0
 	for user in {r for r in recipients if r and r != "Guest"}:
-		if _reminder_already_sent(user, row.name, tomorrow):
-			continue
 		create_notification(user, subject, "Demo Session", row.name)
 		sent += 1
 		email = frappe.db.get_value("User", user, "email")
@@ -936,21 +1003,10 @@ def _send_session_reminder(row, tomorrow):
 				title=_("Reminder email to {0} failed for {1}").format(user, row.name),
 				message=frappe.get_traceback(),
 			)
+	# remember the target date so the next run of the daily job skips this
+	# session (dedupe is per session-day, not per user)
+	frappe.db.set_value("Demo Session", row.name, "last_reminder_date", tomorrow)
 	return sent
-
-
-def _reminder_already_sent(user, session_name, tomorrow):
-	"""True when a reminder for this session's target date already exists for
-	the user (dedupes repeated daily-job runs / same-day reschedules)."""
-	return frappe.db.exists(
-		"Notification Log",
-		{
-			"for_user": user,
-			"document_type": "Demo Session",
-			"document_name": session_name,
-			"subject": ["like", "%{0}%".format(tomorrow)],
-		},
-	)
 
 
 # ------------------------------------------------------------------
@@ -959,16 +1015,16 @@ def _reminder_already_sent(user, session_name, tomorrow):
 
 def get_permission_query_conditions(user=None):
 	"""Consultants see only their own sessions; sales users see sessions of their
-	requests; managers see everything. The read-only Developer role is NOT
+	requests; managers see everything. The read-only Feedback Viewer role is NOT
 	bypassed here - Feedback reads sessions directly with ignore_permissions."""
 	user = user or frappe.session.user
 	if not user or user == "Administrator":
 		return ""
 	roles = frappe.get_roles(user)
-	# Managers still see everything; the read-only Developer role must NOT
+	# Managers still see everything; the read-only Feedback Viewer role must NOT
 	# bypass the list filter (it only needs Feedback, which reads sessions
 	# directly with ignore_permissions). A consultant who also carries the
-	# Developer role must still see only their own sessions.
+	# Feedback Viewer role must still see only their own sessions.
 	if any(r in roles for r in ("System Manager", "Sales Manager", "Functional Team Manager")):
 		return ""
 	if "Functional Consultant" in roles:
@@ -993,8 +1049,8 @@ def has_permission(doc, ptype="read", user=None):
 	roles = frappe.get_roles(user)
 	if any(r in roles for r in ("System Manager", "Sales Manager", "Functional Team Manager")):
 		return True
-	if "Developer" in roles:
-		# Developer is read-only: it can open session details (from Demo
+	if "Feedback Viewer" in roles:
+		# Feedback Viewer is read-only: it can open session details (from Demo
 		# Feedback) but never start/complete/cancel a demo.
 		return ptype == "read"
 	if "Functional Consultant" in roles:

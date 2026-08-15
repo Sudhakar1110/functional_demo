@@ -42,7 +42,7 @@ indicators — while the backend follows proper Frappe v15 / ERPNext v15 standar
   into the standard sales pipeline.
 - **Role-based access** (row-level permission filters + doc-level checks) with a
   role-aware **web portal**: Sales sees all content, the Functional team sees
-  functional-only sections, and the **Developer** role sees feedback only.
+  functional-only sections, and the **Feedback Viewer** role sees feedback only.
 - **Workspaces** — dedicated **Sales Demo Workspace** and **Functional Demo
   Workspace** with shortcuts, cards, number cards and charts.
 - **12 reports** with filters (demo requests, sessions, consultant-wise,
@@ -92,7 +92,8 @@ The install automatically creates:
   (`Sales User` / `Sales Manager` come from ERPNext).
 - The **Demo Request Workflow** (active by default).
 - Doctypes, Reports, Notifications, Workspaces, Number Cards, Dashboard Charts.
-- A daily scheduled job that marks overdue follow-ups.
+- A daily scheduled job that marks overdue follow-ups (and notifies the
+  assignee / sales person).
 
 ## Sample data
 
@@ -167,11 +168,17 @@ execution screen.
 
 ## Notifications
 
-Shipped as standard Notification records (enable/disable them from
-**Notifications** in the awesome bar). Sending requires outgoing email to be
-configured; in-app notifications work out of the box. **Demo Starting Soon** and
-**Follow-up Due** use the "days before" mechanism and fire once per day when the
-scheduler runs.
+Notifications are built into the workflow code: every event (consultant
+assigned/reassigned, demo scheduled/rescheduled, demo started, completed,
+cancelled, final result, follow-up created/overdue, follow-up marked
+*Additional Demo Required*, the day-before-demo reminder and SLA escalation)
+sends an **in-app notification** (portal bell + desk bell, via Notification Log)
+and a **direct email** to the affected people. Emails require outgoing mail to
+be configured; in-app notifications work out of the box.
+
+The legacy standard Notification doctypes shipped in earlier versions are still
+present but are **disabled** (`enabled = 0`) — do not enable them, they would
+double-send alongside the code-based notifications.
 
 ## Permissions model
 
@@ -182,10 +189,13 @@ scheduler runs.
   completes demos and records feedback.
 - **Functional Team Manager**: all consultants, all sessions, templates, workload,
   reassignments.
+- **Feedback Viewer**: read-only portal access to the Demo Feedback page.
 - **System Manager**: full access.
 
 Row-level filters (`permission_query_conditions`) and doc-level checks
-(`has_permission`) are defined in each doctype controller.
+(`has_permission`) are defined in each doctype controller. Demo execution
+actions (start / complete / cancel / final result) are additionally gated in
+the Demo Session controller so only functional-team users can run them.
 
 ## Development
 
@@ -246,12 +256,13 @@ functional_demo/
 │   ├── fixtures/        # Role + Workflow fixtures (synced on install/migrate)
 │   ├── sales_demo/
 │   │   ├── doctype/     # DocTypes + controllers + tests
-│   │   ├── report/      # 13 script reports
-│   │   ├── notification/# 10 standard notifications
+│   │   ├── report/      # 12 script reports
+│   │   ├── notification/# 10 legacy notifications (shipped disabled)
+│   │   ├── page/        # Demo Execution + Demo Feedback desk pages
 │   │   ├── workspace/   # 2 workspaces
 │   │   ├── dashboard_chart/  # charts
 │   │   └── number_card/ # number cards
-│   ├── public/js/       # client scripts + Demo Execution page
+│   ├── public/js/       # client scripts (form + list customizations)
 │   └── modules.txt, patches.txt
 ├── pyproject.toml       # pip packaging (bench installs the app editable)
 └── setup.py

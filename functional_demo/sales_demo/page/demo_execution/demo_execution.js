@@ -194,23 +194,26 @@ frappe.pages["demo-execution"].on_page_load = function (wrapper) {
 		const session = data.session || {};
 		const status = session.demo_status;
 		const can_write = data.can_write;
+		const can_execute = data.can_execute;
+		const can_cancel = data.can_cancel;
 		if (!can_write) return "";
 
 		const buttons = [];
 		const push = (label, cls, action) => buttons.push(`<button class="btn ${cls}" data-action="${action}">${label}</button>`);
 
-		if (status === "Scheduled") {
-			push(__("Start Demo"), "btn-primary", "start");
+		// a Rescheduled session is still active and startable
+		if (["Scheduled", "Rescheduled"].includes(status)) {
+			if (can_execute) push(__("Start Demo"), "btn-primary", "start");
 			push(__("Reschedule"), "btn-default", "reschedule");
-			push(__("Cancel Demo"), "btn-danger", "cancel");
+			if (can_cancel) push(__("Cancel Demo"), "btn-danger", "cancel");
 		}
 		if (status === "In Progress") {
-			push(__("Complete Demo"), "btn-primary", "complete");
-			push(__("Cancel Demo"), "btn-danger", "cancel");
+			if (can_execute) push(__("Complete Demo"), "btn-primary", "complete");
+			if (can_cancel) push(__("Cancel Demo"), "btn-danger", "cancel");
 		}
 		if (["Completed", "Follow-up Required"].includes(status)) {
 			push(__("Create Follow-up"), "btn-primary", "follow_up");
-			push(__("Set Final Result"), "btn-secondary", "result");
+			if (can_execute) push(__("Set Final Result"), "btn-secondary", "result");
 		}
 		push(__("Open Session Form"), "btn-default", "open_form");
 		push(__("Refresh"), "btn-default", "refresh");

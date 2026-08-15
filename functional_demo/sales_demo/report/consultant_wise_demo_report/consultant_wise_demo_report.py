@@ -35,7 +35,7 @@ def execute(filters=None):
 			sum(case when demo_status = 'In Progress' then 1 else 0 end) as in_progress,
 			sum(case when demo_status = 'Completed' then 1 else 0 end) as completed,
 			sum(case when demo_status = 'Cancelled' then 1 else 0 end) as cancelled,
-			sum(case when demo_status in ('Follow-up Required') then 1 else 0 end) as follow_ups,
+			(select count(*) from `tabDemo Follow Up` fu where fu.demo_session = `tabDemo Session`.name) as follow_ups,
 			sum(case when final_result = 'Converted' then 1 else 0 end) as converted
 		from `tabDemo Session`
 		where {conditions}

@@ -79,7 +79,7 @@ def create_roles():
 	"""Create the custom roles used by this app (idempotent).
 
 	Note: 'Sales User' and 'Sales Manager' are standard ERPNext roles and are
-	reused as-is. Only the functional team roles and Developer are custom.
+	reused as-is. Only the functional team roles and Feedback Viewer are custom.
 	"""
 	from functional_demo.roles import ROLES
 
@@ -263,14 +263,16 @@ def disable_legacy_notifications():
 
 
 def create_developer_user():
-	"""Idempotently create the 'developer' user with the Developer role.
+	"""Idempotently create the 'developer' user with the Feedback Viewer role.
 
-	The Developer role sees only the portal Feedback page (feedback-only
+	The Feedback Viewer role sees only the portal Feedback page (feedback-only
 	access). The user is created on first migrate if missing; if the user
-	already exists the Developer role is just ensured. The initial password
-	is randomly generated and printed to the console (and stored on the user)
-	so there is never a hardcoded default credential in the codebase - the
-	operator sets a proper password afterwards if needed.
+	already exists the Feedback Viewer role is just ensured (and the legacy
+	'Developer' role this app used to repurpose is removed again - it is a
+	standard Frappe role that must keep its normal meaning). The initial
+	password is randomly generated and printed to the console (and stored on
+	the user) so there is never a hardcoded default credential in the
+	codebase - the operator sets a proper password afterwards if needed.
 	"""
 	if not frappe.db.exists("User", "developer"):
 		try:
@@ -282,10 +284,10 @@ def create_developer_user():
 			password = frappe.generate_hash(length=12)
 			doc.new_password = password
 			doc.send_welcome_email = 0
-			doc.add_roles("Developer")
+			doc.add_roles("Feedback Viewer")
 			doc.insert(ignore_permissions=True)
 			print(
-				f"Created User: developer (role: Developer, generated password: {password}) - "
+				f"Created User: developer (role: Feedback Viewer, generated password: {password}) - "
 				"change it after first login."
 			)
 		except Exception:
@@ -295,15 +297,37 @@ def create_developer_user():
 			)
 			return
 	else:
-		if "Developer" not in frappe.get_roles("developer"):
-			user = frappe.get_doc("User", "developer")
-			user.add_roles("Developer")
+		user = frappe.get_doc("User", "developer")
+		roles = set(frappe.get_roles("developer"))
+		if "Feedback Viewer" not in roles:
+			user.add_roles("Feedback Viewer")
+		if "Developer" in roles:
+			# legacy migration: the role was renamed so the standard Frappe
+			# 'Developer' role is no longer repurposed by this app
+			user.remove_roles("Developer")
+		if "Feedback Viewer" not in roles or "Developer" in roles:
 			user.save(ignore_permissions=True)
 
 
 def mark_overdue_follow_ups():
-	"""Daily job: mark Demo Follow Ups as Overdue once the date has passed."""
+	"""Daily job: mark Demo Follow Ups as Overdue once the date has passed,
+	and notify the assignee + sales person so an overdue follow-up is never
+	silently forgotten."""
 	if not frappe.db.exists("DocType", "Demo Follow Up"):
+		return
+	overdue = frappe.get_all(
+		"Demo Follow Up",
+		filters=[
+			["status", "in", ["Open", "In Progress"]],
+			["follow_up_date", "<", frappe.utils.today()],
+		],
+		fields=[
+			"name", "demo_request", "customer", "assigned_to", "sales_person",
+			"follow_up_date",
+		],
+		limit_page_length=500,
+	) or []
+	if not overdue:
 		return
 	frappe.db.sql(
 		"""update `tabDemo Follow Up`
@@ -313,3 +337,49 @@ def mark_overdue_follow_ups():
 		frappe.utils.today(),
 	)
 	frappe.db.commit()
+	for row in overdue:
+		_notify_overdue_follow_up(row)
+	frappe.db.commit()
+
+
+def _notify_overdue_follow_up(row):
+	"""In-app notification + email about one overdue follow-up."""
+	from functional_demo.portal import create_notification
+
+	party = row.get("customer") or row.get("demo_request") or row.get("name")
+	subject = _("Follow-up overdue: {0} (due {1})").format(
+		party, row.get("follow_up_date")
+	)
+	message = _(
+		"Hi,\n\n"
+		"Follow-up {0} for {1} was due on {2} and is now overdue.\n\n"
+		"Open the follow-up: {3}\n"
+	).format(
+		row.get("name"),
+		party,
+		row.get("follow_up_date"),
+		frappe.utils.get_url("/app/demo-follow-up/{0}".format(row.get("name"))),
+	)
+	for user in {row.get("assigned_to"), row.get("sales_person")}:
+		if not user or user == "Guest":
+			continue
+		create_notification(user, subject, "Demo Follow Up", row.get("name"))
+		email = frappe.db.get_value("User", user, "email")
+		if not email:
+			continue
+		try:
+			frappe.sendmail(
+				recipients=[email],
+				subject=subject,
+				message=message,
+				reference_doctype="Demo Follow Up",
+				reference_name=row.get("name"),
+				now=True,
+			)
+		except Exception:
+			frappe.log_error(
+				title=_("Overdue follow-up email to {0} failed for {1}").format(
+					user, row.get("name")
+				),
+				message=frappe.get_traceback(),
+			)

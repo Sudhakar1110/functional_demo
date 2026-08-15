@@ -53,6 +53,16 @@ function render_template_preview(frm) {
 
 function add_session_actions(frm) {
 	const status = frm.doc.demo_status;
+	// consultant actions (start / complete / final result) are server-gated;
+	// hide the buttons for roles that would be rejected. Sales users may
+	// cancel a Scheduled session; Sales Managers may also cancel in-progress.
+	const canExecute =
+		frappe.session.user === "Administrator" ||
+		frappe.user.has_role(["Functional Consultant", "Functional Team Manager", "System Manager"]);
+	const canCancel =
+		canExecute ||
+		frappe.user.has_role("Sales Manager") ||
+		(frappe.user.has_role("Sales User") && status === "Scheduled");
 
 	frm.page.remove_inner_button("Start Demo");
 	frm.page.remove_inner_button("Complete Demo");
@@ -66,8 +76,9 @@ function add_session_actions(frm) {
 		frappe.set_route("demo-execution", { demo_session: frm.doc.name });
 	}, __("Actions"));
 
-	if (["Scheduled", "In Progress"].includes(status)) {
-		if (status === "Scheduled") {
+	// a Rescheduled session is still active and startable
+	if (["Scheduled", "Rescheduled"].includes(status)) {
+		if (canExecute) {
 			frm.page.add_inner_button(__("Start Demo"), () => {
 				frappe.call({
 					method: "functional_demo.api.start_demo_session",
@@ -78,6 +89,10 @@ function add_session_actions(frm) {
 				});
 			}, __("Actions"));
 		}
+		frm.page.add_inner_button(__("Reschedule"), () => reschedule_dialog(frm), __("Actions"));
+	}
+
+	if (["Scheduled", "Rescheduled", "In Progress"].includes(status) && canCancel) {
 		frm.page.add_inner_button(__("Cancel Demo"), () => {
 			frappe.confirm(__("Cancel this demo session?"), () => {
 				frappe.call({
@@ -91,17 +106,21 @@ function add_session_actions(frm) {
 		}, __("Actions"));
 	}
 
-	if (status === "In Progress") {
+	if (status === "In Progress" && canExecute) {
 		frm.page.add_inner_button(__("Complete Demo"), () => complete_demo_dialog(frm), __("Actions"));
 	}
 
-	if (status === "Scheduled") {
-		frm.page.add_inner_button(__("Reschedule"), () => reschedule_dialog(frm), __("Actions"));
-	}
-
 	if (["Completed", "Follow-up Required"].includes(status)) {
-		frm.page.add_inner_button(__("Create Follow-up"), () => follow_up_dialog(frm), __("Actions"));
-		frm.page.add_inner_button(__("Set Final Result"), () => final_result_dialog(frm), __("Actions"));
+		// same rule as the portal: once a follow-up exists for this session,
+		// the button disappears so duplicates can never be created
+		frappe.db.get_value("Demo Follow Up", { demo_session: frm.doc.name }, "name", (r) => {
+			if (!(r && r.name)) {
+				frm.page.add_inner_button(__("Create Follow-up"), () => follow_up_dialog(frm), __("Actions"));
+			}
+		});
+		if (canExecute) {
+			frm.page.add_inner_button(__("Set Final Result"), () => final_result_dialog(frm), __("Actions"));
+		}
 	}
 }
 

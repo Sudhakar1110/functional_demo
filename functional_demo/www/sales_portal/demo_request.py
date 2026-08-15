@@ -78,14 +78,6 @@ def get_context(context):
 		# Availability is filtered in Python: an unset status is stored as NULL
 		# and SQL status filters would silently hide those consultants.
 		context.consultants = _consultants_with_templates()
-		# Diagnostic: every consultant record (incl. Inactive / no status) so the
-		# form can show exactly what the portal sees when the dropdown is empty
-		context.consultant_diag = frappe.get_all(
-			"Functional Consultant",
-			fields=["name", "consultant_name", "status"],
-			order_by="consultant_name asc",
-			ignore_permissions=True,
-		) or []
 		# One-click pre-fill: arriving from My Leads (?lead=), a customer
 		# (?customer=) or an ERPNext Opportunity (?opportunity=) pulls the
 		# contact / company details from the CRM record into the form.

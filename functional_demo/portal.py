@@ -8,7 +8,9 @@ from frappe import _
 SALES_ROLES = ("Sales User", "Sales Manager")
 FUNCTIONAL_ROLES = ("Functional Consultant", "Functional Team Manager")
 MANAGER_ROLES = ("Sales Manager", "Functional Team Manager")
-DEVELOPER_ROLES = ("Developer",)
+# Feedback-only portal role. Note: this is a custom role - the standard Frappe
+# 'Developer' role must keep its normal meaning and is never repurposed here.
+DEVELOPER_ROLES = ("Feedback Viewer",)
 
 
 # ---------------------------------------------------------------------------
@@ -41,9 +43,9 @@ def is_manager(user=None):
 
 def is_admin(user=None):
 	"""Site admins (Administrator / System Manager) are never restricted by
-	the feedback-only Developer rule. Note: only the Administrator account
-	itself sees every section; System Manager users still follow their
-	portal roles for the sidebar."""
+	the feedback-only Feedback Viewer rule. Note: only the Administrator
+	account itself sees every section; System Manager users still follow
+	their portal roles for the sidebar."""
 	user = user or frappe.session.user
 	if user == "Administrator":
 		return True
@@ -51,10 +53,10 @@ def is_admin(user=None):
 
 
 def is_developer(user=None):
-	"""The Developer role is feedback-only: it may view the portal Feedback
-	page and nothing else. Site admins are never restricted by it - e.g. the
-	Administrator account often carries every role, including Developer, and
-	must still see the whole portal."""
+	"""The Feedback Viewer role is feedback-only: it may view the portal
+	Feedback page and nothing else. Site admins are never restricted by it -
+	e.g. the Administrator account often carries every role and must still
+	see the whole portal."""
 	if is_admin(user):
 		return False
 	return bool(user_roles(user) & set(DEVELOPER_ROLES))
@@ -150,7 +152,7 @@ ICON_FEEDBACK = _icon('<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2
 def sidebar_items(active):
 	"""Sidebar menu for the current user. The sales team sees all content
 	(sales + functional); functional team members see only functional-related
-	sections (never the sales ones); the Developer role sees only Feedback."""
+	sections (never the sales ones); the Feedback Viewer role sees only Feedback."""
 	if is_developer():
 		return [
 			{"label": _("Feedback"), "route": "/feedback", "icon": ICON_FEEDBACK, "active": active == "feedback"},
@@ -461,11 +463,22 @@ def manager_stats():
 # portal menu (Frappe shows these in the website menu by role)
 # ---------------------------------------------------------------------------
 
+def list_note(shown, total, label):
+	"""Return a short 'showing latest X of Y' note when a portal list was
+	truncated (shown < total), else an empty string. Pages set this on the
+	context so templates can surface the truncation instead of hiding it."""
+	if not total or shown >= total:
+		return ""
+	return _("Showing the latest {0} of {1} {2}. Narrow the filters to see older records.").format(
+		shown, total, label
+	)
+
+
 def get_standard_portal_menu_items():
 	return [
 		{"title": _("Demo Portal"), "route": "/demo_portal", "role": "Sales User"},
 		{"title": _("Demo Portal"), "route": "/demo_portal", "role": "Sales Manager"},
 		{"title": _("Demo Portal"), "route": "/demo_portal", "role": "Functional Consultant"},
 		{"title": _("Demo Portal"), "route": "/demo_portal", "role": "Functional Team Manager"},
-		{"title": _("Demo Feedback"), "route": "/feedback", "role": "Developer"},
+		{"title": _("Demo Feedback"), "route": "/feedback", "role": "Feedback Viewer"},
 	]

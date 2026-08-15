@@ -30,20 +30,14 @@
   "workflow_state",
   "follow_up_date",
   "next_action",
-  "consultant_reassigned",
   "approval_section",
-  "approved_by",
-  "approval_date",
-  "approval_notes",
   "sla_days",
   "sla_due_date",
   "sla_breached",
   "escalated",
   "escalated_on",
-  "escalation_notes",
   "remarks_section",
   "sales_remarks",
-  "functional_remarks",
   "activity_section",
   "demo_request_activity"
  ],
@@ -209,34 +203,9 @@
    "label": "Next Action"
   },
   {
-   "default": "0",
-   "fieldname": "consultant_reassigned",
-   "fieldtype": "Check",
-   "hidden": 1,
-   "label": "Consultant Reassigned"
-  },
-  {
    "fieldname": "approval_section",
    "fieldtype": "Section Break",
    "label": "Approval & SLA"
-  },
-  {
-   "fieldname": "approved_by",
-   "fieldtype": "Link",
-   "label": "Approved By",
-   "options": "User",
-   "read_only": 1
-  },
-  {
-   "fieldname": "approval_date",
-   "fieldtype": "Date",
-   "label": "Approval Date",
-   "read_only": 1
-  },
-  {
-   "fieldname": "approval_notes",
-   "fieldtype": "Small Text",
-   "label": "Approval Notes"
   },
   {
    "default": "2",
@@ -270,12 +239,6 @@
    "read_only": 1
   },
   {
-   "fieldname": "escalation_notes",
-   "fieldtype": "Small Text",
-   "label": "Escalation Notes",
-   "read_only": 1
-  },
-  {
    "fieldname": "remarks_section",
    "fieldtype": "Section Break",
    "label": "Remarks"
@@ -284,11 +247,6 @@
    "fieldname": "sales_remarks",
    "fieldtype": "Small Text",
    "label": "Sales Remarks"
-  },
-  {
-   "fieldname": "functional_remarks",
-   "fieldtype": "Small Text",
-   "label": "Functional Remarks"
   },
   {
    "collapsible": 1,

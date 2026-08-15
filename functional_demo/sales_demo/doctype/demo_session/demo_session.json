@@ -51,7 +51,8 @@
   "timestamps_section",
   "started_on",
   "completed_on",
-  "reschedule_count"
+  "reschedule_count",
+  "last_reminder_date"
  ],
  "fields": [
   {
@@ -221,7 +222,7 @@
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Demo Status",
-   "options": "Scheduled\nIn Progress\nCompleted\nRescheduled\nCancelled\nFollow-up Required\nClosed",
+   "options": "Scheduled\nIn Progress\nCompleted\nRescheduled\nCancelled\nClosed",
    "reqd": 1
   },
   {
@@ -362,6 +363,12 @@
    "fieldname": "reschedule_count",
    "fieldtype": "Int",
    "label": "Reschedule Count",
+   "read_only": 1
+  },
+  {
+   "fieldname": "last_reminder_date",
+   "fieldtype": "Date",
+   "label": "Last Reminder Date",
    "read_only": 1
   }
  ],

@@ -78,13 +78,6 @@
 								Ask your Functional Team Manager to create consultant profiles (Functional Portal → New Consultant Profile) or add one in ERPNext, then reload this page.
 							</div>
 							{% endif %}
-							{% if not consultants and consultant_diag %}
-							<div style="margin-top: 8px; font-size: 12px; color: #64748B; line-height: 1.6;">
-								<strong>Consultant records in ERPNext ({{ consultant_diag|length }}):</strong>
-								{% for c in consultant_diag %}{{ c.consultant_name }}{% if c.status %} ({{ c.status }}){% else %} (no status){% endif %}{% if not loop.last %} · {% endif %}{% endfor %}
-								— only non-inactive ones appear in the list above.
-							</div>
-							{% endif %}
 						</div>
 					</div>
 					<div class="form-row">
@@ -315,7 +308,6 @@
 				<div class="card-body">
 					<div class="detail-grid">
 						<div class="detail-item"><div class="d-label">Sales Remarks</div><div class="d-value wrap">{{ doc.sales_remarks or "-" }}</div></div>
-						<div class="detail-item"><div class="d-label">Functional Remarks</div><div class="d-value wrap">{{ doc.functional_remarks or "-" }}</div></div>
 						<div class="detail-item"><div class="d-label">Follow-up Date</div><div class="d-value">{{ doc.follow_up_date or "-" }}</div></div>
 						<div class="detail-item"><div class="d-label">Next Action</div><div class="d-value wrap">{{ doc.next_action or "-" }}</div></div>
 					</div>

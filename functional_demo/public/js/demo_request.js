@@ -84,7 +84,13 @@ function add_quick_actions(frm) {
 	}
 
 	if (["Demo Completed", "Follow-up Required"].includes(status)) {
-		frm.page.add_inner_button(__("Create Follow-up"), () => follow_up_dialog(frm, null), __("Actions"));
+		// same rule as the portal: once a follow-up exists for this request,
+		// the button disappears so duplicates can never be created
+		frappe.db.get_value("Demo Follow Up", { demo_request: frm.doc.name }, "name", (r) => {
+			if (!(r && r.name)) {
+				frm.page.add_inner_button(__("Create Follow-up"), () => follow_up_dialog(frm, null), __("Actions"));
+			}
+		});
 		frm.page.add_inner_button(__("Set Result"), () => result_dialog(frm), __("Actions"));
 	}
 

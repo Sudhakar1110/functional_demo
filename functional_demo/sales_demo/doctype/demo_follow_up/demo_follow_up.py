@@ -28,6 +28,7 @@ class DemoFollowUp(Document):
 		if old_status and old_status != self.status:
 			if self.status == "Completed":
 				self.close_open_todos()
+		self.notify_additional_demo_required(before)
 
 	# ------------------------------------------------------------------
 
@@ -113,6 +114,58 @@ class DemoFollowUp(Document):
 			"status",
 			"Closed",
 		)
+
+	def notify_additional_demo_required(self, before=None):
+		"""When a follow-up outcome is set to 'Additional Demo Required', tell the
+		sales person and the consultant (in-app notification + email) so the
+		follow-up demo actually gets scheduled instead of stalling the pipeline."""
+		old_outcome = (before.get("outcome") if before else None) or None
+		if self.outcome != "Additional Demo Required" or old_outcome == self.outcome:
+			return
+
+		consultant_user = None
+		if self.functional_consultant:
+			consultant_user = frappe.db.get_value(
+				"Functional Consultant", self.functional_consultant, "user"
+			)
+		party = self.customer or self.demo_request or self.name
+		subject = _("Additional demo required: {0} (Demo Request {1})").format(
+			party, self.demo_request or "-"
+		)
+		message = _(
+			"Hi,\n\n"
+			"Follow-up {0} for {1} was marked 'Additional Demo Required'.\n\n"
+			"Please schedule the follow-up demo so the sales cycle can move forward.\n\n"
+			"Open the follow-up: {2}\n"
+		).format(
+			self.name,
+			party,
+			frappe.utils.get_url("/app/demo-follow-up/{0}".format(self.name)),
+		)
+		for user in {self.sales_person, self.assigned_to, consultant_user}:
+			if not user or user == "Guest":
+				continue
+			create_notification(user, subject, "Demo Follow Up", self.name)
+			email = frappe.db.get_value("User", user, "email")
+			if not email:
+				continue
+			try:
+				frappe.sendmail(
+					recipients=[email],
+					subject=subject,
+					message=message,
+					reference_doctype="Demo Follow Up",
+					reference_name=self.name,
+					now=True,
+				)
+			except Exception:
+				# never block the follow-up update because an email could not be sent
+				frappe.log_error(
+					title=_("Additional demo email to {0} failed for {1}").format(
+						user, self.name
+					),
+					message=frappe.get_traceback(),
+				)
 
 	def add_discussion_note(self, note):
 		if not note:

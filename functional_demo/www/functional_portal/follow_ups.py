@@ -4,7 +4,7 @@
 import frappe
 from frappe import _
 
-from functional_demo.portal import consultant_of_user, portal_context
+from functional_demo.portal import consultant_of_user, list_note, portal_context
 
 STATUS_OPTIONS = ["Open", "In Progress", "Completed", "Overdue"]
 OUTCOME_OPTIONS = [
@@ -34,10 +34,13 @@ def get_context(context):
 			"status", "outcome", "next_action", "remarks", "assigned_to",
 		],
 		order_by="follow_up_date asc",
-		limit_page_length=200,
+		limit_page_length=1000,
 	) or []
 	for fu in context.follow_ups:
 		fu["due_display"] = frappe.utils.format_date(fu.get("follow_up_date"), "medium") if fu.get("follow_up_date") else "-"
 	context.consultant = consultant
 	context.status_options = STATUS_OPTIONS
 	context.outcome_options = OUTCOME_OPTIONS
+	context.list_note = list_note(
+		len(context.follow_ups), frappe.db.count("Demo Follow Up", filters), _("follow-ups")
+	)

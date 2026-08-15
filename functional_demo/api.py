@@ -330,6 +330,9 @@ def schedule_demo(demo_request=None, scheduled_date=None, start_time=None, end_t
 			if not ds.functional_consultant:
 				ds.functional_consultant = dr.functional_consultant
 			ds.reschedule_count = int(ds.reschedule_count or 0) + 1
+			# a rescheduled session is marked Rescheduled (still active/startable)
+			if ds.demo_status == "Scheduled":
+				ds.demo_status = "Rescheduled"
 			ds.flags.rescheduling = True
 			ds.save(ignore_permissions=True)
 			party, consultant = _party_and_consultant(dr)
@@ -519,8 +522,24 @@ def cancel_demo_request(demo_request=None, reason=None, name=None):
 		return {"status": current, "already": True}
 
 	# Move the request to Cancelled FIRST - if the user's role does not allow
-	# the cancel transition, nothing is changed (no partial state).
-	change_status(doc, "Cancelled", ignore_permissions=True)
+	# the cancel transition, nothing is changed (no partial state). Some states
+	# have no Cancel transition at all in the workflow (Follow-up Required,
+	# Demo Completed) or gate it to managers (Demo In Progress) - in those
+	# cases apply the final state directly, exactly like the workflow would,
+	# so a cancellation is never blocked by the role rules.
+	try:
+		change_status(doc, "Cancelled", ignore_permissions=True)
+	except Exception:
+		frappe.log_error(
+			title=_("Demo Request {0} could not be moved to Cancelled via the workflow").format(
+				doc.name
+			),
+			message=frappe.get_traceback(),
+		)
+		frappe.db.set_value(
+			"Demo Request", doc.name, {"status": "Cancelled", "workflow_state": "Cancelled"}
+		)
+		doc = frappe.get_doc("Demo Request", doc.name)
 
 	# Now close any open demo sessions (without re-triggering the session ->
 	# request sync; the request is already Cancelled).
@@ -659,6 +678,9 @@ def bulk_reschedule_demo(requests=None, scheduled_date=None, start_time=None, en
 					session.start_time = start_time
 				if end_time:
 					session.end_time = end_time
+				# mark an already-scheduled session as Rescheduled
+				if session.demo_status == "Scheduled":
+					session.demo_status = "Rescheduled"
 				session.save(ignore_permissions=True)
 				create_calendar_event(session)
 			done.append(name)
@@ -683,24 +705,36 @@ def export_demo_requests(status=None):
 	if status:
 		filters["status"] = status
 
-	rows = frappe.get_all(
-		"Demo Request",
-		filters=filters,
-		fields=[
-			"name", "customer", "lead", "company", "contact_person", "email",
-			"interested_module", "priority", "functional_consultant", "sales_person",
-			"preferred_demo_date", "preferred_demo_time", "demo_type", "status",
-			"sla_due_date", "sla_breached", "creation",
-		],
-		order_by="creation desc",
-		limit_page_length=500,
-	) or []
+	# Export EVERYTHING that matches the filter - page through the result set
+	# instead of silently truncating at 500 rows.
+	rows = []
+	start = 0
+	while True:
+		batch = frappe.get_all(
+			"Demo Request",
+			filters=filters,
+			fields=[
+				"name", "customer", "lead", "company", "contact_person", "email",
+				"interested_module", "priority", "functional_consultant", "sales_person",
+				"preferred_demo_date", "preferred_demo_time", "demo_type", "status",
+				"sla_due_date", "sla_breached", "creation",
+			],
+			order_by="creation desc",
+			start=start,
+			limit_page_length=500,
+		) or []
+		rows.extend(batch)
+		if len(batch) < 500:
+			break
+		start += 500
 
 	buf = io.StringIO()
 	writer = csv.writer(buf)
+	# 'Sales Person' appears twice in a request (the Lead record and the owning
+	# User) - keep the labels distinct so the columns are not ambiguous.
 	writer.writerow(
-		["Request", "Customer", "Sales Person", "Company", "Contact Person", "Email",
-		 "Interested Template", "Priority", "Functional Consultant", "Sales Person",
+		["Request", "Customer", "Sales Person (Lead)", "Company", "Contact Person", "Email",
+		 "Interested Template", "Priority", "Functional Consultant", "Sales Person (User)",
 		 "Preferred Date", "Preferred Time", "Demo Type", "Status", "SLA Due Date",
 		 "SLA Breached", "Created"]
 	)
@@ -774,6 +808,11 @@ def get_demo_execution_data(demo_session=None):
 			as_dict=True,
 		)
 
+	from functional_demo.sales_demo.doctype.demo_session.demo_session import (
+		can_cancel_session,
+		can_execute_session_action,
+	)
+
 	can_write = frappe.has_permission("Demo Session", "write", doc=ds)
 
 	return {
@@ -828,6 +867,10 @@ def get_demo_execution_data(demo_session=None):
 			"snapshot_date": ds.template_snapshot_date,
 		},
 		"can_write": can_write,
+		# consultant-action rights (start / complete / final result) and the
+		# narrower cancel right - the execution screen shows buttons accordingly
+		"can_execute": can_execute_session_action(ds),
+		"can_cancel": can_cancel_session(ds),
 	}
 
 
@@ -952,7 +995,7 @@ def get_demo_feedback_data():
 		],
 		order_by="completed_on desc",
 		ignore_permissions=True,
-		limit_page_length=500,
+		limit_page_length=1000,
 	) or []
 
 	# per-session feedback rows (child table, fetched in bulk)

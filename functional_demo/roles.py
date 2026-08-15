@@ -3,6 +3,8 @@
 """Custom roles created by functional_demo.
 
 'Sales User' and 'Sales Manager' are standard ERPNext roles and are reused.
+'Feedback Viewer' is the read-only portal role that sees only the Demo
+Feedback page - the standard Frappe 'Developer' role is never repurposed.
 """
 
-ROLES = ["Functional Consultant", "Functional Team Manager", "Developer"]
+ROLES = ["Functional Consultant", "Functional Team Manager", "Feedback Viewer"]

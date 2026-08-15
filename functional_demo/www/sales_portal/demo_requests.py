@@ -4,7 +4,7 @@
 import frappe
 from frappe import _
 
-from functional_demo.portal import portal_context
+from functional_demo.portal import list_note, portal_context
 
 STATUS_OPTIONS = [
 	"Draft", "Requested", "Assigned", "Scheduled", "Demo In Progress",
@@ -35,12 +35,15 @@ def get_context(context):
 			"follow_up_date", "creation", "sla_due_date", "sla_breached",
 		],
 		order_by="creation desc",
-		limit_page_length=200,
+		limit_page_length=1000,
 	) or []
 	for r in context.requests:
 		r["created_display"] = frappe.utils.format_date(r.get("creation"), "medium") if r.get("creation") else "-"
 	context.status = status
 	context.status_options = STATUS_OPTIONS
+	context.list_note = list_note(
+		len(context.requests), frappe.db.count("Demo Request", filters), _("demo requests")
+	)
 	# consultants for the bulk-assign action (excludes only Inactive records;
 	# filtered in Python because an unset status is stored as NULL and SQL
 	# status filters would silently hide those consultants)

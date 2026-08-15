@@ -7,7 +7,6 @@ frappe.listview_settings["Demo Session"] = {
 			Completed: [__("Completed"), "green"],
 			Rescheduled: [__("Rescheduled"), "blue"],
 			Cancelled: [__("Cancelled"), "red"],
-			"Follow-up Required": [__("Follow-up Required"), "blue"],
 			Closed: [__("Closed"), "grey"],
 		};
 		return map[doc.demo_status] || [__(doc.demo_status), "grey"];

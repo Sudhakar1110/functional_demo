@@ -36,11 +36,11 @@
 		</div>
 	</aside>
 	<div class="sidebar-overlay"></div>
-	<div class="portal-main">
-		<div class="portal-content">
-			<div class="portal-card">
-				<div class="card-head">
-					<h2>Search Sales</h2>
+	<div class="portal-main">			<div class="portal-content">
+				{% if list_note %}<div class="muted" style="margin-bottom: 16px;">{{ list_note }}</div>{% endif %}
+				<div class="portal-card">
+					<div class="card-head">
+						<h2>Search Sales</h2>
 					<a class="btn-portal secondary sm" href="/sales_portal/new_lead">+ New Sales Person</a>
 				</div>
 				<div class="card-body">

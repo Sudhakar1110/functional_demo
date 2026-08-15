@@ -16,7 +16,6 @@ class DemoRequest(Document):
 		self.validate_consultant()
 		self.validate_schedule_conflict()
 		self.validate_follow_up_date()
-		self.set_reassignment_flag()
 		self.set_sla_due_date()
 		self.apply_priority_rule()
 
@@ -133,10 +132,6 @@ class DemoRequest(Document):
 		if self.follow_up_date and self.follow_up_date < today():
 			frappe.throw(_("Follow-up Date cannot be in the past."))
 
-	def set_reassignment_flag(self):
-		old = self.db_get("functional_consultant")
-		self.consultant_reassigned = 1 if (old and old != self.functional_consultant) else 0
-
 	def set_sla_due_date(self):
 		"""Every new request gets an SLA target: the date by which it should be
 		scheduled (default 2 days, configurable per request). The daily job
@@ -206,7 +201,16 @@ class DemoRequest(Document):
 		before = self.get_doc_before_save()
 		if before and before.get("workflow_state") == "Converted":
 			return  # already converted before this save
-		if not (self.customer or self.lead):
+		if not self.customer:
+			# The 'Sales Person' field is a Lead record representing the internal
+			# sales person, NOT the prospect. Without a 'Leads' (Customer) on the
+			# request there is no real party to create the Opportunity against, so
+			# the win is recorded on the request only - never on the sales
+			# person's own Lead record.
+			self.add_comment(
+				"Comment",
+				_("Opportunity not created: this request has no Leads (Customer) record — the Sales Person is not a prospect."),
+			)
 			return
 
 		try:
@@ -219,15 +223,13 @@ class DemoRequest(Document):
 			)
 			if not company:
 				return
-
 			opportunity = frappe.new_doc("Opportunity")
-			opportunity.opportunity_from = "Customer" if self.customer else "Lead"
-			opportunity.party_name = self.customer or self.lead
-			if self.customer:
-				opportunity.customer_name = frappe.db.get_value(
-					"Customer", self.customer, "customer_name"
-				) or self.customer
-			opportunity.title = _("Demo: {0}").format(self.customer or self.lead)
+			opportunity.opportunity_from = "Customer"
+			opportunity.party_name = self.customer
+			opportunity.customer_name = frappe.db.get_value(
+				"Customer", self.customer, "customer_name"
+			) or self.customer
+			opportunity.title = _("Demo: {0}").format(self.customer)
 			opportunity.transaction_date = today()
 			opportunity.company = company
 			opportunity.source = _ensure_lead_source("Demo")

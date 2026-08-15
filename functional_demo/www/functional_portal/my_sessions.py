@@ -4,11 +4,11 @@
 import frappe
 from frappe import _
 
-from functional_demo.portal import consultant_of_user, portal_context
+from functional_demo.portal import consultant_of_user, list_note, portal_context
 
 SESSION_STATUSES = [
 	"Scheduled", "In Progress", "Completed", "Rescheduled",
-	"Cancelled", "Follow-up Required", "Closed",
+	"Cancelled", "Closed",
 ]
 
 
@@ -36,8 +36,11 @@ def get_context(context):
 			"demo_status", "demo_type", "final_result", "demo_request",
 		],
 		order_by="scheduled_date desc",
-		limit_page_length=200,
+		limit_page_length=1000,
 	) or []
 	context.status = status
 	context.status_options = SESSION_STATUSES
 	context.consultant = consultant
+	context.list_note = list_note(
+		len(context.sessions), frappe.db.count("Demo Session", filters), _("demo sessions")
+	)

@@ -1,6 +1,9 @@
 <script>
 /* Portal pages: tiny vanilla-JS helpers (AJAX to whitelisted APIs + sidebar toggle).
-   Loaded on website pages via hooks.web_include_js. */
+   Included directly in every portal page template ({% include ... %}) - there is no
+   hooks.web_include_js registration, so any NEW portal page must include this file
+   explicitly or it silently loses the notification bell, modal/toast helpers and
+   sidebar toggle. */
 
 (function () {
 	"use strict";

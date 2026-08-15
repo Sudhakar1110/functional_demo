@@ -4,7 +4,7 @@
 import frappe
 from frappe import _
 
-from functional_demo.portal import portal_context
+from functional_demo.portal import list_note, portal_context
 
 LEAD_STATUSES = ["Lead", "Open", "Replied", "Opportunity", "Quotation", "Interested", "Converted", "Do Not Contact"]
 
@@ -30,7 +30,7 @@ def get_context(context):
 		filters=filters or None,
 		fields=["name", "lead_name", "company_name", "email_id", "status", "source", "creation", "owner"],
 		order_by="creation desc",
-		limit_page_length=100,
+		limit_page_length=1000,
 	) or []
 	for lead in context.leads:
 		lead["created_display"] = frappe.utils.format_date(lead.get("creation"), "medium") if lead.get("creation") else "-"
@@ -40,3 +40,6 @@ def get_context(context):
 	context.q = q
 	context.status = status
 	context.status_options = LEAD_STATUSES
+	context.list_note = list_note(
+		len(context.leads), frappe.db.count("Lead", filters or None), _("sales people")
+	)
