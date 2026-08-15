@@ -1,9 +1,10 @@
 <script>
 /* Portal pages: tiny vanilla-JS helpers (AJAX to whitelisted APIs + sidebar toggle).
-   Included directly in every portal page template ({% include ... %}) - there is no
-   hooks.web_include_js registration, so any NEW portal page must include this file
-   explicitly or it silently loses the notification bell, modal/toast helpers and
-   sidebar toggle. */
+   Included directly in every portal page template via the Jinja include tag (this
+   comment is inside a Jinja-processed file, so no template tags may appear here).
+   There is no hooks.web_include_js registration, so any NEW portal page must include
+   this file explicitly or it silently loses the notification bell, modal/toast
+   helpers and sidebar toggle. */
 
 (function () {
 	"use strict";
