@@ -46,8 +46,8 @@ indicators — while the backend follows proper Frappe v15 / ERPNext v15 standar
 - **Workspaces** — dedicated **Sales Demo Workspace** and **Functional Demo
   Workspace** with shortcuts, cards, number cards and charts.
 - **12 reports** with filters (demo requests, sessions, consultant-wise,
-  sales-person-wise, customer history, status, upcoming, completed, follow-ups,
-  workload, template usage, module-wise, conversion funnel).
+  sales-person-wise, leads history, status, upcoming, completed, follow-ups,
+  workload, module-wise, conversion funnel).
 - **Notifications + emails** — in-app bell notifications (portal + desk) and
   direct emails built into the workflow code: consultant assignment/reassignment,
   demo scheduled/rescheduled, started, completed, cancelled, final result,
@@ -92,15 +92,16 @@ The install automatically creates:
   (`Sales User` / `Sales Manager` come from ERPNext).
 - The **Demo Request Workflow** (active by default).
 - Doctypes, Reports, Notifications, Workspaces, Number Cards, Dashboard Charts.
-- A daily scheduled job that marks overdue follow-ups (and notifies the
-  assignee / sales person).
+- Daily scheduled jobs: marks overdue follow-ups (notifying the assignee /
+  sales person), runs SLA escalation checks, and sends day-before-demo
+  reminders.
 
 ## Sample data
 
 Populate the app with realistic demo records — consultant users & profiles,
-customers/leads with contacts, reusable demo templates, and demo requests/sessions
-spanning the whole workflow (including a converted one that auto-creates an
-Opportunity):
+prospect companies (**Leads**) and lead records (**Sales Person**) with contacts,
+reusable demo templates, and demo requests/sessions spanning the whole workflow
+(including a converted one that auto-creates an Opportunity):
 
 ```bash
 bench --site your-site execute functional_demo.setup_demo_data.setup_demo_data
@@ -125,14 +126,16 @@ execution screen.
 3. **Create Demo Templates** per consultant (Sales Demo → Functional Demo
    Template) — e.g. *Accounting Demo*, *GST Demo*, *Sales Demo*.
 4. Optionally create **Leads / Customers / Contacts** in ERPNext — the app
-   auto-fetches the primary contact, phone and email when you select them.
+   shows them as **Sales Person** / **Leads** and auto-fetches the primary
+   contact, phone and email when you select them.
 
 ## Quick start
 
 ### Sales user
 1. Open the **Sales Demo Workspace**.
-2. **+ New Demo Request** → select Lead or Customer (contact details auto-fill),
-   capture requirements, select module/priority, save → **Submit Demo Request**.
+2. **+ New Demo Request** → select **Sales Person** (Lead) or **Leads**
+   (Customer) — contact details auto-fill — capture requirements, select
+   template/priority, save → **Submit Demo Request**.
 3. **Assign Consultant** (choose by specialization/module — workload shown).
 4. **Schedule Demo** → pick date/time/meeting link → a **Demo Session** is created
    and an **Event** is added to the calendar.
@@ -157,7 +160,7 @@ execution screen.
 | Demo Session Report | All sessions with filters |
 | Consultant-wise Demo Report | Per-consultant totals + conversion |
 | Sales Person-wise Demo Report | Per-sales-person pipeline + conversion |
-| Customer Demo History | Per-customer history |
+| Leads Demo History | Per-lead history |
 | Demo Status Report | Status breakdown |
 | Upcoming Demo Report | Scheduled / in-progress sessions ahead |
 | Completed Demo Report | Completed sessions + feedback |
@@ -251,9 +254,12 @@ functional_demo/
 ├── functional_demo/     # the importable app package
 │   ├── hooks.py         # app hooks (doctype_js, permissions, scheduler, fixtures)
 │   ├── api.py           # whitelisted quick-action endpoints
-│   ├── install.py       # install hooks + daily scheduler job
+│   ├── install.py       # install/migrate hooks + daily scheduler jobs
+│   ├── portal.py        # shared portal helpers (roles, sidebar, notifications)
+│   ├── roles.py         # custom role definitions
 │   ├── setup_demo_data.py
 │   ├── fixtures/        # Role + Workflow fixtures (synced on install/migrate)
+│   ├── patches/         # version patches (workflow states, dashboard charts)
 │   ├── sales_demo/
 │   │   ├── doctype/     # DocTypes + controllers + tests
 │   │   ├── report/      # 12 script reports
@@ -262,7 +268,9 @@ functional_demo/
 │   │   ├── workspace/   # 2 workspaces
 │   │   ├── dashboard_chart/  # charts
 │   │   └── number_card/ # number cards
-│   ├── public/js/       # client scripts (form + list customizations)
+│   ├── templates/       # shared portal style + script includes
+│   ├── www/             # role-based portal pages (sales / functional / manager / feedback)
+│   ├── public/          # client scripts + css (form & list customizations)
 │   └── modules.txt, patches.txt
 ├── pyproject.toml       # pip packaging (bench installs the app editable)
 └── setup.py
