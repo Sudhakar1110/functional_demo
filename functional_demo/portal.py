@@ -213,6 +213,24 @@ def create_notification(for_user, subject, document_type, document_name):
 		note.document_name = document_name
 		note.subject = subject
 		note.insert(ignore_permissions=True)
+		# push the new notification to the user's open portal pages instantly via
+		# the realtime (websocket) channel - the bell refreshes immediately
+		# instead of waiting for the next polling interval. Best-effort: if
+		# realtime is not configured, the client's polling fallback still works.
+		try:
+			frappe.publish_realtime(
+				"demo_portal_notification",
+				{
+					"name": note.name,
+					"subject": subject,
+					"document_type": document_type,
+					"document_name": document_name,
+				},
+				user=for_user,
+				after_commit=True,
+			)
+		except Exception:
+			pass
 	except Exception:
 		frappe.log_error(
 			title=_("Notification Log creation failed for {0}").format(for_user),

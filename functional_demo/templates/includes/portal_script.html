@@ -360,17 +360,27 @@
 				var Ctx = window.AudioContext || window.webkitAudioContext;
 				if (!Ctx) return;
 				var ctx = new Ctx();
-				var o = ctx.createOscillator();
-				var g = ctx.createGain();
-				o.connect(g);
-				g.connect(ctx.destination);
-				o.type = "sine";
-				o.frequency.value = 880;
-				g.gain.setValueAtTime(0.0001, ctx.currentTime);
-				g.gain.exponentialRampToValueAtTime(0.18, ctx.currentTime + 0.02);
-				g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.45);
-				o.start(ctx.currentTime);
-				o.stop(ctx.currentTime + 0.5);
+				/* a clearly audible two-tone "ding-dong" chime (E5 + B5) - loud
+				   enough to be heard even with the tab in the background */
+				var tones = [
+					{ freq: 659.25, start: 0, dur: 0.55 },
+					{ freq: 987.77, start: 0.18, dur: 0.7 },
+				];
+				for (var i = 0; i < tones.length; i++) {
+					var t = tones[i];
+					var o = ctx.createOscillator();
+					var g = ctx.createGain();
+					o.connect(g);
+					g.connect(ctx.destination);
+					o.type = "triangle";
+					o.frequency.value = t.freq;
+					var start = ctx.currentTime + t.start;
+					g.gain.setValueAtTime(0.0001, start);
+					g.gain.exponentialRampToValueAtTime(0.55, start + 0.02);
+					g.gain.exponentialRampToValueAtTime(0.0001, start + t.dur);
+					o.start(start);
+					o.stop(start + t.dur + 0.05);
+				}
 			} catch (e) { /* sound is a nicety - never break on it */ }
 		}
 
@@ -476,8 +486,27 @@
 			if (!open) load();
 		});
 
-		/* keep the badge fresh while the user is on the page without any interaction */
-		setInterval(load, 15000);
+		/* ---- realtime (websocket) ----
+		   Frappe ships a socket.io client in the web bundle, but on portal
+		   (website) pages it is only loaded - never started (the desk starts
+		   it). Start it here and subscribe so a new notification refreshes the
+		   bell instantly with zero polling delay. Best-effort: if the websocket
+		   cannot connect (e.g. redis / socketio not running on the bench), the
+		   slow safety-net poll below still covers it. */
+		function setupRealtime() {
+			try {
+				if (!window.frappe || !frappe.realtime || !frappe.realtime.init) return;
+				if (!frappe.realtime.socket) frappe.realtime.init();
+				frappe.realtime.on("demo_portal_notification", function () {
+					load();
+				});
+			} catch (e) { /* realtime unavailable - the safety-net poll still covers it */ }
+		}
+		setupRealtime();
+
+		/* safety-net poll when the websocket is unavailable - the realtime
+		   subscription above delivers notifications instantly */
+		setInterval(load, 60000);
 		document.addEventListener("click", function (e) {
 			if (!wrap.contains(e.target)) panel.style.display = "none";
 		});
