@@ -43,6 +43,19 @@
 	padding-left: 1rem;
 }
 
+/* template badge (Law, Hospitality, ...) - the portal-only .chip style is not
+   loaded on the desk, so give the desk table its own pill */
+.demo-fb-table .chip {
+	display: inline-block;
+	padding: 2px 10px;
+	border-radius: 999px;
+	font-size: 12px;
+	font-weight: 600;
+	white-space: nowrap;
+	background: #e8eeff;
+	color: #114eff;
+}
+
 .demo-fb-wrap {
 	white-space: pre-wrap;
 }

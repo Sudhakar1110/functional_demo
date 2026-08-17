@@ -977,8 +977,8 @@ def get_my_demo_sessions(demo_status=None):
 
 def get_demo_feedback_data():
 	"""Return the feedback recorded against demos (completed sessions), newest
-	first. The Feedback page is about the demos, not the templates - templates
-	are not listed here.
+	first. Every entry carries the Demo Template it was recorded against (e.g.
+	Law, Hospitality) so the Feedback page can group / filter by template.
 
 	Single source of truth for the portal Feedback page (/feedback) and the desk
 	demo-feedback page (/app/demo-feedback), so both sides always show the same
@@ -992,11 +992,25 @@ def get_demo_feedback_data():
 			"overall_feedback", "interested", "requirements_met", "additional_requirements",
 			"requested_changes", "follow_up_required", "follow_up_date", "next_action",
 			"consultant_remarks", "final_result", "functional_consultant", "sales_person",
+			"demo_template",
 		],
 		order_by="completed_on desc",
 		ignore_permissions=True,
 		limit_page_length=1000,
 	) or []
+
+	# template display names (bulk) - the session stores the template doc name,
+	# the Feedback page shows the friendly Template Name (Law, Hospitality, ...)
+	template_ids = {s.demo_template for s in sessions if s.demo_template}
+	template_names = {}
+	if template_ids:
+		for t in frappe.get_all(
+			"Functional Demo Template",
+			filters={"name": ["in", list(template_ids)]},
+			fields=["name", "template_name"],
+			ignore_permissions=True,
+		):
+			template_names[t.name] = t.template_name or t.name
 
 	# per-session feedback rows (child table, fetched in bulk)
 	items_map = {}
@@ -1046,6 +1060,7 @@ def get_demo_feedback_data():
 					or "-"
 				),
 				"final_result": s.final_result or "",
+				"template": template_names.get(s.demo_template) or "No Template",
 			}
 		)
 	return out
