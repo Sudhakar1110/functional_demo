@@ -120,6 +120,7 @@ function schedule_demo_dialog(frm) {
 		title: __("Schedule Demo"),
 		fields: [
 			{ fieldname: "functional_consultant", label: __("Functional Consultant"), fieldtype: "Read Only", default: frm.doc.functional_consultant },
+			{ fieldname: "interested_module", label: __("Interested Template"), fieldtype: "Select", default: frm.doc.interested_module, options: ["", "Law Management", "Hospitality", "Medical Store", "Retail & Supermarket", "Manufacturing", "Education", "Healthcare", "Real Estate", "Logistics & Transport", "Agriculture", "IT Services", "Banking & Finance", "Food & Beverage", "Construction", "Energy & Utilities", "Other"] },
 			{ fieldname: "scheduled_date", label: __("Scheduled Date"), fieldtype: "Date", reqd: 1, default: frm.doc.preferred_demo_date },
 			{ fieldname: "start_time", label: __("Start Time"), fieldtype: "Time", default: frm.doc.preferred_demo_time },
 			{ fieldname: "end_time", label: __("End Time"), fieldtype: "Time" },
@@ -136,6 +137,7 @@ function schedule_demo_dialog(frm) {
 					start_time: values.start_time,
 					end_time: values.end_time,
 					meeting_link: values.meeting_link,
+					interested_module: values.interested_module,
 				},
 				callback(r) {
 					if (r.message) frm.reload_doc();

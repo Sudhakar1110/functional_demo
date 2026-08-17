@@ -261,7 +261,7 @@ def _fmt_date(value):
 
 
 @frappe.whitelist()
-def schedule_demo(demo_request=None, scheduled_date=None, start_time=None, end_time=None, meeting_link=None, name=None):
+def schedule_demo(demo_request=None, scheduled_date=None, start_time=None, end_time=None, meeting_link=None, interested_module=None, name=None):
 	"""Schedule (or reschedule) a demo for a Demo Request and create a Demo Session.
 
 	Arguments are optional so a client that fires the call without a value gets
@@ -325,6 +325,9 @@ def schedule_demo(demo_request=None, scheduled_date=None, start_time=None, end_t
 			ds.start_time = start_time
 			ds.end_time = end_time
 			ds.meeting_link = meeting_link
+			# keep the Interested Template chosen at scheduling (falls back to
+			# the request's value when the dialog sent none)
+			ds.interested_module = interested_module or ds.interested_module
 			# auto-select the request's consultant - a session created before the
 			# consultant was always copied can be empty, so top it up on reschedule
 			if not ds.functional_consultant:
@@ -351,6 +354,9 @@ def schedule_demo(demo_request=None, scheduled_date=None, start_time=None, end_t
 			# the form never shows 'No consultant selected'
 			ds.functional_consultant = dr.functional_consultant
 			ds.consultant_user = dr.consultant_user
+			# the Interested Template chosen at scheduling (falls back to the
+			# request's value) - feedback on this demo groups under this template
+			ds.interested_module = interested_module or dr.interested_module
 			ds.scheduled_date = scheduled_date
 			ds.start_time = start_time
 			ds.end_time = end_time
@@ -366,9 +372,13 @@ def schedule_demo(demo_request=None, scheduled_date=None, start_time=None, end_t
 				)
 			)
 
-		# keep the Demo Request in sync (fields first, then the workflow move)
+		# keep the Demo Request in sync (fields first, then the workflow move).
+		# A template chosen at scheduling also updates the request, so the
+		# request list/reports and the session always agree.
 		dr.preferred_demo_date = scheduled_date
 		dr.preferred_demo_time = start_time or dr.preferred_demo_time
+		if interested_module:
+			dr.interested_module = interested_module
 		dr.save(ignore_permissions=True)
 		change_status(dr, "Scheduled", ignore_permissions=True)
 
@@ -979,10 +989,10 @@ def get_demo_feedback_data():
 	"""Return the feedback recorded against demos (completed sessions), newest
 	first. Every entry carries a template name (Law Management, Hospitality,
 	Retail & Supermarket, ...) so the Feedback page can group / filter by
-	template. The name comes from the session's Demo Template when one is
-	linked, otherwise from the Demo Request's Interested Template - so portal-
-	created sessions (which never link a Demo Template) still group under a
-	real, meaningful name instead of "No Template".
+	template. The name comes from the session's own Interested Template
+	(chosen when the demo was scheduled), falling back to the Demo Request's
+	Interested Template and then the Demo Template - so a session never falls
+	through to "No Template" when the request recorded the customer's interest.
 
 	Single source of truth for the portal Feedback page (/feedback) and the desk
 	demo-feedback page (/app/demo-feedback), so both sides always show the same
@@ -996,7 +1006,7 @@ def get_demo_feedback_data():
 			"overall_feedback", "interested", "requirements_met", "additional_requirements",
 			"requested_changes", "follow_up_required", "follow_up_date", "next_action",
 			"consultant_remarks", "final_result", "functional_consultant", "sales_person",
-			"demo_template",
+			"demo_template", "interested_module",
 		],
 		order_by="completed_on desc",
 		ignore_permissions=True,
@@ -1083,7 +1093,8 @@ def get_demo_feedback_data():
 				),
 				"final_result": s.final_result or "",
 				"template": (
-					request_templates.get(s.demo_request)
+					s.interested_module
+					or request_templates.get(s.demo_request)
 					or template_names.get(s.demo_template)
 					or "No Template"
 				),

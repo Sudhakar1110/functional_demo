@@ -49,6 +49,7 @@ class DemoSession(Document):
 		self.email = self.email or request.email
 		self.sales_person = self.sales_person or request.sales_person
 		self.functional_consultant = self.functional_consultant or request.functional_consultant
+		self.interested_module = self.interested_module or request.interested_module
 		self.demo_type = self.demo_type or request.demo_type
 		self.customer_requirements = self.customer_requirements or request.customer_requirements
 
