@@ -512,17 +512,46 @@
 		function setupRealtime() {
 			try {
 				if (!window.frappe || !frappe.realtime || !frappe.realtime.init) return;
-				if (!frappe.realtime.socket) frappe.realtime.init();
-				frappe.realtime.on("demo_portal_notification", function () {
-					load();
-				});
+				var bound = false;
+				function bind() {
+					if (bound) return true;
+					if (!frappe.realtime.socket) {
+						try { frappe.realtime.init(); } catch (e) { return false; }
+					}
+					if (!frappe.realtime.socket) return false;
+					frappe.realtime.on("demo_portal_notification", function (data) {
+						/* chime + popup straight from the websocket payload - no
+						   API round trip, so the sound fires the moment the
+						   server publishes it */
+						if (data && data.name) seenNames[data.name] = 1;
+						if (data && data.subject) {
+							playChime();
+							var href = docHref(data);
+							if (document.hidden) nativePopup(data.subject, href);
+							showToast(data.subject, href);
+						}
+						load(); /* refresh the bell + unread badge */
+					});
+					bound = true;
+					return true;
+				}
+				if (!bind()) {
+					/* socket not created yet - Frappe's on() only registers a
+					   listener once a socket exists, so retry briefly */
+					var tries = 0;
+					var t = setInterval(function () {
+						tries++;
+						if (bind() || tries > 5) clearInterval(t);
+					}, 2000);
+				}
 			} catch (e) { /* realtime unavailable - the safety-net poll still covers it */ }
 		}
 		setupRealtime();
 
 		/* safety-net poll when the websocket is unavailable - the realtime
-		   subscription above delivers notifications instantly */
-		setInterval(load, 60000);
+		   subscription above delivers instantly; this bounds the worst case
+		   to a few seconds instead of a minute */
+		setInterval(load, 8000);
 		document.addEventListener("click", function (e) {
 			if (!wrap.contains(e.target)) panel.style.display = "none";
 		});
