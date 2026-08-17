@@ -20,8 +20,8 @@ def get_context(context):
 		"Demo Session",
 		filters={"demo_status": ["in", ["Completed", "Follow-up Required", "Closed"]]},
 		fields=[
-			"name", "customer", "sales_person", "scheduled_date", "demo_status", "interested",
-			"requirements_met", "overall_feedback", "follow_up_required",
+			"name", "customer", "sales_person", "interested_module", "scheduled_date", "demo_status",
+			"interested", "requirements_met", "overall_feedback", "follow_up_required",
 			"final_result", "functional_consultant", "demo_request",
 		],
 		order_by="scheduled_date desc",
@@ -30,7 +30,7 @@ def get_context(context):
 	context.converted = frappe.get_all(
 		"Demo Request",
 		filters={"status": "Converted"},
-		fields=["name", "customer", "lead", "functional_consultant", "priority", "creation"],
+		fields=["name", "customer", "lead", "interested_module", "functional_consultant", "priority", "creation"],
 		order_by="creation desc",
 		limit_page_length=1000,
 	) or []
