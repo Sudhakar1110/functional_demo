@@ -111,6 +111,7 @@
 							<tr>
 								<th>Session</th>
 								<th>Leads</th>
+								<th>Interested Template</th>
 								<th>Date</th>
 								<th>Start</th>
 								<th>Status</th>
@@ -123,6 +124,7 @@
 							<tr>
 								<td><a href="/functional_portal/session?name={{ s.name }}">{{ s.name }}</a></td>
 								<td>{{ s.customer or "-" }}</td>
+								<td>{{ s.interested_module or "-" }}</td>
 								<td>{{ s.scheduled_date or "-" }}</td>
 								<td>{{ s.start_time or "-" }}</td>
 								<td><span class="badge b-{{ s.demo_status|lower|replace(' ', '-') }}">{{ s.demo_status }}</span></td>

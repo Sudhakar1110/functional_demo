@@ -553,7 +553,7 @@ def functional_stats(user=None):
 		"recent_sessions": frappe.get_all(
 			"Demo Session",
 			filters={"functional_consultant": consultant},
-			fields=["name", "customer", "scheduled_date", "start_time", "demo_status", "final_result"],
+			fields=["name", "customer", "interested_module", "scheduled_date", "start_time", "demo_status", "final_result"],
 			order_by="scheduled_date desc",
 			limit_page_length=8,
 		) or [],

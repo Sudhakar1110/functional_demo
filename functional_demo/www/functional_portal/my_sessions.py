@@ -32,8 +32,8 @@ def get_context(context):
 		"Demo Session",
 		filters=filters,
 		fields=[
-			"name", "customer", "lead", "sales_person", "scheduled_date", "start_time", "end_time",
-			"demo_status", "demo_type", "final_result", "demo_request",
+			"name", "customer", "lead", "sales_person", "interested_module", "scheduled_date",
+			"start_time", "end_time", "demo_status", "demo_type", "final_result", "demo_request",
 		],
 		order_by="scheduled_date desc",
 		limit_page_length=1000,

@@ -55,6 +55,7 @@
 							<tr>
 								<th>Session</th>
 								<th>Leads</th>
+								<th>Interested Template</th>
 								<th>Date</th>
 								<th>Time</th>
 								<th>Demo Type</th>
@@ -68,6 +69,7 @@
 							<tr>
 								<td><a href="/functional_portal/session?name={{ s.name }}">{{ s.name }}</a></td>
 								<td>{{ s.customer or s.sales_person or "-" }}</td>
+								<td>{{ s.interested_module or "-" }}</td>
 								<td>{{ s.scheduled_date or "-" }}</td>
 								<td>{% if s.start_time %}{{ s.start_time }}{% if s.end_time %} – {{ s.end_time }}{% endif %}{% else %}-{% endif %}</td>
 								<td>{{ s.demo_type or "-" }}</td>
