@@ -25,6 +25,10 @@
 	box-shadow: 0 0 0 3px rgba(17, 78, 255, 0.14);
 }
 .feedback-filter .filter-clear { font-size: 13px; color: #114EFF; text-decoration: none; font-weight: 600; }
+/* template chip acts as a link - clicking opens that template's own section */
+.chip-link { text-decoration: none; display: inline-block; }
+.chip-link:hover .chip { box-shadow: 0 0 0 2px rgba(17, 78, 255, 0.25); }
+.template-section { border-top: 3px solid var(--bx-gradient, #114EFF); }
 </style>
 <div class="portal-layout">
 	<header class="portal-topbar">
@@ -59,6 +63,50 @@
 		<div class="sidebar-overlay"></div>
 		<div class="portal-main">				<div class="portal-content">
 					{% if list_note %}<div class="muted" style="margin-bottom: 16px;">{{ list_note }}</div>{% endif %}
+					{% if template_summary %}
+					<div class="portal-card template-section" style="margin-bottom: 22px;">
+						<div class="card-head">
+							<div>
+								<h2>{{ selected_template }} — Overall Feedback</h2>
+								<p class="text-muted" style="margin: 3px 0 0; font-size: 13px;">Everything recorded for this template, newest first.</p>
+							</div>
+							<a class="filter-clear" href="/feedback">View all templates</a>
+						</div>
+						<div class="card-body">
+							<div class="kpi-grid" style="margin-bottom: 0;">
+								<div class="kpi-card">
+									<div class="kpi-label">Feedback Entries</div>
+									<div class="kpi-value">{{ template_summary.count }}</div>
+								</div>
+								<div class="kpi-card kpi-green">
+									<div class="kpi-label">Interested</div>
+									<div class="kpi-value">{{ template_summary.interested }}</div>
+								</div>
+								<div class="kpi-card kpi-red">
+									<div class="kpi-label">Not Interested</div>
+									<div class="kpi-value">{{ template_summary.not_interested }}</div>
+								</div>
+								<div class="kpi-card kpi-blue">
+									<div class="kpi-label">Requirements Fully Met</div>
+									<div class="kpi-value">{{ template_summary.fully_met }}</div>
+								</div>
+								<div class="kpi-card kpi-amber">
+									<div class="kpi-label">Partially Met</div>
+									<div class="kpi-value">{{ template_summary.partially_met }}</div>
+								</div>
+								<div class="kpi-card kpi-red">
+									<div class="kpi-label">Not Met</div>
+									<div class="kpi-value">{{ template_summary.not_met }}</div>
+								</div>
+								<div class="kpi-card kpi-teal">
+									<div class="kpi-label">Converted</div>
+									<div class="kpi-value">{{ template_summary.converted }}</div>
+								</div>
+							</div>
+						</div>
+					</div>
+					{% endif %}
+
 					<div class="flex-between mb-16">
 					<div>
 						<h2 style="margin: 0; font-size: 20px; font-weight: 800; color: #05133C;">Demo Feedback ({{ total_feedback }})</h2>
@@ -98,7 +146,7 @@
 								<tr>
 									<td><a href="/functional_portal/session?name={{ f.name }}">{{ f.name }}</a></td>
 									<td><strong>{{ f.customer }}</strong><div class="muted">{{ f.consultant }}</div></td>
-									<td><span class="chip">{{ f.template }}</span></td>
+									<td><a class="chip-link" href="/feedback?template={{ f.template | urlencode }}" title="Show {{ f.template }} feedback"><span class="chip">{{ f.template }}</span></a></td>
 									<td class="muted">{{ f.date }}</td>
 									<td class="wrap" style="max-width: 320px;">{{ f.overall_feedback or "-" }}</td>
 									<td>{{ f.interested or "-" }}</td>

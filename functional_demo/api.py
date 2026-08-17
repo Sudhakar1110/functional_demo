@@ -977,8 +977,12 @@ def get_my_demo_sessions(demo_status=None):
 
 def get_demo_feedback_data():
 	"""Return the feedback recorded against demos (completed sessions), newest
-	first. Every entry carries the Demo Template it was recorded against (e.g.
-	Law, Hospitality) so the Feedback page can group / filter by template.
+	first. Every entry carries a template name (Law Management, Hospitality,
+	Retail & Supermarket, ...) so the Feedback page can group / filter by
+	template. The name comes from the session's Demo Template when one is
+	linked, otherwise from the Demo Request's Interested Template - so portal-
+	created sessions (which never link a Demo Template) still group under a
+	real, meaningful name instead of "No Template".
 
 	Single source of truth for the portal Feedback page (/feedback) and the desk
 	demo-feedback page (/app/demo-feedback), so both sides always show the same
@@ -988,7 +992,7 @@ def get_demo_feedback_data():
 		"Demo Session",
 		filters={"demo_status": ["in", ["Completed", "Follow-up Required", "Closed"]]},
 		fields=[
-			"name", "customer", "lead", "scheduled_date", "completed_on",
+			"name", "demo_request", "customer", "lead", "scheduled_date", "completed_on",
 			"overall_feedback", "interested", "requirements_met", "additional_requirements",
 			"requested_changes", "follow_up_required", "follow_up_date", "next_action",
 			"consultant_remarks", "final_result", "functional_consultant", "sales_person",
@@ -1011,6 +1015,24 @@ def get_demo_feedback_data():
 			ignore_permissions=True,
 		):
 			template_names[t.name] = t.template_name or t.name
+
+	# template fallback: the Demo Request's "Interested Template" (Law
+	# Management, Hospitality, Retail & Supermarket, ...). Many sessions - e.g.
+	# every one created from the portal - have no Demo Template linked, but the
+	# request always records what the customer was interested in, so feedback
+	# can still be grouped under a real, meaningful template name instead of
+	# falling through to "No Template".
+	request_ids = {s.demo_request for s in sessions if s.demo_request}
+	request_templates = {}
+	if request_ids:
+		for r in frappe.get_all(
+			"Demo Request",
+			filters={"name": ["in", list(request_ids)]},
+			fields=["name", "interested_module"],
+			ignore_permissions=True,
+		):
+			if r.interested_module:
+				request_templates[r.name] = r.interested_module
 
 	# per-session feedback rows (child table, fetched in bulk)
 	items_map = {}
@@ -1060,7 +1082,11 @@ def get_demo_feedback_data():
 					or "-"
 				),
 				"final_result": s.final_result or "",
-				"template": template_names.get(s.demo_template) or "No Template",
+				"template": (
+					request_templates.get(s.demo_request)
+					or template_names.get(s.demo_template)
+					or "No Template"
+				),
 			}
 		)
 	return out

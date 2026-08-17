@@ -27,6 +27,19 @@ frappe.pages["demo-feedback"].on_page_load = function (wrapper) {
 		return allEntries.filter((f) => (f.template || "No Template") === activeTemplate);
 	}
 
+	// clicking a template chip opens that template's own section (same as the
+	// dropdown) - the chip carries the template name in a data attribute; the
+	// "View all templates" clear link uses an empty data-template
+	function bindChipClicks() {
+		page.main.off("click.demo-fb-chip").on("click.demo-fb-chip", ".demo-fb-chip, .demo-fb-clear", (e) => {
+			e.preventDefault();
+			const t = $(e.currentTarget).data("template") || "";
+			activeTemplate = t;
+			page.fields_dict.template_filter.set_value(t);
+			render(currentEntries());
+		});
+	}
+
 	function row_cells(f) {
 		const items = (f.feedback_items || [])
 			.map((it) => `<li><strong>${esc(it.item_type)}:</strong> ${esc(it.description)}</li>`)
@@ -34,13 +47,42 @@ frappe.pages["demo-feedback"].on_page_load = function (wrapper) {
 		return `
 			<td><a href="/app/demo-session/${esc(f.name)}" target="_blank">${esc(f.name)}</a></td>
 			<td><strong>${esc(f.customer || "-")}</strong><div class="demo-fb-muted">${esc(f.consultant || "-")}</div></td>
-			<td><span class="chip">${esc(f.template || "No Template")}</span></td>
+			<td><a class="demo-fb-chip" href="#" data-template="${esc(f.template || "No Template")}" title="${__("Show {0} feedback", [esc(f.template || "No Template")])}"><span class="chip">${esc(f.template || "No Template")}</span></a></td>
 			<td class="demo-fb-muted">${esc(f.date || "-")}</td>
 			<td class="demo-fb-wrap" style="max-width: 320px;">${esc(f.overall_feedback || "-")}</td>
 			<td>${esc(f.interested || "-")}</td>
 			<td>${esc(f.requirements_met || "-")}</td>
 			<td>${items ? `<ul class="demo-fb-items">${items}</ul>` : '<span class="demo-fb-muted">-</span>'}</td>
 			<td>${esc(f.final_result || "-")}</td>`;
+	}
+
+	function count(entries, field, value) {
+		return entries.filter((f) => (f[field] || "") === value).length;
+	}
+
+	// when a template is selected, show its overall picture in a separate
+	// section above the list (entries + interested / requirements-met split)
+	function summaryHTML(entries) {
+		if (!activeTemplate) return "";
+		return `
+			<div class="demo-fb-section">
+				<div class="demo-fb-section-head">
+					<div>
+						<h3 class="demo-fb-section-title">${esc(activeTemplate)} — ${__("Overall Feedback")}</h3>
+						<p class="demo-fb-section-sub">${__("Everything recorded for this template, newest first.")}</p>
+					</div>
+					<a class="demo-fb-clear" href="#" data-template="">${__("View all templates")}</a>
+				</div>
+				<div class="demo-fb-summary-grid">
+					<div class="demo-fb-summary-card"><div class="s-label">${__("Feedback Entries")}</div><div class="s-value">${entries.length}</div></div>
+					<div class="demo-fb-summary-card s-green"><div class="s-label">${__("Interested")}</div><div class="s-value">${count(entries, "interested", "Interested")}</div></div>
+					<div class="demo-fb-summary-card s-red"><div class="s-label">${__("Not Interested")}</div><div class="s-value">${count(entries, "interested", "Not Interested")}</div></div>
+					<div class="demo-fb-summary-card s-blue"><div class="s-label">${__("Requirements Fully Met")}</div><div class="s-value">${count(entries, "requirements_met", "Fully Met")}</div></div>
+					<div class="demo-fb-summary-card s-amber"><div class="s-label">${__("Partially Met")}</div><div class="s-value">${count(entries, "requirements_met", "Partially Met")}</div></div>
+					<div class="demo-fb-summary-card s-red"><div class="s-label">${__("Not Met")}</div><div class="s-value">${count(entries, "requirements_met", "Not Met")}</div></div>
+					<div class="demo-fb-summary-card s-teal"><div class="s-label">${__("Converted")}</div><div class="s-value">${count(entries, "final_result", "Converted")}</div></div>
+				</div>
+			</div>`;
 	}
 
 	function render(entries) {
@@ -51,6 +93,7 @@ frappe.pages["demo-feedback"].on_page_load = function (wrapper) {
 					entries.length,
 					activeTemplate ? ` — ${__("filtered by template: {0}", [esc(activeTemplate)])}` : "",
 				])} — ${__("the same view is available in the portal at /feedback")}.</div>
+				${summaryHTML(entries)}
 				<div class="demo-fb-card">
 					${entries.length ? `
 					<table class="demo-fb-table">
@@ -59,6 +102,7 @@ frappe.pages["demo-feedback"].on_page_load = function (wrapper) {
 					</table>` : `<p class="demo-fb-empty">${__("No feedback recorded yet. Feedback captured when demos are completed will appear here.")}</p>`}
 				</div>
 			</div>`);
+		bindChipClicks();
 	}
 
 	function load() {
@@ -67,7 +111,7 @@ frappe.pages["demo-feedback"].on_page_load = function (wrapper) {
 			method: "functional_demo.api.get_demo_feedback",
 			callback(r) {
 				allEntries = r.message || [];
-				// populate the template filter from the loaded data (Law, Hospitality, ...)
+				// populate the template filter from the loaded data (Law Management, Hospitality, ...)
 				const templates = [
 					...new Set(allEntries.map((f) => f.template || "No Template").filter(Boolean)),
 				].sort((a, b) => a.localeCompare(b));

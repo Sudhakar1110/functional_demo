@@ -8,6 +8,11 @@ from functional_demo.api import get_demo_feedback_data
 from functional_demo.portal import list_note, portal_context
 
 
+def _count(values, match):
+	"""Count feedback entries whose field equals the given value."""
+	return sum(1 for f in values if (f.get("interested") or "") == match)
+
+
 def get_context(context):
 	portal_context(
 		context,
@@ -17,9 +22,9 @@ def get_context(context):
 		subtitle=_("Feedback recorded against the demos"),
 	)
 
-	# Template filter (?template=Law) - the page groups feedback by the Demo
-	# Template it was recorded against, so each template (Law, Hospitality, ...)
-	# can be reviewed on its own.
+	# Template filter (?template=Law Management) - the page groups feedback by
+	# the template it was recorded against, so each template (Law Management,
+	# Hospitality, Retail & Supermarket, ...) can be reviewed on its own.
 	all_feedback = get_demo_feedback_data()
 	selected = (frappe.form_dict.get("template") or "").strip()
 
@@ -42,6 +47,24 @@ def get_context(context):
 		if not context.selected_template or (f.get("template") or "No Template") == context.selected_template
 	]
 	context.total_feedback = len(context.feedback)
+
+	# When a template is selected the page shows a separate section for it:
+	# the overall picture (entry + interested / requirements-met counts) sits
+	# above that template's feedback list, so clicking a template opens its
+	# own overall-feedback section.
+	context.template_summary = None
+	if context.selected_template:
+		sel = context.feedback
+		context.template_summary = {
+			"count": len(sel),
+			"interested": _count(sel, "Interested"),
+			"not_interested": _count(sel, "Not Interested"),
+			"fully_met": sum(1 for f in sel if (f.get("requirements_met") or "") == "Fully Met"),
+			"partially_met": sum(1 for f in sel if (f.get("requirements_met") or "") == "Partially Met"),
+			"not_met": sum(1 for f in sel if (f.get("requirements_met") or "") == "Not Met"),
+			"converted": sum(1 for f in sel if (f.get("final_result") or "") == "Converted"),
+		}
+
 	context.list_note = (
 		""
 		if context.selected_template
