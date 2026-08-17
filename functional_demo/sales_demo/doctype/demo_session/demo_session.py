@@ -985,6 +985,101 @@ def _send_session_reminder(row, tomorrow):
 	return sent
 
 
+def send_demo_hour_reminders():
+	"""Frequent job (runs on the 'all' scheduler tick): remind the consultant
+	and the sales person (in-app notification + email) about every demo that
+	starts within the next hour.
+
+	Idempotent: each session is reminded once per scheduled slot, tracked in
+	Demo Session.last_hour_reminder (the scheduled start datetime).
+	Rescheduling to a different slot triggers a fresh reminder for the new
+	slot; re-runs of the job never double-send."""
+	if not frappe.db.exists("DocType", "Demo Session"):
+		return
+	now = now_datetime()
+	window_end = frappe.utils.add_to_date(now, hours=1)
+	today = frappe.utils.today()
+	sessions = frappe.get_all(
+		"Demo Session",
+		filters={
+			"demo_status": ["in", ["Scheduled", "Rescheduled"]],
+			"scheduled_date": today,
+		},
+		fields=[
+			"name", "customer", "lead", "demo_request", "sales_person",
+			"functional_consultant", "start_time", "end_time", "meeting_link",
+			"last_hour_reminder",
+		],
+		limit_page_length=500,
+	) or []
+	sent = 0
+	for row in sessions:
+		if not row.get("start_time"):
+			continue
+		start = frappe.utils.get_datetime(
+			"{0} {1}".format(today, str(row.get("start_time"))[:5])
+		)
+		# only demos starting within the next hour (not already started)
+		if not (now <= start <= window_end):
+			continue
+		# dedupe per scheduled slot: normalize datetimes before comparing
+		if str(row.get("last_hour_reminder") or "")[:16] == str(start)[:16]:
+			continue
+		sent += _send_hour_reminder(row, start)
+	if sent:
+		frappe.db.commit()
+
+
+def _send_hour_reminder(row, start):
+	"""Send the 1-hour-before reminder for one session to both the sales person
+	and the consultant; returns how many notifications were created."""
+	party = row.customer or row.lead or row.demo_request or row.name
+	subject = _("Demo Starting Soon — {0} at {1} (Session {2})").format(
+		party, start.strftime("%H:%M"), row.name
+	)
+	recipients = [row.sales_person]
+	consultant_user = (
+		frappe.db.get_value("Functional Consultant", row.functional_consultant, "user")
+		if row.functional_consultant
+		else None
+	)
+	if consultant_user:
+		recipients.append(consultant_user)
+
+	sent = 0
+	for user in {r for r in recipients if r and r != "Guest"}:
+		create_notification(user, subject, "Demo Session", row.name)
+		sent += 1
+		email = frappe.db.get_value("User", user, "email")
+		if not email:
+			continue
+		try:
+			send_branded_email(
+				recipients=[email],
+				subject=subject,
+				heading=_("Demo Starting Soon"),
+				intro=_("Demo Session {0} for {1} starts in about an hour.").format(row.name, party),
+				rows=[
+					(_("Starts At"), start.strftime("%H:%M")),
+					(_("Time"), "{0} - {1}".format(row.start_time or "-", row.end_time or "-")),
+					(_("Meeting Link"), row.meeting_link or "-"),
+					(_("Demo Session"), row.name),
+				],
+				cta_text=_("Open Demo Session"),
+				cta_url=frappe.utils.get_url("/app/demo-session/{0}".format(row.name)),
+				reference_doctype="Demo Session",
+				reference_name=row.name,
+			)
+		except Exception:
+			frappe.log_error(
+				title=_("Hour reminder email to {0} failed for {1}").format(user, row.name),
+				message=frappe.get_traceback(),
+			)
+	# remember the slot so the next run of the job skips this session
+	frappe.db.set_value("Demo Session", row.name, "last_hour_reminder", start)
+	return sent
+
+
 # ------------------------------------------------------------------
 # permission filters
 # ------------------------------------------------------------------

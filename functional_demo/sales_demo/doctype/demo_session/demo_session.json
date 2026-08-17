@@ -55,7 +55,8 @@
   "started_on",
   "completed_on",
   "reschedule_count",
-  "last_reminder_date"
+  "last_reminder_date",
+  "last_hour_reminder"
  ],
  "fields": [
   {
@@ -390,6 +391,12 @@
    "fieldname": "last_reminder_date",
    "fieldtype": "Date",
    "label": "Last Reminder Date",
+   "read_only": 1
+  },
+  {
+   "fieldname": "last_hour_reminder",
+   "fieldtype": "Datetime",
+   "label": "Last Hour Reminder",
    "read_only": 1
   }
  ],
