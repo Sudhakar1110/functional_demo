@@ -360,26 +360,39 @@
 				var Ctx = window.AudioContext || window.webkitAudioContext;
 				if (!Ctx) return;
 				var ctx = new Ctx();
-				/* a clearly audible two-tone "ding-dong" chime (E5 + B5) - loud
-				   enough to be heard even with the tab in the background */
+				/* a loud two-tone "ding-dong" chime (E5 + B5) with an octave layer
+				   on top - maxed gain so it is clearly audible even on small
+				   speakers or with the tab in the background */
 				var tones = [
-					{ freq: 659.25, start: 0, dur: 0.55 },
-					{ freq: 987.77, start: 0.18, dur: 0.7 },
+					{ freq: 659.25, start: 0, dur: 0.6 },
+					{ freq: 987.77, start: 0.18, dur: 0.75 },
 				];
 				for (var i = 0; i < tones.length; i++) {
 					var t = tones[i];
+					var start = ctx.currentTime + t.start;
 					var o = ctx.createOscillator();
 					var g = ctx.createGain();
 					o.connect(g);
 					g.connect(ctx.destination);
 					o.type = "triangle";
 					o.frequency.value = t.freq;
-					var start = ctx.currentTime + t.start;
 					g.gain.setValueAtTime(0.0001, start);
-					g.gain.exponentialRampToValueAtTime(0.55, start + 0.02);
+					g.gain.exponentialRampToValueAtTime(0.95, start + 0.02);
 					g.gain.exponentialRampToValueAtTime(0.0001, start + t.dur);
 					o.start(start);
 					o.stop(start + t.dur + 0.05);
+					/* octave layer adds brightness so the chime cuts through */
+					var o2 = ctx.createOscillator();
+					var g2 = ctx.createGain();
+					o2.connect(g2);
+					g2.connect(ctx.destination);
+					o2.type = "sine";
+					o2.frequency.value = t.freq * 2;
+					g2.gain.setValueAtTime(0.0001, start);
+					g2.gain.exponentialRampToValueAtTime(0.4, start + 0.02);
+					g2.gain.exponentialRampToValueAtTime(0.0001, start + t.dur);
+					o2.start(start);
+					o2.stop(start + t.dur + 0.05);
 				}
 			} catch (e) { /* sound is a nicety - never break on it */ }
 		}

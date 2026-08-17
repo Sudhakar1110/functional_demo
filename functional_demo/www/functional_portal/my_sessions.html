@@ -73,10 +73,7 @@
 								<td>{% if s.start_time %}{{ s.start_time }}{% if s.end_time %} – {{ s.end_time }}{% endif %}{% else %}-{% endif %}</td>
 								<td><span class="badge b-{{ s.demo_status|lower|replace(' ', '-') }}">{{ s.demo_status }}</span></td>
 								<td>{{ s.final_result or "-" }}</td>
-								<td style="white-space: nowrap;">
-									{% if s.demo_request %}
-									<a class="btn-portal secondary sm" href="{% if is_sales %}/sales_portal/lead_details{% else %}/functional_portal/lead_details{% endif %}?request={{ s.demo_request }}">Lead Details</a>
-									{% endif %}
+								<td>
 									{% if s.demo_status in ["Scheduled", "In Progress", "Rescheduled"] %}
 									<a class="btn-portal sm" href="/functional_portal/session?name={{ s.name }}">Conduct Demo &rarr;</a>
 									{% endif %}
