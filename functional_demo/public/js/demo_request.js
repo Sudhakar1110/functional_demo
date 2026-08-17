@@ -27,14 +27,13 @@ frappe.ui.form.on("Demo Request", {
 			args: { lead: frm.doc.lead },
 			callback(r) {
 				if (!r.message) return;
+				/* Selecting a Sales Person only auto-fills the Contact Person.
+				   Contact Number / Email belong to the customer (leads) and are
+				   entered manually - the sales person's own number/email must
+				   never land in the customer's contact fields. */
 				if (r.message.contact_person && !frm.doc.contact_person) {
 					frm.set_value("contact_person", r.message.contact_person);
 				}
-				["contact_number", "email"].forEach((fieldname) => {
-					if (r.message[fieldname] && !frm.doc[fieldname]) {
-						frm.set_value(fieldname, r.message[fieldname]);
-					}
-				});
 			},
 		});
 	},

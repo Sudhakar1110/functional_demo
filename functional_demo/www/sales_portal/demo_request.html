@@ -354,13 +354,20 @@
 	{% if create_mode %}
 	function fillContact(kind, value) {
 		if (!value) return;
-		portalCall(kind === "customer" ? "functional_demo.api.get_customer_details" : "functional_demo.api.get_lead_details",
-			kind === "customer" ? { customer: value } : { lead: value })
+		var isCustomer = kind === "customer";
+		portalCall(isCustomer ? "functional_demo.api.get_customer_details" : "functional_demo.api.get_lead_details",
+			isCustomer ? { customer: value } : { lead: value })
 			.then(function (data) {
 				if (!data) return;
+				/* Contact Number / Email belong to the customer (leads) and are
+				   entered manually - a Sales Person's own number/email must never
+				   land in the customer's contact fields. Selecting a Leads
+				   (customer) fills all three from the customer's own contact;
+				   selecting a Sales Person only fills the Contact Person. */
 				if (data.contact_person && !document.getElementById("contact_person").value) {
 					document.getElementById("contact_person").value = data.contact_person;
 				}
+				if (!isCustomer) return;
 				if (data.contact_number && !document.getElementById("contact_number").value) {
 					document.getElementById("contact_number").value = data.contact_number;
 				}

@@ -146,8 +146,9 @@ def _lead_opportunity_prefill():
 		if ld:
 			if frappe.db.exists("Company", ld.get("company_name") or ""):
 				prefill["company"] = ld.get("company_name") or ""
-			prefill["contact_number"] = ld.get("mobile_no") or ld.get("phone") or ""
-			prefill["email"] = ld.get("email_id") or ""
+			# Contact Number / Email are deliberately NOT filled from the Sales
+			# Person (Lead) - they are the customer's (leads') details and the
+			# user enters them manually.
 	elif customer and frappe.db.exists("Customer", customer):
 		prefill["customer"] = customer
 
