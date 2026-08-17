@@ -1049,8 +1049,9 @@ def has_permission(doc, ptype="read", user=None):
 	roles = frappe.get_roles(user)
 	if any(r in roles for r in ("System Manager", "Sales Manager", "Functional Team Manager")):
 		return True
-	if "Feedback Viewer" in roles:
-		# Feedback Viewer is read-only: it can open session details (from Demo
+	if "Feedback Viewer" in roles or "Developer" in roles:
+		# The feedback-only roles (standard 'Developer' / legacy 'Feedback
+		# Viewer') are read-only: they can open session details (from Demo
 		# Feedback) but never start/complete/cancel a demo.
 		return ptype == "read"
 	if "Functional Consultant" in roles:

@@ -42,7 +42,7 @@ indicators — while the backend follows proper Frappe v15 / ERPNext v15 standar
   into the standard sales pipeline.
 - **Role-based access** (row-level permission filters + doc-level checks) with a
   role-aware **web portal**: Sales sees all content, the Functional team sees
-  functional-only sections, and the **Feedback Viewer** role sees feedback only.
+  functional-only sections, and the **Developer** role sees feedback only.
 - **Workspaces** — dedicated **Sales Demo Workspace** and **Functional Demo
   Workspace** with shortcuts, cards, number cards and charts.
 - **12 reports** with filters (demo requests, sessions, consultant-wise,
@@ -192,7 +192,9 @@ double-send alongside the code-based notifications.
   completes demos and records feedback.
 - **Functional Team Manager**: all consultants, all sessions, templates, workload,
   reassignments.
-- **Feedback Viewer**: read-only portal access to the Demo Feedback page.
+- **Developer** (standard Frappe role) / **Feedback Viewer** (legacy alias):
+  feedback-only access - sees only the Demo Feedback page, both in the portal
+  (`/feedback`) and in the desk (`/app/demo-feedback`).
 - **System Manager**: full access.
 
 Row-level filters (`permission_query_conditions`) and doc-level checks

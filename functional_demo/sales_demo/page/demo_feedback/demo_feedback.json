@@ -45,6 +45,13 @@
 			"parentfield": "roles",
 			"parenttype": "Page",
 			"role": "System Manager"
+		},
+		{
+			"doctype": "Has Role",
+			"parent": "demo-feedback",
+			"parentfield": "roles",
+			"parenttype": "Page",
+			"role": "Developer"
 		}
 	],
 	"standard": "Yes",

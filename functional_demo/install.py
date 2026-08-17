@@ -263,16 +263,18 @@ def disable_legacy_notifications():
 
 
 def create_developer_user():
-	"""Idempotently create the 'developer' user with the Feedback Viewer role.
+	"""Idempotently create the 'developer' user with the feedback-only role.
 
-	The Feedback Viewer role sees only the portal Feedback page (feedback-only
-	access). The user is created on first migrate if missing; if the user
-	already exists the Feedback Viewer role is just ensured (and the legacy
-	'Developer' role this app used to repurpose is removed again - it is a
-	standard Frappe role that must keep its normal meaning). The initial
-	password is randomly generated and printed to the console (and stored on
-	the user) so there is never a hardcoded default credential in the
-	codebase - the operator sets a proper password afterwards if needed.
+	The feedback-only role sees ONLY the Demo Feedback page - the portal
+	/feedback page and the desk /app/demo-feedback page. The standard Frappe
+	'Developer' role is the feedback-only role for this app (a user carrying
+	it is restricted to feedback); the legacy custom 'Feedback Viewer' role is
+	kept as an equivalent alias wherever it was already assigned. The user is
+	created on first migrate if missing; if the user already exists the
+	feedback-only role is just ensured. The initial password is randomly
+	generated and printed to the console (and stored on the user) so there is
+	never a hardcoded default credential in the codebase - the operator sets
+	a proper password afterwards if needed.
 	"""
 	if not frappe.db.exists("User", "developer"):
 		try:
@@ -284,10 +286,10 @@ def create_developer_user():
 			password = frappe.generate_hash(length=12)
 			doc.new_password = password
 			doc.send_welcome_email = 0
-			doc.add_roles("Feedback Viewer")
+			doc.add_roles("Developer")
 			doc.insert(ignore_permissions=True)
 			print(
-				f"Created User: developer (role: Feedback Viewer, generated password: {password}) - "
+				f"Created User: developer (role: Developer, generated password: {password}) - "
 				"change it after first login."
 			)
 		except Exception:
@@ -299,13 +301,8 @@ def create_developer_user():
 	else:
 		user = frappe.get_doc("User", "developer")
 		roles = set(frappe.get_roles("developer"))
-		if "Feedback Viewer" not in roles:
-			user.add_roles("Feedback Viewer")
-		if "Developer" in roles:
-			# legacy migration: the role was renamed so the standard Frappe
-			# 'Developer' role is no longer repurposed by this app
-			user.remove_roles("Developer")
-		if "Feedback Viewer" not in roles or "Developer" in roles:
+		if "Developer" not in roles:
+			user.add_roles("Developer")
 			user.save(ignore_permissions=True)
 
 

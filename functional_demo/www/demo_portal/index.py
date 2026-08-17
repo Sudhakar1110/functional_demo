@@ -16,7 +16,7 @@ from functional_demo.portal import (
 
 
 def get_context(context):
-	# The Feedback Viewer role is feedback-only: it never sees the home
+	# The feedback-only role (Developer / Feedback Viewer) never sees the home
 	# dashboard, it is sent straight to the Feedback page.
 	if is_developer():
 		frappe.local.flags.redirect_location = "/feedback"
