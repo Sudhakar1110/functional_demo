@@ -9,6 +9,9 @@
   "party_section",
   "demo_request",
   "customer",
+  "column_break_customer",
+  "interested_module",
+  "column_break_lead",
   "lead",
   "company",
   "contact_person",
@@ -19,7 +22,6 @@
   "functional_consultant",
   "consultant_user",
   "demo_template",
-  "interested_module",
   "template_snapshot_date",
   "template_source_modified",
   "schedule_section",
@@ -80,6 +82,23 @@
    "label": "Leads",
    "options": "Customer",
    "read_only": 1
+  },
+  {
+   "fieldname": "column_break_customer",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fetch_from": "demo_request.interested_module",
+   "fetch_if_empty": 1,
+   "fieldname": "interested_module",
+   "fieldtype": "Select",
+   "in_standard_filter": 1,
+   "label": "Interested Template",
+   "options": "\nLaw Management\nHospitality\nMedical Store\nRetail & Supermarket\nManufacturing\nEducation\nHealthcare\nReal Estate\nLogistics & Transport\nAgriculture\nIT Services\nBanking & Finance\nFood & Beverage\nConstruction\nEnergy & Utilities\nOther"
+  },
+  {
+   "fieldname": "column_break_lead",
+   "fieldtype": "Column Break"
   },
   {
    "fetch_from": "demo_request.lead",
@@ -167,15 +186,6 @@
    "in_standard_filter": 1,
    "label": "Demo Template",
    "options": "Functional Demo Template"
-  },
-  {
-   "fetch_from": "demo_request.interested_module",
-   "fetch_if_empty": 1,
-   "fieldname": "interested_module",
-   "fieldtype": "Select",
-   "in_standard_filter": 1,
-   "label": "Interested Template",
-   "options": "\nLaw Management\nHospitality\nMedical Store\nRetail & Supermarket\nManufacturing\nEducation\nHealthcare\nReal Estate\nLogistics & Transport\nAgriculture\nIT Services\nBanking & Finance\nFood & Beverage\nConstruction\nEnergy & Utilities\nOther"
   },
   {
    "fieldname": "template_snapshot_date",
