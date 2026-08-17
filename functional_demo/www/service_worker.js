@@ -27,21 +27,7 @@ self.addEventListener("push", function (event) {
 });
 
 self.addEventListener("notificationclick", function (event) {
+	/* read-only notifications: clicking an OS popup only dismisses it and
+	   never navigates the user away from what they are doing */
 	event.notification.close();
-	var url = (event.notification.data && event.notification.data.url) || "/demo_portal";
-	event.waitUntil(
-		self.clients.matchAll({ type: "window", includeUncontrolled: true }).then(function (clientList) {
-			for (var i = 0; i < clientList.length; i++) {
-				var client = clientList[i];
-				if ("focus" in client) {
-					client.focus();
-					if ("navigate" in client && client.url.indexOf(location.origin) === 0) {
-						client.navigate(url);
-					}
-					return;
-				}
-			}
-			return self.clients.openWindow(url);
-		})
-	);
 });

@@ -341,21 +341,11 @@ def mark_overdue_follow_ups():
 
 def _notify_overdue_follow_up(row):
 	"""In-app notification + email about one overdue follow-up."""
-	from functional_demo.portal import create_notification
+	from functional_demo.portal import create_notification, send_branded_email
 
 	party = row.get("customer") or row.get("demo_request") or row.get("name")
-	subject = _("Follow-up overdue: {0} (due {1})").format(
+	subject = _("Follow-up Overdue — {0} (due {1})").format(
 		party, row.get("follow_up_date")
-	)
-	message = _(
-		"Hi,\n\n"
-		"Follow-up {0} for {1} was due on {2} and is now overdue.\n\n"
-		"Open the follow-up: {3}\n"
-	).format(
-		row.get("name"),
-		party,
-		row.get("follow_up_date"),
-		frappe.utils.get_url("/app/demo-follow-up/{0}".format(row.get("name"))),
 	)
 	for user in {row.get("assigned_to"), row.get("sales_person")}:
 		if not user or user == "Guest":
@@ -365,13 +355,21 @@ def _notify_overdue_follow_up(row):
 		if not email:
 			continue
 		try:
-			frappe.sendmail(
+			send_branded_email(
 				recipients=[email],
 				subject=subject,
-				message=message,
+				heading=_("Follow-up Overdue"),
+				intro=_("Follow-up {0} for {1} was due on {2} and is now overdue.").format(
+					row.get("name"), party, row.get("follow_up_date")
+				),
+				rows=[
+					(_("Follow-up"), row.get("name")),
+					(_("Demo Request"), row.get("demo_request") or "-"),
+				],
+				cta_text=_("Open Follow-up"),
+				cta_url=frappe.utils.get_url("/app/demo-follow-up/{0}".format(row.get("name"))),
 				reference_doctype="Demo Follow Up",
 				reference_name=row.get("name"),
-				now=True,
 			)
 		except Exception:
 			frappe.log_error(

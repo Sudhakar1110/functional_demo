@@ -305,6 +305,72 @@ def _send_web_push(for_user, subject, document_type, document_name):
 		)
 
 
+def send_branded_email(
+	recipients,
+	subject,
+	heading,
+	intro,
+	rows,
+	cta_text=None,
+	cta_url=None,
+	reference_doctype=None,
+	reference_name=None,
+):
+	"""Send a professional, on-brand HTML email (navy/mint design system, the
+	same look as the portal). rows is a list of (label, value) pairs rendered
+	as a clean two-column table; cta_text / cta_url render a mint action
+	button. Mail failures are logged by the callers, never raised here."""
+	import html as _html
+
+	def esc(value):
+		return _html.escape(str(value if value not in (None, "") else "-"), quote=True)
+
+	rows_html = "".join(
+		"<tr>"
+		'<td style="padding:9px 0;width:190px;vertical-align:top;color:#71717B;font-size:13px;">{0}</td>'
+		'<td style="padding:9px 0;vertical-align:top;color:#05133C;font-size:13px;font-weight:600;">{1}</td>'
+		"</tr>".format(esc(label), esc(value))
+		for label, value in rows
+	)
+	cta_html = ""
+	if cta_text and cta_url:
+		cta_html = (
+			'<div style="text-align:center;margin:24px 0 4px;">'
+			'<a href="{0}" style="display:inline-block;background:#14F1B1;color:#05133C;'
+			'text-decoration:none;font-weight:700;font-size:14px;padding:12px 28px;border-radius:10px;">{1}</a>'
+			"</div>"
+		).format(esc(cta_url), esc(cta_text))
+
+	html = (
+		'<div style="background:#F4F6FA;padding:28px 16px;font-family:Arial,Helvetica,sans-serif;">'
+		'<div style="max-width:560px;margin:0 auto;background:#FFFFFF;border-radius:14px;overflow:hidden;border:1px solid #E5E7EB;">'
+		'<div style="background:linear-gradient(90deg,#05133C 0%,#091526 100%);padding:20px 26px;">'
+		'<div style="color:#FFFFFF;font-size:16px;font-weight:700;">Sales &amp; Functional Demo Management</div>'
+		'<div style="color:#14F1B1;font-size:11px;margin-top:2px;letter-spacing:0.5px;text-transform:uppercase;">Demo Portal</div>'
+		"</div>"
+		'<div style="height:3px;background:linear-gradient(90deg,#14F1B1 0%,#114EFF 100%);"></div>'
+		'<div style="padding:24px 26px;">'
+		'<h2 style="margin:0 0 6px;color:#05133C;font-size:18px;">{heading}</h2>'
+		'<p style="margin:0 0 12px;color:#71717B;font-size:13px;line-height:1.6;">{intro}</p>'
+		'<table style="width:100%;border-collapse:collapse;">{rows}</table>'
+		"{cta}"
+		"</div>"
+		'<div style="padding:14px 26px;background:#F9FAFB;border-top:1px solid #EEF0F3;color:#9CA3AF;font-size:11px;">'
+		"This is an automated notification from the Sales &amp; Functional Demo Portal. Please do not reply to this email."
+		"</div>"
+		"</div></div>"
+	).format(heading=esc(heading), intro=esc(intro), rows=rows_html, cta=cta_html)
+
+	frappe.sendmail(
+		recipients=recipients,
+		subject=subject,
+		html=html,
+		reference_doctype=reference_doctype,
+		reference_name=reference_name,
+		now=True,
+	)
+
+
 def _ensure_notification_type(type_name):
 	"""Idempotently create a Notification Type record (Frappe v15+ only).
 

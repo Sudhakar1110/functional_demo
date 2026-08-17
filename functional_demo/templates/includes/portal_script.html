@@ -259,10 +259,12 @@
 			badge.style.display = unread > 0 ? "flex" : "none";
 
 			var rows = items.map(function (n) {
-				return '<a class="portal-notif-item' + (n.read ? "" : " unread") + '" href="' + docHref(n) + '" data-name="' + esc(n.name) + '">'
+				/* divs, not links - clicking a notification only marks it read and
+				   never navigates away from the current page */
+				return '<div class="portal-notif-item' + (n.read ? "" : " unread") + '" data-name="' + esc(n.name) + '">'
 					+ '<div class="portal-notif-subject">' + esc(n.subject || "Notification") + "</div>"
 					+ '<div class="portal-notif-meta">' + esc(n.creation || "") + "</div>"
-					+ "</a>";
+					+ "</div>";
 			}).join("");
 
 			panel.innerHTML =
@@ -381,8 +383,8 @@
 					tag: "demo-portal-" + Date.now(),
 				});
 				n.onclick = function () {
-					window.focus();
-					if (href) window.location.href = href;
+					/* read-only: clicking an OS popup never navigates away - it
+					   only dismisses the notification */
 					n.close();
 				};
 			} catch (e) { /* popup blocked - the in-page toast still shows */ }
@@ -390,9 +392,10 @@
 
 		function showToast(subject, href) {
 			if (!subject) return;
-			var toast = document.createElement("a");
+			/* a plain div - clicking a notification only marks it read and
+			   dismisses; it never navigates away from the current page */
+			var toast = document.createElement("div");
 			toast.className = "portal-toast";
-			toast.href = href || "/demo_portal";
 			toast.innerHTML =
 				'<span class="portal-toast-ic"><svg class="portal-notif-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></span>'
 				+ '<span class="portal-toast-body"><span class="portal-toast-label">New notification</span>'
@@ -412,9 +415,10 @@
 				e.stopPropagation();
 				dismiss();
 			});
-			/* clicking the toast marks notifications read and opens the target */
+			/* clicking the toast marks notifications read and dismisses (no navigation) */
 			toast.addEventListener("click", function () {
 				portalCall("functional_demo.api.mark_portal_notifications_read", {}).catch(function () {});
+				dismiss();
 			});
 		}
 
@@ -477,27 +481,33 @@
 		document.addEventListener("click", function (e) {
 			if (!wrap.contains(e.target)) panel.style.display = "none";
 		});
+		/* after marking read, clear the unread styling + badge in the panel */
+		function markAllReadUI() {
+			var badge = btn.querySelector(".portal-notif-badge");
+			badge.textContent = "0";
+			badge.style.display = "none";
+			var m = document.getElementById("portal-notif-markall");
+			if (m) m.remove();
+			var items = panel.querySelectorAll(".portal-notif-item");
+			for (var i = 0; i < items.length; i++) items[i].classList.remove("unread");
+		}
+
 		panel.addEventListener("click", function (e) {
 			var mark = e.target.closest ? e.target.closest("#portal-notif-markall") : null;
 			if (mark) {
 				e.preventDefault();
 				portalCall("functional_demo.api.mark_portal_notifications_read", {})
-					.then(function () {
-						var badge = btn.querySelector(".portal-notif-badge");
-						badge.textContent = "0";
-						badge.style.display = "none";
-						var m = document.getElementById("portal-notif-markall");
-						if (m) m.remove();
-						var items = panel.querySelectorAll(".portal-notif-item");
-						for (var i = 0; i < items.length; i++) items[i].classList.remove("unread");
-					})
+					.then(markAllReadUI)
 					.catch(function () {});
 				return;
 			}
-			/* clicking a notification marks everything read (fire & forget) */
+			/* clicking a notification marks everything read (fire & forget) and
+			   never navigates away from the current page */
 			var item = e.target.closest ? e.target.closest(".portal-notif-item") : null;
 			if (item && item.getAttribute("data-name")) {
-				portalCall("functional_demo.api.mark_portal_notifications_read", {}).catch(function () {});
+				portalCall("functional_demo.api.mark_portal_notifications_read", {})
+					.then(markAllReadUI)
+					.catch(function () {});
 			}
 		});
 

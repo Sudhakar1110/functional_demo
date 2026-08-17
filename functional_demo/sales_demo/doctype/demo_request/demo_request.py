@@ -6,7 +6,7 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.utils import add_days, now_datetime, today
 
-from functional_demo.portal import create_notification
+from functional_demo.portal import create_notification, send_branded_email
 
 
 class DemoRequest(Document):
@@ -263,8 +263,8 @@ class DemoRequest(Document):
 		# in-app notification (portal + desk bells) on every (re)assignment
 		create_notification(
 			user,
-			_("Demo Request {0} assigned to you ({1})").format(
-				self.name, self.customer or self.lead or "-"
+			_("Demo Request Assigned to You — {0} ({1})").format(
+				self.customer or self.lead or "-", self.name
 			),
 			"Demo Request",
 			self.name,
@@ -323,32 +323,26 @@ class DemoRequest(Document):
 				)
 				return
 
-			subject = _("Demo Request {0} assigned to you").format(self.name)
-			message = _(
-				"Hi,\n\n"
-				"You have been assigned Demo Request {0} by {1}.\n\n"
-				"Customer / Lead: {2}\n"
-				"Interested Template: {3}\n"
-				"Priority: {4}\n"
-				"Preferred Date: {5}\n\n"
-				"Please review the customer requirements and confirm your availability.\n\n"
-				"Open the request: {6}\n"
-			).format(
-				self.name,
-				frappe.session.user,
-				self.customer or self.lead or "-",
-				self.interested_module or "-",
-				self.priority or "-",
-				self.preferred_demo_date or "-",
-				frappe.utils.get_url("/app/demo-request/{0}".format(self.name)),
-			)
-			frappe.sendmail(
+			party = self.customer or self.lead or "-"
+			subject = _("Demo Request Assigned to You — {0}").format(party)
+			send_branded_email(
 				recipients=[email],
 				subject=subject,
-				message=message,
+				heading=_("Demo Request Assigned"),
+				intro=_("You have been assigned Demo Request {0} by {1}.").format(
+					self.name, frappe.session.user
+				),
+				rows=[
+					(_("Customer / Lead"), party),
+					(_("Interested Template"), self.interested_module or "-"),
+					(_("Priority"), self.priority or "-"),
+					(_("Preferred Date"), self.preferred_demo_date or "-"),
+					(_("Demo Request"), self.name),
+				],
+				cta_text=_("Open Demo Request"),
+				cta_url=frappe.utils.get_url("/app/demo-request/{0}".format(self.name)),
 				reference_doctype="Demo Request",
 				reference_name=self.name,
-				now=True,
 			)
 		except Exception:
 			# never block the assignment because the email could not be sent
@@ -439,7 +433,7 @@ def _escalate_to_managers(request_name, sla_due_date):
 	for user in managers:
 		create_notification(
 			user,
-			_("SLA breached: {0} was due to be scheduled by {1} but has no demo yet.").format(
+			_("SLA Breached — {0} was due to be scheduled by {1} but has no demo yet.").format(
 				request_name, sla_due_date
 			),
 			"Demo Request",

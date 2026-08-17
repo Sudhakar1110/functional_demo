@@ -6,7 +6,7 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.utils import now_datetime
 
-from functional_demo.portal import create_notification
+from functional_demo.portal import create_notification, send_branded_email
 
 
 class DemoFollowUp(Document):
@@ -63,10 +63,11 @@ class DemoFollowUp(Document):
 				return
 			# in-app notification (portal + desk bells) - created even when the
 			# sales person has no email (e.g. Administrator)
+			party = self.customer or self.demo_request or "-"
 			create_notification(
 				sales_person,
-				_("Follow-up created for {0} (Demo Request {1})").format(
-					self.customer or "-", self.demo_request or "-"
+				_("Follow-up Created — {0} (Request {1})").format(
+					party, self.demo_request or "-"
 				),
 				"Demo Follow Up",
 				self.name,
@@ -74,29 +75,22 @@ class DemoFollowUp(Document):
 			email = frappe.db.get_value("User", sales_person, "email")
 			if not email:
 				return
-			subject = _("Follow-up created for {0}").format(self.customer or self.demo_request)
-			message = _(
-				"Hi,\n\n"
-				"A follow-up has been created for {0} (Demo Request {1}).\n\n"
-				"Follow-up date: {2}\n"
-				"Next action: {3}\n"
-				"Assigned to: {4}\n\n"
-				"Open the follow-up: {5}\n"
-			).format(
-				self.customer or "-",
-				self.demo_request or "-",
-				self.follow_up_date or "-",
-				self.next_action or "-",
-				self.assigned_to or "-",
-				frappe.utils.get_url("/app/demo-follow-up/{0}".format(self.name)),
-			)
-			frappe.sendmail(
+			send_branded_email(
 				recipients=[email],
-				subject=subject,
-				message=message,
+				subject=_("Follow-up Created — {0}").format(party),
+				heading=_("Follow-up Created"),
+				intro=_("A follow-up has been created for {0}.").format(party),
+				rows=[
+					(_("Follow-up Date"), self.follow_up_date or "-"),
+					(_("Next Action"), self.next_action or "-"),
+					(_("Assigned To"), self.assigned_to or "-"),
+					(_("Demo Request"), self.demo_request or "-"),
+					(_("Follow-up"), self.name),
+				],
+				cta_text=_("Open Follow-up"),
+				cta_url=frappe.utils.get_url("/app/demo-follow-up/{0}".format(self.name)),
 				reference_doctype="Demo Follow Up",
 				reference_name=self.name,
-				now=True,
 			)
 		except Exception:
 			# never block follow-up creation because the email could not be sent
@@ -129,18 +123,8 @@ class DemoFollowUp(Document):
 				"Functional Consultant", self.functional_consultant, "user"
 			)
 		party = self.customer or self.demo_request or self.name
-		subject = _("Additional demo required: {0} (Demo Request {1})").format(
+		subject = _("Additional Demo Required — {0} (Request {1})").format(
 			party, self.demo_request or "-"
-		)
-		message = _(
-			"Hi,\n\n"
-			"Follow-up {0} for {1} was marked 'Additional Demo Required'.\n\n"
-			"Please schedule the follow-up demo so the sales cycle can move forward.\n\n"
-			"Open the follow-up: {2}\n"
-		).format(
-			self.name,
-			party,
-			frappe.utils.get_url("/app/demo-follow-up/{0}".format(self.name)),
 		)
 		for user in {self.sales_person, self.assigned_to, consultant_user}:
 			if not user or user == "Guest":
@@ -150,13 +134,21 @@ class DemoFollowUp(Document):
 			if not email:
 				continue
 			try:
-				frappe.sendmail(
+				send_branded_email(
 					recipients=[email],
 					subject=subject,
-					message=message,
+					heading=_("Additional Demo Required"),
+					intro=_("Follow-up {0} for {1} was marked 'Additional Demo Required'. Please schedule the follow-up demo so the sales cycle can move forward.").format(
+						self.name, party
+					),
+					rows=[
+						(_("Follow-up"), self.name),
+						(_("Demo Request"), self.demo_request or "-"),
+					],
+					cta_text=_("Open Follow-up"),
+					cta_url=frappe.utils.get_url("/app/demo-follow-up/{0}".format(self.name)),
 					reference_doctype="Demo Follow Up",
 					reference_name=self.name,
-					now=True,
 				)
 			except Exception:
 				# never block the follow-up update because an email could not be sent

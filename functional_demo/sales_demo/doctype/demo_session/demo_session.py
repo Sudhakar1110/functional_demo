@@ -6,7 +6,7 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.utils import add_days, now_datetime, today
 
-from functional_demo.portal import create_notification
+from functional_demo.portal import create_notification, send_branded_email
 from functional_demo.sales_demo.doctype.functional_demo_template.functional_demo_template import (
 	get_template_snapshot,
 )
@@ -283,25 +283,20 @@ class DemoSession(Document):
 				else None
 			)
 			party = self.customer or self.lead or self.demo_request
-			subject = _("Demo scheduled: {0} on {1}").format(party, self.scheduled_date)
-			message = _(
-				"Hi,\n\n"
-				"Demo Session {0} for {1} has been scheduled.\n\n"
-				"Date: {2}\n"
-				"Time: {3} - {4}\n"
-				"Consultant: {5}\n"
-				"Meeting link: {6}\n\n"
-				"Open the session: {7}\n"
-			).format(
-				self.name,
-				party,
-				self.scheduled_date,
-				self.start_time or "-",
-				self.end_time or "-",
-				consultant_name or "-",
-				self.meeting_link or "-",
-				frappe.utils.get_url("/app/demo-session/{0}".format(self.name)),
+			date_label = (
+				frappe.utils.format_date(self.scheduled_date, "medium")
+				if self.scheduled_date
+				else "-"
 			)
+			subject = _("Demo Scheduled — {0} on {1}").format(party, date_label)
+			session_url = frappe.utils.get_url("/app/demo-session/{0}".format(self.name))
+			rows = [
+				(_("Date"), date_label),
+				(_("Time"), "{0} - {1}".format(self.start_time or "-", self.end_time or "-")),
+				(_("Consultant"), consultant_name or "-"),
+				(_("Meeting Link"), self.meeting_link or "-"),
+				(_("Demo Session"), self.name),
+			]
 
 			# sales person: in-app notification + email
 			if self.sales_person:
@@ -309,29 +304,32 @@ class DemoSession(Document):
 				# sales person has no email (e.g. Administrator)
 				create_notification(
 					self.sales_person,
-					_("Demo scheduled: {0} on {1} (Session {2})").format(
-						party, self.scheduled_date, self.name
+					_("Demo Scheduled — {0} on {1} (Session {2})").format(
+						party, date_label, self.name
 					),
 					"Demo Session",
 					self.name,
 				)
 				email = frappe.db.get_value("User", self.sales_person, "email")
 				if email:
-					frappe.sendmail(
+					send_branded_email(
 						recipients=[email],
 						subject=subject,
-						message=message,
+						heading=_("Demo Scheduled"),
+						intro=_("A demo for {0} has been scheduled.").format(party),
+						rows=rows,
+						cta_text=_("Open Demo Session"),
+						cta_url=session_url,
 						reference_doctype="Demo Session",
 						reference_name=self.name,
-						now=True,
 					)
 
 			# consultant: in-app notification + email with the same schedule details
 			if consultant_user:
 				create_notification(
 					consultant_user,
-					_("Demo scheduled for you: {0} on {1} (Session {2})").format(
-						party, self.scheduled_date, self.name
+					_("Demo Scheduled for You — {0} on {1} (Session {2})").format(
+						party, date_label, self.name
 					),
 					"Demo Session",
 					self.name,
@@ -348,13 +346,16 @@ class DemoSession(Document):
 					or ""
 				)
 				if email:
-					frappe.sendmail(
+					send_branded_email(
 						recipients=[email],
-						subject=_("Demo scheduled for you: {0} on {1}").format(party, self.scheduled_date),
-						message=message,
+						subject=_("Demo Scheduled for You — {0} on {1}").format(party, date_label),
+						heading=_("Demo Scheduled"),
+						intro=_("A demo for {0} has been scheduled for you.").format(party),
+						rows=rows,
+						cta_text=_("Open Demo Session"),
+						cta_url=session_url,
 						reference_doctype="Demo Session",
 						reference_name=self.name,
-						now=True,
 					)
 				else:
 					# log so a missing address is never silently lost
@@ -378,44 +379,32 @@ class DemoSession(Document):
 				return
 			# in-app notification (portal + desk bells) - created even when the
 			# sales person has no email (e.g. Administrator)
+			party = self.customer or self.lead or self.demo_request
 			create_notification(
 				sales_person,
-				_("Demo completed: {0} ({1})").format(
-					self.customer or self.lead or self.demo_request, self.name
-				),
+				_("Demo Completed — {0} (Session {1})").format(party, self.name),
 				"Demo Session",
 				self.name,
 			)
 			email = frappe.db.get_value("User", sales_person, "email")
 			if not email:
 				return
-			subject = _("Demo completed: {0} ({1})").format(
-				self.customer or self.lead or self.demo_request, self.name
-			)
-			message = _(
-				"Hi,\n\n"
-				"Demo Session {0} for {1} has been completed.\n\n"
-				"Interested: {2}\n"
-				"Requirements met: {3}\n"
-				"Overall feedback: {4}\n"
-				"Follow-up required: {5}\n\n"
-				"Open the session: {6}\n"
-			).format(
-				self.name,
-				self.customer or self.lead or self.demo_request,
-				self.interested or "-",
-				self.requirements_met or "-",
-				self.overall_feedback or "-",
-				"Yes" if self.follow_up_required else "No",
-				frappe.utils.get_url("/app/demo-session/{0}".format(self.name)),
-			)
-			frappe.sendmail(
+			send_branded_email(
 				recipients=[email],
-				subject=subject,
-				message=message,
+				subject=_("Demo Completed — {0}").format(party),
+				heading=_("Demo Completed"),
+				intro=_("Demo Session {0} for {1} has been completed.").format(self.name, party),
+				rows=[
+					(_("Interested"), self.interested or "-"),
+					(_("Requirements Met"), self.requirements_met or "-"),
+					(_("Overall Feedback"), self.overall_feedback or "-"),
+					(_("Follow-up Required"), "Yes" if self.follow_up_required else "No"),
+					(_("Demo Session"), self.name),
+				],
+				cta_text=_("Open Demo Session"),
+				cta_url=frappe.utils.get_url("/app/demo-session/{0}".format(self.name)),
 				reference_doctype="Demo Session",
 				reference_name=self.name,
-				now=True,
 			)
 		except Exception:
 			frappe.log_error(
@@ -434,26 +423,26 @@ class DemoSession(Document):
 			party = self.customer or self.lead or self.demo_request
 			create_notification(
 				sales_person,
-				_("Demo started: {0} ({1})").format(party, self.name),
+				_("Demo Started — {0} (Session {1})").format(party, self.name),
 				"Demo Session",
 				self.name,
 			)
 			email = frappe.db.get_value("User", sales_person, "email")
 			if not email:
 				return
-			subject = _("Demo started: {0} ({1})").format(party, self.name)
-			message = _(
-				"Hi,\n\n"
-				"Demo Session {0} for {1} has just started.\n\n"
-				"Open the session: {2}\n"
-			).format(party, self.name, frappe.utils.get_url("/app/demo-session/{0}".format(self.name)))
-			frappe.sendmail(
+			send_branded_email(
 				recipients=[email],
-				subject=subject,
-				message=message,
+				subject=_("Demo Started — {0}").format(party),
+				heading=_("Demo Started"),
+				intro=_("Demo Session {0} for {1} has just started.").format(self.name, party),
+				rows=[
+					(_("Demo Session"), self.name),
+					(_("Meeting Link"), self.meeting_link or "-"),
+				],
+				cta_text=_("Open Demo Session"),
+				cta_url=frappe.utils.get_url("/app/demo-session/{0}".format(self.name)),
 				reference_doctype="Demo Session",
 				reference_name=self.name,
-				now=True,
 			)
 		except Exception:
 			frappe.log_error(
@@ -474,33 +463,28 @@ class DemoSession(Document):
 			party = self.customer or self.lead or self.demo_request
 			create_notification(
 				sales_person,
-				_("Demo cancelled: {0} ({1})").format(party, self.name),
+				_("Demo Cancelled — {0} (Session {1})").format(party, self.name),
 				"Demo Session",
 				self.name,
 			)
 			email = frappe.db.get_value("User", sales_person, "email")
 			if not email:
 				return
-			subject = _("Demo cancelled: {0} ({1})").format(party, self.name)
-			message = _(
-				"Hi,\n\n"
-				"Demo Session {0} for {1} has been cancelled by {2}.\n\n"
-				"Reason: {3}\n\n"
-				"Open the session: {4}\n"
-			).format(
-				self.name,
-				party,
-				frappe.utils.get_fullname(frappe.session.user),
-				reason or "Not provided",
-				frappe.utils.get_url("/app/demo-session/{0}".format(self.name)),
-			)
-			frappe.sendmail(
+			send_branded_email(
 				recipients=[email],
-				subject=subject,
-				message=message,
+				subject=_("Demo Cancelled — {0}").format(party),
+				heading=_("Demo Cancelled"),
+				intro=_("Demo Session {0} for {1} has been cancelled by {2}.").format(
+					self.name, party, frappe.utils.get_fullname(frappe.session.user)
+				),
+				rows=[
+					(_("Reason"), reason or "Not provided"),
+					(_("Demo Session"), self.name),
+				],
+				cta_text=_("Open Demo Session"),
+				cta_url=frappe.utils.get_url("/app/demo-session/{0}".format(self.name)),
 				reference_doctype="Demo Session",
 				reference_name=self.name,
-				now=True,
 			)
 		except Exception:
 			frappe.log_error(
@@ -520,31 +504,28 @@ class DemoSession(Document):
 			party = self.customer or self.lead or self.demo_request
 			create_notification(
 				sales_person,
-				_("Demo closed with result '{0}': {1} ({2})").format(result, party, self.name),
+				_("Demo Closed — {0} · Result: {1} (Session {2})").format(party, result, self.name),
 				"Demo Session",
 				self.name,
 			)
 			email = frappe.db.get_value("User", sales_person, "email")
 			if not email:
 				return
-			subject = _("Demo closed with result '{0}': {1}").format(result, party)
-			message = _(
-				"Hi,\n\n"
-				"Demo Session {0} for {1} has been closed with the final result '{2}'.\n\n"
-				"Open the session: {3}\n"
-			).format(
-				self.name,
-				party,
-				result,
-				frappe.utils.get_url("/app/demo-session/{0}".format(self.name)),
-			)
-			frappe.sendmail(
+			send_branded_email(
 				recipients=[email],
-				subject=subject,
-				message=message,
+				subject=_("Demo Closed — {0} · Result: {1}").format(party, result),
+				heading=_("Demo Closed"),
+				intro=_("Demo Session {0} for {1} has been closed with the final result '{2}'.").format(
+					self.name, party, result
+				),
+				rows=[
+					(_("Final Result"), result),
+					(_("Demo Session"), self.name),
+				],
+				cta_text=_("Open Demo Session"),
+				cta_url=frappe.utils.get_url("/app/demo-session/{0}".format(self.name)),
 				reference_doctype="Demo Session",
 				reference_name=self.name,
-				now=True,
 			)
 		except Exception:
 			frappe.log_error(
@@ -782,8 +763,8 @@ class DemoSession(Document):
 		if sales_person and sales_person != "Administrator":
 			create_notification(
 				sales_person,
-				_("Demo Session {0} closed with result '{1}'; Demo Request {2} was updated directly.").format(
-					self.name, result, request.name
+				_("Demo Closed — Result: {0} · Demo Request {1} Updated (Session {2})").format(
+					result, request.name, self.name
 				),
 				"Demo Session",
 				self.name,
@@ -956,23 +937,8 @@ def _send_session_reminder(row, tomorrow):
 	"""Send the day-before reminder for one session to both the sales person
 	and the consultant; returns how many notifications were created."""
 	party = row.customer or row.lead or row.demo_request or row.name
-	subject = _("Reminder: demo for {0} tomorrow ({1}) - {2}").format(
+	subject = _("Reminder: Demo Tomorrow — {0} ({1}) (Session {2})").format(
 		party, tomorrow, row.name
-	)
-	message = _(
-		"Hi,\n\n"
-		"This is a reminder that Demo Session {0} for {1} is scheduled for tomorrow ({2}).\n\n"
-		"Time: {3} - {4}\n"
-		"Meeting link: {5}\n\n"
-		"Open the session: {6}\n"
-	).format(
-		row.name,
-		party,
-		tomorrow,
-		row.start_time or "-",
-		row.end_time or "-",
-		row.meeting_link or "-",
-		frappe.utils.get_url("/app/demo-session/{0}".format(row.name)),
 	)
 	recipients = [row.sales_person]
 	consultant_user = (
@@ -991,13 +957,22 @@ def _send_session_reminder(row, tomorrow):
 		if not email:
 			continue
 		try:
-			frappe.sendmail(
+			send_branded_email(
 				recipients=[email],
 				subject=subject,
-				message=message,
+				heading=_("Demo Reminder"),
+				intro=_("This is a reminder that Demo Session {0} for {1} is scheduled for tomorrow ({2}).").format(
+					row.name, party, tomorrow
+				),
+				rows=[
+					(_("Time"), "{0} - {1}".format(row.start_time or "-", row.end_time or "-")),
+					(_("Meeting Link"), row.meeting_link or "-"),
+					(_("Demo Session"), row.name),
+				],
+				cta_text=_("Open Demo Session"),
+				cta_url=frappe.utils.get_url("/app/demo-session/{0}".format(row.name)),
 				reference_doctype="Demo Session",
 				reference_name=row.name,
-				now=True,
 			)
 		except Exception:
 			frappe.log_error(
