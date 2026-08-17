@@ -1160,6 +1160,81 @@ def mark_portal_notifications_read():
 
 
 # ---------------------------------------------------------------------------
+# Web Push (service worker) - OS-level popups with sound, even on other pages
+# ---------------------------------------------------------------------------
+
+@frappe.whitelist()
+def get_push_config():
+	"""Return whether Web Push is configured on this site plus the public VAPID
+	key (safe to expose) so the browser can subscribe. When VAPID keys are not
+	configured the client silently skips Web Push and the in-app popups still
+	cover everything."""
+	public_key = frappe.conf.get("vapid_public_key") or ""
+	private_key = frappe.conf.get("vapid_private_key") or ""
+	return {
+		"enabled": bool(public_key and private_key),
+		"public_key": public_key,
+		"sound": "/chime.wav",
+	}
+
+
+@frappe.whitelist()
+def subscribe_push(subscription=None):
+	"""Save the current user's browser Web Push subscription (one per endpoint).
+
+	Always scoped to the logged-in user - a user can never register a
+	subscription for anyone else. Re-subscribing to the same endpoint updates
+	the stored subscription instead of duplicating it."""
+	import json
+
+	if not subscription:
+		return {"ok": False}
+	if isinstance(subscription, str):
+		try:
+			subscription = json.loads(subscription)
+		except Exception:
+			return {"ok": False}
+	endpoint = (subscription or {}).get("endpoint", "")
+	if not endpoint:
+		return {"ok": False}
+
+	payload = json.dumps(subscription)
+	existing = frappe.db.get_value(
+		"Web Push Subscription",
+		{"user": frappe.session.user, "endpoint": endpoint},
+		"name",
+	)
+	if existing:
+		frappe.db.set_value("Web Push Subscription", existing, "subscription", payload)
+	else:
+		doc = frappe.new_doc("Web Push Subscription")
+		doc.user = frappe.session.user
+		doc.endpoint = endpoint
+		doc.subscription = payload
+		doc.enabled = 1
+		doc.insert(ignore_permissions=True)
+	frappe.db.commit()
+	return {"ok": True}
+
+
+@frappe.whitelist()
+def unsubscribe_push(endpoint=None):
+	"""Remove the current user's Web Push subscription for this endpoint (used
+	when the browser drops it or the user disables notifications)."""
+	if not endpoint:
+		return {"ok": False}
+	name = frappe.db.get_value(
+		"Web Push Subscription",
+		{"user": frappe.session.user, "endpoint": endpoint},
+		"name",
+	)
+	if name:
+		frappe.db.delete("Web Push Subscription", name)
+		frappe.db.commit()
+	return {"ok": True}
+
+
+# ---------------------------------------------------------------------------
 # Portal actions (used by the Sales / Functional / Manager portal pages)
 # ---------------------------------------------------------------------------
 

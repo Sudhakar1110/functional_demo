@@ -194,6 +194,9 @@ def sidebar_items(active):
 def create_notification(for_user, subject, document_type, document_name):
 	"""Create an in-app Notification Log for the user - it shows in the portal
 	notification bell and in the ERPNext desk bell (both read Notification Log).
+	Also fires a Web Push (OS-level popup with sound) to the user's subscribed
+	browsers when the site has VAPID keys configured, so the user sees the
+	notification even when they are on another page/site entirely.
 	A failure is logged but never blocks the action that triggered it."""
 	if not for_user or for_user == "Guest":
 		return
@@ -213,6 +216,91 @@ def create_notification(for_user, subject, document_type, document_name):
 	except Exception:
 		frappe.log_error(
 			title=_("Notification Log creation failed for {0}").format(for_user),
+			message=frappe.get_traceback(),
+		)
+
+	_send_web_push(for_user, subject, document_type, document_name)
+
+
+def _push_target_url(document_type, document_name):
+	"""Portal route a Web Push notification should open when clicked - mirrors
+	the bell's docHref() so both go to the same place."""
+	if document_type == "Demo Request" and document_name:
+		return "/sales_portal/demo_request?name={0}".format(document_name)
+	if document_type == "Demo Session" and document_name:
+		return "/functional_portal/session?name={0}".format(document_name)
+	if document_type == "Demo Follow Up":
+		return "/functional_portal/follow_ups"
+	return "/demo_portal"
+
+
+def _send_web_push(for_user, subject, document_type, document_name):
+	"""Send an OS-level Web Push (with sound) to every browser the user has
+	subscribed. Requires VAPID keys in site_config.json (vapid_public_key /
+	vapid_private_key / vapid_subject) and the 'pywebpush' package installed -
+	until then this is a silent no-op and the in-app notifications still cover
+	everything. Expired subscriptions (HTTP 404/410) are cleaned up."""
+	import json
+
+	public_key = frappe.conf.get("vapid_public_key")
+	private_key = frappe.conf.get("vapid_private_key")
+	if not (public_key and private_key):
+		return
+	# the doctype may not exist yet on sites that have not run migrate
+	if not frappe.db.exists("DocType", "Web Push Subscription"):
+		return
+	try:
+		subs = frappe.get_all(
+			"Web Push Subscription",
+			filters={"user": for_user, "enabled": 1},
+			fields=["name", "subscription"],
+			limit_page_length=20,
+		)
+		if not subs:
+			return
+
+		from pywebpush import WebPushException, webpush
+
+		payload = json.dumps(
+			{
+				"title": subject or "New notification",
+				"body": "Sales & Functional Demo Management",
+				"url": frappe.utils.get_url(_push_target_url(document_type, document_name)),
+				"sound": "/chime.wav",
+			}
+		).encode("utf-8")
+		vapid_claims = {"sub": frappe.conf.get("vapid_subject") or "mailto:admin@example.com"}
+
+		for row in subs:
+			try:
+				webpush(
+					subscription_info=json.loads(row.subscription),
+					data=payload,
+					vapid_private_key=private_key,
+					vapid_claims=vapid_claims,
+				)
+			except WebPushException as e:
+				# 404/410 = the browser dropped the subscription - clean it up so
+				# we never push to a dead endpoint again
+				if e.response is not None and e.response.status_code in (404, 410):
+					frappe.db.delete("Web Push Subscription", row.name)
+				else:
+					frappe.log_error(
+						title=_("Web Push failed for {0}").format(for_user),
+						message=frappe.get_traceback(),
+					)
+			except Exception:
+				frappe.log_error(
+					title=_("Web Push failed for {0}").format(for_user),
+					message=frappe.get_traceback(),
+				)
+		frappe.db.commit()
+	except ImportError:
+		# 'pywebpush' is not installed on this bench - in-app notifications still work
+		pass
+	except Exception:
+		frappe.log_error(
+			title=_("Web Push setup failed for {0}").format(for_user),
 			message=frappe.get_traceback(),
 		)
 

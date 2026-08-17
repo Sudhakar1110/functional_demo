@@ -183,6 +183,48 @@ The legacy standard Notification doctypes shipped in earlier versions are still
 present but are **disabled** (`enabled = 0`) — do not enable them, they would
 double-send alongside the code-based notifications.
 
+### Popup notifications (portal)
+
+While a portal page is open, new notifications also **pop up** (toast in the
+top-right + a short chime), and when the browser tab is in the background an
+**OS-level popup** is shown via the Notification API. The browser asks for
+permission on your first click (or when you open the bell) — allow it once and
+you are set.
+
+### Web Push — popups even on *another* page / site
+
+To receive a popup (with sound) even when you are **not on the site at all**
+(e.g. working in another tab of another website), the site must have **Web
+Push** enabled. Frappe does not ship this out of the box, so it is opt-in:
+
+1. Generate a VAPID key pair (run from anywhere with Node):
+
+   ```bash
+   node -e "const c=require('crypto');const{publicKey,privateKey}=c.generateKeyPairSync('ec',{namedCurve:'prime256v1'});const jw=publicKey.export({format:'jwk'});const d=privateKey.export({format:'jwk'});const b64u=b=>Buffer.from(b,'base64').toString('base64url');const pub=b64u(Buffer.concat([Buffer.from([4]),Buffer.from(jw.x,'base64url'),Buffer.from(jw.y,'base64url')]).toString('base64'));console.log('vapid_public_key :',pub);console.log('vapid_private_key:',b64u(d.d));"
+   ```
+
+2. Configure the keys on the site and install the push library (on the bench):
+
+   ```bash
+   bench --site your-site set-config vapid_public_key "<public key>"
+   bench --site your-site set-config vapid_private_key "<private key>"
+   bench --site your-site set-config vapid_subject "mailto:admin@example.com"
+   bench pip install pywebpush
+   bench --site your-site migrate
+   ```
+
+3. The site must be served over **HTTPS** (service workers require a secure
+   context; `localhost` works in development).
+
+4. Each user clicks **Allow** once on the notification prompt — after that every
+   event (scheduled, started, completed, cancelled, result, follow-up, SLA,
+   reminders) delivers an OS popup with a chime (`/chime.wav`) even when they
+   are on another page entirely. Expired subscriptions are cleaned up
+   automatically (HTTP 404/410).
+
+Without VAPID keys the feature is silently off — the in-app bell, portal popups
+and emails continue to work as described above.
+
 ## Permissions model
 
 - **Sales User**: own Demo Requests (if_owner + query filter), read customers,
