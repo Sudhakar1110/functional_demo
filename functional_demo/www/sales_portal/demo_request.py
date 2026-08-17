@@ -104,8 +104,11 @@ def get_context(context):
 
 
 def _lead_opportunity_prefill():
-	"""Resolve the party + contact details to pre-fill when the create form is
-	opened from a Lead, a Customer or an Opportunity."""
+	"""Resolve the party details to pre-fill when the create form is opened
+	from a Lead, a Customer or an Opportunity. Contact Person / Number / Email
+	are only pre-filled from an Opportunity's own contact - they belong to the
+	customer and are entered manually everywhere else (a Sales Person's own
+	contact details must never land in the customer's contact fields)."""
 	prefill = {
 		"customer": "",
 		"lead": "",
@@ -146,8 +149,9 @@ def _lead_opportunity_prefill():
 		if ld:
 			if frappe.db.exists("Company", ld.get("company_name") or ""):
 				prefill["company"] = ld.get("company_name") or ""
-			prefill["contact_number"] = ld.get("mobile_no") or ld.get("phone") or ""
-			prefill["email"] = ld.get("email_id") or ""
+			# Contact Person / Number / Email are deliberately NOT filled from
+			# the Sales Person (Lead) - they are the customer's details and the
+			# user enters them manually.
 	elif customer and frappe.db.exists("Customer", customer):
 		prefill["customer"] = customer
 

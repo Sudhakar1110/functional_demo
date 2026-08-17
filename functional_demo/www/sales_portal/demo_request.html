@@ -373,14 +373,15 @@
 	document.getElementById("customer").addEventListener("change", function () {
 		fillContact("customer", this.value);
 	});
-	document.getElementById("lead").addEventListener("change", function () {
-		fillContact("lead", this.value);
-	});
+	/* NOTE: selecting a Sales Person intentionally does NOT touch the Contact
+	   Person / Contact Number / Email fields - those belong to the CUSTOMER
+	   and are entered manually (a sales person's own number/email must never
+	   land in the customer's contact fields). Selecting a Leads (customer)
+	   still pre-fills them from the customer's own contact record above. */
 
-	/* Arrived from My Leads with a lead pre-selected (?lead=...) - auto-fill
-	   the contact details right away instead of waiting for a change event. */
+	/* Keep the pre-selected lead value (from My Leads ?lead=...) so the submit
+	   validation below does not flag it as an unknown free-typed name. */
 	var preLead = document.getElementById("lead").value.trim();
-	if (preLead) fillContact("lead", preLead);
 
 
 	/* The Customer / Lead boxes only accept real records: the value must be one
