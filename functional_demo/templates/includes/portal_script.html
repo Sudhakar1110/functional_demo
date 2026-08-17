@@ -272,11 +272,80 @@
 				+ "</div>"
 				+ (rows || '<div class="portal-notif-empty">No notifications yet.</div>');
 		}
-		/* ---- popup toast for new notifications (Option A) ----
-		   The bell polls every 30s; when a notification the user has not seen
-		   yet arrives, a green toast pops in top-right and auto-hides. */
+		/* ---- popup notifications ----
+		   The bell polls the Notification Log; when a notification the user has
+		   not seen yet arrives, a green toast pops in top-right and auto-hides.
+		   When the browser tab is in the background, a native OS-level popup
+		   (Notification API) is shown instead so a notification is never missed,
+		   plus a short chime. Permission is requested on the first user click
+		   (browsers require a gesture) and on opening the bell. */
 		var seenNames = {};
 		var isFirstLoad = true;
+		var nativeOk = false;
+
+		function requestNativePermission() {
+			if (!("Notification" in window)) return;
+			if (Notification.permission === "granted") {
+				nativeOk = true;
+				return;
+			}
+			if (Notification.permission !== "default") return; /* denied - do not nag */
+			Notification.requestPermission()
+				.then(function (p) {
+					nativeOk = p === "granted";
+					if (nativeOk) {
+						window.portalAlert("Browser popups enabled - you will see notifications even when this tab is in the background.", "ok");
+					}
+				})
+				.catch(function () { /* permission prompt unavailable - in-page toast still works */ });
+		}
+		/* browsers only allow the prompt after a user gesture - ask on the
+		   first click anywhere on the page */
+		(function bindNativePermission() {
+			var done = false;
+			function onFirst(e) {
+				if (done) return;
+				done = true;
+				document.removeEventListener("click", onFirst, true);
+				requestNativePermission();
+			}
+			document.addEventListener("click", onFirst, true);
+		})();
+
+		function playChime() {
+			try {
+				var Ctx = window.AudioContext || window.webkitAudioContext;
+				if (!Ctx) return;
+				var ctx = new Ctx();
+				var o = ctx.createOscillator();
+				var g = ctx.createGain();
+				o.connect(g);
+				g.connect(ctx.destination);
+				o.type = "sine";
+				o.frequency.value = 880;
+				g.gain.setValueAtTime(0.0001, ctx.currentTime);
+				g.gain.exponentialRampToValueAtTime(0.18, ctx.currentTime + 0.02);
+				g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.45);
+				o.start(ctx.currentTime);
+				o.stop(ctx.currentTime + 0.5);
+			} catch (e) { /* sound is a nicety - never break on it */ }
+		}
+
+		function nativePopup(subject, href) {
+			if (!nativeOk || !("Notification" in window)) return;
+			try {
+				var n = new Notification(subject || "New notification", {
+					body: "Sales & Functional Demo Management",
+					icon: "/assets/functional_demo/images/brand_logo.jpg",
+					tag: "demo-portal-" + Date.now(),
+				});
+				n.onclick = function () {
+					window.focus();
+					if (href) window.location.href = href;
+					n.close();
+				};
+			} catch (e) { /* popup blocked - the in-page toast still shows */ }
+		}
 
 		function showToast(subject, href) {
 			if (!subject) return;
@@ -322,7 +391,20 @@
 				var n = items[j];
 				if (n.name && !seenNames[n.name]) {
 					seenNames[n.name] = 1;
-					if (!n.read) showToast(n.subject || "New notification", docHref(n));
+					if (!n.read) {
+						var subject = n.subject || "New notification";
+						var href = docHref(n);
+						playChime();
+						if (document.hidden) {
+							/* tab in the background - show an OS-level popup so the
+							   notification is never missed; the in-page toast also
+							   appears so it is visible after switching back */
+							nativePopup(subject, href);
+							showToast(subject, href);
+						} else {
+							showToast(subject, href);
+						}
+					}
 				}
 			}
 		}
@@ -341,13 +423,16 @@
 		}
 
 		btn.addEventListener("click", function () {
+			/* opening the bell is an explicit intent - also ask for browser
+			   popup permission here (a real user gesture) */
+			requestNativePermission();
 			var open = panel.style.display === "block";
 			panel.style.display = open ? "none" : "block";
 			if (!open) load();
 		});
 
 		/* keep the badge fresh while the user is on the page without any interaction */
-		setInterval(load, 30000);
+		setInterval(load, 15000);
 		document.addEventListener("click", function (e) {
 			if (!wrap.contains(e.target)) panel.style.display = "none";
 		});
