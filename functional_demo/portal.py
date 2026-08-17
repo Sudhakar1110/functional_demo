@@ -237,8 +237,7 @@ def create_notification(for_user, subject, document_type, document_name):
 			message=frappe.get_traceback(),
 		)
 
-	_send_web_push(for_user, subject, document_type, document_name)
-
+	_send_web_push(for_user, subject, document_type, document_name, note.name)
 
 def _push_target_url(document_type, document_name):
 	"""Portal route a Web Push notification should open when clicked - mirrors
@@ -252,7 +251,7 @@ def _push_target_url(document_type, document_name):
 	return "/demo_portal"
 
 
-def _send_web_push(for_user, subject, document_type, document_name):
+def _send_web_push(for_user, subject, document_type, document_name, notification_name=None):
 	"""Send an OS-level Web Push (with sound) to every browser the user has
 	subscribed. Requires VAPID keys in site_config.json (vapid_public_key /
 	vapid_private_key / vapid_subject) and the 'pywebpush' package installed -
@@ -285,6 +284,7 @@ def _send_web_push(for_user, subject, document_type, document_name):
 				"body": "Sales & Functional Demo Management",
 				"url": frappe.utils.get_url(_push_target_url(document_type, document_name)),
 				"sound": "/chime.wav",
+				"name": notification_name or "",
 			}
 		).encode("utf-8")
 		vapid_claims = {"sub": frappe.conf.get("vapid_subject") or "mailto:admin@example.com"}

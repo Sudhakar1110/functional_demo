@@ -400,13 +400,15 @@
 			} catch (e) { /* sound is a nicety - never break on it */ }
 		}
 
-		function nativePopup(subject, href) {
+		function nativePopup(subject, href, name) {
 			if (!nativeOk || !("Notification" in window)) return;
 			try {
 				var n = new Notification(subject || "New notification", {
 					body: "Sales & Functional Demo Management",
 					icon: "/assets/functional_demo/images/brand_logo.jpg",
-					tag: "demo-portal-" + Date.now(),
+					/* deterministic tag (matches the web push popup) so a
+					   duplicate is replaced, never stacked */
+					tag: "demo-portal-" + (name || Date.now()),
 				});
 				n.onclick = function () {
 					/* read-only: clicking an OS popup never navigates away - it
@@ -465,14 +467,13 @@
 					if (!n.read) {
 						var subject = n.subject || "New notification";
 						var href = docHref(n);
-						playChime();
-						if (document.hidden) {
-							/* tab in the background - show an OS-level popup so the
-							   notification is never missed; the in-page toast also
-							   appears so it is visible after switching back */
-							nativePopup(subject, href);
-							showToast(subject, href);
-						} else {
+						playChime();							if (document.hidden) {
+								/* tab in the background - show an OS-level popup so the
+								   notification is never missed; the in-page toast also
+								   appears so it is visible after switching back */
+								nativePopup(subject, href, n.name);
+								showToast(subject, href);
+							} else {
 							showToast(subject, href);
 						}
 					}
@@ -522,12 +523,15 @@
 					frappe.realtime.on("demo_portal_notification", function (data) {
 						/* chime + popup straight from the websocket payload - no
 						   API round trip, so the sound fires the moment the
-						   server publishes it */
+						   server publishes it. If the web push path already
+						   handled this notification (same name), skip so it
+						   never rings twice. */
+						if (data && data.name && seenNames[data.name]) { load(); return; }
 						if (data && data.name) seenNames[data.name] = 1;
 						if (data && data.subject) {
 							playChime();
 							var href = docHref(data);
-							if (document.hidden) nativePopup(data.subject, href);
+							if (document.hidden) nativePopup(data.subject, href, data.name);
 							showToast(data.subject, href);
 						}
 						load(); /* refresh the bell + unread badge */
@@ -547,6 +551,21 @@
 			} catch (e) { /* realtime unavailable - the safety-net poll still covers it */ }
 		}
 		setupRealtime();
+
+		/* the service worker pokes open portal pages to play the chime when a
+		   web push arrives - the OS popup's sound option is unreliable on
+		   desktop. The seen-set dedupes against the websocket path so the
+		   chime never rings twice. */
+		if ("serviceWorker" in navigator) {
+			navigator.serviceWorker.addEventListener("message", function (e) {
+				var d = e.data || {};
+				if (d.type !== "demo-portal-chime") return;
+				if (d.name && seenNames[d.name]) return;
+				if (d.name) seenNames[d.name] = 1;
+				playChime();
+				load();
+			});
+		}
 
 		/* safety-net poll when the websocket is unavailable - the realtime
 		   subscription above delivers instantly; this bounds the worst case
