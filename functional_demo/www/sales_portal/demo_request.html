@@ -146,6 +146,7 @@
 					</div>
 					<div style="display: flex; gap: 8px; flex-wrap: wrap;">
 						<a class="btn-portal secondary sm" href="/sales_portal/demo_requests">&larr; List</a>
+						<a class="btn-portal sm" href="/sales_portal/lead_details?request={{ doc.name }}">Lead Details</a>
 						{% if session_name %}
 						<a class="btn-portal sm" href="/functional_portal/session?name={{ session_name }}">Open Demo Session</a>
 						{% endif %}

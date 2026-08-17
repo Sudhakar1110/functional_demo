@@ -1,0 +1,178 @@
+{% extends "templates/web.html" %}
+{% block banner %}{% endblock %}
+{% block navbar %}{% endblock %}
+{% block footer %}{% endblock %}
+{% block style %}{% include "functional_demo/templates/includes/portal_style.html" %}{% endblock %}
+{% block script %}{% include "functional_demo/templates/includes/portal_script.html" %}{% endblock %}
+{% block content %}
+<div class="portal-layout">
+	<header class="portal-topbar">
+		<button class="sidebar-toggle" id="sidebar-toggle" aria-label="Menu">&#9776;</button>
+		<a class="topbar-brand" href="/demo_portal">
+			<img class="brand-logo" src="/assets/functional_demo/images/brand_logo.jpg" alt="Brand Logo" />
+			<div class="brand-text">
+				<span class="brand-name">Demo Portal</span>
+				<span class="brand-sub">Sales &amp; Functional</span>
+			</div>
+		</a>
+		<div class="topbar-title">
+			<h1>{{ title }}</h1>
+			<p>{{ subtitle }}</p>
+		</div>
+		<div class="topbar-right">
+			<span class="portal-avatar">{{ full_name[:1] }}</span>
+			<span class="portal-user-name">{{ full_name }}</span>
+			<a class="btn-desk" href="/app">Open Desk</a>
+		</div>
+	</header>
+	<div class="portal-body">
+		<aside class="portal-sidebar" id="portal-sidebar">
+			<div class="sidebar-menu">
+			{% for item in sidebar_items %}
+			<a class="sidebar-item {% if item.active %}active{% endif %}" href="{{ item.route }}">
+				<span class="sidebar-icon">{{ item.icon | safe }}</span>{{ item.label }}
+			</a>
+			{% endfor %}
+		</div>
+	</aside>
+	<div class="sidebar-overlay"></div>
+	<div class="portal-main">			<div class="portal-content">
+
+		{% if missing %}
+		<div class="portal-card">
+			<div class="empty-state">
+				<div class="empty-icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12" y1="16" y2="16"/></svg></div>
+				<h3>No request selected</h3>
+				<p>Open this page from a demo session to see the lead details.</p>
+				<a class="btn-portal" href="/functional_portal/my_sessions">Back to My Sessions</a>
+			</div>
+		</div>
+		{% elif access_denied %}
+		<div class="portal-card">
+			<div class="empty-state">
+				<div class="empty-icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+				<h3>Request not found</h3>
+				<p>The demo request does not exist or you do not have permission to view it.</p>
+				<a class="btn-portal" href="/functional_portal/my_sessions">Back to My Sessions</a>
+			</div>
+		</div>
+		{% else %}
+
+		<div class="flex-between mb-16">
+			<h2 style="margin: 0; font-size: 20px; font-weight: 800; color: #05133C;">Lead Details — {{ request.name }}</h2>
+			<span class="badge b-{{ request.status|lower|replace(' ', '-') }}">{{ request.status }}</span>
+		</div>
+
+		<div class="portal-card">
+			<div class="card-head"><h2>Lead</h2></div>
+			<div class="card-body">
+				<div class="detail-grid">
+					<div class="detail-item"><div class="d-label">Leads</div><div class="d-value">{{ request.customer or "-" }}</div></div>
+					<div class="detail-item"><div class="d-label">Company</div><div class="d-value">{{ request.company or "-" }}</div></div>
+					<div class="detail-item"><div class="d-label">Sales Person</div><div class="d-value">{{ request.sales_person or "-" }}</div></div>
+					<div class="detail-item"><div class="d-label">Interested Template</div><div class="d-value">{{ request.interested_module or "-" }}</div></div>
+					<div class="detail-item"><div class="d-label">Demo Type</div><div class="d-value">{{ request.demo_type or "-" }}</div></div>
+				</div>
+			</div>
+		</div>
+
+		{% if additional_leads %}
+		<div class="portal-card">
+			<div class="card-head"><h2>Additional Leads ({{ additional_leads|length }})</h2></div>
+			<div class="card-body flush">
+				<table class="table-portal">
+					<thead>
+						<tr>
+							<th>Leads</th>
+							<th>Notes</th>
+						</tr>
+					</thead>
+					<tbody>
+						{% for row in additional_leads %}
+						<tr>
+							<td>{{ row.customer or "-" }}</td>
+							<td>{{ row.notes or "-" }}</td>
+						</tr>
+						{% endfor %}
+					</tbody>
+				</table>
+			</div>
+		</div>
+		{% endif %}
+
+		<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 16px;">
+			<div class="portal-card" style="margin-bottom: 0;">
+				<div class="card-head"><h2>Demo Planning</h2></div>
+				<div class="card-body">
+					<div class="detail-grid">
+						<div class="detail-item"><div class="d-label">Preferred Demo Date</div><div class="d-value">{{ request.preferred_demo_date or "-" }}</div></div>
+						<div class="detail-item"><div class="d-label">Preferred Demo Time</div><div class="d-value">{{ request.preferred_demo_time or "-" }}</div></div>
+						<div class="detail-item"><div class="d-label">Assigned Functional Consultant</div><div class="d-value">{{ request.functional_consultant or "-" }}</div></div>
+					</div>
+				</div>
+			</div>
+
+			<div class="portal-card" style="margin-bottom: 0;">
+				<div class="card-head"><h2>Follow-up</h2></div>
+				<div class="card-body">
+					<div class="detail-grid">
+						<div class="detail-item"><div class="d-label">Follow-up Date</div><div class="d-value">{{ request.follow_up_date or "-" }}</div></div>
+						<div class="detail-item"><div class="d-label">Next Action</div><div class="d-value wrap">{{ request.next_action or "-" }}</div></div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="portal-card">
+			<div class="card-head"><h2>Leads Requirements</h2></div>
+			<div class="card-body">
+				<div class="detail-grid">
+					<div class="detail-item"><div class="d-label">Requirements</div><div class="d-value wrap">{{ request.customer_requirements or "-" }}</div></div>
+					<div class="detail-item"><div class="d-label">Business Processes</div><div class="d-value wrap">{{ request.business_process_requirements or "-" }}</div></div>
+				</div>
+			</div>
+		</div>
+
+		<div class="portal-card">
+			<div class="card-head"><h2>Demo Sessions ({{ sessions|length }})</h2></div>
+			{% if sessions %}
+			<div class="card-body flush">
+				<table class="table-portal">
+					<thead>
+						<tr>
+							<th>Session</th>
+							<th>Date</th>
+							<th>Template</th>
+							<th>Status</th>
+							<th>Result</th>
+							<th></th>
+						</tr>
+					</thead>
+					<tbody>
+						{% for s in sessions %}
+						<tr>
+							<td>{{ s.name }}</td>
+							<td>{{ s.scheduled_date or "-" }}</td>
+							<td>{{ s.interested_module or "-" }}</td>
+							<td><span class="badge b-{{ s.demo_status|lower|replace(' ', '-') }}">{{ s.demo_status }}</span></td>
+							<td>{{ s.final_result or "-" }}</td>
+							<td><a class="btn-portal sm" href="/functional_portal/session?name={{ s.name }}">Open &rarr;</a></td>
+						</tr>
+						{% endfor %}
+					</tbody>
+				</table>
+			</div>
+			{% else %}
+			<div class="card-body"><div class="muted">No demo sessions for this request yet.</div></div>
+			{% endif %}
+		</div>
+
+		<div style="display: flex; gap: 10px; margin-top: 16px;">
+			<a class="btn-portal" href="/functional_portal/my_sessions">Back to My Sessions</a>
+		</div>
+		{% endif %}
+	</div>
+</div>
+</div>
+</div>
+{% endblock %}

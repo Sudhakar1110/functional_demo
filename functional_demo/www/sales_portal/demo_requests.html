@@ -76,6 +76,7 @@
 								<th>Preferred Date</th>
 								<th>Status</th>
 								<th>SLA</th>
+								<th></th>
 							</tr>
 						</thead>
 						<tbody>
@@ -90,6 +91,7 @@
 								<td>{{ r.preferred_demo_date or "-" }}</td>
 								<td><span class="badge b-{{ r.status|lower|replace(' ', '-') }}">{{ r.status }}</span></td>
 								<td>{% if r.sla_breached %}<span class="badge b-sla-breached">Breached</span>{% elif r.sla_due_date %}<span class="chip">{{ r.sla_due_date }}</span>{% else %}-{% endif %}</td>
+								<td><a class="btn-portal secondary sm" href="/sales_portal/lead_details?request={{ r.name }}">Lead Details</a></td>
 							</tr>
 							{% endfor %}
 						</tbody>

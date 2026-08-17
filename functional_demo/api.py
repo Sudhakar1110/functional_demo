@@ -828,6 +828,7 @@ def get_demo_execution_data(demo_session=None):
 	return {
 		"session": {
 			"name": ds.name,
+			"demo_request": ds.demo_request,
 			"demo_status": ds.demo_status,
 			"scheduled_date": ds.scheduled_date,
 			"start_time": str(ds.start_time or ""),

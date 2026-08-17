@@ -13,6 +13,7 @@
   "contact_person",
   "contact_number",
   "email",
+  "additional_leads",
   "requirement_section",
   "sales_person",
   "interested_module",
@@ -90,6 +91,13 @@
    "fieldtype": "Data",
    "label": "Lead Email",
    "options": "Email"
+  },
+  {
+   "description": "Extra leads / customers attached to this demo request, each with its own contact details.",
+   "fieldname": "additional_leads",
+   "fieldtype": "Table",
+   "label": "Additional Leads",
+   "options": "Demo Request Additional Lead"
   },
   {
    "fieldname": "requirement_section",
