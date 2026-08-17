@@ -13,27 +13,13 @@ frappe.ui.form.on("Demo Request", {
 			args: { customer: frm.doc.customer },
 			callback(r) {
 				if (!r.message) return;
-				["contact_person", "contact_number", "email"].forEach((fieldname) => {
+				/* Sales Person Name (contact_person) is always entered manually.
+				   Contact Number / Email are the customer's (lead's) own details
+				   and are auto-filled only from the customer - the sales person's
+				   own number/email must never land in the customer's fields. */
+				["contact_number", "email"].forEach((fieldname) => {
 					if (r.message[fieldname]) frm.set_value(fieldname, r.message[fieldname]);
 				});
-			},
-		});
-	},
-
-	lead(frm) {
-		if (!frm.doc.lead) return;
-		frappe.call({
-			method: "functional_demo.api.get_lead_details",
-			args: { lead: frm.doc.lead },
-			callback(r) {
-				if (!r.message) return;
-				/* Selecting a Sales Person only auto-fills the Contact Person.
-				   Contact Number / Email belong to the customer (leads) and are
-				   entered manually - the sales person's own number/email must
-				   never land in the customer's contact fields. */
-				if (r.message.contact_person && !frm.doc.contact_person) {
-					frm.set_value("contact_person", r.message.contact_person);
-				}
 			},
 		});
 	},

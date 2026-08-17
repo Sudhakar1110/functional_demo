@@ -74,7 +74,7 @@
    "fieldname": "contact_person",
    "fieldtype": "Link",
    "ignore_user_permissions": 1,
-   "label": "Contact Person",
+   "label": "Sales Person Name",
    "options": "Contact"
   },
   {

@@ -81,7 +81,7 @@
 						</div>
 					</div>
 					<div class="form-row">
-						<div><label>Contact Person <span class="form-hint">(name, if no Leads/Sales Person yet)</span></label><input type="text" id="contact_person" name="contact_person" value="{{ prefill.contact_person }}"></div>
+						<div><label>Sales Person Name</label><input type="text" id="contact_person" name="contact_person" value="{{ prefill.contact_person }}"></div>
 						<div><label>Lead Contact Number</label><input type="text" id="contact_number" name="contact_number" value="{{ prefill.contact_number }}"></div>
 						<div><label>Lead Email</label><input type="email" id="email" name="email" value="{{ prefill.email }}"></div>
 					</div>
@@ -278,7 +278,7 @@
 						<div class="detail-item"><div class="d-label">Leads</div><div class="d-value">{{ doc.customer or "-" }}</div></div>
 						<div class="detail-item"><div class="d-label">Sales Person</div><div class="d-value">{{ doc.sales_person or "-" }}</div></div>
 						<div class="detail-item"><div class="d-label">Company</div><div class="d-value">{{ doc.company or "-" }}</div></div>
-						<div class="detail-item"><div class="d-label">Contact Person</div><div class="d-value">{{ doc.contact_person or "-" }}</div></div>
+						<div class="detail-item"><div class="d-label">Sales Person Name</div><div class="d-value">{{ doc.contact_person or "-" }}</div></div>
 						<div class="detail-item"><div class="d-label">Lead Contact Number</div><div class="d-value">{{ doc.contact_number or "-" }}</div></div>
 						<div class="detail-item"><div class="d-label">Lead Email</div><div class="d-value">{{ doc.email or "-" }}</div></div>
 					</div>
@@ -358,36 +358,29 @@
 		portalCall(isCustomer ? "functional_demo.api.get_customer_details" : "functional_demo.api.get_lead_details",
 			isCustomer ? { customer: value } : { lead: value })
 			.then(function (data) {
-				if (!data) return;
-				/* Contact Number / Email belong to the customer (leads) and are
-				   entered manually - a Sales Person's own number/email must never
-				   land in the customer's contact fields. Selecting a Leads
-				   (customer) fills all three from the customer's own contact;
-				   selecting a Sales Person only fills the Contact Person. */
-				if (data.contact_person && !document.getElementById("contact_person").value) {
-					document.getElementById("contact_person").value = data.contact_person;
-				}
-				if (!isCustomer) return;
-				if (data.contact_number && !document.getElementById("contact_number").value) {
-					document.getElementById("contact_number").value = data.contact_number;
-				}
-				if (data.email && !document.getElementById("email").value) {
-					document.getElementById("email").value = data.email;
-				}
-			});
+					if (!data) return;
+					/* Sales Person Name (contact_person) is always entered manually.
+					   Contact Number / Email are the customer's (lead's) own details
+					   and are auto-filled only when a Leads (customer) is selected -
+					   a Sales Person's own number/email must never land in the
+					   customer's contact fields. */
+					if (!isCustomer) return;
+					if (data.contact_number && !document.getElementById("contact_number").value) {
+						document.getElementById("contact_number").value = data.contact_number;
+					}
+					if (data.email && !document.getElementById("email").value) {
+						document.getElementById("email").value = data.email;
+					}
+				});
 	}
 
 	document.getElementById("customer").addEventListener("change", function () {
 		fillContact("customer", this.value);
 	});
-	document.getElementById("lead").addEventListener("change", function () {
-		fillContact("lead", this.value);
-	});
 
-	/* Arrived from My Leads with a lead pre-selected (?lead=...) - auto-fill
-	   the contact details right away instead of waiting for a change event. */
+	/* Arrived from My Leads with a lead pre-selected (?lead=...) - remember it
+	   so the submit check below can tell a pre-selected lead from a typed one. */
 	var preLead = document.getElementById("lead").value.trim();
-	if (preLead) fillContact("lead", preLead);
 
 
 	/* The Customer / Lead boxes only accept real records: the value must be one
