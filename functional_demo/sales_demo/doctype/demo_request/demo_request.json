@@ -81,14 +81,14 @@
    "fetch_if_empty": 1,
    "fieldname": "contact_number",
    "fieldtype": "Data",
-   "label": "Contact Number"
+   "label": "Lead Contact Number"
   },
   {
    "fetch_from": "contact_person.email_id",
    "fetch_if_empty": 1,
    "fieldname": "email",
    "fieldtype": "Data",
-   "label": "Email",
+   "label": "Lead Email",
    "options": "Email"
   },
   {

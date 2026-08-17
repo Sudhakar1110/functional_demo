@@ -82,8 +82,8 @@
 					</div>
 					<div class="form-row">
 						<div><label>Contact Person <span class="form-hint">(name, if no Leads/Sales Person yet)</span></label><input type="text" id="contact_person" name="contact_person" value="{{ prefill.contact_person }}"></div>
-						<div><label>Contact Number</label><input type="text" id="contact_number" name="contact_number" value="{{ prefill.contact_number }}"></div>
-						<div><label>Email</label><input type="email" id="email" name="email" value="{{ prefill.email }}"></div>
+						<div><label>Lead Contact Number</label><input type="text" id="contact_number" name="contact_number" value="{{ prefill.contact_number }}"></div>
+						<div><label>Lead Email</label><input type="email" id="email" name="email" value="{{ prefill.email }}"></div>
 					</div>
 					<div class="form-row">
 						<div style="grid-column: 1 / -1;">
@@ -279,8 +279,8 @@
 						<div class="detail-item"><div class="d-label">Sales Person</div><div class="d-value">{{ doc.sales_person or "-" }}</div></div>
 						<div class="detail-item"><div class="d-label">Company</div><div class="d-value">{{ doc.company or "-" }}</div></div>
 						<div class="detail-item"><div class="d-label">Contact Person</div><div class="d-value">{{ doc.contact_person or "-" }}</div></div>
-						<div class="detail-item"><div class="d-label">Contact Number</div><div class="d-value">{{ doc.contact_number or "-" }}</div></div>
-						<div class="detail-item"><div class="d-label">Email</div><div class="d-value">{{ doc.email or "-" }}</div></div>
+						<div class="detail-item"><div class="d-label">Lead Contact Number</div><div class="d-value">{{ doc.contact_number or "-" }}</div></div>
+						<div class="detail-item"><div class="d-label">Lead Email</div><div class="d-value">{{ doc.email or "-" }}</div></div>
 					</div>
 				</div>
 			</div>

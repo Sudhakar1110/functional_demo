@@ -130,8 +130,8 @@ frappe.pages["demo-execution"].on_page_load = function (wrapper) {
 						<div class="demo-exec-row"><span class="label">${__("Leads")}</span><span class="value">${esc(customer.customer || "-")}</span></div>
 						<div class="demo-exec-row"><span class="label">${__("Sales Person")}</span><span class="value">${esc(customer.lead || "-")}</span></div>
 						<div class="demo-exec-row"><span class="label">${__("Contact Person")}</span><span class="value">${esc(customer.contact_person || "-")}</span></div>
-						<div class="demo-exec-row"><span class="label">${__("Contact Number")}</span><span class="value">${esc(customer.contact_number || "-")}</span></div>
-						<div class="demo-exec-row"><span class="label">${__("Email")}</span><span class="value">${esc(customer.email || "-")}</span></div>
+						<div class="demo-exec-row"><span class="label">${__("Lead Contact Number")}</span><span class="value">${esc(customer.contact_number || "-")}</span></div>
+						<div class="demo-exec-row"><span class="label">${__("Lead Email")}</span><span class="value">${esc(customer.email || "-")}</span></div>
 						<div class="demo-exec-row"><span class="label">${__("Company")}</span><span class="value">${esc(customer.company || "-")}</span></div>
 					</div>
 
