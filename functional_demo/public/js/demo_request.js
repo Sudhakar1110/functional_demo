@@ -20,11 +20,24 @@ frappe.ui.form.on("Demo Request", {
 		});
 	},
 
-	/* NOTE: selecting a Sales Person intentionally does NOT touch the Contact
-	   Person / Contact Number / Email fields - those belong to the CUSTOMER
-	   and are entered manually (a sales person's own number/email must never
-	   land in the customer's contact fields). Selecting a Leads (customer)
-	   still pre-fills them from the customer's own contact record above. */
+	lead(frm) {
+		if (!frm.doc.lead) return;
+		frappe.call({
+			method: "functional_demo.api.get_lead_details",
+			args: { lead: frm.doc.lead },
+			callback(r) {
+				if (!r.message) return;
+				if (r.message.contact_person && !frm.doc.contact_person) {
+					frm.set_value("contact_person", r.message.contact_person);
+				}
+				["contact_number", "email"].forEach((fieldname) => {
+					if (r.message[fieldname] && !frm.doc[fieldname]) {
+						frm.set_value(fieldname, r.message[fieldname]);
+					}
+				});
+			},
+		});
+	},
 
 	functional_consultant(frm) {
 		show_consultant_info(frm);
