@@ -41,6 +41,8 @@ def after_migrate():
 	create_developer_user()
 	disable_legacy_notifications()
 	fix_lead_naming()
+	fix_sales_person_on_requests()
+	create_lead_list_client_script()
 
 
 def backfill_consultant_statuses():
@@ -96,6 +98,53 @@ def fix_lead_naming():
 		set `default` = replace(`default`, 'CRM-LEAD', 'CRM-SALES')
 		where parent = 'Lead' and fieldname = 'naming_series'
 	""")
+	frappe.db.commit()
+
+
+def fix_sales_person_on_requests():
+	"""Auto-fix Demo Requests where sales_person holds the consultant's email.
+
+	When a consultant creates a demo request, sales_person defaults to the
+	consultant's user. This fix replaces it with the request owner (the actual
+	sales person who should receive trial reminders and notifications).
+	"""
+	if not frappe.db.exists("DocType", "Demo Request"):
+		return
+	# Find requests where sales_person matches the consultant's user email
+	frappe.db.sql("""
+		update `tabDemo Request` dr
+		join `tabFunctional Consultant` fc on fc.name = dr.functional_consultant
+		join `tabUser` u on u.name = fc.user
+		set dr.sales_person = dr.owner
+		where dr.sales_person = u.email
+			and ifnull(dr.functional_consultant, '') != ''
+			and ifnull(dr.owner, '') != ''
+			and dr.owner != 'Administrator'
+	""")
+	frappe.db.commit()
+
+
+def create_lead_list_client_script():
+	"""Create a Client Script to rename the 'Add Lead' button to
+	'Add Sales Person' on the Lead list view.
+	"""
+	script_name = "Sales Person - Rename Add Button"
+	if frappe.db.exists("Client Script", script_name):
+		return
+	doc = frappe.new_doc("Client Script")
+	doc.name = script_name
+	doc.script_type = "List"
+	doc.dt = "Lead"
+	doc.enabled = 1
+	doc.script = (
+		'// Change Add Lead button to Add Sales Person\n'
+		'frappe.listview_settings["Lead"] = frappe.listview_settings["Lead"] || {};\n'
+		'frappe.listview_settings["Lead"].formatters = frappe.listview_settings["Lead"].formatters || {};\n'
+		'cur_list.page && cur_list.page.set_primary_action(__("Add Sales Person"), () => {\n'
+		'  frappe.new_doc("Lead");\n'
+		'}, "octicon octicon-plus");\n'
+	)
+	doc.insert(ignore_permissions=True)
 	frappe.db.commit()
 
 
