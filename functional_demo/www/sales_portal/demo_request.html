@@ -590,20 +590,21 @@
 	if (btnTrial) btnTrial.addEventListener("click", function () {
 		var start = document.getElementById("trial-start").value;
 		var end = document.getElementById("trial-end").value;
-		if (!start || !end) { portalAlert("Please pick both the trial start and end dates.", "err"); return; }						if (end < start) { portalAlert("Trial End Date cannot be before the Trial Start Date.", "err"); return; }
-						var btn = this; btn.disabled = true;
-						portalCall("functional_demo.api.set_trial_period", { demo_request: DOC_NAME, trial_start_date: start, trial_end_date: end })
-							.then(function () { window.location.reload(); }).catch(function () { btn.disabled = false; });
-					});
+		if (!start || !end) { portalAlert("Please pick both the trial start and end dates.", "err"); return; }
+		if (end < start) { portalAlert("Trial End Date cannot be before the Trial Start Date.", "err"); return; }
+		var btn = this; btn.disabled = true;
+		portalCall("functional_demo.api.set_trial_period", { demo_request: DOC_NAME, trial_start_date: start, trial_end_date: end })
+			.then(function () { window.location.reload(); }).catch(function () { btn.disabled = false; });
+	});
 
-					var btnTrialRemind = document.getElementById("btn-trial-remind");
-					if (btnTrialRemind) btnTrialRemind.addEventListener("click", function () {
-						if (!window.confirm("Send the trial-ending reminder email and notification to the sales person now? (The scheduled reminder one day before the end date still fires too.)")) return;
-						var btn = this; btn.disabled = true;
-						portalCall("functional_demo.api.send_trial_reminder", { demo_request: DOC_NAME })
-							.then(function () { portalAlert("Trial reminder sent to the sales person.", "ok"); })
-							.catch(function () { btn.disabled = false; });
-					});
+	var btnTrialRemind = document.getElementById("btn-trial-remind");
+	if (btnTrialRemind) btnTrialRemind.addEventListener("click", function () {
+		if (!window.confirm("Send the trial-ending reminder email and notification to the sales person now? (The scheduled reminder one day before the end date still fires too.)")) return;
+		var btn = this; btn.disabled = true;
+		portalCall("functional_demo.api.send_trial_reminder", { demo_request: DOC_NAME })
+			.then(function () { btn.disabled = false; portalAlert("Trial reminder sent to the sales person.", "ok"); })
+			.catch(function () { btn.disabled = false; });
+	});
 	{% endif %}
 
 	{% if doc.status in ["Demo Completed", "Follow-up Required"] %}
