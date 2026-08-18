@@ -31,6 +31,10 @@
   "workflow_state",
   "follow_up_date",
   "next_action",
+  "trial_section",
+  "trial_start_date",
+  "trial_end_date",
+  "trial_reminder_sent",
   "approval_section",
   "sla_days",
   "sla_due_date",
@@ -209,6 +213,33 @@
    "fieldname": "next_action",
    "fieldtype": "Small Text",
    "label": "Next Action"
+  },
+  {
+   "depends_on": "eval:doc.status == \"Converted\"",
+   "fieldname": "trial_section",
+   "fieldtype": "Section Break",
+   "label": "Trial Period (Converted)"
+  },
+  {
+   "depends_on": "eval:doc.status == \"Converted\"",
+   "description": "When the converted customer gets full access to the product.",
+   "fieldname": "trial_start_date",
+   "fieldtype": "Date",
+   "label": "Trial Start Date"
+  },
+  {
+   "depends_on": "eval:doc.status == \"Converted\"",
+   "description": "A reminder email is sent to the sales person one day before this date.",
+   "fieldname": "trial_end_date",
+   "fieldtype": "Date",
+   "label": "Trial End Date"
+  },
+  {
+   "fieldname": "trial_reminder_sent",
+   "fieldtype": "Check",
+   "hidden": 1,
+   "label": "Trial Reminder Sent",
+   "read_only": 1
   },
   {
    "fieldname": "approval_section",

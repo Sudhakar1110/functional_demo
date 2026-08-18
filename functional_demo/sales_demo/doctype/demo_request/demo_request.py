@@ -16,6 +16,7 @@ class DemoRequest(Document):
 		self.validate_consultant()
 		self.validate_schedule_conflict()
 		self.validate_follow_up_date()
+		self.validate_trial_dates()
 		self.set_sla_due_date()
 		self.apply_priority_rule()
 
@@ -131,6 +132,12 @@ class DemoRequest(Document):
 	def validate_follow_up_date(self):
 		if self.follow_up_date and self.follow_up_date < today():
 			frappe.throw(_("Follow-up Date cannot be in the past."))
+
+	def validate_trial_dates(self):
+		"""Trial period (set once the lead is converted) must be a valid window:
+		both dates present, end date on or after the start date."""
+		if self.trial_start_date and self.trial_end_date and self.trial_end_date < self.trial_start_date:
+			frappe.throw(_("Trial End Date cannot be before the Trial Start Date."))
 
 	def set_sla_due_date(self):
 		"""Every new request gets an SLA target: the date by which it should be

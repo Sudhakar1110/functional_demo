@@ -28,16 +28,24 @@ def get_context(context):
 	if status:
 		filters["demo_status"] = status
 
+	# Sessions are listed by assignment date (newest first), so a freshly
+	# assigned demo appears at the top of the list.
 	context.sessions = frappe.get_all(
 		"Demo Session",
 		filters=filters,
 		fields=[
 			"name", "customer", "lead", "sales_person", "interested_module", "scheduled_date",
-			"start_time", "end_time", "demo_status", "final_result", "demo_request",
+			"start_time", "end_time", "demo_status", "final_result", "demo_request", "creation",
 		],
-		order_by="scheduled_date desc",
+		order_by="creation desc",
 		limit_page_length=1000,
 	) or []
+	for s in context.sessions:
+		s["assigned_display"] = (
+			frappe.utils.format_datetime(s.get("creation"), "dd MMM yyyy, hh:mm a")
+			if s.get("creation")
+			else "-"
+		)
 	context.status = status
 	context.status_options = SESSION_STATUSES
 	context.consultant = consultant

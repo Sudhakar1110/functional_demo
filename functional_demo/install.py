@@ -378,3 +378,71 @@ def _notify_overdue_follow_up(row):
 				),
 				message=frappe.get_traceback(),
 			)
+
+
+def send_trial_period_reminders():
+	"""Daily job: when a converted lead's trial period ends tomorrow, email the
+	sales person (and send an in-app notification) so they can follow up before
+	the customer's access expires. Each trial period is reminded only once."""
+	if not frappe.db.exists("DocType", "Demo Request"):
+		return
+	reminder_day = frappe.utils.add_days(frappe.utils.today(), 1)
+	due = frappe.get_all(
+		"Demo Request",
+		filters=[
+			["status", "=", "Converted"],
+			["trial_end_date", "=", reminder_day],
+			["trial_reminder_sent", "=", 0],
+		],
+		fields=["name", "customer", "lead", "sales_person", "trial_start_date", "trial_end_date"],
+		limit_page_length=500,
+	) or []
+	if not due:
+		return
+	for row in due:
+		_notify_trial_period_reminder(row)
+	frappe.db.commit()
+
+
+def _notify_trial_period_reminder(row):
+	"""Email + in-app notification about one trial period ending tomorrow."""
+	from functional_demo.portal import create_notification, send_branded_email
+
+	sales_person = row.get("sales_person")
+	if not sales_person or sales_person == "Guest":
+		return
+	party = row.get("customer") or row.get("lead") or row.get("name")
+	subject = _("Trial Period Ends Tomorrow — {0}").format(party)
+	create_notification(sales_person, subject, "Demo Request", row.get("name"))
+	email = frappe.db.get_value("User", sales_person, "email")
+	if email:
+		try:
+			send_branded_email(
+				recipients=[email],
+				subject=subject,
+				heading=_("Trial Period Ending Tomorrow"),
+				intro=_(
+					"The trial period for {0} ends tomorrow ({1}). Reach out to the customer "
+					"about converting or extending before their access expires."
+				).format(party, row.get("trial_end_date")),
+				rows=[
+					(_("Demo Request"), row.get("name")),
+					(_("Trial Start Date"), row.get("trial_start_date") or "-"),
+					(_("Trial End Date"), row.get("trial_end_date") or "-"),
+					(_("Sales Person"), sales_person),
+				],
+				cta_text=_("Open Demo Request"),
+				cta_url=frappe.utils.get_url("/app/demo-request/{0}".format(row.get("name"))),
+				reference_doctype="Demo Request",
+				reference_name=row.get("name"),
+			)
+		except Exception:
+			frappe.log_error(
+				title=_("Trial reminder email to {0} failed for {1}").format(
+					sales_person, row.get("name")
+				),
+				message=frappe.get_traceback(),
+			)
+	# mark reminded (even if the mail failed - the job matches only the day
+	# before the end date, so a retry would arrive a day late anyway)
+	frappe.db.set_value("Demo Request", row.get("name"), "trial_reminder_sent", 1)

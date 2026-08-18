@@ -56,6 +56,7 @@
 								<th>Session</th>
 								<th>Leads</th>
 								<th>Interested Template</th>
+								<th>Assigned</th>
 								<th>Date</th>
 								<th>Time</th>
 								<th>Status</th>
@@ -69,6 +70,7 @@
 								<td><a href="/functional_portal/session?name={{ s.name }}">{{ s.name }}</a></td>
 								<td>{{ s.customer or s.sales_person or "-" }}</td>
 								<td>{{ s.interested_module or "-" }}</td>
+								<td>{{ s.assigned_display }}</td>
 								<td>{{ s.scheduled_date or "-" }}</td>
 								<td>{% if s.start_time %}{{ s.start_time }}{% if s.end_time %} – {{ s.end_time }}{% endif %}{% else %}-{% endif %}</td>
 								<td><span class="badge b-{{ s.demo_status|lower|replace(' ', '-') }}">{{ s.demo_status }}</span></td>

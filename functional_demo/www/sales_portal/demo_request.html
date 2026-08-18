@@ -321,6 +321,25 @@
 				</div>
 			</div>
 
+			{% if doc.status == "Converted" %}
+			<div class="portal-card">
+				<div class="card-head">
+					<h2>Trial Period</h2>
+					<span class="badge b-converted">Converted</span>
+				</div>
+				<div class="card-body">
+					<p class="text-muted" style="margin-top: 0;">Set the trial window during which the converted customer gets full access. A reminder email is sent to the sales person one day before the trial end date.</p>
+					<div class="form-row">
+						<div><label>Trial Start Date <span class="req">*</span></label><input type="date" id="trial-start" value="{{ doc.trial_start_date or '' }}"></div>
+						<div><label>Trial End Date <span class="req">*</span></label><input type="date" id="trial-end" value="{{ doc.trial_end_date or '' }}"></div>
+					</div>
+					<div class="form-actions">
+						<button class="btn-portal success" id="btn-trial">{% if doc.trial_start_date and doc.trial_end_date %}Update Trial Period{% else %}Set Trial Period{% endif %}</button>
+					</div>
+				</div>
+			</div>
+			{% endif %}
+
 			<div class="portal-card">
 				<div class="card-head"><h2>Activity Timeline</h2></div>
 				<div class="card-body">
@@ -561,6 +580,19 @@
 		});
 	}
 	{% endif %}
+	{% endif %}
+
+	{% if doc.status == "Converted" %}
+	var btnTrial = document.getElementById("btn-trial");
+	if (btnTrial) btnTrial.addEventListener("click", function () {
+		var start = document.getElementById("trial-start").value;
+		var end = document.getElementById("trial-end").value;
+		if (!start || !end) { portalAlert("Please pick both the trial start and end dates.", "err"); return; }
+		if (end < start) { portalAlert("Trial End Date cannot be before the Trial Start Date.", "err"); return; }
+		var btn = this; btn.disabled = true;
+		portalCall("functional_demo.api.set_trial_period", { demo_request: DOC_NAME, trial_start_date: start, trial_end_date: end })
+			.then(function () { window.location.reload(); }).catch(function () { btn.disabled = false; });
+	});
 	{% endif %}
 
 	{% if doc.status in ["Demo Completed", "Follow-up Required"] %}

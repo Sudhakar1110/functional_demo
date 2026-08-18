@@ -484,6 +484,43 @@ def set_demo_result(demo_request=None, result=None):
 
 
 @frappe.whitelist()
+def set_trial_period(demo_request=None, trial_start_date=None, trial_end_date=None):
+	"""Set the trial period on a converted demo request (sales team only).
+
+	The trial window is when the converted customer gets full access; a
+	reminder email goes to the sales person one day before the trial end date.
+	"""
+	if not is_sales():
+		frappe.throw(_("Only the sales team can set the trial period."), frappe.PermissionError)
+	if not demo_request:
+		frappe.throw(
+			_("Demo Request is missing. Please refresh the page and try again."),
+			title=_("Missing Request"),
+		)
+	if not trial_start_date or not trial_end_date:
+		frappe.throw(_("Please select both the trial start and end dates."))
+	if trial_end_date < trial_start_date:
+		frappe.throw(_("Trial End Date cannot be before the Trial Start Date."))
+
+	dr = frappe.get_doc("Demo Request", demo_request)
+	frappe.has_permission("Demo Request", "write", doc=dr, throw=True)
+	before = dr.get_doc_before_save()
+	dr.trial_start_date = trial_start_date
+	dr.trial_end_date = trial_end_date
+	# changing the dates re-arms the reminder (it fires 1 day before the end)
+	if before and (before.trial_start_date != trial_start_date or before.trial_end_date != trial_end_date):
+		dr.trial_reminder_sent = 0
+	dr.save()
+
+	frappe.msgprint(
+		_("Trial period set from {0} to {1}. A reminder will be sent to the sales person one day before it ends.").format(
+			trial_start_date, trial_end_date
+		)
+	)
+	return {"trial_start_date": dr.trial_start_date, "trial_end_date": dr.trial_end_date}
+
+
+@frappe.whitelist()
 def cancel_demo_request(demo_request=None, reason=None, name=None):
 	"""Cancel a Demo Request from the portal: close its open demo sessions and
 	move the request to Cancelled (the workflow's role rules apply).
