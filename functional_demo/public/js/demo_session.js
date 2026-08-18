@@ -111,10 +111,13 @@ function add_session_actions(frm) {
 	}
 
 	if (["Completed", "Follow-up Required"].includes(status)) {
-		// same rule as the portal: once a follow-up exists for this session,
-		// the button disappears so duplicates can never be created
+		// Follow-ups are sales-team-only; once a follow-up exists for this
+		// session the button disappears so duplicates can never be created
+		const canFollowUp =
+			frappe.session.user === "Administrator" ||
+			frappe.user.has_role(["Sales User", "Sales Manager"]);
 		frappe.db.get_value("Demo Follow Up", { demo_session: frm.doc.name }, "name", (r) => {
-			if (!(r && r.name)) {
+			if (canFollowUp && !(r && r.name)) {
 				frm.page.add_inner_button(__("Create Follow-up"), () => follow_up_dialog(frm), __("Actions"));
 			}
 		});

@@ -111,22 +111,19 @@ class DemoFollowUp(Document):
 
 	def notify_additional_demo_required(self, before=None):
 		"""When a follow-up outcome is set to 'Additional Demo Required', tell the
-		sales person and the consultant (in-app notification + email) so the
-		follow-up demo actually gets scheduled instead of stalling the pipeline."""
+		sales person (in-app notification + email) so the follow-up demo actually
+		gets scheduled instead of stalling the pipeline."""
 		old_outcome = (before.get("outcome") if before else None) or None
 		if self.outcome != "Additional Demo Required" or old_outcome == self.outcome:
 			return
 
-		consultant_user = None
-		if self.functional_consultant:
-			consultant_user = frappe.db.get_value(
-				"Functional Consultant", self.functional_consultant, "user"
-			)
+		# Follow-ups are sales-only, so only the sales team is notified here -
+		# a consultant link to the follow-up would hit a permission error.
 		party = self.customer or self.demo_request or self.name
 		subject = _("Additional Demo Required — {0} (Request {1})").format(
 			party, self.demo_request or "-"
 		)
-		for user in {self.sales_person, self.assigned_to, consultant_user}:
+		for user in {self.sales_person, self.assigned_to}:
 			if not user or user == "Guest":
 				continue
 			create_notification(user, subject, "Demo Follow Up", self.name)
@@ -174,13 +171,14 @@ class DemoFollowUp(Document):
 # ------------------------------------------------------------------
 
 def get_permission_query_conditions(user=None):
-	"""Sales users see follow-ups assigned to them or on their requests;
-	consultants see follow-ups on their demos; managers see everything."""
+	"""Follow-ups are sales-team-only: sales users see follow-ups assigned to
+	them or on their requests; Sales Managers and System Managers see everything.
+	Functional roles never see follow-ups."""
 	user = user or frappe.session.user
 	if not user or user == "Administrator":
 		return ""
 	roles = frappe.get_roles(user)
-	if any(r in roles for r in ("System Manager", "Sales Manager", "Functional Team Manager")):
+	if any(r in roles for r in ("System Manager", "Sales Manager")):
 		return ""
 	if "Sales User" in roles:
 		return (
@@ -189,21 +187,19 @@ def get_permission_query_conditions(user=None):
 			"(select `tabDemo Request`.`name` from `tabDemo Request` "
 			"where `tabDemo Request`.`sales_person` = {0} or `tabDemo Request`.`owner` = {0}))"
 		).format(frappe.db.escape(user))
-	if "Functional Consultant" in roles:
-		return (
-			"(`tabDemo Follow Up`.`functional_consultant` in "
-			"(select `tabFunctional Consultant`.`name` from `tabFunctional Consultant` "
-			"where `tabFunctional Consultant`.`user` = {0}))"
-		).format(frappe.db.escape(user))
-	return ""
+	# Everyone else (functional roles included) gets an empty result set -
+	# never an unrestricted fallthrough.
+	return "1=0"
 
 
 def has_permission(doc, ptype="read", user=None):
+	"""Only the sales team (plus System Manager / Administrator) may access a
+	follow-up. Functional consultants and functional managers get no access."""
 	user = user or frappe.session.user
 	if user == "Administrator":
 		return True
 	roles = frappe.get_roles(user)
-	if any(r in roles for r in ("System Manager", "Sales Manager", "Functional Team Manager")):
+	if any(r in roles for r in ("System Manager", "Sales Manager")):
 		return True
 	if "Sales User" in roles:
 		if doc.get("assigned_to") == user or doc.get("owner") == user:
@@ -215,9 +211,4 @@ def has_permission(doc, ptype="read", user=None):
 			if request and (request.sales_person == user or request.owner == user):
 				return True
 		return False
-	if "Functional Consultant" in roles and doc.get("functional_consultant"):
-		consultant_user = frappe.db.get_value(
-			"Functional Consultant", doc.get("functional_consultant"), "user"
-		)
-		return consultant_user == user
 	return False

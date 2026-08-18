@@ -4,7 +4,7 @@
 import frappe
 from frappe import _
 
-from functional_demo.portal import consultant_of_user, list_note, portal_context
+from functional_demo.portal import list_note, portal_context
 
 STATUS_OPTIONS = ["Open", "In Progress", "Completed", "Overdue"]
 OUTCOME_OPTIONS = [
@@ -14,21 +14,19 @@ OUTCOME_OPTIONS = [
 
 
 def get_context(context):
+	# Follow-ups are sales-team-only - the functional team never sees this page.
 	portal_context(
 		context,
 		_("Follow-ups"),
-		["Sales User", "Sales Manager", "Functional Consultant", "Functional Team Manager"],
+		["Sales User", "Sales Manager"],
 		active="follow_ups",
-		subtitle=_("Follow-ups on your demos"),
+		subtitle=_("Follow-ups on your demo requests"),
 	)
-	consultant = consultant_of_user()
-	filters = {}
-	if consultant:
-		filters["functional_consultant"] = consultant
-
+	# Row-level permission filters (see demo_follow_up.has_permission) restrict
+	# the list to follow-ups the sales user is assigned to or owns - no extra
+	# filtering needed here.
 	context.follow_ups = frappe.get_all(
 		"Demo Follow Up",
-		filters=filters,
 		fields=[
 			"name", "demo_request", "demo_session", "customer", "follow_up_date",
 			"status", "outcome", "next_action", "remarks", "assigned_to",
@@ -38,9 +36,8 @@ def get_context(context):
 	) or []
 	for fu in context.follow_ups:
 		fu["due_display"] = frappe.utils.format_date(fu.get("follow_up_date"), "medium") if fu.get("follow_up_date") else "-"
-	context.consultant = consultant
 	context.status_options = STATUS_OPTIONS
 	context.outcome_options = OUTCOME_OPTIONS
 	context.list_note = list_note(
-		len(context.follow_ups), frappe.db.count("Demo Follow Up", filters), _("follow-ups")
+		len(context.follow_ups), frappe.db.count("Demo Follow Up"), _("follow-ups")
 	)

@@ -14,7 +14,6 @@ def execute(filters=None):
 		{"label": _("In Progress"), "fieldname": "in_progress", "fieldtype": "Int", "width": 90},
 		{"label": _("Completed"), "fieldname": "completed", "fieldtype": "Int", "width": 90},
 		{"label": _("Cancelled"), "fieldname": "cancelled", "fieldtype": "Int", "width": 90},
-		{"label": _("Follow-ups"), "fieldname": "follow_ups", "fieldtype": "Int", "width": 90},
 		{"label": _("Converted"), "fieldname": "converted", "fieldtype": "Int", "width": 90},
 		{"label": _("Conversion Rate (%)"), "fieldname": "conversion_rate", "fieldtype": "Percent", "width": 120},
 	]
@@ -35,7 +34,6 @@ def execute(filters=None):
 			sum(case when demo_status = 'In Progress' then 1 else 0 end) as in_progress,
 			sum(case when demo_status = 'Completed' then 1 else 0 end) as completed,
 			sum(case when demo_status = 'Cancelled' then 1 else 0 end) as cancelled,
-			(select count(*) from `tabDemo Follow Up` fu where fu.demo_session = `tabDemo Session`.name) as follow_ups,
 			sum(case when final_result = 'Converted' then 1 else 0 end) as converted
 		from `tabDemo Session`
 		where {conditions}

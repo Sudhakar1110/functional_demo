@@ -212,7 +212,11 @@ frappe.pages["demo-execution"].on_page_load = function (wrapper) {
 			if (can_cancel) push(__("Cancel Demo"), "btn-danger", "cancel");
 		}
 		if (["Completed", "Follow-up Required"].includes(status)) {
-			push(__("Create Follow-up"), "btn-primary", "follow_up");
+			// Follow-ups are sales-team-only
+			const canFollowUp =
+				frappe.session.user === "Administrator" ||
+				frappe.user.has_role(["Sales User", "Sales Manager"]);
+			if (canFollowUp) push(__("Create Follow-up"), "btn-primary", "follow_up");
 			if (can_execute) push(__("Set Final Result"), "btn-secondary", "result");
 		}
 		push(__("Open Session Form"), "btn-default", "open_form");

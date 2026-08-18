@@ -13,7 +13,7 @@ def get_context(context):
 		_("Functional Home"),
 		["Sales User", "Sales Manager", "Functional Consultant", "Functional Team Manager"],
 		active="functional",
-		subtitle=_("Your demos and follow-ups"),
+		subtitle=_("Your demos and feedback"),
 	)
 	context.stats = functional_stats()
 	context.can_manage_consultants = can_manage_consultants()

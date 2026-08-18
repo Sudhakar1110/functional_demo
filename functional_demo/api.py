@@ -5,7 +5,7 @@
 import frappe
 from frappe import _
 
-from functional_demo.portal import can_manage_consultants, create_notification
+from functional_demo.portal import can_manage_consultants, create_notification, is_sales
 from functional_demo.sales_demo.doctype.demo_request.demo_request import (
 	change_status,
 	get_primary_contact,
@@ -414,6 +414,8 @@ def create_demo_follow_up(demo_request=None, follow_up_date=None, next_action=No
 		)
 	if not follow_up_date:
 		frappe.throw(_("Please select a follow-up date."))
+	if not is_sales():
+		frappe.throw(_("Only the sales team can create follow-ups."), frappe.PermissionError)
 
 	dr = frappe.get_doc("Demo Request", demo_request)
 	frappe.has_permission("Demo Request", "write", doc=dr, throw=True)
@@ -942,6 +944,8 @@ def create_follow_up_from_session(demo_session=None, follow_up_date=None, next_a
 	"""Create a follow-up directly from a completed demo session."""
 	if not follow_up_date:
 		frappe.throw(_("Please select a follow-up date."))
+	if not is_sales():
+		frappe.throw(_("Only the sales team can create follow-ups."), frappe.PermissionError)
 	ds = _get_session(demo_session)
 	fu = ds.create_follow_up(follow_up_date, next_action, assigned_to)
 	party, _consultant = _party_and_consultant(ds)

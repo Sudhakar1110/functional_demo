@@ -169,6 +169,8 @@ def sidebar_items(active):
 			{"label": _("Sales"), "route": "/sales_portal/my_leads", "icon": ICON_LEADS, "active": active == "leads"},
 			{"label": _("Demo Requests"), "route": "/sales_portal/demo_requests", "icon": ICON_REQUESTS, "active": active == "requests"},
 			{"label": _("Results"), "route": "/sales_portal/results", "icon": ICON_RESULTS, "active": active == "results"},
+			# Follow-ups are sales-team-only
+			{"label": _("Follow-ups"), "route": "/functional_portal/follow_ups", "icon": ICON_FOLLOWUPS, "active": active == "follow_ups"},
 		]
 
 	# Functional sections are shared - the sales team sees them too
@@ -176,7 +178,6 @@ def sidebar_items(active):
 		items += [
 			{"label": _("Functional Home"), "route": "/functional_portal", "icon": ICON_FUNCTIONAL, "active": active == "functional"},
 			{"label": _("My Sessions"), "route": "/functional_portal/my_sessions", "icon": ICON_SESSIONS, "active": active == "sessions"},
-			{"label": _("Follow-ups"), "route": "/functional_portal/follow_ups", "icon": ICON_FOLLOWUPS, "active": active == "follow_ups"},
 		]
 
 	if is_manager():
@@ -509,7 +510,7 @@ def functional_stats(user=None):
 	empty = {
 		"consultant": consultant,
 		"todays_demos": 0, "in_progress": 0, "upcoming": 0,
-		"completed": 0, "templates": 0, "follow_ups": 0,
+		"completed": 0, "templates": 0,
 	}
 	if not consultant:
 		return empty
@@ -540,16 +541,14 @@ def functional_stats(user=None):
 	)
 	completed = sum(1 for s in sessions if s.get("demo_status") == "Completed")
 
+	# Note: follow-up counts are intentionally absent here - follow-ups are
+	# sales-team-only, so the functional dashboard never surfaces them.
 	return {
 		"consultant": consultant,
 		"todays_demos": todays,
 		"in_progress": in_progress,
 		"upcoming": upcoming,
 		"completed": completed,
-		"follow_ups": _count(
-			"Demo Follow Up",
-			{"functional_consultant": consultant, "status": ["in", ["Open", "In Progress"]]},
-		),
 		"recent_sessions": frappe.get_all(
 			"Demo Session",
 			filters={"functional_consultant": consultant},
@@ -624,9 +623,12 @@ def manager_stats():
 			"Demo Session",
 			{"scheduled_date": today, "demo_status": ["in", ["Scheduled", "In Progress"]]},
 		),
+		# Follow-ups are sales-only: the manager dashboard shows the open
+		# follow-up count only to sales managers (functional managers have no
+		# Demo Follow Up permission at all, so a bare query would return 0).
 		"open_follow_ups": _count(
 			"Demo Follow Up", {"status": ["in", ["Open", "In Progress"]]}
-		),
+		) if is_sales() else 0,
 		"consultant_workload": consultant_workload,
 		"sales_performance": sales_performance,
 		"module_wise": module_wise,
