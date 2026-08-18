@@ -128,7 +128,7 @@ frappe.pages["demo-execution"].on_page_load = function (wrapper) {
 					<div class="demo-exec-card">
 						<h5>${__("Leads Information")}</h5>
 						<div class="demo-exec-row"><span class="label">${__("Leads")}</span><span class="value">${esc(customer.customer || "-")}</span></div>
-						<div class="demo-exec-row"><span class="label">${__("Sales Person")}</span><span class="value">${esc(customer.lead || "-")}</span></div>
+						<div class="demo-exec-row"><span class="label">${__("Lead Name")}</span><span class="value">${esc(customer.lead || "-")}</span></div>
 						<div class="demo-exec-row"><span class="label">${__("Contact Person")}</span><span class="value">${esc(customer.contact_person || "-")}</span></div>
 						<div class="demo-exec-row"><span class="label">${__("Lead Contact Number")}</span><span class="value">${esc(customer.contact_number || "-")}</span></div>
 						<div class="demo-exec-row"><span class="label">${__("Lead Email")}</span><span class="value">${esc(customer.email || "-")}</span></div>
@@ -138,8 +138,7 @@ frappe.pages["demo-execution"].on_page_load = function (wrapper) {
 					<div class="demo-exec-card">
 						<h5>${__("Demo Information")}</h5>
 						<div class="demo-exec-row"><span class="label">${__("Demo Request")}</span><span class="value">${esc(request.name || "-")} (${esc(request.status || "")})</span></div>
-						<div class="demo-exec-row"><span class="label">${__("Sales Person")}</span><span class="value">${esc(team.sales_person || "-")}</span></div>
-						<div class="demo-exec-row"><span class="label">${__("Functional Consultant")}</span><span class="value">${esc(team.consultant_name || team.functional_consultant || "-")}</span></div>
+						<div class="demo-exec-row"><span class="label">${__("Consultant")}</span><span class="value">${esc(team.consultant_name || team.functional_consultant || "-")}${team.consultant_specialization ? " (" + esc(team.consultant_specialization) + ")" : ""}${team.consultant_email ? " \u2014 " + esc(team.consultant_email) : ""}</span></div>
 						<div class="demo-exec-row"><span class="label">${__("Demo Type")}</span><span class="value">${esc(session.demo_type || "-")}</span></div>
 						<div class="demo-exec-row"><span class="label">${__("Date & Time")}</span><span class="value">${esc(session.scheduled_date || "-")} ${esc(session.start_time || "")}${session.end_time ? " - " + esc(session.end_time) : ""}</span></div>
 						<div class="demo-exec-row">
