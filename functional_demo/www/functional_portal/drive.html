@@ -1,0 +1,193 @@
+{% extends "templates/web.html" %}
+{% block banner %}{% endblock %}
+{% block navbar %}{% endblock %}
+{% block footer %}{% endblock %}
+{% block style %}{% include "functional_demo/templates/includes/portal_style.html" %}{% endblock %}
+{% block content %}
+<div class="portal-layout">
+	<header class="portal-topbar">
+		<button class="sidebar-toggle" id="sidebar-toggle" aria-label="Menu">&#9776;</button>
+		<a class="topbar-brand" href="/demo_portal">
+			<img class="brand-logo" src="/assets/functional_demo/images/brand_logo.jpg" alt="Brand Logo" />
+			<div class="brand-text">
+				<span class="brand-name">Demo Portal</span>
+				<span class="brand-sub">Sales &amp; Functional</span>
+			</div>
+		</a>
+		<div class="topbar-title">
+			<h1>{{ title }}</h1>
+			<p>{{ subtitle }}</p>
+		</div>
+		<div class="topbar-right">
+			<span class="portal-avatar">{{ full_name[:1] }}</span>
+			<span class="portal-user-name">{{ full_name }}</span>
+			<a class="btn-desk" href="/app">Open Desk</a>
+		</div>
+	</header>
+	<div class="portal-body">
+		<aside class="portal-sidebar" id="portal-sidebar">
+			<div class="sidebar-menu">
+			{% for item in sidebar_items %}
+			<a class="sidebar-item {% if item.active %}active{% endif %}" href="{{ item.route }}">
+				<span class="sidebar-icon">{{ item.icon | safe }}</span>{{ item.label }}
+			</a>
+			{% endfor %}
+			</div>
+		</aside>
+		<div class="sidebar-overlay"></div>
+		<div class="portal-main">
+			<div class="portal-content">
+				<div class="dash-greet">
+					<div>
+						<span class="greet-eyebrow">● {{ today_pretty }}</span>
+						<h1>Consultant Drive</h1>
+						<p>Upload and share files with the whole consultant team. Only the consultant team can see this library.</p>
+					</div>
+				</div>
+
+				<div class="portal-card">
+					<div class="card-head"><h2>Upload a File</h2></div>
+					<div class="card-body">
+						<form id="drive-upload-form" class="portal-form" enctype="multipart/form-data">
+							<div class="form-row">
+								<div>
+									<label>Title <span class="req">*</span></label>
+									<input type="text" id="drive-title" placeholder="e.g. Pricing Deck 2026">
+								</div>
+								<div>
+									<label>File <span class="req">*</span></label>
+									<input type="file" id="drive-file">
+								</div>
+							</div>
+							<label>Description</label>
+							<textarea id="drive-description" placeholder="What is this file about?"></textarea>
+							<div class="form-actions">
+								<button class="btn-portal success" id="btn-drive-upload" type="button">Upload</button>
+							</div>
+						</form>
+					</div>
+				</div>
+
+				<h2 style="margin: 24px 0 16px; font-size: 20px; font-weight: 800; color: #05133C;">Files ({{ total_files }})</h2>
+
+				{% if files %}
+				<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 16px;">
+					{% for f in files %}
+					<div class="portal-card" style="margin-bottom: 0;">
+						<div class="card-head" style="padding: 12px 16px;">
+							<div>
+								<h2 style="font-size: 14px;">{{ f.title }}</h2>
+								<div style="margin-top: 6px; display: flex; gap: 6px; flex-wrap: wrap; align-items: center;">
+									<span class="badge b-scheduled">{{ f.size_display }}</span>
+									<span class="muted">by {{ f.uploaded_by_display }}</span>
+								</div>
+							</div>
+							<div style="text-align: right;">
+								<div class="muted" style="font-size: 12px;">{{ f.uploaded_on_display }}</div>
+							</div>
+						</div>
+						<div class="card-body" style="padding: 14px 16px;">
+							<div class="detail-grid" style="grid-template-columns: 1fr;">
+								<div class="detail-item"><div class="d-label">Description</div><div class="d-value wrap">{{ f.description or "-" }}</div></div>
+							</div>
+							<div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px;">
+								<a class="btn-portal sm" href="/api/method/functional_demo.api.consultant_drive_download?name={{ f.name }}" download>
+									<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg> Download
+								</a>
+								<button class="btn-portal danger sm" type="button" data-delete-file="{{ f.name }}" data-delete-title="{{ f.title }}">
+									<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg> Delete
+								</button>
+							</div>
+						</div>
+					</div>
+					{% endfor %}
+				</div>
+				{% else %}
+				<div class="portal-card">
+					<div class="empty-state">
+						<div class="empty-icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg></div>
+						<h3>No files yet</h3>
+						<p>Upload the first file to start building the team library.</p>
+					</div>
+				</div>
+				{% endif %}
+			</div>
+		</div>
+	</div>
+</div>
+{% endblock %}
+
+{% block script %}
+{% include "functional_demo/templates/includes/portal_script.html" %}
+<script>
+(function () {
+	"use strict";
+	var metaCsrf = document.querySelector('meta[name="csrf-token"]');
+	var CSRF = "{{ csrf_token }}" || (metaCsrf && metaCsrf.getAttribute("content")) || (window.frappe && frappe.csrf_token) || "";
+
+	function apiJson(res) {
+		return res.text().then(function (txt) {
+			var data = {};
+			try { data = JSON.parse(txt) || {}; } catch (e) { data = { __raw: txt || "" }; }
+			return { ok: res.ok, data: data };
+		});
+	}
+
+	function fail(res) {
+		var msg = "";
+		try {
+			var serverMsgs = JSON.parse(res.data._server_messages || "[]");
+			msg = serverMsgs.map(function (m) { return m.replace(/<[^>]+>/g, ""); }).join(" ");
+		} catch (e) {}
+		if (!msg && res.data.exc_type) msg = res.data.exception || "Something went wrong.";
+		if (!msg && res.data.__raw) msg = res.data.__raw.replace(/<[^>]+>/g, "").trim().slice(0, 200);
+		window.portalModal("Upload failed", msg || "Could not reach the server.", "err");
+	}
+
+	document.getElementById("btn-drive-upload").addEventListener("click", function () {
+		var btn = this;
+		var title = document.getElementById("drive-title").value.trim();
+		var fileInput = document.getElementById("drive-file");
+		var description = document.getElementById("drive-description").value.trim();
+		if (!title) { window.portalAlert("Please give the file a title.", "err"); return; }
+		if (!fileInput.files || !fileInput.files.length) { window.portalAlert("Please choose a file to upload.", "err"); return; }
+		var fd = new FormData();
+		fd.append("title", title);
+		fd.append("description", description);
+		fd.append("file", fileInput.files[0]);
+		btn.disabled = true;
+		btn.textContent = "Uploading...";
+		fetch("/api/method/functional_demo.api.consultant_drive_upload", {
+			method: "POST",
+			headers: { "X-Frappe-CSRF-Token": CSRF },
+			body: fd,
+			credentials: "same-origin",
+		})
+			.then(apiJson)
+			.then(function (res) {
+				if (res.ok) { window.location.reload(); return; }
+				fail(res);
+				btn.disabled = false;
+				btn.textContent = "Upload";
+			})
+			.catch(function () {
+				window.portalModal("Upload failed", "Could not reach the server.", "err");
+				btn.disabled = false;
+				btn.textContent = "Upload";
+			});
+	});
+
+	document.querySelectorAll("[data-delete-file]").forEach(function (btn) {
+		btn.addEventListener("click", function () {
+			var name = btn.getAttribute("data-delete-file");
+			var title = btn.getAttribute("data-delete-title") || name;
+			if (!window.confirm("Delete \"" + title + "\" from the Drive? This cannot be undone.")) return;
+			btn.disabled = true;
+			portalCall("functional_demo.api.consultant_drive_delete", { name: name })
+				.then(function () { window.location.reload(); })
+				.catch(function () { btn.disabled = false; });
+		});
+	});
+})();
+</script>
+{% endblock %}

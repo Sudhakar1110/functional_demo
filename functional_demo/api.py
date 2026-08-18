@@ -5,7 +5,7 @@
 import frappe
 from frappe import _
 
-from functional_demo.portal import can_manage_consultants, create_notification, is_sales
+from functional_demo.portal import can_manage_consultants, create_notification, is_functional, is_sales
 from functional_demo.sales_demo.doctype.demo_request.demo_request import (
 	change_status,
 	get_primary_contact,
@@ -953,6 +953,80 @@ def create_follow_up_from_session(demo_session=None, follow_up_date=None, next_a
 		_("Follow-up {0} created for {1}.").format(fu.name, party or ds.customer or ds.demo_request)
 	)
 	return {"follow_up": fu.name}
+
+
+# ---------------------------------------------------------------------------
+# Consultant Drive (shared consultant-only file library)
+# ---------------------------------------------------------------------------
+
+
+def _guard_consultant_drive():
+	"""The Drive is consultant-only: Functional Consultant / Functional Team
+	Manager (and System Manager / Administrator). Sales roles never get in."""
+	if not is_functional():
+		frappe.throw(_("Only the consultant team can access the Drive."), frappe.PermissionError)
+
+
+@frappe.whitelist()
+def consultant_drive_upload(title=None, description=None, file=None):
+	"""Upload a file to the shared consultant Drive (multipart POST)."""
+	_guard_consultant_drive()
+	if not title:
+		frappe.throw(_("Please give the file a title."))
+	filedata = None
+	if file is not None:
+		# passed as a base64/JSON string by some clients
+		filedata = file
+	else:
+		files = getattr(frappe.request, "files", None) or {}
+		filedata = files.get("file")
+	if not filedata or not getattr(filedata, "filename", None):
+		frappe.throw(_("Please choose a file to upload."))
+
+	from frappe.utils.file_manager import save_file
+
+	file_doc = save_file(
+		fname=filedata.filename,
+		content=filedata.stream.read(),
+		is_private=1,
+	)
+	doc = frappe.new_doc("Consultant Drive File")
+	doc.title = title
+	doc.description = description or ""
+	doc.file = file_doc.file_url
+	doc.file_size = file_doc.file_size or 0
+	doc.uploaded_by = frappe.session.user
+	doc.insert()
+
+	frappe.msgprint(_("{0} uploaded to the Drive.").format(title))
+	return {"name": doc.name, "file_url": doc.file}
+
+
+@frappe.whitelist()
+def consultant_drive_download(name=None):
+	"""Serve a Drive file for download (GET link from the portal)."""
+	_guard_consultant_drive()
+	if not name:
+		frappe.throw(_("File is missing."))
+	doc = frappe.get_doc("Consultant Drive File", name)
+	file_doc = frappe.get_doc("File", {"file_url": doc.file})
+	content = file_doc.get_content()
+	frappe.response.filename = file_doc.file_name or "download"
+	frappe.response.filecontent = content
+	frappe.response.type = "download"
+
+
+@frappe.whitelist()
+def consultant_drive_delete(name=None):
+	"""Delete a file from the shared consultant Drive."""
+	_guard_consultant_drive()
+	if not name:
+		frappe.throw(_("File is missing."))
+	doc = frappe.get_doc("Consultant Drive File", name)
+	title = doc.title
+	doc.delete()  # on_trash also removes the backing File record
+	frappe.msgprint(_("{0} removed from the Drive.").format(title))
+	return True
 
 
 @frappe.whitelist()

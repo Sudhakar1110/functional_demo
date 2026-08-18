@@ -149,6 +149,7 @@ ICON_SESSIONS = _icon('<rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><
 ICON_FOLLOWUPS = _icon('<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>')
 ICON_MANAGER = _icon('<path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/>')
 ICON_FEEDBACK = _icon('<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>')
+ICON_DRIVE = _icon('<path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><line x1="12" x2="12" y1="11" y2="17"/><polyline points="9 14 12 17 15 14"/>')
 
 
 def sidebar_items(active):
@@ -179,6 +180,10 @@ def sidebar_items(active):
 			{"label": _("Functional Home"), "route": "/functional_portal", "icon": ICON_FUNCTIONAL, "active": active == "functional"},
 			{"label": _("My Sessions"), "route": "/functional_portal/my_sessions", "icon": ICON_SESSIONS, "active": active == "sessions"},
 		]
+
+	# The Drive is consultant-only - the sales team never sees it
+	if is_functional():
+		items += [{"label": _("Drive"), "route": "/functional_portal/drive", "icon": ICON_DRIVE, "active": active == "drive"}]
 
 	if is_manager():
 		items += [{"label": _("Manager Dashboard"), "route": "/manager_portal", "icon": ICON_MANAGER, "active": active == "manager"}]
@@ -657,6 +662,8 @@ def get_standard_portal_menu_items():
 		{"title": _("Demo Portal"), "route": "/demo_portal", "role": "Sales Manager"},
 		{"title": _("Demo Portal"), "route": "/demo_portal", "role": "Functional Consultant"},
 		{"title": _("Demo Portal"), "route": "/demo_portal", "role": "Functional Team Manager"},
+		{"title": _("Consultant Drive"), "route": "/functional_portal/drive", "role": "Functional Consultant"},
+		{"title": _("Consultant Drive"), "route": "/functional_portal/drive", "role": "Functional Team Manager"},
 		{"title": _("Demo Feedback"), "route": "/feedback", "role": "Feedback Viewer"},
 		{"title": _("Demo Feedback"), "route": "/feedback", "role": "Developer"},
 	]
