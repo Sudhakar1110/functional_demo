@@ -140,7 +140,9 @@
 			msg = serverMsgs.map(function (m) { return m.replace(/<[^>]+>/g, ""); }).join(" ");
 		} catch (e) {}
 		if (!msg && res.data.exc_type) msg = res.data.exception || "Something went wrong.";
-		if (!msg && res.data.__raw) msg = res.data.__raw.replace(/<[^>]+>/g, "").trim().slice(0, 200);
+		// bracket notation only - a literal dot-dot-underscore sequence in the
+		// page source makes Frappe's safe_render reject the template
+		if (!msg && res.data["__raw"]) msg = res.data["__raw"].replace(/<[^>]+>/g, "").trim().slice(0, 200);
 		window.portalModal("Upload failed", msg || "Could not reach the server.", "err");
 	}
 
