@@ -73,7 +73,10 @@ def backfill_session_consultants():
 		where ifnull(ds.functional_consultant, '') = ''
 			and ifnull(dr.functional_consultant, '') != ''"""
 	)
-	frappe.db.commit()	def fix_lead_naming():
+	frappe.db.commit()
+
+
+def fix_lead_naming():
 	"""Change the Lead doctype naming from CRM-LEAD to CRM-SALES and
 	label from 'Lead' to 'Sales Person'.
 
