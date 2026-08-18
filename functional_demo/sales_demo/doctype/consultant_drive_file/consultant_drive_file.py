@@ -27,3 +27,21 @@ class ConsultantDriveFile(Document):
 		file_doc = frappe.db.get_value("File", {"file_url": self.file}, "name")
 		if file_doc:
 			frappe.get_doc("File", file_doc).delete(ignore_permissions=True)
+
+
+# ------------------------------------------------------------------
+# document-level permission checks
+# ------------------------------------------------------------------
+
+def has_permission(doc, ptype="read", user=None):
+	"""The Drive is a shared team library: every consultant can view and
+	download any file (role permissions cover that). Deleting is reserved for
+	the uploader - System Manager / Administrator keep an override."""
+	user = user or frappe.session.user
+	if user == "Administrator":
+		return True
+	if ptype == "delete":
+		if "System Manager" in frappe.get_roles(user):
+			return True
+		return doc.get("uploaded_by") == user
+	return True

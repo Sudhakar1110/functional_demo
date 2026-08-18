@@ -69,6 +69,7 @@ has_permission = {
 	"Functional Demo Template": "functional_demo.sales_demo.doctype.functional_demo_template.functional_demo_template.has_permission",
 	"Demo Follow Up": "functional_demo.sales_demo.doctype.demo_follow_up.demo_follow_up.has_permission",
 	"Functional Consultant": "functional_demo.sales_demo.doctype.functional_consultant.functional_consultant.has_permission",
+	"Consultant Drive File": "functional_demo.sales_demo.doctype.consultant_drive_file.consultant_drive_file.has_permission",
 }
 
 # Scheduled jobs

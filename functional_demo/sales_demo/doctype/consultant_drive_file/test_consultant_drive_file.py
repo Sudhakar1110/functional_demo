@@ -66,3 +66,36 @@ class TestConsultantDriveFile(FrappeTestCase):
 			self.assertEqual(frappe.get_all("Consultant Drive File", filters={"name": f.name}), [])
 		finally:
 			frappe.set_user("Administrator")
+
+	# --- delete is uploader-only ---------------------------------------
+
+	def test_only_uploader_can_delete_own_file(self):
+		uploader = _make_user("drive.uploader@example.com", "Uploader", ["Functional Consultant"])
+		other = _make_user("drive.other@example.com", "Other", ["Functional Consultant"])
+		f = make_drive_file(uploaded_by=uploader)
+
+		frappe.set_user(uploader)
+		try:
+			self.assertTrue(frappe.has_permission("Consultant Drive File", doc=f, ptype="delete"))
+		finally:
+			frappe.set_user("Administrator")
+
+		frappe.set_user(other)
+		try:
+			# another consultant can still view/download, but cannot delete
+			self.assertTrue(frappe.has_permission("Consultant Drive File", doc=f, ptype="read"))
+			self.assertFalse(frappe.has_permission("Consultant Drive File", doc=f, ptype="delete"))
+		finally:
+			frappe.set_user("Administrator")
+
+	def test_functional_team_manager_cannot_delete_others_file(self):
+		uploader = _make_user("drive.uploader2@example.com", "Uploader", ["Functional Consultant"])
+		ftm = _make_user("drive.ftm2@example.com", "FTM", ["Functional Team Manager"])
+		f = make_drive_file(uploaded_by=uploader)
+
+		frappe.set_user(ftm)
+		try:
+			self.assertTrue(frappe.has_permission("Consultant Drive File", doc=f, ptype="read"))
+			self.assertFalse(frappe.has_permission("Consultant Drive File", doc=f, ptype="delete"))
+		finally:
+			frappe.set_user("Administrator")

@@ -4,7 +4,7 @@
 import frappe
 from frappe import _
 
-from functional_demo.portal import portal_context
+from functional_demo.portal import is_admin, portal_context
 
 
 def _size_display(size):
@@ -55,6 +55,8 @@ def get_context(context):
 			if f.get("uploaded_on")
 			else "-"
 		)
+		# only the uploader (or an admin) may delete a file
+		f["can_delete"] = (f.get("uploaded_by") == frappe.session.user) or is_admin()
 	context.total_files = len(context.files)
 	# The upload form posts multipart directly to the whitelisted API, so the
 	# page hands the CSRF token to its own script (the shared portal_script
