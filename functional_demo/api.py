@@ -521,6 +521,49 @@ def set_trial_period(demo_request=None, trial_start_date=None, trial_end_date=No
 
 
 @frappe.whitelist()
+def send_trial_reminder(demo_request=None):
+	"""Send the trial-ending reminder (email + in-app notification) to the sales
+	person of a converted demo request right now - used to verify the reminder
+	works, or to nudge the sales person ahead of the scheduled one-day-before
+	reminder. Sales team only."""
+	if not is_sales():
+		frappe.throw(_("Only the sales team can send the trial reminder."), frappe.PermissionError)
+	if not demo_request:
+		frappe.throw(
+			_("Demo Request is missing. Please refresh the page and try again."),
+			title=_("Missing Request"),
+		)
+
+	dr = frappe.get_doc("Demo Request", demo_request)
+	frappe.has_permission("Demo Request", "read", doc=dr, throw=True)
+	if dr.status != "Converted":
+		frappe.throw(_("Trial reminders apply only to converted demo requests."))
+	if not (dr.trial_start_date and dr.trial_end_date):
+		frappe.throw(_("Set the trial start and end dates before sending the reminder."))
+
+	from functional_demo.install import _notify_trial_period_reminder
+
+	# mark_sent=False: a manual send is a verification / early nudge and must
+	# not suppress the scheduled one-day-before reminder.
+	_notify_trial_period_reminder(
+		{
+			"name": dr.name,
+			"customer": dr.customer,
+			"lead": dr.lead,
+			"sales_person": dr.sales_person,
+			"trial_start_date": dr.trial_start_date,
+			"trial_end_date": dr.trial_end_date,
+		},
+		mark_sent=False,
+	)
+	frappe.db.commit()
+	frappe.msgprint(
+		_("Trial reminder sent to the sales person ({0}).").format(dr.sales_person or "-")
+	)
+	return True
+
+
+@frappe.whitelist()
 def cancel_demo_request(demo_request=None, reason=None, name=None):
 	"""Cancel a Demo Request from the portal: close its open demo sessions and
 	move the request to Cancelled (the workflow's role rules apply).

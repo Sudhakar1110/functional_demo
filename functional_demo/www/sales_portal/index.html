@@ -87,6 +87,12 @@
 					<div class="kpi-value">{{ stats.follow_ups_due }}</div>
 					<div class="kpi-note">Open and due today or earlier</div>
 				</div>
+				<div class="kpi-card kpi-purple">
+					<span class="kpi-icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span>
+					<div class="kpi-label">Trials Ending Soon</div>
+					<div class="kpi-value">{{ stats.trials_ending_soon }}</div>
+					<div class="kpi-note">Converted, ends in next 7 days</div>
+				</div>
 				<div class="kpi-card kpi-green">
 					<span class="kpi-icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg></span>
 					<div class="kpi-label">Conversion Rate</div>
@@ -135,6 +141,47 @@
 					<h3>No demo requests yet</h3>
 					<p>Create your first demo request and start the workflow.</p>
 					<a class="btn-portal" href="/sales_portal/demo_request?new=1">+ New Demo Request</a>
+				</div>
+				{% endif %}
+			</div>
+
+			<div class="portal-card">
+				<div class="card-head">
+					<h2>Trial Periods Ending Soon</h2>
+					<a class="btn-portal secondary sm" href="/sales_portal/trials">Trial Dashboard &rarr;</a>
+				</div>
+				{% if stats.trial_expirations %}
+				<div class="card-body flush">
+					<table class="table-portal">
+						<thead>
+							<tr>
+								<th>Request</th>
+								<th>Customer</th>
+								<th>Sales Person</th>
+								<th>Trial Start</th>
+								<th>Trial End</th>
+								<th></th>
+							</tr>
+						</thead>
+						<tbody>
+							{% for t in stats.trial_expirations %}
+							<tr>
+								<td><a href="/sales_portal/demo_request?name={{ t.name }}">{{ t.name }}</a></td>
+								<td>{{ t.customer or t.lead or "-" }}</td>
+								<td>{{ t.sales_person or "-" }}</td>
+								<td>{{ t.trial_start_date or "-" }}</td>
+								<td>{% if t.trial_end_date %}<span class="chip warning">{{ t.trial_end_date }}</span>{% else %}-{% endif %}</td>
+								<td><a class="btn-portal secondary sm" href="/sales_portal/demo_request?name={{ t.name }}">Open</a></td>
+							</tr>
+							{% endfor %}
+						</tbody>
+					</table>
+				</div>
+				{% else %}
+				<div class="empty-state">
+					<div class="empty-icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+					<h3>No trials ending soon</h3>
+					<p>No converted demo request has a trial ending in the next 7 days.</p>
 				</div>
 				{% endif %}
 			</div>

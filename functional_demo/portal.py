@@ -147,6 +147,7 @@ ICON_RESULTS = _icon('<polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline
 ICON_FUNCTIONAL = _icon('<circle cx="12" cy="12" r="10"/><line x1="22" x2="18" y1="12" y2="12"/><line x1="6" x2="2" y1="12" y2="12"/><line x1="12" x2="12" y1="6" y2="2"/><line x1="12" x2="12" y1="22" y2="18"/>')
 ICON_SESSIONS = _icon('<rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/>')
 ICON_FOLLOWUPS = _icon('<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>')
+ICON_TRIALS = _icon('<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>')
 ICON_MANAGER = _icon('<path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/>')
 ICON_FEEDBACK = _icon('<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>')
 ICON_DRIVE = _icon('<path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><line x1="12" x2="12" y1="11" y2="17"/><polyline points="9 14 12 17 15 14"/>')
@@ -172,6 +173,7 @@ def sidebar_items(active):
 			{"label": _("Results"), "route": "/sales_portal/results", "icon": ICON_RESULTS, "active": active == "results"},
 			# Follow-ups are sales-team-only
 			{"label": _("Follow-ups"), "route": "/functional_portal/follow_ups", "icon": ICON_FOLLOWUPS, "active": active == "follow_ups"},
+			{"label": _("Trial Dashboard"), "route": "/sales_portal/trials", "icon": ICON_TRIALS, "active": active == "trials"},
 		]
 
 	# Functional sections are shared - the sales team sees them too
@@ -484,6 +486,21 @@ def sales_stats(user=None):
 	completed = sum(by_status.get(s, 0) for s in ("Demo Completed", "Follow-up Required"))
 	converted = by_status.get("Converted", 0)
 
+	# Upcoming trial expirations: converted requests whose trial ends today or
+	# in the next 7 days, soonest end first - so the sales team sees at a
+	# glance which customers are about to lose access.
+	end_limit = frappe.utils.add_days(today, 7)
+	trial_expirations = frappe.get_all(
+		"Demo Request",
+		filters={
+			"status": "Converted",
+			"trial_end_date": ["between", [today, end_limit]],
+		},
+		fields=["name", "customer", "lead", "sales_person", "trial_start_date", "trial_end_date"],
+		order_by="trial_end_date asc",
+		limit_page_length=10,
+	) or []
+
 	return {
 		"total_requests": total,
 		"pending": pending,
@@ -499,6 +516,8 @@ def sales_stats(user=None):
 			{"status": ["in", ["Open", "In Progress"]], "follow_up_date": ["<=", today]},
 		),
 		"conversion_rate": round((converted / total * 100), 1) if total else 0,
+		"trials_ending_soon": len(trial_expirations),
+		"trial_expirations": trial_expirations,
 		"recent_requests": frappe.get_all(
 			"Demo Request",
 			fields=["name", "customer", "lead", "sales_person", "status", "priority", "interested_module", "preferred_demo_date", "functional_consultant", "creation"],

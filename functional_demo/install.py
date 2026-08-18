@@ -404,8 +404,13 @@ def send_trial_period_reminders():
 	frappe.db.commit()
 
 
-def _notify_trial_period_reminder(row):
-	"""Email + in-app notification about one trial period ending tomorrow."""
+def _notify_trial_period_reminder(row, mark_sent=True):
+	"""Email + in-app notification about one trial period ending tomorrow.
+
+	mark_sent=False keeps the trial_reminder_sent flag untouched, so a manual
+	"Send Reminder Now" (verification / early nudge) does not suppress the
+	scheduled one-day-before reminder.
+	"""
 	from functional_demo.portal import create_notification, send_branded_email
 
 	sales_person = row.get("sales_person")
@@ -445,4 +450,5 @@ def _notify_trial_period_reminder(row):
 			)
 	# mark reminded (even if the mail failed - the job matches only the day
 	# before the end date, so a retry would arrive a day late anyway)
-	frappe.db.set_value("Demo Request", row.get("name"), "trial_reminder_sent", 1)
+	if mark_sent:
+		frappe.db.set_value("Demo Request", row.get("name"), "trial_reminder_sent", 1)

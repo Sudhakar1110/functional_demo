@@ -74,14 +74,16 @@ has_permission = {
 
 # Scheduled jobs
 scheduler_events = {
-	# the "all" tick runs every few minutes - used for the 1-hour-before
-	# demo reminder so it fires close to exactly 60 minutes ahead
+	# the "all" tick runs every few minutes - used for reminders that must
+	# fire close to a precise moment: the 1-hour-before demo reminder, and the
+	# trial-period reminder (one day before the trial ends). Both are guarded
+	# by a sent-flag so they still fire exactly once.
 	"all": [
 		"functional_demo.sales_demo.doctype.demo_session.demo_session.send_demo_hour_reminders",
+		"functional_demo.install.send_trial_period_reminders",
 	],
 	"daily": [
 		"functional_demo.install.mark_overdue_follow_ups",
-		"functional_demo.install.send_trial_period_reminders",
 		"functional_demo.sales_demo.doctype.demo_request.demo_request.run_sla_escalation_checks",
 		"functional_demo.sales_demo.doctype.demo_session.demo_session.send_demo_reminders",
 	],
