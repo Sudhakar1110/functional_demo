@@ -73,24 +73,24 @@ def backfill_session_consultants():
 		where ifnull(ds.functional_consultant, '') = ''
 			and ifnull(dr.functional_consultant, '') != ''"""
 	)
-	frappe.db.commit()
+	frappe.db.commit()	def fix_lead_naming():
+	"""Change the Lead doctype naming from CRM-LEAD to CRM-SALES and
+	label from 'Lead' to 'Sales Person'.
 
-
-def fix_lead_naming():
-	"""Change the Lead doctype naming from CRM-LEAD to CRM-SALES.
-
-	The portal calls leads 'Sales Persons' - the ID should match.
+	The portal calls leads 'Sales Persons' - the ID and label should match.
 	"""
 	if not frappe.db.exists("DocType", "Lead"):
 		return
-	# Update the naming_series field options on the Lead doctype to replace
-	# CRM-LEAD with CRM-SALES. This is a DocType field-level change.
+	# Rename the DocType label so the desk shows 'Sales Person' instead of
+	# 'Lead' in the sidebar, title and create button.
+	frappe.db.set_value("DocType", "Lead", "label", "Sales Person")
+	# Update the naming_series field options to replace CRM-LEAD with
+	# CRM-SALES so new records get the correct ID.
 	frappe.db.sql("""
 		update `tabDocField`
 		set options = replace(options, 'CRM-LEAD', 'CRM-SALES')
 		where parent = 'Lead' and fieldname = 'naming_series'
 	""")
-	# Also update the default value of the naming_series field
 	frappe.db.sql("""
 		update `tabDocField`
 		set `default` = replace(`default`, 'CRM-LEAD', 'CRM-SALES')
