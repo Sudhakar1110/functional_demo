@@ -394,7 +394,7 @@ def send_trial_period_reminders():
 			["trial_end_date", "=", reminder_day],
 			["trial_reminder_sent", "=", 0],
 		],
-		fields=["name", "customer", "lead", "sales_person", "trial_start_date", "trial_end_date"],
+		fields=["name", "customer", "lead", "sales_person", "owner", "trial_start_date", "trial_end_date"],
 		limit_page_length=500,
 	) or []
 	if not due:
@@ -413,7 +413,9 @@ def _notify_trial_period_reminder(row, mark_sent=True):
 	"""
 	from functional_demo.portal import create_notification, send_branded_email
 
-	sales_person = row.get("sales_person")
+	# Send to the request owner (the actual sales person), not sales_person
+	# which may hold the consultant in some records.
+	sales_person = row.get("owner") or row.get("sales_person")
 	if not sales_person or sales_person == "Guest":
 		return
 	party = row.get("customer") or row.get("lead") or row.get("name")

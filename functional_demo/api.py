@@ -551,14 +551,16 @@ def send_trial_reminder(demo_request=None):
 			"customer": dr.customer,
 			"lead": dr.lead,
 			"sales_person": dr.sales_person,
+			"owner": dr.owner,
 			"trial_start_date": dr.trial_start_date,
 			"trial_end_date": dr.trial_end_date,
 		},
 		mark_sent=False,
 	)
 	frappe.db.commit()
+	recipient = dr.owner or dr.sales_person or "-"
 	frappe.msgprint(
-		_("Trial reminder sent to the sales person ({0}).").format(dr.sales_person or "-")
+		_("Trial reminder sent to the sales person ({0}).").format(recipient)
 	)
 	return True
 
