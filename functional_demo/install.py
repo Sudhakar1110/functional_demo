@@ -40,6 +40,7 @@ def after_migrate():
 	import_module_docs()
 	create_developer_user()
 	disable_legacy_notifications()
+	fix_lead_naming()
 
 
 def backfill_consultant_statuses():
@@ -73,6 +74,20 @@ def backfill_session_consultants():
 			and ifnull(dr.functional_consultant, '') != ''"""
 	)
 	frappe.db.commit()
+
+
+def fix_lead_naming():
+	"""Change the Lead doctype naming from CRM-LEAD to CRM-SALES.
+
+	The portal calls leads 'Sales Persons' - the ID should match.
+	"""
+	if not frappe.db.exists("DocType", "Lead"):
+		return
+	current = frappe.db.get_value("DocType", "Lead", "autoname") or ""
+	if "LEAD" in current:
+		new_autoname = current.replace("LEAD", "SALES")
+		frappe.db.set_value("DocType", "Lead", "autoname", new_autoname)
+		frappe.db.commit()
 
 
 def create_roles():
