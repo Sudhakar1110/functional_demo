@@ -80,9 +80,8 @@
 								<th>Interested Template</th>
 								<th>Sales Person</th>
 								<th>Trial Start</th>
-								<th>Trial End</th>
-								<th>Days Remaining</th>
-								<th></th>
+								<th>Trial End</th>									<th>Days Remaining</th>
+									<th>Actions</th>
 							</tr>
 						</thead>
 						<tbody>
@@ -104,8 +103,10 @@
 									{% else %}
 									<span class="chip">{{ t.days_remaining }}d left</span>
 									{% endif %}
+								</td>									<td style="white-space: nowrap;">
+										<button class="btn-portal secondary sm btn-remind" data-name="{{ t.name }}">Send Reminder</button>
+									<a class="btn-portal secondary sm" href="/sales_portal/demo_request?name={{ t.name }}">Open</a>
 								</td>
-								<td><a class="btn-portal secondary sm" href="/sales_portal/demo_request?name={{ t.name }}">Open</a></td>
 							</tr>
 							{% endfor %}
 						</tbody>
@@ -124,4 +125,28 @@
 	</div>
 	</div>
 </div>
+{% endblock %}
+
+{% block script %}
+{% include "functional_demo/templates/includes/portal_script.html" %}
+<script>
+(function () {
+	"use strict";
+	document.querySelectorAll(".btn-remind").forEach(function (btn) {
+		btn.addEventListener("click", function () {
+			if (!window.confirm("Send the trial-ending reminder email and notification to the sales person now?")) return;
+			var name = btn.getAttribute("data-name");
+			var b = btn; b.disabled = true; b.textContent = "Sending...";
+			portalCall("functional_demo.api.send_trial_reminder", { demo_request: name })
+				.then(function () {
+					b.disabled = false; b.textContent = "Send Reminder";
+					portalAlert("Trial reminder sent to the sales person.", "ok");
+				})
+				.catch(function () {
+					b.disabled = false; b.textContent = "Send Reminder";
+				});
+		});
+	});
+})();
+</script>
 {% endblock %}
