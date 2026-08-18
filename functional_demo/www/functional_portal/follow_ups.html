@@ -48,7 +48,7 @@
 							<h2 style="font-size: 14px;">{{ fu.customer or fu.demo_request }}</h2>
 							<div style="margin-top: 6px; display: flex; gap: 6px; flex-wrap: wrap; align-items: center;">
 								<span class="badge b-{{ fu.status|lower|replace(' ', '-') }}">{{ fu.status }}</span>
-								<span class="muted">Due: {{ fu.due_display }}</span>
+								<span class="muted">Assigned: {{ fu.assigned_display }}</span>
 							</div>
 						</div>
 						<div style="text-align: right;">
@@ -58,6 +58,7 @@
 					</div>
 					<div class="card-body" style="padding: 14px 16px;">
 						<div class="detail-grid" style="grid-template-columns: 1fr;">
+							<div class="detail-item"><div class="d-label">Due Date</div><div class="d-value">{{ fu.due_display }}</div></div>
 							<div class="detail-item"><div class="d-label">Next Action</div><div class="d-value wrap">{{ fu.next_action or "-" }}</div></div>
 							<div class="detail-item"><div class="d-label">Remarks</div><div class="d-value wrap">{{ fu.remarks or "-" }}</div></div>
 							<div class="detail-item"><div class="d-label">Assigned To</div><div class="d-value">{{ fu.assigned_to or "-" }}</div></div>

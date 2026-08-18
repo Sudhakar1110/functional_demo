@@ -40,8 +40,19 @@ def get_context(context):
 	context.follow_ups = frappe.get_all(
 		"Demo Follow Up",
 		filters={"demo_request": doc.name},
-		fields=["name", "follow_up_date", "status", "next_action"],
-		order_by="follow_up_date desc",
+		fields=["name", "follow_up_date", "creation", "status", "next_action"],
+		order_by="creation desc",
 		limit_page_length=50,
 	) or []
+	for f in context.follow_ups:
+		f["assigned_display"] = (
+			frappe.utils.format_datetime(f.get("creation"), "dd MMM yyyy, hh:mm a")
+			if f.get("creation")
+			else "-"
+		)
+		f["due_display"] = (
+			frappe.utils.format_date(f.get("follow_up_date"), "medium")
+			if f.get("follow_up_date")
+			else "-"
+		)
 	return context

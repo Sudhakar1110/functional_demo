@@ -203,7 +203,8 @@
 						<thead>
 							<tr>
 								<th>Follow-up</th>
-								<th>Date</th>
+								<th>Assigned</th>
+								<th>Due</th>
 								<th>Status</th>
 							</tr>
 						</thead>
@@ -211,7 +212,8 @@
 							{% for f in follow_ups %}
 							<tr>
 								<td><a href="/functional_portal/follow_ups">{{ f.name }}</a></td>
-								<td>{{ f.follow_up_date or "-" }}</td>
+								<td>{{ f.assigned_display }}</td>
+								<td>{{ f.due_display }}</td>
 								<td><span class="badge b-{{ f.status|lower|replace(' ', '-') }}">{{ f.status }}</span></td>
 							</tr>
 							{% endfor %}

@@ -25,16 +25,23 @@ def get_context(context):
 	# Row-level permission filters (see demo_follow_up.has_permission) restrict
 	# the list to follow-ups the sales user is assigned to or owns - no extra
 	# filtering needed here.
+	# Follow-ups are listed by assignment date (newest first); the due date is
+	# shown alongside so nothing is lost.
 	context.follow_ups = frappe.get_all(
 		"Demo Follow Up",
 		fields=[
-			"name", "demo_request", "demo_session", "customer", "follow_up_date",
+			"name", "demo_request", "demo_session", "customer", "follow_up_date", "creation",
 			"status", "outcome", "next_action", "remarks", "assigned_to",
 		],
-		order_by="follow_up_date asc",
+		order_by="creation desc",
 		limit_page_length=1000,
 	) or []
 	for fu in context.follow_ups:
+		fu["assigned_display"] = (
+			frappe.utils.format_datetime(fu.get("creation"), "dd MMM yyyy, hh:mm a")
+			if fu.get("creation")
+			else "-"
+		)
 		fu["due_display"] = frappe.utils.format_date(fu.get("follow_up_date"), "medium") if fu.get("follow_up_date") else "-"
 	context.status_options = STATUS_OPTIONS
 	context.outcome_options = OUTCOME_OPTIONS

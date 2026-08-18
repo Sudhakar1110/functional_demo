@@ -1184,7 +1184,7 @@ def get_demo_feedback_data():
 				"name": s.name,
 				"customer": s.customer or s.sales_person or "-",
 				"date": (
-					frappe.utils.format_date(s.completed_on or s.scheduled_date, "medium")
+					frappe.utils.format_datetime(s.completed_on or s.scheduled_date, "dd MMM yyyy, hh:mm a")
 					if (s.completed_on or s.scheduled_date)
 					else "-"
 				),
