@@ -137,10 +137,10 @@
 			if (!window.confirm("Send the trial-ending reminder email and notification to the sales person now?")) return;
 			var name = btn.getAttribute("data-name");
 			var b = btn; b.disabled = true; b.textContent = "Sending...";
-			portalCall("functional_demo.api.send_trial_reminder", { demo_request: name })
+			portalCall("functional_demo.api.send_trial_reminder", { demo_request: name }, { silent: true })
 				.then(function () {
-					b.disabled = false; b.textContent = "Send Reminder";
-					portalAlert("Trial reminder sent to the sales person.", "ok");
+					b.textContent = "Sent \u2713"; b.style.opacity = "0.7";
+					setTimeout(function () { b.disabled = false; b.textContent = "Send Reminder"; b.style.opacity = ""; }, 3000);
 				})
 				.catch(function () {
 					b.disabled = false; b.textContent = "Send Reminder";

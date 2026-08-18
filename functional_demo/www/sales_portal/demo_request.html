@@ -600,10 +600,13 @@
 	var btnTrialRemind = document.getElementById("btn-trial-remind");
 	if (btnTrialRemind) btnTrialRemind.addEventListener("click", function () {
 		if (!window.confirm("Send the trial-ending reminder email and notification to the sales person now? (The scheduled reminder one day before the end date still fires too.)")) return;
-		var btn = this; btn.disabled = true;
-		portalCall("functional_demo.api.send_trial_reminder", { demo_request: DOC_NAME })
-			.then(function () { btn.disabled = false; portalAlert("Trial reminder sent to the sales person.", "ok"); })
-			.catch(function () { btn.disabled = false; });
+		var btn = this; btn.disabled = true; btn.textContent = "Sending...";
+		portalCall("functional_demo.api.send_trial_reminder", { demo_request: DOC_NAME }, { silent: true })
+			.then(function () {
+				btn.textContent = "Sent \u2713"; btn.style.opacity = "0.7";
+				setTimeout(function () { btn.disabled = false; btn.textContent = "Send Reminder Now"; btn.style.opacity = ""; }, 3000);
+			})
+			.catch(function () { btn.disabled = false; btn.textContent = "Send Reminder Now"; });
 	});
 	{% endif %}
 
