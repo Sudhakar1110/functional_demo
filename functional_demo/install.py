@@ -84,9 +84,6 @@ def fix_lead_naming():
 	"""
 	if not frappe.db.exists("DocType", "Lead"):
 		return
-	# Rename the DocType label so the desk shows 'Sales Person' instead of
-	# 'Lead' in the sidebar, title and create button.
-	frappe.db.set_value("DocType", "Lead", "label", "Sales Person")
 	# Update the naming_series field options to replace CRM-LEAD with
 	# CRM-SALES so new records get the correct ID.
 	frappe.db.sql("""
