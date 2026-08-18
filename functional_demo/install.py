@@ -413,9 +413,7 @@ def _notify_trial_period_reminder(row, mark_sent=True):
 	"""
 	from functional_demo.portal import create_notification, send_branded_email
 
-	# Send to the request owner (the actual sales person), not sales_person
-	# which may hold the consultant in some records.
-	sales_person = row.get("owner") or row.get("sales_person")
+	sales_person = row.get("sales_person") or row.get("owner")
 	if not sales_person or sales_person == "Guest":
 		return
 	party = row.get("customer") or row.get("lead") or row.get("name")
