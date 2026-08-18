@@ -983,20 +983,35 @@ def consultant_drive_upload(title=None, description=None, file=None):
 	if not filedata or not getattr(filedata, "filename", None):
 		frappe.throw(_("Please choose a file to upload."))
 
-	from frappe.utils.file_manager import save_file
-
-	file_doc = save_file(
-		fname=filedata.filename,
-		content=filedata.stream.read(),
-		is_private=1,
-	)
+	# Create the Drive entry first (its hash name is required to attach the
+	# File record). The whole request is one transaction, so if anything below
+	# fails the entry is rolled back and never appears file-less.
 	doc = frappe.new_doc("Consultant Drive File")
 	doc.title = title
 	doc.description = description or ""
-	doc.file = file_doc.file_url
-	doc.file_size = file_doc.file_size or 0
 	doc.uploaded_by = frappe.session.user
 	doc.insert()
+
+	# Store the bytes in a private File record attached to this Drive entry.
+	# Built directly instead of via frappe.utils.file_manager.save_file because
+	# that helper's signature (dt/dn) differs across Frappe versions.
+	file_doc = frappe.get_doc(
+		{
+			"doctype": "File",
+			"file_name": filedata.filename,
+			"content": filedata.stream.read(),
+			"is_private": 1,
+			"attached_to_doctype": "Consultant Drive File",
+			"attached_to_name": doc.name,
+		}
+	).insert(ignore_permissions=True)
+
+	frappe.db.set_value(
+		"Consultant Drive File",
+		doc.name,
+		{"file": file_doc.file_url, "file_size": file_doc.file_size or 0},
+		update_modified=True,
+	)
 
 	frappe.msgprint(_("{0} uploaded to the Drive.").format(title))
 	return {"name": doc.name, "file_url": doc.file}

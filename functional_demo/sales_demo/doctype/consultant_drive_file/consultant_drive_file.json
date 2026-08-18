@@ -38,8 +38,7 @@
    "fieldname": "file",
    "fieldtype": "Attach",
    "in_list_view": 1,
-   "label": "File",
-   "reqd": 1
+   "label": "File"
   },
   {
    "fieldname": "file_size",
