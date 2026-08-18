@@ -92,11 +92,7 @@
 					</div>
 					<div>
 						<div class="d-label">Consultant</div>
-						<div class="d-value" style="font-size: 13px;">{{ t.consultant_name or t.functional_consultant or "—" }}</div>
-					</div>
-					<div>
-						<div class="d-label">Sales Person</div>
-						<div class="d-value" style="font-size: 13px;">{{ t.sales_person or "—" }}</div>
+						<div class="d-value" style="font-size: 13px;">{{ t.consultant_name or t.functional_consultant or "—" }}{% if t.consultant_email %} &mdash; {{ t.consultant_email }}{% endif %}</div>
 					</div>
 					<div>
 						<div class="d-label">Customer</div>
@@ -241,8 +237,7 @@
 							<tr><td class="kv-label">Date</td><td class="kv-value">{{ s.scheduled_date or "—" }}</td></tr>
 							<tr><td class="kv-label">Time</td><td class="kv-value">{% if s.start_time %}{{ s.start_time[:5] }}{% if s.end_time %} – {{ s.end_time[:5] }}{% endif %}{% else %}—{% endif %}</td></tr>
 							<tr><td class="kv-label">Demo Type</td><td class="kv-value">{{ s.demo_type or "—" }}</td></tr>
-							<tr><td class="kv-label">Sales Person</td><td class="kv-value">{{ t.sales_person or "—" }}</td></tr>
-							<tr><td class="kv-label">Consultant</td><td class="kv-value">{{ t.consultant_name or t.functional_consultant or "—" }}{% if t.consultant_specialization %} <span class="muted">({{ t.consultant_specialization }})</span>{% endif %}</td></tr>
+							<tr><td class="kv-label">Consultant</td><td class="kv-value">{{ t.consultant_name or t.functional_consultant or "—" }}{% if t.consultant_specialization %} <span class="muted">({{ t.consultant_specialization }})</span>{% endif %}{% if t.consultant_email %} &mdash; {{ t.consultant_email }}{% endif %}</td></tr>
 							{% if r.priority %}<tr><td class="kv-label">Priority</td><td class="kv-value"><span class="chip {{ r.priority|lower }}">{{ r.priority }}</span></td></tr>{% endif %}
 						</tbody>
 					</table>

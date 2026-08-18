@@ -949,6 +949,7 @@ def get_demo_execution_data(demo_session=None):
 			"functional_consultant": ds.functional_consultant,
 			"consultant_name": consultant.consultant_name if consultant else "",
 			"consultant_specialization": consultant.specialization if consultant else "",
+			"consultant_email": consultant.email if consultant else "",
 		},
 		"template": {
 			"name": ds.demo_template,
