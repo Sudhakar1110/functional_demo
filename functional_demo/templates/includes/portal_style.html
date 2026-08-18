@@ -663,6 +663,13 @@ details.portal-card[open] > summary.card-head::after {
 .table-portal a { color: var(--bx-blue); font-weight: 600; text-decoration: none; transition: color 0.12s ease; }
 .table-portal a:hover { color: var(--bx-navy); text-decoration: underline; }
 .table-portal .muted { color: var(--bx-gray-400); font-size: 13px; }
+/* Label/value detail table - one field per row, label left, value right */
+.kv-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.kv-table tbody td { padding: 11px 16px; border-bottom: 1px solid #EEF0F4; vertical-align: top; }
+.kv-table tbody tr:last-child td { border-bottom: none; }
+.kv-table td.kv-label { width: 240px; color: var(--bx-gray-400); font-weight: 500; white-space: nowrap; }
+.kv-table td.kv-value { color: var(--bx-navy); font-weight: 600; word-break: break-word; }
+.kv-table td.kv-value.plain { font-weight: 400; color: var(--bx-gray-500); white-space: pre-wrap; }
 
 /* ==========================================================================
    Status badges & priority chips (pill shaped)

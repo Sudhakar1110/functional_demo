@@ -34,6 +34,13 @@ def get_context(context):
 		data["session"]["scheduled_date"] = frappe.utils.format_date(
 			data["session"]["scheduled_date"], "medium"
 		)
+	# Raw datetimes (e.g. 2026-08-17 11:05:42.016086) are hard to read on the
+	# page - show them as "17 Aug 2026, 11:05 AM" instead.
+	for key in ("started_on", "completed_on"):
+		if data.get("session") and data["session"].get(key):
+			data["session"][key] = frappe.utils.format_datetime(
+				data["session"][key], "dd MMM yyyy, hh:mm a"
+			)
 	# A follow-up already exists for this session - the Create Follow-up
 	# button must not show again (no duplicate follow-ups).
 	session_name = (data.get("session") or {}).get("name")

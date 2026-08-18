@@ -81,6 +81,28 @@
 						{% endif %}
 					</div>
 				</div>
+				<div style="display: flex; gap: 28px; flex-wrap: wrap; padding: 14px 16px; border-top: 1px solid #EEF0F4; background: #F8FAFC;">
+					<div>
+						<div class="d-label">Date</div>
+						<div class="d-value" style="font-size: 13px;">{{ s.scheduled_date or "—" }}</div>
+					</div>
+					<div>
+						<div class="d-label">Time</div>
+						<div class="d-value" style="font-size: 13px;">{% if s.start_time %}{{ s.start_time[:5] }}{% if s.end_time %} – {{ s.end_time[:5] }}{% endif %}{% else %}—{% endif %}</div>
+					</div>
+					<div>
+						<div class="d-label">Consultant</div>
+						<div class="d-value" style="font-size: 13px;">{{ t.consultant_name or t.functional_consultant or "—" }}</div>
+					</div>
+					<div>
+						<div class="d-label">Sales Person</div>
+						<div class="d-value" style="font-size: 13px;">{{ t.sales_person or "—" }}</div>
+					</div>
+					<div>
+						<div class="d-label">Customer</div>
+						<div class="d-value" style="font-size: 13px;">{{ c.customer or "—" }}</div>
+					</div>
+				</div>
 				{% if data.can_write %}
 				<div class="card-body">
 					<div style="display: flex; gap: 10px; flex-wrap: wrap;">
@@ -197,39 +219,45 @@
 			</div>
 
 			<div class="portal-card">
-				<div class="card-head"><h2>Leads Information</h2></div>
-				<div class="card-body">
-					<div class="detail-grid">
-						<div class="detail-item"><div class="d-label">Leads</div><div class="d-value">{{ c.customer or "-" }}</div></div>
-						<div class="detail-item"><div class="d-label">Contact Person</div><div class="d-value">{{ c.contact_person or "-" }}</div></div>
-						<div class="detail-item"><div class="d-label">Lead Contact Number</div><div class="d-value">{{ c.contact_number or "-" }}</div></div>
-						<div class="detail-item"><div class="d-label">Lead Email</div><div class="d-value">{{ c.email or "-" }}</div></div>
-						<div class="detail-item"><div class="d-label">Company</div><div class="d-value">{{ c.company or "-" }}</div></div>
-					</div>
+				<div class="card-head"><h2>Lead Information</h2></div>
+				<div class="card-body flush">
+					<table class="kv-table">
+						<tbody>
+							<tr><td class="kv-label">Leads</td><td class="kv-value">{{ c.customer or "—" }}</td></tr>
+							<tr><td class="kv-label">Contact Person</td><td class="kv-value">{{ c.contact_person or "—" }}</td></tr>
+							<tr><td class="kv-label">Lead Contact Number</td><td class="kv-value">{{ c.contact_number or "—" }}</td></tr>
+							<tr><td class="kv-label">Lead Email</td><td class="kv-value">{{ c.email or "—" }}</td></tr>
+							<tr><td class="kv-label">Company</td><td class="kv-value">{{ c.company or "—" }}</td></tr>
+						</tbody>
+					</table>
 				</div>
 			</div>
 
 			<div class="portal-card">
 				<div class="card-head"><h2>Demo Information</h2></div>
-				<div class="card-body">
-					<div class="detail-grid">
-						<div class="detail-item"><div class="d-label">Date</div><div class="d-value">{{ s.scheduled_date or "-" }}</div></div>
-						<div class="detail-item"><div class="d-label">Time</div><div class="d-value">{% if s.start_time %}{{ s.start_time }}{% if s.end_time %} – {{ s.end_time }}{% endif %}{% else %}-{% endif %}</div></div>
-						<div class="detail-item"><div class="d-label">Demo Type</div><div class="d-value">{{ s.demo_type or "-" }}</div></div>
-						<div class="detail-item"><div class="d-label">Sales Person</div><div class="d-value">{{ t.sales_person or "-" }}</div></div>
-						<div class="detail-item"><div class="d-label">Consultant</div><div class="d-value">{{ t.consultant_name or t.functional_consultant or "-" }}{% if t.consultant_specialization %} <span class="muted">({{ t.consultant_specialization }})</span>{% endif %}</div></div>
-						{% if r.priority %}<div class="detail-item"><div class="d-label">Priority</div><div class="d-value"><span class="chip {{ r.priority|lower }}">{{ r.priority }}</span></div></div>{% endif %}
-					</div>
+				<div class="card-body flush">
+					<table class="kv-table">
+						<tbody>
+							<tr><td class="kv-label">Date</td><td class="kv-value">{{ s.scheduled_date or "—" }}</td></tr>
+							<tr><td class="kv-label">Time</td><td class="kv-value">{% if s.start_time %}{{ s.start_time[:5] }}{% if s.end_time %} – {{ s.end_time[:5] }}{% endif %}{% else %}—{% endif %}</td></tr>
+							<tr><td class="kv-label">Demo Type</td><td class="kv-value">{{ s.demo_type or "—" }}</td></tr>
+							<tr><td class="kv-label">Sales Person</td><td class="kv-value">{{ t.sales_person or "—" }}</td></tr>
+							<tr><td class="kv-label">Consultant</td><td class="kv-value">{{ t.consultant_name or t.functional_consultant or "—" }}{% if t.consultant_specialization %} <span class="muted">({{ t.consultant_specialization }})</span>{% endif %}</td></tr>
+							{% if r.priority %}<tr><td class="kv-label">Priority</td><td class="kv-value"><span class="chip {{ r.priority|lower }}">{{ r.priority }}</span></td></tr>{% endif %}
+						</tbody>
+					</table>
 				</div>
 			</div>
 
 			<div class="portal-card">
-				<div class="card-head"><h2>Leads Requirements</h2></div>
-				<div class="card-body">
-					<div class="detail-grid">
-						<div class="detail-item"><div class="d-label">Requirements</div><div class="d-value wrap">{{ r.customer_requirements or "-" }}</div></div>
-						<div class="detail-item"><div class="d-label">Business Processes</div><div class="d-value wrap">{{ r.business_process_requirements or "-" }}</div></div>
-					</div>
+				<div class="card-head"><h2>Requirements</h2></div>
+				<div class="card-body flush">
+					<table class="kv-table">
+						<tbody>
+							<tr><td class="kv-label">Requirements</td><td class="kv-value plain">{{ r.customer_requirements or "—" }}</td></tr>
+							<tr><td class="kv-label">Business Processes</td><td class="kv-value plain">{{ r.business_process_requirements or "—" }}</td></tr>
+						</tbody>
+					</table>
 				</div>
 			</div>
 
@@ -251,20 +279,22 @@
 			</div>
 
 			<div class="portal-card">
-				<div class="card-head"><h2>Notes, Feedback &amp; Result</h2></div>
-				<div class="card-body">
-					<div class="detail-grid">
-						<div class="detail-item"><div class="d-label">Demo Notes</div><div class="d-value wrap">{{ s.demo_notes or "-" }}</div></div>
-						<div class="detail-item"><div class="d-label">Overall Feedback</div><div class="d-value wrap">{{ s.overall_feedback or "-" }}</div></div>
-						<div class="detail-item"><div class="d-label">Interested</div><div class="d-value">{{ s.interested or "-" }}</div></div>
-						<div class="detail-item"><div class="d-label">Requirements Met</div><div class="d-value">{{ s.requirements_met or "-" }}</div></div>
-						<div class="detail-item"><div class="d-label">Follow-up Required</div><div class="d-value">{% if s.follow_up_required %}Yes{% else %}No{% endif %}</div></div>
-						<div class="detail-item"><div class="d-label">Follow-up Date</div><div class="d-value">{{ s.follow_up_date or "-" }}</div></div>
-						<div class="detail-item"><div class="d-label">Next Action</div><div class="d-value wrap">{{ s.next_action or "-" }}</div></div>
-						<div class="detail-item"><div class="d-label">Consultant Remarks</div><div class="d-value wrap">{{ s.consultant_remarks or "-" }}</div></div>
-						<div class="detail-item"><div class="d-label">Started</div><div class="d-value">{{ s.started_on or "-" }}</div></div>
-						<div class="detail-item"><div class="d-label">Completed</div><div class="d-value">{{ s.completed_on or "-" }}</div></div>
-					</div>
+				<div class="card-head"><h2>Feedback &amp; Result</h2></div>
+				<div class="card-body flush">
+					<table class="kv-table">
+						<tbody>
+							<tr><td class="kv-label">Demo Notes</td><td class="kv-value plain">{{ s.demo_notes or "—" }}</td></tr>
+							<tr><td class="kv-label">Overall Feedback</td><td class="kv-value plain">{{ s.overall_feedback or "—" }}</td></tr>
+							<tr><td class="kv-label">Interested</td><td class="kv-value">{{ s.interested or "—" }}</td></tr>
+							<tr><td class="kv-label">Requirements Met</td><td class="kv-value">{{ s.requirements_met or "—" }}</td></tr>
+							<tr><td class="kv-label">Follow-up Required</td><td class="kv-value">{% if s.follow_up_required %}Yes{% else %}No{% endif %}</td></tr>
+							<tr><td class="kv-label">Follow-up Date</td><td class="kv-value">{{ s.follow_up_date or "—" }}</td></tr>
+							<tr><td class="kv-label">Next Action</td><td class="kv-value plain">{{ s.next_action or "—" }}</td></tr>
+							<tr><td class="kv-label">Consultant Remarks</td><td class="kv-value plain">{{ s.consultant_remarks or "—" }}</td></tr>
+							<tr><td class="kv-label">Started</td><td class="kv-value">{{ s.started_on or "—" }}</td></tr>
+							<tr><td class="kv-label">Completed</td><td class="kv-value">{{ s.completed_on or "—" }}</td></tr>
+						</tbody>
+					</table>
 				</div>
 			</div>
 		{% endif %}
