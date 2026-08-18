@@ -960,6 +960,17 @@ def create_follow_up_from_session(demo_session=None, follow_up_date=None, next_a
 # ---------------------------------------------------------------------------
 
 
+def _safe_filename(filename):
+	"""Make an uploaded filename safe for URLs: whitespace and characters like
+	#, %, & or quotes break attachment links in the desk, so collapse them to
+	dashes and keep only letters, digits, dot, dash and underscore."""
+	import re
+
+	name = re.sub(r"\s+", "-", filename or "").strip(" .-_")
+	name = re.sub(r"[^A-Za-z0-9._-]", "-", name)
+	return name or "file"
+
+
 def _guard_consultant_drive():
 	"""The Drive is consultant-only: Functional Consultant / Functional Team
 	Manager (and System Manager / Administrator). Sales roles never get in."""
@@ -994,11 +1005,13 @@ def consultant_drive_upload(title=None, description=None, file=None):
 
 	# Store the bytes in a private File record attached to this Drive entry.
 	# Built directly instead of via frappe.utils.file_manager.save_file because
-	# that helper's signature (dt/dn) differs across Frappe versions.
+	# that helper's signature (dt/dn) differs across Frappe versions. The
+	# filename is sanitized (no spaces/special chars) so the desk attachment
+	# link resolves and opens the file instead of showing the raw path.
 	file_doc = frappe.get_doc(
 		{
 			"doctype": "File",
-			"file_name": filedata.filename,
+			"file_name": _safe_filename(filedata.filename),
 			"content": filedata.stream.read(),
 			"is_private": 1,
 			"attached_to_doctype": "Consultant Drive File",
