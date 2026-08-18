@@ -100,6 +100,19 @@ def get_context(context):
 	context.has_follow_up = bool(
 		frappe.db.exists("Demo Follow Up", {"demo_request": doc.name})
 	)
+	# Resolve the functional consultant's display name and email so the
+	# template can show "Consultant" instead of the raw sales_person link.
+	if doc.functional_consultant:
+		c_info = frappe.db.get_value(
+			"Functional Consultant", doc.functional_consultant,
+			["consultant_name", "email"], as_dict=True,
+		)
+		context.consultant_display = (
+			(c_info.consultant_name or "") + (" \u2014 " + c_info.email if c_info and c_info.email else "")
+			if c_info else context.consultant_names.get(doc.functional_consultant, "")
+		)
+	else:
+		context.consultant_display = ""
 	return context
 
 

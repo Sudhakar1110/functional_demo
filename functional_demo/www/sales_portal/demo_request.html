@@ -276,7 +276,7 @@
 				<div class="card-body">
 					<div class="detail-grid">
 						<div class="detail-item"><div class="d-label">Leads</div><div class="d-value">{{ doc.customer or "-" }}</div></div>
-						<div class="detail-item"><div class="d-label">Sales Person</div><div class="d-value">{{ doc.sales_person or "-" }}</div></div>
+						<div class="detail-item"><div class="d-label">Consultant</div><div class="d-value">{{ consultant_display or doc.functional_consultant or "-" }}</div></div>
 						<div class="detail-item"><div class="d-label">Company</div><div class="d-value">{{ doc.company or "-" }}</div></div>
 						<div class="detail-item"><div class="d-label">Sales Person Name</div><div class="d-value">{{ doc.contact_person or "-" }}</div></div>
 						<div class="detail-item"><div class="d-label">Lead Contact Number</div><div class="d-value">{{ doc.contact_number or "-" }}</div></div>
