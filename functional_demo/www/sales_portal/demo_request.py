@@ -113,6 +113,12 @@ def get_context(context):
 		)
 	else:
 		context.consultant_display = ""
+	# Resolve the lead's display name so the template can show "Lead Name"
+	# instead of the raw link.
+	if doc.lead:
+		context.lead_name = frappe.db.get_value("Lead", doc.lead, "lead_name") or doc.lead
+	else:
+		context.lead_name = ""
 	return context
 
 
