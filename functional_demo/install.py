@@ -269,6 +269,7 @@ def create_workflow_states():
 	workflow_states = [
 		("Draft", "Inverse"),
 		("Requested", "Info"),
+		("Manager Review", "Warning"),
 		("Assigned", "Primary"),
 		("Scheduled", "Primary"),
 		("Demo In Progress", "Info"),
@@ -285,7 +286,31 @@ def create_workflow_states():
 			doc.workflow_state_name = state
 			doc.style = style
 			doc.insert(ignore_permissions=True)
+	# Ensure all roles that use Demo Request have read access to Workflow State
+	frappe.db.set_value("DocType", "Workflow State", "read_only", 1)
+	# Grant read permission on Workflow State to roles that need it
+	_ensure_workflow_state_permissions()
 	frappe.db.commit()
+
+
+def _ensure_workflow_state_permissions():
+	"""Grant read permission on Workflow State to all roles that interact
+	with the Demo Request workflow.  Without this, Frappe v15 raises
+	'No permission for Workflow State' when a user with limited roles
+	(e.g. Sales User) opens a workflow-enabled form."""
+	roles_needing_access = [
+		"Sales User", "Sales Manager", "Functional Consultant",
+		"Functional Team Manager", "System Manager",
+	]
+	# Clear existing permissions and re-add them idempotently
+	frappe.db.sql("""delete from `tabDocPerm` where parent = 'Workflow State'""")
+	for role in roles_needing_access:
+		frappe.db.sql(
+			"""insert into `tabDocPerm` (parent, parentfield, parenttype, role, read, write, create, delete, report, export)
+		values ('Workflow State', 'permissions', 'DocType', %s, 1, 0, 0, 0, 0, 0)""",
+			role,
+		)
+	frappe.clear_cache()
 
 
 def move_approved_requests_forward():
