@@ -121,30 +121,38 @@ def fix_sales_person_on_requests():
 			and ifnull(dr.owner, '') != ''
 			and dr.owner != 'Administrator'
 	""")
-	frappe.db.commit()
-
-
-def create_lead_list_client_script():
+	frappe.db.commit()	def create_lead_list_client_script():
 	"""Create a Client Script to rename the 'Add Lead' button to
 	'Add Sales Person' on the Lead list view.
 	"""
 	script_name = "Sales Person - Rename Add Button"
-	if frappe.db.exists("Client Script", script_name):
-		return
-	doc = frappe.new_doc("Client Script")
-	doc.name = script_name
-	doc.script_type = "List"
-	doc.dt = "Lead"
-	doc.enabled = 1
-	doc.script = (
+	script_content = (
 		'// Change Add Lead button to Add Sales Person\n'
 		'frappe.listview_settings["Lead"] = frappe.listview_settings["Lead"] || {};\n'
-		'frappe.listview_settings["Lead"].formatters = frappe.listview_settings["Lead"].formatters || {};\n'
-		'cur_list.page && cur_list.page.set_primary_action(__("Add Sales Person"), () => {\n'
-		'  frappe.new_doc("Lead");\n'
-		'}, "octicon octicon-plus");\n'
+		'var orig_refresh = frappe.listview_settings["Lead"].refresh;\n'
+		'frappe.listview_settings["Lead"].refresh = function(listview) {\n'
+		'  if (orig_refresh) orig_refresh.call(this, listview);\n'
+		'  setTimeout(function() {\n'
+		'    if (listview.page) {\n'
+		'      listview.page.set_primary_action(__("Add Sales Person"), function() {\n'
+		'        frappe.new_doc("Lead");\n'
+		'      }, "octicon octicon-plus");\n'
+		'    }\n'
+		'  }, 500);\n'
+		'};\n'
 	)
-	doc.insert(ignore_permissions=True)
+	if frappe.db.exists("Client Script", script_name):
+		# Update existing script if it exists
+		frappe.db.set_value("Client Script", script_name, "script", script_content)
+		frappe.db.set_value("Client Script", script_name, "enabled", 1)
+	else:
+		doc = frappe.new_doc("Client Script")
+		doc.name = script_name
+		doc.script_type = "List"
+		doc.dt = "Lead"
+		doc.enabled = 1
+		doc.script = script_content
+		doc.insert(ignore_permissions=True)
 	frappe.db.commit()
 
 
