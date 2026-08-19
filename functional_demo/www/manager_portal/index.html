@@ -340,7 +340,7 @@
 (function () {
 	"use strict";
 
-	/* Manager: assign consultant from the All Demo Requests table */
+	/* Manager: assign consultant → then immediately open schedule form */
 	document.querySelectorAll(".manager-assign-btn").forEach(function (btn) {
 		btn.addEventListener("click", function () {
 			var requestName = btn.getAttribute("data-request");
@@ -348,14 +348,19 @@
 			if (!select) { portalAlert("Select a consultant first.", "err"); return; }
 			var consultant = select.value;
 			if (!consultant) { portalAlert("Please select a consultant.", "err"); return; }
+			var consultantName = select.options[select.selectedIndex].text;
 			btn.disabled = true;
 			btn.textContent = "Assigning...";
 			portalCall("functional_demo.api.assign_consultant", {
 				demo_request: requestName,
 				consultant: consultant,
 			}).then(function () {
-				portalAlert("Consultant assigned to " + requestName + ".", "ok");
-				setTimeout(function () { window.location.reload(); }, 1200);
+				/* Consultant assigned — open schedule modal right away */
+				document.getElementById("sched-request").value = requestName;
+				document.getElementById("sched-request-name").textContent = requestName;
+				document.getElementById("sched-consultant-name").textContent = consultantName;
+				var modal = document.getElementById("schedule-modal");
+				if (modal) modal.classList.add("show");
 			}).catch(function () {
 				btn.disabled = false;
 				btn.textContent = "Assign";
@@ -395,8 +400,8 @@
 			end_time: document.getElementById("sched-end").value,
 			meeting_link: document.getElementById("sched-link").value,
 		}).then(function () {
-			portalAlert("Demo scheduled for " + date + ".", "ok");
-			setTimeout(function () { window.location.reload(); }, 1200);
+			portalAlert("Demo scheduled for " + date + ". Consultant has been notified.", "ok");
+			setTimeout(function () { window.location.href = "/manager_portal"; }, 1200);
 		}).catch(function () {
 			schedGo.disabled = false;
 			schedGo.textContent = "Schedule Demo";
