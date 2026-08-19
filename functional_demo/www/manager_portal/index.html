@@ -200,42 +200,72 @@
 				{% endif %}
 			</div>
 
-			<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 22px;">
-				<div class="portal-card">
-					<div class="card-head"><h2>Consultant Workload</h2></div>
-					{% if stats.consultant_workload %}
-					<div class="card-body">
-						<table class="table-portal">
-							<thead>
-								<tr>
-									<th>Consultant</th>
-									<th>Specialization</th>
-									<th>Availability</th>
-									<th>Active Demos</th>
-								</tr>
-							</thead>
-							<tbody>
-								{% for row in stats.consultant_workload %}
-								<tr>
-									<td>{{ row[1] }}</td>
-									<td>{{ row[2] or "-" }}</td>
-									<td>{{ row[3] or "-" }}</td>
-									<td>
-										{% if row[4] %}<span class="badge b-scheduled">{{ row[4] }}</span>
-										{% else %}<span class="badge b-draft">0</span>{% endif %}
-									</td>
-								</tr>
-								{% endfor %}
-							</tbody>
-						</table>
+			<div class="portal-card" style="margin-bottom: 22px;">
+				<div class="card-head"><h2>Consultant Activity</h2></div>
+				{% if consultant_details %}
+				<div class="card-body">
+					{% for c in consultant_details %}
+					<div style="padding: 14px 0; {% if not loop.last %}border-bottom: 1px solid #F3F4F6;{% endif %}">
+						<div style="display: flex; align-items: center; gap: 12px; margin-bottom: 10px;">
+							<div style="width: 40px; height: 40px; border-radius: 50%; background: {% if c.active_session %}#DCFBEA{% elif c.upcoming_sessions %}#E8EEFF{% else %}#F3F4F6{% endif %}; display: flex; align-items: center; justify-content: center; font-weight: 700; color: {% if c.active_session %}#009A52{% elif c.upcoming_sessions %}var(--bx-blue){% else %}#9CA3AF{% endif %}; font-size: 14px;">{{ c.consultant_name[:1] }}</div>
+							<div style="flex: 1;">
+								<div style="font-weight: 700; color: #05133C;">{{ c.consultant_name }}</div>
+								<div style="font-size: 12px; color: #71717B;">{{ c.specialization or 'Generalist' }} · {{ c.availability or 'Available' }}</div>
+							</div>
+							<div style="text-align: right;">
+								{% if c.active_session %}
+								<span class="badge b-demo-in-progress">🔴 Live Demo</span>
+								{% elif c.upcoming_sessions %}
+								<span class="badge b-scheduled">📋 {{ c.upcoming_sessions|length }} Scheduled</span>
+								{% elif c.pending_count %}
+								<span class="badge b-manager-review">⏳ {{ c.pending_count }} Pending</span>
+								{% else %}
+								<span class="badge b-draft">Free</span>
+								{% endif %}
+							</div>
+						</div>
+						{% if c.active_session %}
+						<div style="background: #F0FDF4; border-radius: 8px; padding: 10px 14px; margin-bottom: 8px;">
+							<div style="font-size: 12px; font-weight: 600; color: #009A52;">🔴 Currently conducting demo</div>
+							<div style="font-size: 13px; color: #05133C;">{{ c.active_session.customer or 'Customer' }} · <a href="/functional_portal/session?name={{ c.active_session.name }}">{{ c.active_session.name }}</a></div>
+							<div style="font-size: 11px; color: #71717B;">Started {{ c.active_session.start_time or '' }}</div>
+						</div>
+						{% endif %}
+						{% if c.todays_sessions %}
+						<div style="font-size: 12px; color: #71717B; margin-bottom: 4px;">Today's schedule:</div>
+						{% for s in c.todays_sessions %}
+						<div style="display: flex; gap: 8px; align-items: center; padding: 4px 0; font-size: 12px;">
+							<span style="color: #71717B;">{{ s.start_time or '-' }}</span>
+							<span style="color: #05133C; font-weight: 600;">{{ s.customer or '-' }}</span>
+							<span class="badge b-{{ s.demo_status|lower|replace(' ', '-') }}" style="font-size: 10px;">{{ s.demo_status }}</span>
+						</div>
+						{% endfor %}
+						{% endif %}
+						{% if c.upcoming_sessions and not c.active_session %}
+						<div style="font-size: 12px; color: #71717B; margin-bottom: 4px;">Upcoming:</div>
+						{% for s in c.upcoming_sessions[:3] %}
+						<div style="display: flex; gap: 8px; align-items: center; padding: 4px 0; font-size: 12px;">
+							<span style="color: #71717B;">{{ s.date_display }}</span>
+							<span style="color: #05133C; font-weight: 600;">{{ s.customer or '-' }}</span>
+							<span style="color: #71717B;">{{ s.start_time or '' }}</span>
+						</div>
+						{% endfor %}
+						{% endif %}
+						<div style="display: flex; gap: 12px; margin-top: 6px; font-size: 11px; color: #9CA3AF;">
+							<span>✅ {{ c.completed_count }} completed</span>
+							{% if c.pending_count %}<span>📋 {{ c.pending_count }} pending assignment</span>{% endif %}
+						</div>
 					</div>
-					{% else %}
-					<div class="empty-state"><div class="empty-icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div><h3>No active consultants</h3><p>Add consultants in ERPNext to see workload here.</p></div>
-					{% endif %}
+					{% endfor %}
 				</div>
-
-				<div class="portal-card">
-					<div class="card-head"><h2>Sales Team Performance</h2></div>
+				{% else %}
+				<div class="empty-state">
+					<div class="empty-icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+					<h3>No consultants</h3>
+					<p>Add consultants in ERPNext to see their activity here.</p>
+				</div>
+				{% endif %}
+			</div>
 					{% if stats.sales_performance %}
 					<div class="card-body">
 						<table class="table-portal">

@@ -70,6 +70,73 @@ def get_context(context):
 		ignore_permissions=True,
 	) or []
 	context.consultants = [c for c in consultants if (c.get("status") or "") != "Inactive"]
+	# Consultant activity details
+	consultant_details = []
+	for c in consultants:
+		if (c.get("status") or "") == "Inactive":
+			continue
+		# Current active session (In Progress)
+		active_session = frappe.get_all(
+			"Demo Session",
+			filters={
+				"functional_consultant": c.name,
+				"demo_status": "In Progress",
+			},
+			fields=["name", "customer", "scheduled_date", "start_time"],
+			limit=1,
+		) or []
+		# Upcoming scheduled sessions
+		upcoming = frappe.get_all(
+			"Demo Session",
+			filters={
+				"functional_consultant": c.name,
+				"demo_status": ["in", ["Scheduled", "Rescheduled"]],
+			},
+			fields=["name", "customer", "scheduled_date", "start_time"],
+			order_by="scheduled_date asc",
+			limit_page_length=10,
+		) or []
+		# Today's demos
+		todays = frappe.get_all(
+			"Demo Session",
+			filters={
+				"functional_consultant": c.name,
+				"demo_status": ["in", ["Scheduled", "In Progress"]],
+				"scheduled_date": frappe.utils.today(),
+			},
+			fields=["name", "customer", "scheduled_date", "start_time", "demo_status"],
+			order_by="start_time asc",
+		) or []
+		# Total completed
+		completed_count = frappe.db.count(
+			"Demo Session",
+			{"functional_consultant": c.name, "demo_status": "Completed"},
+		) or 0
+		# Pending assigned requests (no session yet)
+		pending_count = frappe.db.count(
+		"Demo Request",
+		{"functional_consultant": c.name, "status": "Assigned"},
+	) or 0
+		for sess in upcoming + todays:
+			sess["date_display"] = (
+				frappe.utils.format_date(sess.get("scheduled_date"), "medium") if sess.get("scheduled_date") else "-"
+			)
+		for sess in active_session:
+			sess["date_display"] = (
+				frappe.utils.format_date(sess.get("scheduled_date"), "medium") if sess.get("scheduled_date") else "-"
+			)
+		consultant_details.append({
+			"name": c.name,
+			"consultant_name": c.consultant_name,
+			"specialization": c.specialization,
+			"availability": c.availability,
+			"active_session": active_session[0] if active_session else None,
+			"upcoming_sessions": upcoming,
+			"todays_sessions": todays,
+			"completed_count": completed_count,
+			"pending_count": pending_count,
+		})
+	context.consultant_details = consultant_details
 	# Recent demo sessions
 	sessions = frappe.get_all(
 		"Demo Session",
