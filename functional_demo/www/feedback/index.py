@@ -17,7 +17,7 @@ def get_context(context):
 	portal_context(
 		context,
 		_("Demo Feedback"),
-		["Sales User", "Sales Manager", "Functional Consultant", "Functional Team Manager", "Feedback Viewer", "Developer"],
+		["Sales Manager", "Functional Team Manager"],
 		active="feedback",
 		subtitle=_("Feedback recorded against the demos"),
 	)

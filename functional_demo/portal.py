@@ -193,8 +193,9 @@ def sidebar_items(active):
 	if can_manage_consultants():
 		items += [{"label": _("Consultants"), "route": "/functional_portal/consultants", "icon": ICON_FUNCTIONAL, "active": active == "consultants"}]
 
-	# Shared sections: template feedback is visible to every portal role
-	items.append({"label": _("Feedback"), "route": "/feedback", "icon": ICON_FEEDBACK, "active": active == "feedback"})
+	# Feedback is only visible to managers (Functional Team Manager / Sales Manager)
+	if is_manager():
+		items.append({"label": _("Feedback"), "route": "/feedback", "icon": ICON_FEEDBACK, "active": active == "feedback"})
 
 	return items
 
@@ -694,6 +695,6 @@ def get_standard_portal_menu_items():
 		{"title": _("Demo Portal"), "route": "/demo_portal", "role": "Functional Team Manager"},
 		{"title": _("Consultant Drive"), "route": "/functional_portal/drive", "role": "Functional Consultant"},
 		{"title": _("Consultant Drive"), "route": "/functional_portal/drive", "role": "Functional Team Manager"},
-		{"title": _("Demo Feedback"), "route": "/feedback", "role": "Feedback Viewer"},
-		{"title": _("Demo Feedback"), "route": "/feedback", "role": "Developer"},
+		{"title": _("Demo Feedback"), "route": "/feedback", "role": "Functional Team Manager"},
+		{"title": _("Demo Feedback"), "route": "/feedback", "role": "Sales Manager"},
 	]
