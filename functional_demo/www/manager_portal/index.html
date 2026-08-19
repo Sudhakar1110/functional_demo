@@ -120,7 +120,7 @@
 							{% for r in all_requests %}
 							<tr>
 								<td><a href="/sales_portal/demo_request?name={{ r.name }}">{{ r.name }}</a></td>
-								<td>{{ r.customer or r.lead or "-" }}</td>
+								<td>{{ r.customer or "-" }}</td>
 								<td>{{ r.interested_module or "-" }}</td>
 								<td>{% if r.priority %}<span class="chip {{ r.priority|lower }}">{{ r.priority }}</span>{% else %}-{% endif %}</td>
 								<td>{{ r.consultant_name }}</td>

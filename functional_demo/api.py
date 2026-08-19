@@ -1531,9 +1531,17 @@ def create_lead(lead_name=None, company_name=None, email=None, phone=None, statu
 
 
 @frappe.whitelist()
-def create_demo_request(customer=None, lead=None, company=None, contact_person=None, contact_number=None, email=None, interested_module=None, customer_requirements=None, business_process_requirements=None, priority="Medium", preferred_demo_date=None, preferred_demo_time=None, demo_type=None, sales_remarks=None, functional_consultant=None):
-	"""Create a Demo Request from the Sales Portal web form."""
+def create_demo_request(customer=None, company=None, contact_person=None, contact_number=None, email=None, interested_module=None, customer_requirements=None, business_process_requirements=None, priority="Medium", preferred_demo_date=None, preferred_demo_time=None, demo_type=None, sales_remarks=None, functional_consultant=None):
+	"""Create a Demo Request from the Sales Portal web form.
+
+	The sales_person is always auto-set to the logged-in user — no dropdown needed.
+	The 'lead' field is kept for backwards compatibility but is no longer
+	sent from the form.
+	"""
 	from functional_demo.sales_demo.doctype.demo_request.demo_request import change_status
+
+	# Auto-set sales_person to the logged-in user
+	sales_person = frappe.session.user
 
 	# A party (Customer/Lead) and contact details are OPTIONAL - the sales team
 	# can create a request with only a Functional Consultant and fill in the
@@ -1557,12 +1565,6 @@ def create_demo_request(customer=None, lead=None, company=None, contact_person=N
 			)
 			customer = ""
 
-	if lead and not frappe.db.exists("Lead", lead):
-		frappe.throw(
-			_("Sales Person \"{0}\" was not found. Please pick a sales person from the suggestions list.").format(lead),
-			title=_("Sales Person Not Found"),
-		)
-
 	# With the new Manager Review flow, the sales user creates the request
 	# WITHOUT a consultant. The consultant is assigned later by the Functional
 	# Team Manager after reviewing the request.  If a consultant is explicitly
@@ -1579,7 +1581,7 @@ def create_demo_request(customer=None, lead=None, company=None, contact_person=N
 
 	doc = frappe.new_doc("Demo Request")
 	doc.customer = customer
-	doc.lead = lead
+	doc.sales_person = sales_person  # auto-set to logged-in user
 	doc.company = company
 	doc.contact_person = contact_person
 	doc.contact_number = contact_number
@@ -1588,8 +1590,8 @@ def create_demo_request(customer=None, lead=None, company=None, contact_person=N
 	doc.customer_requirements = customer_requirements
 	doc.business_process_requirements = business_process_requirements
 	# Priority rule: "Auto" (the portal default) computes the priority from the
-	# lead value / customer tier; an explicit choice is always respected.
-	doc.priority = suggested_priority(lead, customer) if priority in (None, "", "Auto") else priority
+	# customer tier; an explicit choice is always respected.
+	doc.priority = suggested_priority("", customer) if priority in (None, "", "Auto") else priority
 	doc.preferred_demo_date = preferred_demo_date
 	doc.preferred_demo_time = preferred_demo_time
 	doc.demo_type = demo_type

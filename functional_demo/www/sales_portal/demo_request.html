@@ -47,21 +47,18 @@
 				</div>
 				<div class="card-body">
 					<form class="portal-form" id="dr-form">
-					<div class="form-row">
-						<div>
-							<label>Leads <span class="form-hint">(optional - pick one, or type a new name to auto-create)</span></label>
-							<input type="text" id="customer" name="customer" list="customers-list" placeholder="Type &amp; pick a lead, or type a new one..." value="{{ prefill.customer }}" autocomplete="off">
-							<datalist id="customers-list">
-								{% for c in customers %}<option value="{{ c.name }}">{{ c.customer_name }}</option>{% endfor %}
-							</datalist>
-						</div>
-						<div>
-							<label>Sales Person <span class="form-hint">(optional - or pick a sales person instead)</span></label>
-							<input type="text" id="lead" name="lead" list="leads-list" placeholder="Type &amp; pick a sales team member..." value="{{ prefill.lead }}" autocomplete="off">
-							<datalist id="leads-list">
-								{% for l in leads %}<option value="{{ l.name }}">{{ l.lead_name }} ({{ l.company_name or 'no company' }})</option>{% endfor %}
-							</datalist>
-						</div>
+					<div class="form-row">								<div>
+									<label>Leads <span class="form-hint">(optional - pick one, or type a new name to auto-create)</span></label>
+									<input type="text" id="customer" name="customer" list="customers-list" placeholder="Type &amp; pick a lead, or type a new one..." value="{{ prefill.customer }}" autocomplete="off">
+									<datalist id="customers-list">
+										{% for c in customers %}<option value="{{ c.name }}">{{ c.customer_name }}</option>{% endfor %}
+									</datalist>
+								</div>
+								<div>
+									<label>Sales Person</label>
+									<input type="text" value="{{ current_user_name }}" disabled style="background: #f3f4f6; cursor: not-allowed;">
+									<input type="hidden" id="sales_person" name="sales_person" value="{{ current_user }}">
+								</div>
 					</div>
 					<div class="form-row">
 						<div style="grid-column: 1 / -1;">
@@ -278,7 +275,7 @@
 						<div class="detail-item"><div class="d-label">Leads</div><div class="d-value">{{ doc.customer or "-" }}</div></div>
 						<div class="detail-item"><div class="d-label">Consultant</div><div class="d-value">{{ consultant_display or doc.functional_consultant or "-" }}</div></div>
 						<div class="detail-item"><div class="d-label">Company</div><div class="d-value">{{ doc.company or "-" }}</div></div>
-						<div class="detail-item"><div class="d-label">Sales Person Name</div><div class="d-value">{{ lead_name or doc.contact_person or "-" }}</div></div>
+						<div class="detail-item"><div class="d-label">Sales Person</div><div class="d-value">{{ sales_person_name or doc.sales_person or "-" }}</div></div>
 						<div class="detail-item"><div class="d-label">Lead Contact Number</div><div class="d-value">{{ doc.contact_number or "-" }}</div></div>
 						<div class="detail-item"><div class="d-label">Lead Email</div><div class="d-value">{{ doc.email or "-" }}</div></div>
 					</div>
@@ -374,19 +371,13 @@
 (function () {
 	"use strict";
 	{% if create_mode %}
-	function fillContact(kind, value) {
+	function fillContact(value) {
 		if (!value) return;
-		var isCustomer = kind === "customer";
-		portalCall(isCustomer ? "functional_demo.api.get_customer_details" : "functional_demo.api.get_lead_details",
-			isCustomer ? { customer: value } : { lead: value })
+		portalCall("functional_demo.api.get_customer_details", { customer: value })
 			.then(function (data) {
 					if (!data) return;
-					/* Sales Person Name (contact_person) is always entered manually.
-					   Contact Number / Email are the customer's (lead's) own details
-					   and are auto-filled only when a Leads (customer) is selected -
-					   a Sales Person's own number/email must never land in the
-					   customer's contact fields. */
-					if (!isCustomer) return;
+					/* Contact Number / Email are the customer's own details
+					   and are auto-filled only when a customer is selected. */
 					if (data.contact_number && !document.getElementById("contact_number").value) {
 						document.getElementById("contact_number").value = data.contact_number;
 					}
@@ -397,15 +388,14 @@
 	}
 
 	document.getElementById("customer").addEventListener("change", function () {
-		fillContact("customer", this.value);
+		fillContact(this.value);
 	});
 
-	/* Arrived from My Leads with a lead pre-selected (?lead=...) - remember it
-	   so the submit check below can tell a pre-selected lead from a typed one. */
-	var preLead = document.getElementById("lead").value.trim();
+	/* Arrived from My Leads with a lead pre-selected (?lead=...) */
+	var preLead = "";
 
 
-	/* The Customer / Lead boxes only accept real records: the value must be one
+	/* The Customer box only accepts real records: the value must be one
 	   of the datalist options (picked from the suggestions). A free-typed name
 	   can never match a record, so we check before submitting and explain the
 	   exact problem in the popup instead of a cryptic server error. */
@@ -422,12 +412,11 @@
 	document.getElementById("dr-form").addEventListener("submit", function (e) {
 		e.preventDefault();
 		var customer = document.getElementById("customer").value.trim();
-		var lead = document.getElementById("lead").value.trim();
 		var consultant = document.getElementById("functional_consultant").value;
 
-		/* A Customer/Lead and contact details are all optional - the workflow is
-		   consultant-first, so the request can be created with just a
-		   Functional Consultant (customer details can be filled in later). */
+		/* A Customer is optional - the workflow is consultant-first, so the request
+		   can be created with just a Functional Consultant (customer details can
+		   be filled in later). */
 		/* A free-typed customer name is fine: the server auto-creates the
 		   Customer record (it appears in the desk too). Just confirm first so
 		   a typo never creates a junk customer. */
@@ -435,9 +424,6 @@
 			if (!window.confirm("\"" + customer + "\" is not a saved customer yet. Create it automatically and continue?")) {
 				return;
 			}
-		}
-		if (lead && lead !== preLead && !isKnown("leads-list", lead)) {							portalAlert("Sales Person \"" + lead + "\" was not found. Please pick a sales person from the suggestions list.", "err");
-			return;
 		}
 		if (!consultant) {
 			window.portalModal("Consultant Required", "Please select a Functional Consultant to run this demo. Pick one from the list above - a consultant is mandatory before the request can be created.", "err");
@@ -450,7 +436,6 @@
 		btn.disabled = true; btn.textContent = "Creating...";
 		portalCall("functional_demo.api.create_demo_request", {
 			customer: customer || null,
-			lead: lead || null,
 			company: company || null,
 			functional_consultant: consultant,
 			contact_person: document.getElementById("contact_person").value,
