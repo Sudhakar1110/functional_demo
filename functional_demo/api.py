@@ -1604,12 +1604,16 @@ def create_demo_request(customer=None, lead=None, company=None, contact_person=N
 
 	# Move the new request through the workflow:
 	# - If a consultant was provided (manager creating directly) -> Assigned
-	# - Otherwise (sales user creating) -> Requested -> Manager Review
+	# - Otherwise (sales user creating) -> goes directly to Manager Review
 	try:
 		if functional_consultant:
 			change_status(doc, "Assigned")
 		else:
 			change_status(doc, "Requested")
+			# Reload to pick up the new workflow_state after the first change_status
+		doc = frappe.get_doc("Demo Request", doc.name)
+		current = doc.get("workflow_state") or doc.get("status") or "Draft"
+		if current == "Requested" and not functional_consultant:
 			change_status(doc, "Manager Review")
 	except Exception:
 		# the request is still created; the sales team can move it from the desk

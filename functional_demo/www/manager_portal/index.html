@@ -140,6 +140,46 @@
 			</div>
 			{% endif %}
 
+			<div class="portal-card" style="margin-bottom: 22px;">
+				<div class="card-head"><h2>Recent Demo Sessions</h2></div>
+				{% if sessions %}
+				<div class="card-body flush">
+					<table class="table-portal">
+						<thead>
+							<tr>
+								<th>Session</th>
+								<th>Customer</th>
+								<th>Consultant</th>
+								<th>Date</th>
+								<th>Time</th>
+								<th>Status</th>
+								<th>Result</th>
+							</tr>
+						</thead>
+						<tbody>
+							{% for s in sessions %}
+							<tr>
+								<td><a href="/functional_portal/session?name={{ s.name }}">{{ s.name }}</a></td>
+								<td>{{ s.customer or "-" }}</td>
+								<td>{{ s.consultant_name }}</td>
+								<td>{{ s.date_display }}</td>
+								<td>{{ s.start_time or "-" }}</td>
+								<td><span class="badge b-{{ s.demo_status|lower|replace(' ', '-') }}">{{ s.demo_status }}</span></td>
+								<td>{% if s.final_result %}<span class="badge b-{{ s.final_result|lower|replace(' ', '-') }}">{{ s.final_result }}</span>{% else %}-{% endif %}</td>
+							</tr>
+							{% endfor %}
+						</tbody>
+					</table>
+				</div>
+				{% else %}
+				<div class="empty-state">
+					<div class="empty-icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg></div>
+					<h3>No demo sessions yet</h3>
+					<p>Demo sessions will appear here once demos are scheduled and executed.</p>
+				</div>
+				{% endif %}
+			</div>
+
 			<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 22px;">
 				<div class="portal-card">
 					<div class="card-head"><h2>Consultant Workload</h2></div>

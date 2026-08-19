@@ -153,21 +153,9 @@
 				</div>
 			</div>
 
-			{% if not doc.functional_consultant and doc.status in ["Draft", "Requested"] %}
+			{% if not doc.functional_consultant and doc.status in ["Manager Review", "Requested"] %}
 			<div class="portal-card" id="card-assign">
-				<div class="card-head"><h2>Send to Manager for Consultant Assignment</h2></div>
-				<div class="card-body">
-					<p class="text-muted" style="margin-top: 0;">This demo request will be sent to the Functional Team Manager who will review it and assign the right Functional Consultant.</p>
-					<div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end;">
-						<button class="btn-portal" id="btn-send-manager">Send to Manager</button>
-					</div>
-				</div>
-			</div>
-			{% endif %}
-
-			{% if not doc.functional_consultant and doc.status == "Manager Review" %}
-			<div class="portal-card" id="card-assign">
-				<div class="card-head"><h2>Awaiting Manager Review</h2></div>
+				<div class="card-head"><h2>Awaiting Consultant Assignment</h2></div>
 				<div class="card-body">
 					<p class="text-muted" style="margin-top: 0;">This request is with the Functional Team Manager for consultant assignment. You can also assign a consultant directly if you have the manager role.</p>
 					<div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end;">
@@ -519,17 +507,7 @@
 		if (el) el.style.display = el.style.display === "none" ? "block" : "none";
 	}
 
-	{% if not doc.functional_consultant and doc.status in ["Draft", "Requested"] %}
-	var btnSendManager = document.getElementById("btn-send-manager");
-	if (btnSendManager) btnSendManager.addEventListener("click", function () {
-		var btn = this; btn.disabled = true; btn.textContent = "Sending...";
-		portalCall("functional_demo.api.assign_to_manager", { demo_request: DOC_NAME })
-			.then(function () { window.location.reload(); })
-			.catch(function () { btn.disabled = false; btn.textContent = "Send to Manager"; });
-	});
-	{% endif %}
-
-	{% if not doc.functional_consultant and doc.status == "Manager Review" %}
+	{% if not doc.functional_consultant and doc.status in ["Manager Review", "Requested"] %}
 	document.getElementById("btn-assign").addEventListener("click", function () {
 		var consultant = document.getElementById("assign-consultant").value;
 		if (!consultant) { portalAlert("Please select a consultant.", "err"); return; }
