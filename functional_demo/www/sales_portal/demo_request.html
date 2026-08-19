@@ -153,7 +153,7 @@
 				</div>
 			</div>
 
-			{% if not doc.functional_consultant and doc.status in ["Manager Review", "Requested"] %}
+			{% if doc.status in ["Manager Review", "Requested", "Draft"] and not doc.functional_consultant %}
 			<div class="portal-card" id="card-assign">
 				<div class="card-head"><h2>Awaiting Consultant Assignment</h2></div>
 				<div class="card-body">
@@ -507,7 +507,7 @@
 		if (el) el.style.display = el.style.display === "none" ? "block" : "none";
 	}
 
-	{% if not doc.functional_consultant and doc.status in ["Manager Review", "Requested"] %}
+	{% if doc.status in ["Manager Review", "Requested", "Draft"] and not doc.functional_consultant %}
 	document.getElementById("btn-assign").addEventListener("click", function () {
 		var consultant = document.getElementById("assign-consultant").value;
 		if (!consultant) { portalAlert("Please select a consultant.", "err"); return; }

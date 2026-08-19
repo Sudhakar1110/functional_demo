@@ -105,11 +105,10 @@
 				{% endif %}
 			</div>
 
-			{% if stats.pending_manager_review %}
 			<div class="portal-card" style="margin-bottom: 22px;">
-				<div class="card-head"><h2>Pending Manager Review</h2></div>
-				<div class="card-body">
-					<p class="text-muted" style="margin-top: 0;">Demo requests from the sales team that need your review. Assign a Functional Consultant to move them forward.</p>
+				<div class="card-head"><h2>All Demo Requests ({{ all_requests|length }})</h2></div>
+				{% if all_requests %}
+				<div class="card-body flush">
 					<table class="table-portal">
 						<thead>
 							<tr>
@@ -117,28 +116,48 @@
 								<th>Party</th>
 								<th>Template</th>
 								<th>Priority</th>
-								<th>Sales Person</th>
-								<th>Created</th>
-								<th>Action</th>
+								<th>Consultant</th>
+								<th>Status</th>
+								<th>Assign Consultant</th>
 							</tr>
 						</thead>
 						<tbody>
-							{% for r in stats.pending_review_requests %}
+							{% for r in all_requests %}
 							<tr>
-								<td><a href="/app/demo-request/{{ r.name }}">{{ r.name }}</a></td>
+								<td><a href="/sales_portal/demo_request?name={{ r.name }}">{{ r.name }}</a></td>
 								<td>{{ r.customer or r.lead or "-" }}</td>
 								<td>{{ r.interested_module or "-" }}</td>
 								<td>{% if r.priority %}<span class="chip {{ r.priority|lower }}">{{ r.priority }}</span>{% else %}-{% endif %}</td>
-								<td>{{ r.sales_person or "-" }}</td>
-								<td>{{ r.created_display or "-" }}</td>
-								<td><a class="btn-portal sm" href="/sales_portal/demo_request?name={{ r.name }}">Review & Assign</a></td>
+								<td>{{ r.consultant_name }}</td>
+								<td><span class="badge b-{{ r.status|lower|replace(' ', '-') }}">{{ r.status }}</span></td>
+								<td>
+									{% if r.status in ["Manager Review", "Requested", "Draft"] %}
+									<select class="manager-assign-select" data-request="{{ r.name }}" style="font-size: 12px; padding: 4px 8px; border: 1px solid #E5E7EB; border-radius: 6px;">
+										<option value="">— Select —</option>
+									{% for c in consultants %}
+									<option value="{{ c.name }}" {% if c.name == r.functional_consultant %}selected{% endif %}>{{ c.consultant_name }} · {{ c.specialization or 'Generalist' }}</option>
+									{% endfor %}
+									</select>
+									<button class="btn-portal sm manager-assign-btn" data-request="{{ r.name }}" style="margin-left: 6px;">Assign</button>
+								{% elif r.functional_consultant %}
+									<span class="muted">{{ r.consultant_name }}</span>
+								{% else %}
+									<span class="muted">—</span>
+								{% endif %}
+								</td>
 							</tr>
 							{% endfor %}
 						</tbody>
 					</table>
 				</div>
+				{% else %}
+				<div class="empty-state">
+					<div class="empty-icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg></div>
+					<h3>No demo requests yet</h3>
+					<p>Demo requests from the sales team will appear here for your review.</p>
+				</div>
+				{% endif %}
 			</div>
-			{% endif %}
 
 			<div class="portal-card" style="margin-bottom: 22px;">
 				<div class="card-head"><h2>Recent Demo Sessions</h2></div>
@@ -293,4 +312,36 @@
 	</div>
 	</div>
 </div>
+{% endblock %}
+
+{% block script %}
+{% include "functional_demo/templates/includes/portal_script.html" %}
+<script>
+(function () {
+	"use strict";
+
+	/* Manager: assign consultant from the All Demo Requests table */
+	document.querySelectorAll(".manager-assign-btn").forEach(function (btn) {
+		btn.addEventListener("click", function () {
+			var requestName = btn.getAttribute("data-request");
+			var select = document.querySelector('.manager-assign-select[data-request="' + requestName + '"]');
+			if (!select) { portalAlert("Select a consultant first.", "err"); return; }
+			var consultant = select.value;
+			if (!consultant) { portalAlert("Please select a consultant.", "err"); return; }
+			btn.disabled = true;
+			btn.textContent = "Assigning...";
+			portalCall("functional_demo.api.assign_consultant", {
+				demo_request: requestName,
+				consultant: consultant,
+			}).then(function () {
+				portalAlert("Consultant assigned to " + requestName + ".", "ok");
+				setTimeout(function () { window.location.reload(); }, 1200);
+			}).catch(function () {
+				btn.disabled = false;
+				btn.textContent = "Assign";
+			});
+		});
+	});
+})();
+</script>
 {% endblock %}
