@@ -303,14 +303,27 @@ def _ensure_workflow_state_permissions():
 		"Functional Team Manager", "System Manager",
 	]
 	# Clear existing permissions and re-add them idempotently
-	frappe.db.sql("""delete from `tabDocPerm` where parent = 'Workflow State'""")
-	for role in roles_needing_access:
-		frappe.db.sql(
-			"""insert into `tabDocPerm` (`parent`, `parentfield`, `parenttype`, `role`, `read`, `write`, `create`, `delete`, `report`, `export`)
-		values ('Workflow State', 'permissions', 'DocType', %s, 1, 0, 0, 0, 0, 0)""",
-			(role,),
+	try:
+		dt = frappe.get_doc("DocType", "Workflow State")
+		# Only modify if no permissions exist yet
+		if not dt.permissions:
+			for role in roles_needing_access:
+				dt.append("permissions", {
+					"role": role,
+					"read": 1,
+					"write": 0,
+					"create": 0,
+					"delete": 0,
+					"report": 0,
+					"export": 0,
+				})
+			dt.save(ignore_permissions=True)
+		frappe.clear_cache()
+	except Exception:
+		frappe.log_error(
+			title="Could not set Workflow State permissions",
+			message=frappe.get_traceback(),
 		)
-	frappe.clear_cache()
 
 
 def move_approved_requests_forward():
