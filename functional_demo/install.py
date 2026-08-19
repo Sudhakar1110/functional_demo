@@ -121,7 +121,10 @@ def fix_sales_person_on_requests():
 			and ifnull(dr.owner, '') != ''
 			and dr.owner != 'Administrator'
 	""")
-	frappe.db.commit()	def create_lead_list_client_script():
+	frappe.db.commit()
+
+
+def create_lead_list_client_script():
 	"""Create a Client Script to rename the 'Add Lead' button to
 	'Add Sales Person' on the Lead list view.
 	"""
