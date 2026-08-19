@@ -306,9 +306,9 @@ def _ensure_workflow_state_permissions():
 	frappe.db.sql("""delete from `tabDocPerm` where parent = 'Workflow State'""")
 	for role in roles_needing_access:
 		frappe.db.sql(
-			"""insert into `tabDocPerm` (parent, parentfield, parenttype, role, read, write, create, delete, report, export)
+			"""insert into `tabDocPerm` (`parent`, `parentfield`, `parenttype`, `role`, `read`, `write`, `create`, `delete`, `report`, `export`)
 		values ('Workflow State', 'permissions', 'DocType', %s, 1, 0, 0, 0, 0, 0)""",
-			role,
+			(role,),
 		)
 	frappe.clear_cache()
 
