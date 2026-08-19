@@ -138,6 +138,8 @@
 									{% endfor %}
 									</select>
 									<button class="btn-portal sm manager-assign-btn" data-request="{{ r.name }}" style="margin-left: 6px;">Assign</button>
+								{% elif r.status == "Assigned" and r.functional_consultant %}
+									<button class="btn-portal sm manager-schedule-btn" data-request="{{ r.name }}" data-consultant="{{ r.consultant_name }}">Schedule Demo</button>
 								{% elif r.functional_consultant %}
 									<span class="muted">{{ r.consultant_name }}</span>
 								{% else %}
@@ -306,8 +308,27 @@
 						{% endif %}
 					</div>
 				</div>
+			</div>			</div>
+
+			<div class="portal-modal" id="schedule-modal">
+				<div class="pm-card">
+					<div class="pm-title">Schedule Demo</div>
+					<p class="pm-msg" style="margin: 0 0 12px;">Schedule a demo for <strong id="sched-request-name"></strong> with consultant <strong id="sched-consultant-name"></strong>.</p>
+					<input type="hidden" id="sched-request">
+					<div class="form-row">
+						<div><label>Date <span class="req">*</span></label><input type="date" id="sched-date"></div>
+						<div><label>Start Time</label><input type="time" id="sched-start"></div>
+					</div>
+					<div class="form-row">
+						<div><label>End Time</label><input type="time" id="sched-end"></div>
+						<div><label>Meeting Link</label><input type="text" id="sched-link" placeholder="https://meet.google.com/..."></div>
+					</div>
+					<div style="display: flex; gap: 10px; justify-content: flex-end;">
+						<button class="btn-portal secondary pm-btn" id="sched-cancel">Cancel</button>
+						<button class="btn-portal pm-btn" id="sched-go">Schedule Demo</button>
+					</div>
+				</div>
 			</div>
-		</div>
 	</div>
 	</div>
 </div>
@@ -339,6 +360,46 @@
 				btn.disabled = false;
 				btn.textContent = "Assign";
 			});
+		});
+	});
+
+	/* Manager: schedule demo from the All Demo Requests table */
+	document.querySelectorAll(".manager-schedule-btn").forEach(function (btn) {
+		btn.addEventListener("click", function () {
+			var requestName = btn.getAttribute("data-request");
+			var consultantName = btn.getAttribute("data-consultant");
+			document.getElementById("sched-request").value = requestName;
+			document.getElementById("sched-request-name").textContent = requestName;
+			document.getElementById("sched-consultant-name").textContent = consultantName || "-";
+			var modal = document.getElementById("schedule-modal");
+			if (modal) modal.classList.add("show");
+		});
+	});
+	var schedCancel = document.getElementById("sched-cancel");
+	if (schedCancel) schedCancel.addEventListener("click", function () {
+		var modal = document.getElementById("schedule-modal");
+		if (modal) modal.classList.remove("show");
+	});
+	var schedGo = document.getElementById("sched-go");
+	if (schedGo) schedGo.addEventListener("click", function () {
+		var requestName = document.getElementById("sched-request").value;
+		var date = document.getElementById("sched-date").value;
+		if (!requestName) { portalAlert("No demo request selected.", "err"); return; }
+		if (!date) { portalAlert("Please pick a date.", "err"); return; }
+		schedGo.disabled = true;
+		schedGo.textContent = "Scheduling...";
+		portalCall("functional_demo.api.schedule_demo", {
+			demo_request: requestName,
+			scheduled_date: date,
+			start_time: document.getElementById("sched-start").value,
+			end_time: document.getElementById("sched-end").value,
+			meeting_link: document.getElementById("sched-link").value,
+		}).then(function () {
+			portalAlert("Demo scheduled for " + date + ".", "ok");
+			setTimeout(function () { window.location.reload(); }, 1200);
+		}).catch(function () {
+			schedGo.disabled = false;
+			schedGo.textContent = "Schedule Demo";
 		});
 	});
 })();
