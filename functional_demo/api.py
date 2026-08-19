@@ -701,13 +701,47 @@ def unassign_consultant(demo_request=None):
 # ---------------------------------------------------------------------------
 
 @frappe.whitelist()
+def bulk_send_to_manager(requests=None):
+	"""Sales user sends many Demo Requests to the Functional Team Manager
+	for review at once (bulk version of assign_to_manager)."""
+	names = _as_list(requests)
+	if not names:
+		frappe.throw(_("Please select at least one demo request."), title=_("Nothing Selected"))
+
+	done, errors = [], []
+	for name in names:
+		try:
+			doc = frappe.get_doc("Demo Request", name)
+			frappe.has_permission("Demo Request", "write", doc=doc, throw=True)
+			current = doc.get("workflow_state") or doc.get("status") or "Draft"
+			if current == "Manager Review":
+				done.append(name)
+				continue
+			from functional_demo.sales_demo.doctype.demo_request.demo_request import change_status
+			if current in (None, "", "Draft"):
+				doc = change_status(doc, "Requested")
+				doc = frappe.get_doc("Demo Request", name)
+			if (doc.get("workflow_state") or doc.get("status")) == "Requested":
+				doc = change_status(doc, "Manager Review")
+			done.append(name)
+		except Exception:
+			errors.append("{0}: {1}".format(name, _clean_error()))
+
+	msg = _("{0} request(s) sent to Functional Team Manager for review.").format(len(done))
+	if errors:
+		msg += " " + _("{0} failed: {1}").format(len(errors), "; ".join(errors))
+	frappe.msgprint(msg)
+	return {"done": done, "errors": errors}
+
+
+@frappe.whitelist()
 def bulk_assign_consultant(requests=None, consultant=None):
 	"""Assign one Functional Consultant to many Demo Requests at once.
 
 	Each request is checked individually - requests that fail (permission, rule,
 	scheduling) are reported in the response instead of aborting the whole batch.
 	A consultant assignment is direct: the request moves straight to Assigned
-	(no manager approval step)."""
+	(no manager approval step). Used by Functional Team Manager / Sales Manager."""
 	names = _as_list(requests)
 	if not names:
 		frappe.throw(_("Please select at least one demo request."), title=_("Nothing Selected"))
@@ -726,7 +760,7 @@ def bulk_assign_consultant(requests=None, consultant=None):
 			doc.consultant_user = consultant_user
 			doc.save()
 			state = doc.get("workflow_state") or doc.get("status") or "Draft"
-			if state in ("Draft", "Requested"):
+			if state in ("Draft", "Requested", "Manager Review"):
 				change_status(doc, "Assigned")
 			done.append(name)
 		except Exception:
@@ -1529,48 +1563,13 @@ def create_demo_request(customer=None, lead=None, company=None, contact_person=N
 			title=_("Sales Person Not Found"),
 		)
 
-	# Business rule: every demo must be allocated to a Functional Consultant at
-	# creation. If the value is missing (e.g. a stale cached page submits
-	# without it), auto-assign the first available consultant instead of
-	# failing - the request always gets a consultant and it can be changed
-	# from the request page afterwards. Availability is checked in Python
-	# because an unset status is stored as NULL and SQL filters would hide it.
-	auto_assigned_consultant = ""
-	if not functional_consultant:
-		candidates = frappe.get_all(
-			"Functional Consultant",
-			fields=["name", "status"],
-			order_by="consultant_name asc",
-			ignore_permissions=True,
-		)
-		for cand in candidates:
-			if (cand.get("status") or "") != "Inactive":
-				auto_assigned_consultant = cand["name"]
-				break
-		functional_consultant = auto_assigned_consultant or None
-	if not functional_consultant:
-		frappe.throw(
-			_("No consultants are available yet. Ask your Functional Team Manager to create a consultant profile (Functional Portal → New Consultant Profile) or add one in ERPNext, then try again."),
-			title=_("Consultant Required"),
-		)
-
-	# Contact Person / Company are Link fields: only set them when the value is
-	# a real record. A free-typed name (e.g. when no CRM data exists yet) is
-	# preserved in the remarks instead of crashing Link validation.
-	# IMPORTANT: never call frappe.msgprint() here. If anything below raises,
-	# Frappe promotes the last msgprint text to the error message and hides the
-	# real failure. The note is returned in the response instead and the portal
-	# shows it as a success toast.
+	# With the new Manager Review flow, the sales user creates the request
+	# WITHOUT a consultant. The consultant is assigned later by the Functional
+	# Team Manager after reviewing the request.  If a consultant is explicitly
+	# provided (e.g. a manager creating a request directly), use it; otherwise
+	# leave it empty so the request goes to Manager Review.
 	auto_assigned_note = ""
 	extra_remarks = []
-	if auto_assigned_consultant:
-		extra_remarks.append(_("Consultant auto-assigned: {0}").format(auto_assigned_consultant))
-		auto_assigned_note = _(
-			"No consultant was selected, so {0} was auto-assigned to this demo. You can change it from the request page if needed."
-		).format(
-			frappe.db.get_value("Functional Consultant", auto_assigned_consultant, "consultant_name")
-			or auto_assigned_consultant
-		)
 	if contact_person and not frappe.db.exists("Contact", contact_person):
 		extra_remarks.append(_("Contact person: {0}").format(contact_person))
 		contact_person = ""
@@ -1603,15 +1602,19 @@ def create_demo_request(customer=None, lead=None, company=None, contact_person=N
 	)
 	doc.insert()  # respects role permissions; sales_person defaults to the session user
 
-	# move the new request straight to Assigned - the consultant is mandatory
-	# at creation, so there is no separate approval step (Draft -> Requested ->
-	# Assigned is walked automatically by change_status).
+	# Move the new request through the workflow:
+	# - If a consultant was provided (manager creating directly) -> Assigned
+	# - Otherwise (sales user creating) -> Requested -> Manager Review
 	try:
-		change_status(doc, "Assigned")
+		if functional_consultant:
+			change_status(doc, "Assigned")
+		else:
+			change_status(doc, "Requested")
+			change_status(doc, "Manager Review")
 	except Exception:
 		# the request is still created; the sales team can move it from the desk
 		frappe.log_error(
-			title=_("Portal: Demo Request could not be moved to Assigned"),
+			title=_("Portal: Demo Request could not be moved through workflow"),
 			message=frappe.get_traceback(),
 		)
 
@@ -1619,9 +1622,54 @@ def create_demo_request(customer=None, lead=None, company=None, contact_person=N
 
 
 @frappe.whitelist()
+def assign_to_manager(demo_request=None):
+	"""Sales user sends a Demo Request to the Functional Team Manager for
+	review. The request moves to 'Manager Review' state so the manager can
+	pick a consultant.
+
+	Arguments are optional so a client that fires the call without a value
+	gets a clear popup instead of a TypeError 500."""
+	if not demo_request:
+		frappe.throw(
+			_("Demo Request is missing. Please refresh the page and try again."),
+			title=_("Missing Request"),
+		)
+
+	doc = frappe.get_doc("Demo Request", demo_request)
+	frappe.has_permission("Demo Request", "write", doc=doc, throw=True)
+
+	current_state = doc.get("workflow_state") or doc.get("status") or "Draft"
+	if current_state == "Manager Review":
+		frappe.msgprint(_("{0} is already in Manager Review.").format(demo_request))
+		return {"status": doc.get("status") or doc.get("workflow_state")}
+
+	from functional_demo.sales_demo.doctype.demo_request.demo_request import change_status
+
+	try:
+		if current_state in (None, "", "Draft"):
+			doc = change_status(doc, "Requested")
+		doc = frappe.get_doc("Demo Request", demo_request)
+		if (doc.get("workflow_state") or doc.get("status")) == "Requested":
+			doc = change_status(doc, "Manager Review")
+	except Exception:
+		frappe.log_error(
+			title=_("Portal: Could not send Demo Request to Manager Review"),
+			message=frappe.get_traceback(),
+		)
+		frappe.throw(
+			_("Could not send the request to the manager. Please try again or use the desk form."),
+			title=_("Send Failed"),
+		)
+
+	frappe.msgprint(_("{0} sent to Functional Team Manager for review.").format(demo_request))
+	return {"status": doc.get("status") or doc.get("workflow_state")}
+
+
+@frappe.whitelist()
 def assign_consultant(demo_request=None, consultant=None):
 	"""Assign (or reassign) a Functional Consultant on a Demo Request and move
-	the workflow to 'Assigned' when the request is still in its early stages.
+	the workflow to 'Assigned'. This is used by the Functional Team Manager
+	(after reviewing the request) and by Sales Managers.
 
 	Both arguments are optional so a client that fires the call without a value
 	gets a clear popup instead of a TypeError 500."""
@@ -1643,11 +1691,9 @@ def assign_consultant(demo_request=None, consultant=None):
 	doc.consultant_user = frappe.db.get_value("Functional Consultant", consultant, "user")
 	doc.save()  # validate runs: only Active consultants, reassignment flag, ToDo + notifications
 
-	# Assignment is direct (no manager approval): move the request to Assigned
-	# when it is still in its early stages.
-	if current_state in (None, "", "Draft", "Requested"):
-		from functional_demo.sales_demo.doctype.demo_request.demo_request import change_status
+	from functional_demo.sales_demo.doctype.demo_request.demo_request import change_status
 
+	if current_state in (None, "", "Draft", "Requested", "Manager Review"):
 		doc = change_status(doc, "Assigned")
 
 	frappe.msgprint(_("Functional Consultant assigned to {0}.").format(demo_request))

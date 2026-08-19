@@ -35,6 +35,17 @@
 				"parent": "Demo Request Workflow",
 				"parentfield": "states",
 				"parenttype": "Workflow",
+				"state": "Manager Review",
+				"allow_edit": "Functional Team Manager",
+				"update_field": "status",
+				"update_value": "Manager Review"
+			},
+			{
+				"doc_status": "0",
+				"is_optional_state": 0,
+				"parent": "Demo Request Workflow",
+				"parentfield": "states",
+				"parenttype": "Workflow",
 				"state": "Assigned",
 				"allow_edit": "Functional Team Manager",
 				"update_field": "status",
@@ -153,55 +164,22 @@
 				"state": "Draft"
 			},
 			{
-				"action": "Assign Consultant",
+				"action": "Send to Manager",
 				"allow_self_approval": 1,
 				"allowed": "Sales User",
 				"condition": "",
-				"next_state": "Assigned",
-				"parent": "Demo Request Workflow",
-				"parentfield": "transitions",
-				"parenttype": "Workflow",
-				"state": "Draft"
-			},
-			{
-				"action": "Assign Consultant",
-				"allow_self_approval": 1,
-				"allowed": "Sales Manager",
-				"condition": "",
-				"next_state": "Assigned",
-				"parent": "Demo Request Workflow",
-				"parentfield": "transitions",
-				"parenttype": "Workflow",
-				"state": "Draft"
-			},
-			{
-				"action": "Assign Consultant",
-				"allow_self_approval": 1,
-				"allowed": "Functional Team Manager",
-				"condition": "",
-				"next_state": "Assigned",
-				"parent": "Demo Request Workflow",
-				"parentfield": "transitions",
-				"parenttype": "Workflow",
-				"state": "Draft"
-			},
-			{
-				"action": "Assign Consultant",
-				"allow_self_approval": 1,
-				"allowed": "Sales User",
-				"condition": "",
-				"next_state": "Assigned",
+				"next_state": "Manager Review",
 				"parent": "Demo Request Workflow",
 				"parentfield": "transitions",
 				"parenttype": "Workflow",
 				"state": "Requested"
 			},
 			{
-				"action": "Assign Consultant",
+				"action": "Send to Manager",
 				"allow_self_approval": 1,
 				"allowed": "Sales Manager",
 				"condition": "",
-				"next_state": "Assigned",
+				"next_state": "Manager Review",
 				"parent": "Demo Request Workflow",
 				"parentfield": "transitions",
 				"parenttype": "Workflow",
@@ -216,18 +194,29 @@
 				"parent": "Demo Request Workflow",
 				"parentfield": "transitions",
 				"parenttype": "Workflow",
-				"state": "Requested"
+				"state": "Manager Review"
+			},
+			{
+				"action": "Reject / Send Back",
+				"allow_self_approval": 1,
+				"allowed": "Functional Team Manager",
+				"condition": "",
+				"next_state": "Requested",
+				"parent": "Demo Request Workflow",
+				"parentfield": "transitions",
+				"parenttype": "Workflow",
+				"state": "Manager Review"
 			},
 			{
 				"action": "Cancel Demo Request",
 				"allow_self_approval": 1,
-				"allowed": "Sales User",
+				"allowed": "Functional Team Manager",
 				"condition": "",
 				"next_state": "Cancelled",
 				"parent": "Demo Request Workflow",
 				"parentfield": "transitions",
 				"parenttype": "Workflow",
-				"state": "Requested"
+				"state": "Manager Review"
 			},
 			{
 				"action": "Cancel Demo Request",
@@ -238,7 +227,7 @@
 				"parent": "Demo Request Workflow",
 				"parentfield": "transitions",
 				"parenttype": "Workflow",
-				"state": "Requested"
+				"state": "Manager Review"
 			},
 			{
 				"action": "Schedule Demo",
@@ -316,6 +305,28 @@
 				"parentfield": "transitions",
 				"parenttype": "Workflow",
 				"state": "Scheduled"
+			},
+			{
+				"action": "Cancel Demo Request",
+				"allow_self_approval": 1,
+				"allowed": "Sales User",
+				"condition": "",
+				"next_state": "Cancelled",
+				"parent": "Demo Request Workflow",
+				"parentfield": "transitions",
+				"parenttype": "Workflow",
+				"state": "Requested"
+			},
+			{
+				"action": "Cancel Demo Request",
+				"allow_self_approval": 1,
+				"allowed": "Sales Manager",
+				"condition": "",
+				"next_state": "Cancelled",
+				"parent": "Demo Request Workflow",
+				"parentfield": "transitions",
+				"parenttype": "Workflow",
+				"state": "Requested"
 			},
 			{
 				"action": "Cancel Demo Request",

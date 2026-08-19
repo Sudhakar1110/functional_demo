@@ -209,7 +209,20 @@ def setup_demo_data(verbose=True):
 	)
 	change_status(req, "Requested", ignore_permissions=True)
 
+	# Manager Review (sales sent to manager, awaiting consultant assignment)
+	req = _make_request(
+		created,
+		customer=customer_by_name["Globex Ltd"].name,
+		module="CRM",
+		priority="High",
+		requirements="Need a full CRM solution with lead management and sales pipeline.",
+		preferred_days=5,
+	)
+	change_status(req, "Requested", ignore_permissions=True)
+	change_status(req, "Manager Review", ignore_permissions=True)
+
 	# Assigned (consultant chosen, not scheduled yet)
+	# With the new Manager Review flow, go through: Requested -> Manager Review -> Assigned
 	req = _make_request(
 		created,
 		customer=customer_by_name["Acme Industries"].name,
@@ -220,6 +233,7 @@ def setup_demo_data(verbose=True):
 		preferred_days=6,
 	)
 	change_status(req, "Requested", ignore_permissions=True)
+	change_status(req, "Manager Review", ignore_permissions=True)
 	change_status(req, "Assigned", ignore_permissions=True)
 
 	# Scheduled (session with template)
@@ -233,6 +247,7 @@ def setup_demo_data(verbose=True):
 		preferred_days=4,
 	)
 	change_status(req, "Requested", ignore_permissions=True)
+	change_status(req, "Manager Review", ignore_permissions=True)
 	change_status(req, "Assigned", ignore_permissions=True)
 	change_status(req, "Scheduled", ignore_permissions=True)
 	session = _make_session(
@@ -254,6 +269,7 @@ def setup_demo_data(verbose=True):
 		preferred_days=0,
 	)
 	change_status(req, "Requested", ignore_permissions=True)
+	change_status(req, "Manager Review", ignore_permissions=True)
 	change_status(req, "Assigned", ignore_permissions=True)
 	change_status(req, "Scheduled", ignore_permissions=True)
 	session = _make_session(
@@ -285,6 +301,7 @@ def setup_demo_data(verbose=True):
 		preferred_days=0,
 	)
 	change_status(req, "Requested", ignore_permissions=True)
+	change_status(req, "Manager Review", ignore_permissions=True)
 	change_status(req, "Assigned", ignore_permissions=True)
 	change_status(req, "Scheduled", ignore_permissions=True)
 	session = _make_session(
@@ -320,6 +337,7 @@ def setup_demo_data(verbose=True):
 		preferred_days=0,
 	)
 	change_status(req, "Requested", ignore_permissions=True)
+	change_status(req, "Manager Review", ignore_permissions=True)
 	change_status(req, "Assigned", ignore_permissions=True)
 	change_status(req, "Scheduled", ignore_permissions=True)
 	session = _make_session(
@@ -357,6 +375,7 @@ def setup_demo_data(verbose=True):
 		preferred_days=0,
 	)
 	change_status(req, "Requested", ignore_permissions=True)
+	change_status(req, "Manager Review", ignore_permissions=True)
 	change_status(req, "Assigned", ignore_permissions=True)
 	change_status(req, "Scheduled", ignore_permissions=True)
 	session = _make_session(

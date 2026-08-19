@@ -648,6 +648,7 @@ body {
 }
 .b-draft, .b-closed, .b-cancelled, .b-overdue, .b-pending { background: var(--bx-gray-100); color: var(--bx-gray-400); }
 .b-requested, .b-open { background: #E8EEFF; color: var(--bx-blue); }
+.b-manager-review { background: #FEF6D8; color: #A16207; }
 .b-scheduled { background: #E8EEFF; color: var(--bx-blue); }
 .b-assigned { background: #ECE9FF; color: #5B3DF5; }
 .b-inprogress, .b-demo-in-progress { background: #FFF1E6; color: #D96C0A; }

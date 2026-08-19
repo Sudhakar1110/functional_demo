@@ -481,7 +481,8 @@ def sales_stats(user=None):
 		by_status[r.get("status")] = by_status.get(r.get("status"), 0) + 1
 
 	total = len(requests)
-	pending = sum(by_status.get(s, 0) for s in ("Draft", "Requested", "Assigned"))
+	pending = sum(by_status.get(s, 0) for s in ("Draft", "Requested", "Manager Review"))
+	assigned = by_status.get("Assigned", 0)
 	scheduled = sum(by_status.get(s, 0) for s in ("Scheduled", "Demo In Progress"))
 	completed = sum(by_status.get(s, 0) for s in ("Demo Completed", "Follow-up Required"))
 	converted = by_status.get("Converted", 0)
@@ -504,6 +505,8 @@ def sales_stats(user=None):
 	return {
 		"total_requests": total,
 		"pending": pending,
+		"manager_review": by_status.get("Manager Review", 0),
+		"assigned": assigned,
 		"scheduled": scheduled,
 		"completed": completed,
 		"converted": converted,
@@ -637,7 +640,8 @@ def manager_stats():
 	return {
 		"total": total,
 		"by_status": by_status,
-		"pending": sum(by_status.get(s, 0) for s in ("Draft", "Requested", "Assigned")),
+		"pending": sum(by_status.get(s, 0) for s in ("Draft", "Requested", "Manager Review")),
+		"assigned": by_status.get("Assigned", 0),
 		"scheduled": sum(by_status.get(s, 0) for s in ("Scheduled", "Demo In Progress")),
 		"completed": sum(by_status.get(s, 0) for s in ("Demo Completed", "Follow-up Required")),
 		"converted": converted,

@@ -67,6 +67,15 @@ class DemoRequest(Document):
 			self.contact_number = self.contact_number or (details.mobile_no or details.phone)
 
 	def validate_consultant(self):
+		"""Validate consultant assignment.
+
+		With the new Manager Review flow, a new Demo Request does NOT require
+		a Functional Consultant at creation time — the sales user creates the
+		request and then sends it to the Functional Team Manager for review.
+		The consultant is mandatory only after the manager assigns one
+		(i.e. when the request moves to Assigned / Scheduled / later states
+		AND a consultant is still missing).
+		"""
 		if self.functional_consultant:
 			consultant = frappe.db.get_value(
 				"Functional Consultant",
@@ -85,19 +94,20 @@ class DemoRequest(Document):
 					),
 					title=_("Consultant Not Active"),
 				)
-		elif self.is_new():
-			# Same business rule as the portal: a new Demo Request must already
-			# be allocated to a Functional Consultant (the desk form previously
-			# allowed creating a consultant-less Draft, which the portal blocked).
-			frappe.throw(
-				_("Please select a Functional Consultant to run this demo. Every demo request needs a consultant."),
-				title=_("Consultant Required"),
+		elif not self.is_new():
+			# For existing requests: a consultant is required once the request
+			# has been assigned (Assigned / Scheduled / later states).  During
+			# the Manager Review phase (or just requested), no consultant is
+			# needed yet.
+			status = self.workflow_state or self.status
+			needs_consultant = status in (
+				"Assigned", "Scheduled", "Demo In Progress", "Demo Completed", "Follow-up Required"
 			)
-		elif self.workflow_state in ("Assigned", "Scheduled", "Demo In Progress", "Demo Completed", "Follow-up Required"):
-			frappe.throw(
-				_("Please assign a Functional Consultant before the demo moves forward."),
-				title=_("Consultant Required"),
-			)
+			if needs_consultant:
+				frappe.throw(
+					_("Please assign a Functional Consultant before the demo moves forward."),
+					title=_("Consultant Required"),
+				)
 
 	def validate_schedule_conflict(self):
 		"""Warn (and prevent) conflicting schedules for the same consultant on the
@@ -259,10 +269,22 @@ class DemoRequest(Document):
 
 	def assign_consultant_todo(self):
 		"""Create a ToDo for the assigned consultant (standard ERPNext assignment)
-		and email them so they know a demo has been handed to them."""
+		and email them so they know a demo has been handed to them.
+
+		With the new Manager Review flow, a ToDo is also created for the
+		Functional Team Manager when the request enters Manager Review (so they
+		know a demo needs their attention)."""
 		before = self.get_doc_before_save()
-		old = before.get("functional_consultant") if before else None
-		if not self.functional_consultant or old == self.functional_consultant:
+		old_status = before.get("workflow_state") or before.get("status") if before else None
+		new_status = self.workflow_state or self.status
+
+		# --- Manager Review notification: when the request moves to Manager Review ---
+		if new_status == "Manager Review" and old_status != "Manager Review":
+			self._notify_managers_pending_review()
+
+		# --- Consultant assignment notification (unchanged logic) ---
+		old_consultant = before.get("functional_consultant") if before else None
+		if not self.functional_consultant or old_consultant == self.functional_consultant:
 			return
 		user = frappe.db.get_value("Functional Consultant", self.functional_consultant, "user")
 		if not user:
@@ -298,6 +320,59 @@ class DemoRequest(Document):
 		todo.role = "Functional Consultant"
 		todo.owner = user
 		todo.insert(ignore_permissions=True)
+
+	def _notify_managers_pending_review(self):
+		"""Notify all Functional Team Managers that a demo request is waiting
+		for their review and consultant assignment."""
+		managers = frappe.get_all(
+			"User",
+			filters=[
+				["Has Role", "role", "=", "Functional Team Manager"],
+				["User", "enabled", "=", 1],
+			],
+			fields=["name"],
+		)
+		party = self.customer or self.lead or "-"
+		for m in managers:
+			create_notification(
+				m.name,
+				_("Demo Request Pending Your Review — {0} ({1})").format(party, self.name),
+				"Demo Request",
+				self.name,
+			)
+		# email the managers as well
+		self._email_managers_pending_review(managers, party)
+
+	def _email_managers_pending_review(self, managers, party):
+		"""Send a branded email to every Functional Team Manager about the
+		pending review request."""
+		for m in managers:
+			try:
+				email = frappe.db.get_value("User", m.name, "email")
+				if not email:
+					continue
+				send_branded_email(
+					recipients=[email],
+					subject=_("Demo Request Pending Review — {0}").format(party),
+					heading=_("Demo Request Awaiting Manager Review"),
+					intro=_("A new demo request has been submitted and requires your review. Please assign a Functional Consultant."),
+					rows=[
+						(_("Customer / Lead"), party),
+						(_("Interested Template"), self.interested_module or "-"),
+						(_("Priority"), self.priority or "-"),
+						(_("Preferred Date"), self.preferred_demo_date or "-"),
+						(_("Demo Request"), self.name),
+					],
+					cta_text=_("Review & Assign Consultant"),
+					cta_url=frappe.utils.get_url("/app/demo-request/{0}".format(self.name)),
+					reference_doctype="Demo Request",
+					reference_name=self.name,
+				)
+			except Exception:
+				frappe.log_error(
+					title=_("Manager review notification email failed for {0}").format(m.name),
+					message=frappe.get_traceback(),
+				)
 
 	def notify_consultant_assigned(self, user):
 		"""Email the assigned consultant the details of the demo request.
@@ -405,7 +480,7 @@ def run_sla_escalation_checks():
 	overdue = frappe.get_all(
 		"Demo Request",
 		filters=[
-			["workflow_state", "in", ["Requested", "Assigned"]],
+			["workflow_state", "in", ["Requested", "Manager Review", "Assigned"]],
 			["sla_due_date", "<", frappe.utils.today()],
 			["sla_breached", "=", 0],
 		],
@@ -458,11 +533,8 @@ def _log_sla_activity(request_name, sla_due_date):
 			"parenttype": "Demo Request",
 			"activity_type": "SLA Breached",
 			"activity_date": frappe.utils.now_datetime(),
-			"user": frappe.session.user or "Administrator",
 			"status": "Escalated",
-			"remarks": _("Not scheduled by the SLA due date {0}. Escalated to managers.").format(
-				sla_due_date
-			),
+			"remarks": _("Not scheduled by the SLA due date {0}. Escalated to managers.").format(sla_due_date),
 		}
 	)
 	row.db_insert()
@@ -515,11 +587,11 @@ def change_status(doc, new_status, ignore_permissions=False):
 	"""Move a Demo Request through its workflow with friendly validation.
 
 	Walks the workflow graph so intermediate states (e.g. Draft -> Requested ->
-	Assigned, or Scheduled -> Demo In Progress -> Demo Completed) are applied in
-	order even when no direct transition exists. Every step is validated by the
-	framework against the current user's roles, so users can only move the
-	request along transitions their role allows. Jumps further than three
-	transitions ahead are not allowed.
+	Manager Review -> Assigned, or Scheduled -> Demo In Progress ->
+	Demo Completed) are applied in order even when no direct transition exists.
+	Every step is validated by the framework against the current user's roles,
+	so users can only move the request along transitions their role allows.
+	Jumps further than four transitions ahead are not allowed.
 	"""
 	from collections import deque
 
@@ -555,9 +627,10 @@ def change_status(doc, new_status, ignore_permissions=False):
 		)
 
 	# find a path through the workflow graph using role-allowed transitions.
-	# The path is capped at 3 transitions: real flows never need more than
-	# Draft -> Requested -> Assigned -> Scheduled, and jumping further ahead
-	# (e.g. straight to Converted without a demo) must not be possible.
+	# The path is capped at 4 transitions: real flows may need
+	# Draft -> Requested -> Manager Review -> Assigned -> Scheduled, and
+	# jumping further ahead (e.g. straight to Converted without a demo)
+	# must not be possible.
 	parent = {current: None}
 	queue = deque([(current, 0)])
 	visited = set()
@@ -568,8 +641,8 @@ def change_status(doc, new_status, ignore_permissions=False):
 		visited.add(state)
 		if state == new_status:
 			break
-		if depth >= 3:
-			continue  # do not explore deeper than 3 transitions
+		if depth >= 4:
+			continue  # do not explore deeper than 4 transitions
 		for transition in transitions_from.get(state, []):
 			if not transition_allowed(state, transition):
 				continue
@@ -606,7 +679,6 @@ def change_status(doc, new_status, ignore_permissions=False):
 # ------------------------------------------------------------------
 # permission filters
 # ------------------------------------------------------------------
-
 def get_permission_query_conditions(user=None):
 	"""Sales users see their own requests; consultants see requests assigned to them;
 	managers and System Manager see everything."""

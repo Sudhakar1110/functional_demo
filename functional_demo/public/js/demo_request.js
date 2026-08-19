@@ -64,7 +64,7 @@ function add_quick_actions(frm) {
 	frm.page.remove_inner_button("Set Result");
 	frm.page.remove_inner_button("Open Demo Session");
 
-	if (["Requested", "Assigned", "Scheduled", "Follow-up Required"].includes(status) && frm.doc.functional_consultant) {
+	if (["Requested", "Manager Review", "Assigned", "Scheduled", "Follow-up Required"].includes(status) && frm.doc.functional_consultant) {
 		frm.page.add_inner_button(__("Schedule Demo"), () => schedule_demo_dialog(frm), __("Actions"));
 	}
 

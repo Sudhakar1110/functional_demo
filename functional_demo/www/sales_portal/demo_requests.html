@@ -46,10 +46,11 @@
 			<div class="portal-card" style="margin-bottom: 16px;">
 				<div class="card-body" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap; padding: 12px 16px;">
 					<span class="muted" id="bulk-count" style="font-weight: 800;">0 selected</span>
-					<button class="btn-portal secondary sm" id="btn-bulk-assign" disabled>Bulk Assign Consultant</button>
-					<button class="btn-portal secondary sm" id="btn-bulk-reschedule" disabled>Bulk Reschedule</button>
-					<button class="btn-portal sm" id="btn-bulk-export">Export CSV</button>
-					<span class="muted" style="margin-left: auto;">Tick requests to bulk-assign or reschedule them.</span>
+				<button class="btn-portal secondary sm" id="btn-bulk-send-manager" disabled>Send to Manager</button>
+				<button class="btn-portal secondary sm" id="btn-bulk-assign" disabled>Bulk Assign Consultant</button>
+				<button class="btn-portal secondary sm" id="btn-bulk-reschedule" disabled>Bulk Reschedule</button>
+				<button class="btn-portal sm" id="btn-bulk-export">Export CSV</button>
+				<span class="muted" style="margin-left: auto;">Tick requests to send to manager, assign a consultant, or reschedule them.</span>
 				</div>
 			</div>
 			{% endif %}
@@ -105,10 +106,21 @@
 				{% endif %}
 			</div>
 
+			<div class="portal-modal" id="bulk-send-manager-modal">
+				<div class="pm-card">
+					<div class="pm-title">Send to Functional Team Manager</div>
+					<p class="pm-msg" style="margin: 0 0 12px;">Send the <span id="bulk-send-count">0</span> selected request(s) to the Functional Team Manager for consultant assignment. The requests will move to Manager Review status.</p>
+					<div style="display: flex; gap: 10px; justify-content: flex-end;">
+						<button class="btn-portal secondary pm-btn" id="bulk-send-cancel">Cancel</button>
+						<button class="btn-portal pm-btn" id="bulk-send-go">Send to Manager</button>
+					</div>
+				</div>
+			</div>
+
 			<div class="portal-modal" id="bulk-assign-modal">
 				<div class="pm-card">
 					<div class="pm-title">Bulk Assign Consultant</div>
-					<p class="pm-msg" style="margin: 0 0 12px;">Assign one consultant to the <span id="bulk-assign-count">0</span> selected request(s). The requests move straight to Assigned - no approval step.</p>
+					<p class="pm-msg" style="margin: 0 0 12px;">Assign one consultant to the <span id="bulk-assign-count">0</span> selected request(s). The requests move straight to Assigned.</p>
 					<select id="bulk-consultant" style="width: 100%; margin-bottom: 14px;">
 						<option value="">— Select consultant —</option>
 						{% for c in consultants %}
@@ -162,10 +174,12 @@
 		var resched = document.getElementById("btn-bulk-reschedule");
 		if (assign) assign.disabled = n === 0;
 		if (resched) resched.disabled = n === 0;
-		var aCount = document.getElementById("bulk-assign-count");
-		if (aCount) aCount.textContent = n;
-		var rCount = document.getElementById("bulk-resched-count");
-		if (rCount) rCount.textContent = n;
+	var sCount = document.getElementById("bulk-send-count");
+	if (sCount) sCount.textContent = n;
+	var aCount = document.getElementById("bulk-assign-count");
+	if (aCount) aCount.textContent = n;
+	var rCount = document.getElementById("bulk-resched-count");
+	if (rCount) rCount.textContent = n;
 	}
 	var checkAll = document.getElementById("check-all");
 	if (checkAll) checkAll.addEventListener("change", function () {
@@ -179,6 +193,21 @@
 
 	function openModal(id) { var m = document.getElementById(id); if (m) m.classList.add("show"); }
 	function closeModal(id) { var m = document.getElementById(id); if (m) m.classList.remove("show"); }
+
+	var btnSendMgr = document.getElementById("btn-bulk-send-manager");
+	if (btnSendMgr) btnSendMgr.addEventListener("click", function () { openModal("bulk-send-manager-modal"); });
+	var cancelSend = document.getElementById("bulk-send-cancel");
+	if (cancelSend) cancelSend.addEventListener("click", function () { closeModal("bulk-send-manager-modal"); });
+	var goSend = document.getElementById("bulk-send-go");
+	if (goSend) goSend.addEventListener("click", function () {
+		var names = selectedNames();
+		if (!names.length) { portalAlert("No demo requests selected.", "err"); return; }
+		goSend.disabled = true;
+		portalCall("functional_demo.api.bulk_send_to_manager", {
+			requests: JSON.stringify(names),
+		}).then(function () { window.location.reload(); })
+			.catch(function () { goSend.disabled = false; closeModal("bulk-send-manager-modal"); });
+	});
 
 	var btnAssign = document.getElementById("btn-bulk-assign");
 	if (btnAssign) btnAssign.addEventListener("click", function () { openModal("bulk-assign-modal"); });
