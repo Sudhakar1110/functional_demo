@@ -38,7 +38,7 @@
 	<div class="sidebar-overlay"></div>
 	<div class="portal-main">			<div class="portal-content">
 				{% if list_note %}<div class="muted" style="margin-bottom: 16px;">{{ list_note }}</div>{% endif %}
-				<h2 style="margin: 0 0 16px; font-size: 20px; font-weight: 800; color: #05133C;">My Sessions ({{ sessions|length }})</h2>
+				<h2 style="margin: 0 0 16px; font-size: 20px; font-weight: 800; color: #05133C;">My Sessions &amp; Assigned Demos ({{ all_items|length }})</h2>
 
 			<div class="filter-chips">
 				<a class="filter-chip {% if not status %}active{% endif %}" href="/functional_portal/my_sessions">All</a>
@@ -48,12 +48,13 @@
 			</div>
 
 			<div class="portal-card">
-				{% if sessions %}
+				{% if all_items %}
 				<div class="card-body flush">
 					<table class="table-portal">
 						<thead>
 							<tr>
-								<th>Session</th>
+								<th>Type</th>
+								<th>Request / Session</th>
 								<th>Leads</th>
 								<th>Interested Template</th>
 								<th>Assigned</th>
@@ -65,19 +66,42 @@
 							</tr>
 						</thead>
 						<tbody>
-							{% for s in sessions %}
+							{% for s in all_items %}
 							<tr>
-								<td><a href="/functional_portal/session?name={{ s.name }}">{{ s.name }}</a></td>
+								<td>
+									{% if s.is_session %}
+									<span class="badge b-scheduled">Session</span>
+									{% else %}
+									<span class="badge b-manager-review">Assigned</span>
+									{% endif %}
+								</td>
+								<td>
+									{% if s.is_session %}
+									<a href="/functional_portal/session?name={{ s.name }}">{{ s.name }}</a>
+									{% else %}
+									<a href="/sales_portal/demo_request?name={{ s.name }}">{{ s.name }}</a>
+									{% endif %}
+								</td>
 								<td>{{ s.customer or s.sales_person or "-" }}</td>
 								<td>{{ s.interested_module or "-" }}</td>
 								<td>{{ s.assigned_display }}</td>
-								<td>{{ s.scheduled_date or "-" }}</td>
-								<td>{% if s.start_time %}{{ s.start_time }}{% if s.end_time %} – {{ s.end_time }}{% endif %}{% else %}-{% endif %}</td>
-								<td><span class="badge b-{{ s.demo_status|lower|replace(' ', '-') }}">{{ s.demo_status }}</span></td>
+								<td>{{ s.scheduled_date or s.preferred_demo_date or "-" }}</td>
+								<td>
+									{% if s.is_session %}{% if s.start_time %}{{ s.start_time }}{% if s.end_time %} – {{ s.end_time }}{% endif %}{% else %}-{% endif %}{% else %}{{ s.preferred_demo_time or "-" }}{% endif %}
+								</td>
+								<td>
+									{% if s.is_session %}
+									<span class="badge b-{{ s.demo_status|lower|replace(' ', '-') }}">{{ s.demo_status }}</span>
+									{% else %}
+									<span class="badge b-assigned">{{ s.status }}</span>
+									{% endif %}
+								</td>
 								<td>{{ s.final_result or "-" }}</td>
 								<td>
-									{% if s.demo_status in ["Scheduled", "In Progress", "Rescheduled"] %}
+									{% if s.is_session and s.demo_status in ["Scheduled", "In Progress", "Rescheduled"] %}
 									<a class="btn-portal sm" href="/functional_portal/session?name={{ s.name }}">Conduct Demo &rarr;</a>
+									{% elif not s.is_session %}
+									<span class="muted" style="font-size: 12px;">Waiting to be scheduled</span>
 									{% endif %}
 								</td>
 							</tr>
@@ -89,7 +113,7 @@
 				<div class="empty-state">
 					<div class="empty-icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg></div>
 					<h3>No sessions found</h3>
-					<p>Sessions scheduled for you will appear here. When one is ready, open it to conduct the demo.</p>
+					<p>Demo sessions and assigned demos will appear here. When a demo is assigned to you, it will show up here.</p>
 				</div>
 				{% endif %}
 			</div>

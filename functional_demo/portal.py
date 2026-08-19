@@ -568,6 +568,12 @@ def functional_stats(user=None):
 	)
 	completed = sum(1 for s in sessions if s.get("demo_status") == "Completed")
 
+	# Assigned Demo Requests (no active session yet)
+	assigned_count = frappe.db.count(
+		"Demo Request",
+		{"functional_consultant": consultant, "status": "Assigned"},
+	) or 0
+
 	# Note: follow-up counts are intentionally absent here - follow-ups are
 	# sales-team-only, so the functional dashboard never surfaces them.
 	return {
@@ -576,6 +582,7 @@ def functional_stats(user=None):
 		"in_progress": in_progress,
 		"upcoming": upcoming,
 		"completed": completed,
+		"assigned_demos": assigned_count,
 		"recent_sessions": frappe.get_all(
 			"Demo Session",
 			filters={"functional_consultant": consultant},
