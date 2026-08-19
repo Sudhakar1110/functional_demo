@@ -99,7 +99,7 @@
 								<td>{{ s.final_result or "-" }}</td>
 								<td>
 									{% if s.is_session and s.demo_status in ["Scheduled", "In Progress", "Rescheduled"] %}
-									<a class="btn-portal sm" href="/functional_portal/session?name={{ s.name }}">Conduct Demo &rarr;</a>
+									<a class="btn-portal sm" href="/functional_portal/session?name={{ s.name }}">{% if is_sales %}Open{% else %}Conduct Demo &rarr;{% endif %}</a>
 									{% elif not s.is_session %}
 									<span class="muted" style="font-size: 12px;">Waiting to be scheduled</span>
 									{% endif %}

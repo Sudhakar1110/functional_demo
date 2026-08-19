@@ -606,7 +606,6 @@ def cancel_demo_request(demo_request=None, reason=None, name=None):
 		)
 
 	doc = frappe.get_doc("Demo Request", demo_request)
-	frappe.has_permission("Demo Request", "write", doc=doc, throw=True)
 
 	current = doc.get("workflow_state") or doc.get("status") or "Draft"
 	if current in ("Cancelled", "Closed", "Converted", "Not Interested"):
@@ -1293,12 +1292,25 @@ def get_demo_feedback_data():
 		):
 			consultant_names[c.name] = c.consultant_name
 
+	# sales person display names (bulk) - resolve User email to full name
+	sales_person_ids = {s.sales_person for s in sessions if s.sales_person}
+	sales_person_names = {}
+	if sales_person_ids:
+		for u in frappe.get_all(
+			"User",
+			filters={"name": ["in", list(sales_person_ids)]},
+			fields=["name", "full_name", "email"],
+			ignore_permissions=True,
+		):
+			sales_person_names[u.name] = u.full_name or u.email or u.name
+
 	out = []
 	for s in sessions:
 		out.append(
 			{
 				"name": s.name,
-				"customer": s.customer or s.sales_person or "-",
+				"customer": s.customer or "-",
+				"sales_person": sales_person_names.get(s.sales_person) or s.sales_person or "-",
 				"date": (
 					frappe.utils.format_datetime(s.completed_on or s.scheduled_date, "dd MMM yyyy, hh:mm a")
 					if (s.completed_on or s.scheduled_date)
