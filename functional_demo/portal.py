@@ -538,7 +538,7 @@ def functional_stats(user=None):
 	empty = {
 		"consultant": consultant,
 		"todays_demos": 0, "in_progress": 0, "upcoming": 0,
-		"completed": 0, "templates": 0,
+		"completed": 0, "assigned_demos": 0, "templates": 0,
 	}
 	if not consultant:
 		return empty
