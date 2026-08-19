@@ -164,6 +164,17 @@
 				"state": "Draft"
 			},
 			{
+				"action": "Submit Demo Request",
+				"allow_self_approval": 1,
+				"allowed": "Functional Team Manager",
+				"condition": "",
+				"next_state": "Requested",
+				"parent": "Demo Request Workflow",
+				"parentfield": "transitions",
+				"parenttype": "Workflow",
+				"state": "Draft"
+			},
+			{
 				"action": "Send to Manager",
 				"allow_self_approval": 1,
 				"allowed": "Sales User",
@@ -178,6 +189,17 @@
 				"action": "Send to Manager",
 				"allow_self_approval": 1,
 				"allowed": "Sales Manager",
+				"condition": "",
+				"next_state": "Manager Review",
+				"parent": "Demo Request Workflow",
+				"parentfield": "transitions",
+				"parenttype": "Workflow",
+				"state": "Requested"
+			},
+			{
+				"action": "Send to Manager",
+				"allow_self_approval": 1,
+				"allowed": "Functional Team Manager",
 				"condition": "",
 				"next_state": "Manager Review",
 				"parent": "Demo Request Workflow",

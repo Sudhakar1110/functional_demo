@@ -1694,7 +1694,7 @@ def assign_consultant(demo_request=None, consultant=None):
 	from functional_demo.sales_demo.doctype.demo_request.demo_request import change_status
 
 	if current_state in (None, "", "Draft", "Requested", "Manager Review"):
-		doc = change_status(doc, "Assigned")
+		doc = change_status(doc, "Assigned", ignore_permissions=True)
 
 	frappe.msgprint(_("Functional Consultant assigned to {0}.").format(demo_request))
 	return {"status": doc.get("status") or doc.get("workflow_state")}
