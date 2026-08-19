@@ -37,6 +37,8 @@
 	<div class="sidebar-overlay"></div>
 	<div class="portal-main">
 		<div class="portal-content">
+
+			<!-- Greeting -->
 			<div class="dash-greet">
 				<div>
 					<span class="greet-eyebrow">● {{ today_pretty }}</span>
@@ -45,6 +47,7 @@
 				</div>
 			</div>
 
+			<!-- KPI Cards -->
 			<div class="kpi-grid">
 				<div class="kpi-card">
 					<span class="kpi-icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg></span>
@@ -94,16 +97,9 @@
 					<div class="kpi-value">{{ stats.cancelled }}</div>
 					<div class="kpi-note">Requests cancelled</div>
 				</div>
-				{% if is_sales %}
-				<div class="kpi-card kpi-red">
-					<span class="kpi-icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></span>
-					<div class="kpi-label">Open Follow-ups</div>
-					<div class="kpi-value">{{ stats.open_follow_ups }}</div>
-					<div class="kpi-note">Across the team</div>
-				</div>
-				{% endif %}
 			</div>
 
+			<!-- All Demo Requests -->
 			<div class="portal-card" style="margin-bottom: 22px;">
 				<div class="card-head"><h2>All Demo Requests ({{ all_requests|length }})</h2></div>
 				{% if all_requests %}
@@ -117,7 +113,7 @@
 								<th>Priority</th>
 								<th>Consultant</th>
 								<th>Status</th>
-								<th>Assign Consultant</th>
+								<th>Action</th>
 							</tr>
 						</thead>
 						<tbody>
@@ -133,18 +129,18 @@
 									{% if r.status in ["Manager Review", "Requested", "Draft"] %}
 									<select class="manager-assign-select" data-request="{{ r.name }}" style="font-size: 12px; padding: 4px 8px; border: 1px solid #E5E7EB; border-radius: 6px;">
 										<option value="">— Select —</option>
-									{% for c in consultants %}
-									<option value="{{ c.name }}" {% if c.name == r.functional_consultant %}selected{% endif %}>{{ c.consultant_name }} · {{ c.specialization or 'Generalist' }}</option>
-									{% endfor %}
+										{% for c in consultants %}
+										<option value="{{ c.name }}">{{ c.consultant_name }} · {{ c.specialization or 'Generalist' }}</option>
+										{% endfor %}
 									</select>
 									<button class="btn-portal sm manager-assign-btn" data-request="{{ r.name }}" style="margin-left: 6px;">Assign</button>
-								{% elif r.status == "Assigned" and r.functional_consultant %}
+									{% elif r.status == "Assigned" and r.functional_consultant %}
 									<button class="btn-portal sm manager-schedule-btn" data-request="{{ r.name }}" data-consultant="{{ r.consultant_name }}">Schedule Demo</button>
-								{% elif r.functional_consultant %}
+									{% elif r.functional_consultant %}
 									<span class="muted">{{ r.consultant_name }}</span>
-								{% else %}
+									{% else %}
 									<span class="muted">—</span>
-								{% endif %}
+									{% endif %}
 								</td>
 							</tr>
 							{% endfor %}
@@ -160,6 +156,79 @@
 				{% endif %}
 			</div>
 
+			<!-- Consultant Activity -->
+			<div class="portal-card" style="margin-bottom: 22px;">
+				<div class="card-head"><h2>Consultant Activity</h2></div>
+				{% if consultant_details %}
+				<div class="card-body">
+					{% for c in consultant_details %}
+					<div style="padding: 16px 0; {% if not loop.last %}border-bottom: 1px solid #F3F4F6;{% endif %}">
+						<div style="display: flex; align-items: center; gap: 14px; margin-bottom: 10px;">
+							<div style="width: 44px; height: 44px; border-radius: 50%; background: {% if c.active_session %}#DCFBEA{% elif c.upcoming_sessions %}#E8EEFF{% else %}#F3F4F6{% endif %}; display: flex; align-items: center; justify-content: center; font-weight: 700; color: {% if c.active_session %}#009A52{% elif c.upcoming_sessions %}var(--bx-blue){% else %}#9CA3AF{% endif %}; font-size: 16px; flex-shrink: 0;">{{ c.consultant_name[:1] }}</div>
+							<div style="flex: 1; min-width: 0;">
+								<div style="font-weight: 700; color: #05133C; font-size: 15px;">{{ c.consultant_name }}</div>
+								<div style="font-size: 13px; color: #71717B;">{{ c.specialization or 'Generalist' }} · {{ c.availability or 'Available' }}</div>
+							</div>
+							<div style="text-align: right; flex-shrink: 0;">
+								{% if c.active_session %}
+								<span class="badge b-demo-in-progress">Live Demo</span>
+								{% elif c.upcoming_sessions %}
+								<span class="badge b-scheduled">{{ c.upcoming_sessions|length }} Scheduled</span>
+								{% elif c.pending_count %}
+								<span class="badge b-manager-review">{{ c.pending_count }} Pending</span>
+								{% else %}
+								<span class="badge b-draft">Free</span>
+								{% endif %}
+							</div>
+						</div>
+						{% if c.active_session %}
+						<div style="background: #F0FDF4; border-radius: 10px; padding: 12px 16px; margin-bottom: 10px; border: 1px solid #DCFBEA;">
+							<div style="font-size: 13px; font-weight: 600; color: #009A52; margin-bottom: 4px;">🔴 Currently conducting demo</div>
+							<div style="font-size: 14px; color: #05133C;">{{ c.active_session.customer or 'Customer' }} · <a href="/functional_portal/session?name={{ c.active_session.name }}">{{ c.active_session.name }}</a></div>
+							<div style="font-size: 12px; color: #71717B;">Started {{ c.active_session.start_time or '' }}</div>
+						</div>
+						{% endif %}
+						{% if c.todays_sessions %}
+						<div style="margin-bottom: 8px;">
+							<div style="font-size: 13px; font-weight: 600; color: #71717B; margin-bottom: 6px;">📅 Today's Schedule</div>
+							{% for s in c.todays_sessions %}
+							<div style="display: flex; gap: 10px; align-items: center; padding: 6px 10px; background: #F9FAFB; border-radius: 6px; margin-bottom: 4px; font-size: 13px;">
+								<span style="color: #71717B; min-width: 55px;">{{ s.start_time or '-' }}</span>
+								<span style="color: #05133C; font-weight: 600; flex: 1;">{{ s.customer or '-' }}</span>
+								<span class="badge b-{{ s.demo_status|lower|replace(' ', '-') }}">{{ s.demo_status }}</span>
+							</div>
+							{% endfor %}
+						</div>
+						{% endif %}
+						{% if c.upcoming_sessions and not c.active_session %}
+						<div style="margin-bottom: 8px;">
+							<div style="font-size: 13px; font-weight: 600; color: #71717B; margin-bottom: 6px;">📋 Upcoming Sessions</div>
+							{% for s in c.upcoming_sessions[:3] %}
+							<div style="display: flex; gap: 10px; align-items: center; padding: 6px 10px; background: #F9FAFB; border-radius: 6px; margin-bottom: 4px; font-size: 13px;">
+								<span style="color: #71717B; min-width: 80px;">{{ s.date_display }}</span>
+								<span style="color: #05133C; font-weight: 600; flex: 1;">{{ s.customer or '-' }}</span>
+								<span style="color: #71717B;">{{ s.start_time or '' }}</span>
+							</div>
+							{% endfor %}
+						</div>
+						{% endif %}
+						<div style="display: flex; gap: 16px; margin-top: 8px; font-size: 12px; color: #9CA3AF;">
+							<span>✅ {{ c.completed_count }} completed</span>
+							{% if c.pending_count %}<span>📋 {{ c.pending_count }} pending assignment</span>{% endif %}
+						</div>
+					</div>
+					{% endfor %}
+				</div>
+				{% else %}
+				<div class="empty-state">
+					<div class="empty-icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+					<h3>No consultants</h3>
+					<p>Add consultants in ERPNext to see their activity here.</p>
+				</div>
+				{% endif %}
+			</div>
+
+			<!-- Recent Demo Sessions -->
 			<div class="portal-card" style="margin-bottom: 22px;">
 				<div class="card-head"><h2>Recent Demo Sessions</h2></div>
 				{% if sessions %}
@@ -200,74 +269,12 @@
 				{% endif %}
 			</div>
 
-			<div class="portal-card" style="margin-bottom: 22px;">
-				<div class="card-head"><h2>Consultant Activity</h2></div>
-				{% if consultant_details %}
-				<div class="card-body">
-					{% for c in consultant_details %}
-					<div style="padding: 14px 0; {% if not loop.last %}border-bottom: 1px solid #F3F4F6;{% endif %}">
-						<div style="display: flex; align-items: center; gap: 12px; margin-bottom: 10px;">
-							<div style="width: 40px; height: 40px; border-radius: 50%; background: {% if c.active_session %}#DCFBEA{% elif c.upcoming_sessions %}#E8EEFF{% else %}#F3F4F6{% endif %}; display: flex; align-items: center; justify-content: center; font-weight: 700; color: {% if c.active_session %}#009A52{% elif c.upcoming_sessions %}var(--bx-blue){% else %}#9CA3AF{% endif %}; font-size: 14px;">{{ c.consultant_name[:1] }}</div>
-							<div style="flex: 1;">
-								<div style="font-weight: 700; color: #05133C;">{{ c.consultant_name }}</div>
-								<div style="font-size: 12px; color: #71717B;">{{ c.specialization or 'Generalist' }} · {{ c.availability or 'Available' }}</div>
-							</div>
-							<div style="text-align: right;">
-								{% if c.active_session %}
-								<span class="badge b-demo-in-progress">🔴 Live Demo</span>
-								{% elif c.upcoming_sessions %}
-								<span class="badge b-scheduled">📋 {{ c.upcoming_sessions|length }} Scheduled</span>
-								{% elif c.pending_count %}
-								<span class="badge b-manager-review">⏳ {{ c.pending_count }} Pending</span>
-								{% else %}
-								<span class="badge b-draft">Free</span>
-								{% endif %}
-							</div>
-						</div>
-						{% if c.active_session %}
-						<div style="background: #F0FDF4; border-radius: 8px; padding: 10px 14px; margin-bottom: 8px;">
-							<div style="font-size: 12px; font-weight: 600; color: #009A52;">🔴 Currently conducting demo</div>
-							<div style="font-size: 13px; color: #05133C;">{{ c.active_session.customer or 'Customer' }} · <a href="/functional_portal/session?name={{ c.active_session.name }}">{{ c.active_session.name }}</a></div>
-							<div style="font-size: 11px; color: #71717B;">Started {{ c.active_session.start_time or '' }}</div>
-						</div>
-						{% endif %}
-						{% if c.todays_sessions %}
-						<div style="font-size: 12px; color: #71717B; margin-bottom: 4px;">Today's schedule:</div>
-						{% for s in c.todays_sessions %}
-						<div style="display: flex; gap: 8px; align-items: center; padding: 4px 0; font-size: 12px;">
-							<span style="color: #71717B;">{{ s.start_time or '-' }}</span>
-							<span style="color: #05133C; font-weight: 600;">{{ s.customer or '-' }}</span>
-							<span class="badge b-{{ s.demo_status|lower|replace(' ', '-') }}" style="font-size: 10px;">{{ s.demo_status }}</span>
-						</div>
-						{% endfor %}
-						{% endif %}
-						{% if c.upcoming_sessions and not c.active_session %}
-						<div style="font-size: 12px; color: #71717B; margin-bottom: 4px;">Upcoming:</div>
-						{% for s in c.upcoming_sessions[:3] %}
-						<div style="display: flex; gap: 8px; align-items: center; padding: 4px 0; font-size: 12px;">
-							<span style="color: #71717B;">{{ s.date_display }}</span>
-							<span style="color: #05133C; font-weight: 600;">{{ s.customer or '-' }}</span>
-							<span style="color: #71717B;">{{ s.start_time or '' }}</span>
-						</div>
-						{% endfor %}
-						{% endif %}
-						<div style="display: flex; gap: 12px; margin-top: 6px; font-size: 11px; color: #9CA3AF;">
-							<span>✅ {{ c.completed_count }} completed</span>
-							{% if c.pending_count %}<span>📋 {{ c.pending_count }} pending assignment</span>{% endif %}
-						</div>
-					</div>
-					{% endfor %}
-				</div>
-				{% else %}
-				<div class="empty-state">
-					<div class="empty-icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
-					<h3>No consultants</h3>
-					<p>Add consultants in ERPNext to see their activity here.</p>
-				</div>
-				{% endif %}
-			</div>
+			<!-- Two Column: Sales Performance + Template-wise -->
+			<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 22px; margin-bottom: 22px;">
+				<div class="portal-card">
+					<div class="card-head"><h2>Sales Team Performance</h2></div>
 					{% if stats.sales_performance %}
-					<div class="card-body">
+					<div class="card-body flush">
 						<table class="table-portal">
 							<thead>
 								<tr>
@@ -290,12 +297,10 @@
 						</table>
 					</div>
 					{% else %}
-					<div class="empty-state"><div class="empty-icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div><h3>No requests yet</h3><p>Demo requests will appear here by sales person.</p></div>
+					<div class="empty-state"><p class="text-muted">No requests yet.</p></div>
 					{% endif %}
 				</div>
-			</div>
 
-			<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 22px;">
 				<div class="portal-card">
 					<div class="card-head"><h2>Template-wise Demo Requests</h2></div>
 					<div class="card-body">
@@ -319,47 +324,51 @@
 						{% endif %}
 					</div>
 				</div>
+			</div>
 
-				<div class="portal-card">
-					<div class="card-head"><h2>Recent Activity</h2></div>
-					<div class="card-body">
-						{% if stats.recent_activity %}
-						<ul class="timeline">
-							{% for a in stats.recent_activity %}
-							<li>
-								<div class="t-title">{{ a.activity_type }} · {{ a.parent }}</div>
-								<div class="t-meta">{{ a.user }} · {{ a.activity_display }}</div>
-								{% if a.remarks %}<div class="t-remarks">{{ a.remarks }}</div>{% endif %}
-							</li>
-							{% endfor %}
-						</ul>
-						{% else %}
-						<p class="text-muted">No activity yet. It builds up as your team works on demo requests.</p>
-						{% endif %}
-					</div>
-				</div>
-			</div>			</div>
-
-			<div class="portal-modal" id="schedule-modal">
-				<div class="pm-card">
-					<div class="pm-title">Schedule Demo</div>
-					<p class="pm-msg" style="margin: 0 0 12px;">Schedule a demo for <strong id="sched-request-name"></strong> with consultant <strong id="sched-consultant-name"></strong>.</p>
-					<input type="hidden" id="sched-request">
-					<div class="form-row">
-						<div><label>Date <span class="req">*</span></label><input type="date" id="sched-date"></div>
-						<div><label>Start Time</label><input type="time" id="sched-start"></div>
-					</div>
-					<div class="form-row">
-						<div><label>End Time</label><input type="time" id="sched-end"></div>
-						<div><label>Meeting Link</label><input type="text" id="sched-link" placeholder="https://meet.google.com/..."></div>
-					</div>
-					<div style="display: flex; gap: 10px; justify-content: flex-end;">
-						<button class="btn-portal secondary pm-btn" id="sched-cancel">Cancel</button>
-						<button class="btn-portal pm-btn" id="sched-go">Schedule Demo</button>
-					</div>
+			<!-- Recent Activity -->
+			<div class="portal-card" style="margin-bottom: 22px;">
+				<div class="card-head"><h2>Recent Activity</h2></div>
+				<div class="card-body">
+					{% if stats.recent_activity %}
+					<ul class="timeline">
+						{% for a in stats.recent_activity %}
+						<li>
+							<div class="t-title">{{ a.activity_type }} · {{ a.parent }}</div>
+							<div class="t-meta">{{ a.user }} · {{ a.activity_display }}</div>
+							{% if a.remarks %}<div class="t-remarks">{{ a.remarks }}</div>{% endif %}
+						</li>
+						{% endfor %}
+					</ul>
+					{% else %}
+					<p class="text-muted">No activity yet. It builds up as your team works on demo requests.</p>
+					{% endif %}
 				</div>
 			</div>
+
+		</div>
 	</div>
+	</div>
+</div>
+
+<!-- Schedule Demo Modal -->
+<div class="portal-modal" id="schedule-modal">
+	<div class="pm-card">
+		<div class="pm-title">Schedule Demo</div>
+		<p class="pm-msg" style="margin: 0 0 12px;">Schedule a demo for <strong id="sched-request-name"></strong> with consultant <strong id="sched-consultant-name"></strong>.</p>
+		<input type="hidden" id="sched-request">
+		<div class="form-row">
+			<div><label>Date <span class="req">*</span></label><input type="date" id="sched-date"></div>
+			<div><label>Start Time</label><input type="time" id="sched-start"></div>
+		</div>
+		<div class="form-row">
+			<div><label>End Time</label><input type="time" id="sched-end"></div>
+			<div><label>Meeting Link</label><input type="text" id="sched-link" placeholder="https://meet.google.com/..."></div>
+		</div>
+		<div style="display: flex; gap: 10px; justify-content: flex-end;">
+			<button class="btn-portal secondary pm-btn" id="sched-cancel">Cancel</button>
+			<button class="btn-portal pm-btn" id="sched-go">Schedule Demo</button>
+		</div>
 	</div>
 </div>
 {% endblock %}
@@ -385,7 +394,6 @@
 				demo_request: requestName,
 				consultant: consultant,
 			}).then(function () {
-				/* Consultant assigned — open schedule modal right away */
 				document.getElementById("sched-request").value = requestName;
 				document.getElementById("sched-request-name").textContent = requestName;
 				document.getElementById("sched-consultant-name").textContent = consultantName;
@@ -398,7 +406,7 @@
 		});
 	});
 
-	/* Manager: schedule demo from the All Demo Requests table */
+	/* Manager: schedule demo for already-assigned requests */
 	document.querySelectorAll(".manager-schedule-btn").forEach(function (btn) {
 		btn.addEventListener("click", function () {
 			var requestName = btn.getAttribute("data-request");
@@ -410,11 +418,13 @@
 			if (modal) modal.classList.add("show");
 		});
 	});
+
 	var schedCancel = document.getElementById("sched-cancel");
 	if (schedCancel) schedCancel.addEventListener("click", function () {
 		var modal = document.getElementById("schedule-modal");
 		if (modal) modal.classList.remove("show");
 	});
+
 	var schedGo = document.getElementById("sched-go");
 	if (schedGo) schedGo.addEventListener("click", function () {
 		var requestName = document.getElementById("sched-request").value;
