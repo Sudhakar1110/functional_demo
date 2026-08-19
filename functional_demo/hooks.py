@@ -62,6 +62,11 @@ permission_query_conditions = {
 	"Functional Consultant": "functional_demo.sales_demo.doctype.functional_consultant.functional_consultant.get_permission_query_conditions",
 }
 
+# Auto-create Functional Consultant profile when a user is assigned the role
+doctype_on_update = {
+	"User": "functional_demo.install.on_user_update",
+}
+
 # Document-level permission checks
 has_permission = {
 	"Demo Request": "functional_demo.sales_demo.doctype.demo_request.demo_request.has_permission",

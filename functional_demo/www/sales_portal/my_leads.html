@@ -36,66 +36,56 @@
 		</div>
 	</aside>
 	<div class="sidebar-overlay"></div>
-	<div class="portal-main">			<div class="portal-content">
-				{% if list_note %}<div class="muted" style="margin-bottom: 16px;">{{ list_note }}</div>{% endif %}
-				<div class="portal-card">
-					<div class="card-head">
-						<h2>Search Sales</h2>
-					<a class="btn-portal secondary sm" href="/sales_portal/new_lead">+ New Sales Person</a>
+	<div class="portal-main">
+		<div class="portal-content">
+			{% if list_note %}<div class="muted" style="margin-bottom: 16px;">{{ list_note }}</div>{% endif %}
+
+			<div class="portal-card" style="margin-bottom: 22px;">
+				<div class="card-head">
+					<h2>Sales Team Members</h2>
+					<div style="display: flex; gap: 8px; align-items: center;">
+						<a class="btn-portal sm" href="/app/user">+ Add Sales Person in Desk</a>
+					</div>
 				</div>
 				<div class="card-body">
-					<form method="get" class="portal-form" style="display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap;">
-						<div style="flex: 1; min-width: 240px;">
-							<label>Search by name or company</label>
-							<input type="text" name="q" value="{{ q }}" placeholder="Type to search sales team members...">
-						</div>
-						<div style="min-width: 180px;">
-							<label>Status</label>
-							<select name="status">
-								<option value="">All statuses</option>
-								{% for s in status_options %}
-								<option value="{{ s }}" {% if status == s %}selected{% endif %}>{{ "Sales Person" if s == "Lead" else s }}</option>
-								{% endfor %}
-							</select>
-						</div>
-						<button class="btn-portal" type="submit">Search</button>
-						{% if q or status %}
-						<a class="btn-portal secondary" href="/sales_portal/my_leads">Clear</a>
-						{% endif %}
-					</form>
+					<p class="text-muted" style="margin-top: 0;">Sales team members are managed in the ERPNext desk. Create a user and assign the <strong>Sales User</strong> or <strong>Sales Manager</strong> role — they will appear here automatically.</p>
 				</div>
 			</div>
 
 			<div class="portal-card">
 				<div class="card-head">
-					<h2>Sales ({{ leads|length }})</h2>
+					<h2>Sales People ({{ leads|length }})</h2>
+				</div>
+				<div class="card-body">
+					<form method="get" class="portal-form" style="display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 16px;">
+						<div style="flex: 1; min-width: 240px;">
+							<label>Search by name</label>
+							<input type="text" name="q" value="{{ q }}" placeholder="Type to search sales team members...">
+						</div>
+						<button class="btn-portal" type="submit">Search</button>
+						{% if q %}
+						<a class="btn-portal secondary" href="/sales_portal/my_leads">Clear</a>
+						{% endif %}
+					</form>
 				</div>
 				{% if leads %}
 				<div class="card-body flush">
 					<table class="table-portal">
 						<thead>
 							<tr>
-								<th>Sales Person</th>
 								<th>Name</th>
-								<th>Company</th>
 								<th>Email</th>
-								<th>Source</th>
-								<th>Status</th>
-								<th>Created</th>
-								<th></th>
+								<th>Role(s)</th>
+								<th>Last Active</th>
 							</tr>
 						</thead>
 						<tbody>
 							{% for lead in leads %}
 							<tr>
-								<td>{{ lead.name }}</td>
-								<td>{{ lead.lead_name }}</td>
-								<td>{{ lead.company_name or "-" }}</td>
-								<td>{{ lead.email_id or "-" }}</td>
-								<td>{{ lead.source or "-" }}</td>
-								<td><span class="badge b-{{ lead.status|lower|replace(' ', '-') }}">{{ lead.status_display }}</span></td>
-								<td class="muted">{{ lead.created_display }}</td>
-								<td><a class="btn-portal sm" href="/sales_portal/demo_request?new=1&lead={{ lead.name }}">Demo Request &rarr;</a></td>
+								<td><strong>{{ lead.full_name }}</strong></td>
+								<td>{{ lead.email }}</td>
+								<td><span class="chip">{{ lead.roles }}</span></td>
+								<td class="muted">{{ lead.last_active }}</td>
 							</tr>
 							{% endfor %}
 						</tbody>
@@ -105,8 +95,8 @@
 				<div class="empty-state">
 					<div class="empty-icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 15-4-4 6.75-6.77a7.79 7.79 0 0 1 11 11L13 22l-4-4 6.39-6.36a2.14 2.14 0 0 0-3-3L6 15"/><path d="m5 8 4 4"/><path d="m12 15 4 4"/></svg></div>
 					<h3>No sales team members found</h3>
-					<p>Try a different search, or create a new sales team member from the portal.</p>
-					<a class="btn-portal" href="/sales_portal/new_lead">+ New Sales Person</a>
+					<p>Create users in the ERPNext desk and assign them the Sales User or Sales Manager role. They will automatically appear here.</p>
+					<a class="btn-portal" href="/app/user">Go to Desk Users</a>
 				</div>
 				{% endif %}
 			</div>

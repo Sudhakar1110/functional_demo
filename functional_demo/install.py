@@ -574,3 +574,32 @@ def _notify_trial_period_reminder(row, mark_sent=True):
 	# before the end date, so a retry would arrive a day late anyway)
 	if mark_sent:
 		frappe.db.set_value("Demo Request", row.get("name"), "trial_reminder_sent", 1)
+
+
+def on_user_update(doc, method):
+	"""Auto-create a Functional Consultant profile when a user is assigned
+	the 'Functional Consultant' role. This way, users created in the desk
+	with the right role automatically appear in the portal as consultants."""
+	if not doc.name or doc.name in ("Administrator", "Guest"):
+		return
+	roles = [r.role for r in doc.get("roles", [])]
+	if "Functional Consultant" not in roles:
+		return
+	# Check if a consultant profile already exists for this user
+	existing = frappe.db.get_value("Functional Consultant", {"user": doc.name}, "name")
+	if existing:
+		return
+	try:
+		consultant = frappe.new_doc("Functional Consultant")
+		consultant.consultant_name = doc.full_name or doc.name
+		consultant.user = doc.name
+		consultant.email = doc.email
+		consultant.status = "Active"
+		consultant.availability = "Available"
+		consultant.insert(ignore_permissions=True)
+		frappe.db.commit()
+	except Exception:
+		frappe.log_error(
+			title=_("Auto-create Functional Consultant for {0}").format(doc.name),
+			message=frappe.get_traceback(),
+		)

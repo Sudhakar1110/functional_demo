@@ -6,8 +6,6 @@ from frappe import _
 
 from functional_demo.portal import list_note, portal_context
 
-LEAD_STATUSES = ["Lead", "Open", "Replied", "Opportunity", "Quotation", "Interested", "Converted", "Do Not Contact"]
-
 
 def get_context(context):
 	portal_context(
@@ -15,31 +13,48 @@ def get_context(context):
 		_("Sales"),
 		["Sales User", "Sales Manager"],
 		active="leads",
-		subtitle=_("Search and manage your sales"),
+		subtitle=_(("Search and manage your sales team")),
 	)
 	q = (frappe.form_dict.get("q") or "").strip()
-	status = frappe.form_dict.get("status") or ""
-	filters = []
-	if q:
-		filters.append(["lead_name", "like", "%{0}%".format(q)])
-	if status:
-		filters.append(["status", "=", status])
 
-	context.leads = frappe.get_all(
-		"Lead",
-		filters=filters or None,
-		fields=["name", "lead_name", "company_name", "email_id", "status", "source", "creation", "owner"],
-		order_by="creation desc",
+	# Show users with Sales User or Sales Manager role as Sales Persons
+	sales_roles = ["Sales User", "Sales Manager"]
+	filters = [["Has Role", "role", "in", sales_roles]]
+	if q:
+		filters.append(["full_name", "like", "%{0}%".format(q)])
+
+	users = frappe.get_all(
+		"User",
+		filters=filters,
+		fields=["name", "full_name", "email", "user_image", "creation", "last_active"],
+		order_by="full_name asc",
 		limit_page_length=1000,
 	) or []
-	for lead in context.leads:
-		lead["created_display"] = frappe.utils.format_date(lead.get("creation"), "medium") if lead.get("creation") else "-"
-		# The ERPNext Lead doctype stores its default status as "Lead"; show it
-		# as "Sales Person" in the portal (stored value stays untouched).
-		lead["status_display"] = "Sales Person" if lead.get("status") == "Lead" else (lead.get("status") or "-")
+
+	context.leads = []
+	for u in users:
+		if u.name in ("Administrator", "Guest"):
+			continue
+		# Get roles for this user
+		user_roles = frappe.get_roles(u.name)
+		role_display = []
+		if "Sales Manager" in user_roles:
+			role_display.append("Sales Manager")
+		if "Sales User" in user_roles:
+			role_display.append("Sales User")
+
+		context.leads.append({
+			"name": u.name,
+			"full_name": u.full_name or u.name,
+			"email": u.email or "-",
+			"roles": ", ".join(role_display),
+			"last_active": frappe.utils.format_datetime(u.last_active, "dd MMM yyyy, hh:mm a") if u.last_active else "Never",
+			"created_display": frappe.utils.format_date(u.creation, "medium") if u.creation else "-",
+		})
+
 	context.q = q
-	context.status = status
-	context.status_options = LEAD_STATUSES
 	context.list_note = list_note(
-		len(context.leads), frappe.db.count("Lead", filters or None), _("sales people")
+		len(context.leads),
+		frappe.db.count("User", [["Has Role", "role", "in", sales_roles]]) or 0,
+		_("sales team members"),
 	)
