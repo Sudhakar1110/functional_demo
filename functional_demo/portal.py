@@ -295,6 +295,7 @@ ICON_TRIALS = _icon('<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 1
 ICON_MANAGER = _icon('<path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/>')
 ICON_FEEDBACK = _icon('<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>')
 ICON_DRIVE = _icon('<path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><line x1="12" x2="12" y1="11" y2="17"/><polyline points="9 14 12 17 15 14"/>')
+ICON_CONSULTANT_ACTIVITY = _icon('<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/><polyline points="14 7 16 7 16 9"/><polyline points="22 11 20 13 22 15"/><line x1="22" y1="11" x2="22" y2="15"/>')
 
 
 def sidebar_items(active):
@@ -339,6 +340,10 @@ def sidebar_items(active):
 
 	if can_manage_consultants():
 		items += [{"label": _("Consultants"), "route": "/functional_portal/consultants", "icon": ICON_FUNCTIONAL, "active": active == "consultants"}]
+
+	# Consultant Activity — Functional Team Manager only (not Sales Manager)
+	if "Functional Team Manager" in user_roles():
+		items.append({"label": _("Consultant Activity"), "route": "/consultant_activity", "icon": ICON_CONSULTANT_ACTIVITY, "active": active == "consultant_activity"})
 
 	# Feedback is only visible to managers (Functional Team Manager / Sales Manager)
 	if is_manager():
