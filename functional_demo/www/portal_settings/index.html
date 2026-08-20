@@ -44,91 +44,112 @@
 					<h1>{{ greeting }}, {{ full_name }}</h1>
 					<p>Manage your mail notification preferences.</p>
 				</div>
+				<div class="greet-actions">
+					<a class="btn-portal secondary" href="/demo_portal">← Back to Home</a>
+				</div>
 			</div>
 
-			<div class="portal-card" style="max-width: 700px;">
+			<!-- Mail Notifications Card -->
+			<div class="portal-card" style="max-width: 720px;">
 				<div class="card-head">
-					<h2>Mail Notifications</h2>
+					<h2>
+						<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;vertical-align:middle;margin-right:6px;color:#14F1B1;"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+						Email Notifications
+					</h2>
 				</div>
 				<div class="card-body">
-					<p style="color: #71717B; font-size: 14px; margin-bottom: 20px;">
-						Control whether you receive email notifications. When OFF, emails are stopped but
-						in-app notifications (desk bell and portal bell) still work.
+					<p style="color: #71717B; font-size: 14px; margin-bottom: 0; line-height: 1.6;">
+						Control whether you receive email notifications for demo scheduling,
+						completions, reminders, follow-ups, and trial periods. When turned OFF,
+						email notifications are stopped but <strong>in-app notifications</strong>
+						(desk bell and portal bell) still work.
 					</p>
 
-					<div style="display: flex; align-items: center; gap: 16px; padding: 20px; background: #F9FAFB; border-radius: 10px; border: 1px solid #E5E7EB;">
-						<div style="flex: 1;">
-							<div style="font-weight: 600; color: #05133C; font-size: 15px; margin-bottom: 4px;">
-								Email Notifications
+					<!-- Toggle Section -->
+					<div style="margin-top: 24px; padding: 24px; background: #F9FAFB; border-radius: 12px; border: 1px solid #E5E7EB;">
+						<div style="display: flex; align-items: center; justify-content: space-between; gap: 16px;">
+							<div>
+								<div style="font-weight: 700; color: #05133C; font-size: 16px; margin-bottom: 6px;">
+									Email Notifications
+								</div>
+								<div style="color: #71717B; font-size: 13px;" id="mail-status-text">
+									{% if mail_notifications_enabled %}
+									Your email notifications are <strong style="color: #10B981;">ON</strong> — you will receive emails for demo events.
+									{% else %}
+									Your email notifications are <strong style="color: #EF4444;">OFF</strong> — emails are stopped.
+									{% endif %}
+								</div>
 							</div>
-							<div style="color: #71717B; font-size: 13px;" id="mail-status-text">
+							<button
+								type="button"
+								id="mail-toggle-btn"
+								class="settings-toggle {% if mail_notifications_enabled %}toggle-on{% else %}toggle-off{% endif %}"
+							>
 								{% if mail_notifications_enabled %}
-								Currently <strong style="color: #10B981;">ON</strong> — You will receive email notifications.
+								✅ ON
 								{% else %}
-								Currently <strong style="color: #EF4444;">OFF</strong> — Emails are stopped. In-app notifications still work.
+								🔴 OFF
 								{% endif %}
-							</div>
+							</button>
 						</div>
-						<button
-							type="button"
-							id="mail-toggle-btn"
-							class="btn-portal {% if mail_notifications_enabled %}toggle-on{% else %}toggle-off{% endif %}"
-							style="min-width: 120px; font-weight: 600; transition: all 0.3s ease;"
-							onclick="toggleMailNotifications()"
-						>
-							{% if mail_notifications_enabled %}
-							✅ ON
-							{% else %}
-							🔴 OFF
-							{% endif %}
-						</button>
 					</div>
 
-					<div style="margin-top: 20px; padding: 16px; background: #FFF7ED; border-radius: 8px; border: 1px solid #FDBA74;">
+					<!-- Info Box -->
+					<div style="margin-top: 20px; padding: 16px 20px; background: #EFF6FF; border-radius: 10px; border: 1px solid #BFDBFE;">
 						<div style="display: flex; align-items: flex-start; gap: 10px;">
-							<span style="font-size: 18px;">ℹ️</span>
-							<div>
-								<div style="font-weight: 600; color: #9A3412; font-size: 13px; margin-bottom: 4px;">What happens when you turn OFF email notifications?</div>
-								<ul style="color: #9A3412; font-size: 12px; margin: 0; padding-left: 16px;">
-									<li>Email notifications are stopped (demo scheduled, completed, reminders, etc.)</li>
-									<li>In-app notifications still appear in the desk bell and portal bell</li>
-									<li>Web push popups still work when configured</li>
-									<li>You can turn emails back on anytime</li>
-								</ul>
+							<span style="font-size: 18px;">💡</span>
+							<div style="color: #1E40AF; font-size: 13px; line-height: 1.6;">
+								<strong>When emails are ON:</strong> You receive emails for scheduled demos, completions, reminders, follow-ups, and trial periods.<br>
+								<strong>When emails are OFF:</strong> Emails are stopped but in-app notifications (desk &amp; portal bell) and web push popups still work.
 							</div>
 						</div>
+					</div>
+
+					<!-- Reload Button -->
+					<div style="margin-top: 20px; display: flex; gap: 10px;">
+						<button type="button" id="reload-settings-btn" class="btn-portal secondary" onclick="location.reload();">
+							🔄 Reload Page
+						</button>
 					</div>
 				</div>
 			</div>
+
 		</div>
 	</div>
 	</div>
 </div>
 
 <style>
-	.toggle-on {
-		background: #10B981 !important;
-		color: #fff !important;
+	.settings-toggle {
+		min-width: 130px;
+		padding: 12px 28px;
 		border: none;
+		border-radius: 10px;
+		font-size: 15px;
+		font-weight: 700;
 		cursor: pointer;
-		padding: 10px 24px;
-		border-radius: 8px;
-		font-size: 14px;
+		transition: all 0.3s ease;
+		white-space: nowrap;
+	}
+	.toggle-on {
+		background: #10B981;
+		color: #fff;
+		box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
 	}
 	.toggle-on:hover {
-		background: #059669 !important;
+		background: #059669;
+		box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+		transform: translateY(-1px);
 	}
 	.toggle-off {
-		background: #EF4444 !important;
-		color: #fff !important;
-		border: none;
-		cursor: pointer;
-		padding: 10px 24px;
-		border-radius: 8px;
-		font-size: 14px;
+		background: #EF4444;
+		color: #fff;
+		box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
 	}
 	.toggle-off:hover {
-		background: #DC2626 !important;
+		background: #DC2626;
+		box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+		transform: translateY(-1px);
 	}
 	#mail-toggle-btn.loading {
 		opacity: 0.6;
@@ -137,8 +158,8 @@
 </style>
 
 <script>
-function toggleMailNotifications() {
-	var btn = document.getElementById("mail-toggle-btn");
+document.getElementById("mail-toggle-btn").addEventListener("click", function () {
+	var btn = this;
 	var statusText = document.getElementById("mail-status-text");
 	btn.classList.add("loading");
 	btn.textContent = "Updating...";
@@ -147,20 +168,31 @@ function toggleMailNotifications() {
 		.then(function (enabled) {
 			btn.classList.remove("loading");
 			if (enabled) {
-				btn.className = "btn-portal toggle-on";
+				btn.className = "settings-toggle toggle-on";
 				btn.textContent = "✅ ON";
-				statusText.innerHTML = 'Currently <strong style="color: #10B981;">ON</strong> — You will receive email notifications.';
-				portalAlert("Email notifications enabled.", "ok");
+				statusText.innerHTML = 'Your email notifications are <strong style="color: #10B981;">ON</strong> — you will receive emails for demo events.';
+				portalAlert("Email notifications enabled successfully.", "ok");
 			} else {
-				btn.className = "btn-portal toggle-off";
+				btn.className = "settings-toggle toggle-off";
 				btn.textContent = "🔴 OFF";
-				statusText.innerHTML = 'Currently <strong style="color: #EF4444;">OFF</strong> — Emails are stopped. In-app notifications still work.';
+				statusText.innerHTML = 'Your email notifications are <strong style="color: #EF4444;">OFF</strong> — emails are stopped.';
 				portalAlert("Email notifications disabled. In-app notifications still work.", "ok");
 			}
 		})
 		.catch(function () {
 			btn.classList.remove("loading");
+			portalCall("functional_demo.portal.get_mail_notifications_status", {})
+				.then(function (enabled) {
+					if (enabled) {
+						btn.className = "settings-toggle toggle-on";
+						btn.textContent = "✅ ON";
+					} else {
+						btn.className = "settings-toggle toggle-off";
+						btn.textContent = "🔴 OFF";
+					}
+				})
+				.catch(function () {});
 		});
-}
+});
 </script>
 {% endblock %}

@@ -74,17 +74,79 @@ def can_manage_consultants(user=None):
 	return bool(user_roles(user) & {"Functional Team Manager", "System Manager"})# ---------------------------------------------------------------------------
 # mail notifications toggle (per-user)
 # ---------------------------------------------------------------------------
+
+# Table for storing per-user mail notification preferences. Created
+# lazily on first access so the app never breaks on a fresh install
+# before the first toggle.
+_MAIL_PREFS_TABLE = "tabUser Mail Prefs"
+
+
+def _ensure_mail_prefs_table():
+	"""Create the User Mail Prefs table if it does not exist."""
+	if frappe.db.sql("SHOW TABLES LIKE 'tabUser Mail Prefs'"):
+		return
+	try:
+		frappe.db.sql(
+			"""CREATE TABLE IF NOT EXISTS `tabUser Mail Prefs` (
+				`user` VARCHAR(140) NOT NULL PRIMARY KEY,
+				`mail_enabled` INT(1) NOT NULL DEFAULT 1,
+				`modified` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+			) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"""
+		)
+		frappe.db.commit()
+	except Exception:
+		# table already exists or permissions issue - ignore
+		pass
+
+
+def _get_mail_pref(user):
+	"""Return the mail_enabled value (1 or 0) for a user."""
+	_ensure_mail_prefs_table()
+	result = frappe.db.sql(
+		"SELECT mail_enabled FROM `tabUser Mail Prefs` WHERE user = %s",
+		(user,),
+	)
+	if result:
+		return int(result[0][0])
+	return 1  # default: enabled
+
+
+def _set_mail_pref(user, value):
+	"""Set the mail_enabled value (1 or 0) for a user."""
+	_ensure_mail_prefs_table()
+	try:
+		frappe.db.sql(
+			"""INSERT INTO `tabUser Mail Prefs` (user, mail_enabled)
+			VALUES (%s, %s)
+			ON DUPLICATE KEY UPDATE mail_enabled = %s""",
+			(user, value, value),
+		)
+		frappe.db.commit()
+	except Exception:
+		# fallback: try update then insert
+		try:
+			frappe.db.sql(
+				"UPDATE `tabUser Mail Prefs` SET mail_enabled = %s WHERE user = %s",
+				(value, user),
+			)
+			if frappe.db.sql("SELECT changes()") == [(0,)]:
+				frappe.db.sql(
+					"INSERT INTO `tabUser Mail Prefs` (user, mail_enabled) VALUES (%s, %s)",
+					(user, value),
+				)
+			frappe.db.commit()
+		except Exception:
+			pass
+
+
 def is_mail_notifications_enabled(user=None):
 	"""Return True when mail notifications are ON for the user (the default).
 	
-	Per-user setting stored in tabSingles. Each user controls their own
-	email notification preference.
+	Per-user setting stored in User Mail Prefs table. Each user controls
+	their own email notification preference.
 	"""
 	user = user or frappe.session.user
-	key = "demo_portal_mail_notifications_{0}".format(user)
-	value = frappe.db.get_default(key)
-	# Default to enabled (1) when the setting has never been set.
-	return value != 0
+	return _get_mail_pref(user) == 1
 
 
 @frappe.whitelist()
@@ -108,8 +170,7 @@ def toggle_mail_notifications():
 		)
 	current = is_mail_notifications_enabled(user)
 	new_value = 0 if current else 1
-	key = "demo_portal_mail_notifications_{0}".format(user)
-	frappe.db.set_default(key, new_value)
+	_set_mail_pref(user, new_value)
 	return not current
 
 
