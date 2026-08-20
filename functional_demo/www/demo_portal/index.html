@@ -67,22 +67,19 @@
 									{% endif %}
 								</span>
 							</div>
-						</div>
-						<div style="display: flex; align-items: center; gap: 8px;">
-							<button type="button" id="mail-toggle-btn"
-								class="home-toggle {% if mail_notifications_enabled %}home-toggle-on{% else %}home-toggle-off{% endif %}">
+						</div>							<div style="display: flex; align-items: center; gap: 8px;">
+								<button type="button" id="mail-toggle-btn"
+									class="home-toggle {% if mail_notifications_enabled %}home-toggle-on{% else %}home-toggle-off{% endif %}">
 								{% if mail_notifications_enabled %}✅ ON{% else %}🔴 OFF{% endif %}
-							</button>
-							<button type="button" id="reload-btn"
-								class="btn-portal secondary"
-								style="padding: 7px 14px; font-size: 12px; min-width: auto;"
-								onclick="location.reload();">
-								🔄 Reload
-							</button>
-							<a class="btn-portal secondary" href="/portal_settings" style="padding: 7px 14px; font-size: 12px; min-width: auto; text-decoration: none;">
-								⚙️ Settings
-							</a>
-						</div>
+								</button>									<button type="button" id="auto-reload-btn"
+										class="home-toggle home-toggle-off"
+										title="Auto Reload: page refreshes after toggle changes">
+									🔄 Auto OFF
+									</button>
+								<a class="btn-portal secondary" href="/portal_settings" style="padding: 7px 14px; font-size: 12px; min-width: auto; text-decoration: none;">
+									⚙️ Settings
+								</a>
+							</div>
 					</div>
 				</div>
 			</div>
@@ -224,6 +221,45 @@
 </style>
 
 <script>
+/* Auto Reload: stored in localStorage so it persists across reloads */
+function getAutoReload() {
+	return localStorage.getItem("portal_auto_reload") === "on";
+}
+function setAutoReload(val) {
+	localStorage.setItem("portal_auto_reload", val ? "on" : "off");
+}
+
+/* Init auto-reload button from localStorage on page load */
+(function () {
+	var btn = document.getElementById("auto-reload-btn");
+	if (!btn) return;
+	if (getAutoReload()) {
+		btn.className = "home-toggle home-toggle-on";
+		btn.textContent = "🔄 Auto ON";
+	} else {
+		btn.className = "home-toggle home-toggle-off";
+		btn.textContent = "🔄 Auto OFF";
+	}
+})();
+
+/* --- Auto Reload toggle --- */
+document.getElementById("auto-reload-btn").addEventListener("click", function () {
+	var btn = this;
+	var current = getAutoReload();
+	var newVal = !current;
+	setAutoReload(newVal);
+	if (newVal) {
+		btn.className = "home-toggle home-toggle-on";
+		btn.textContent = "🔄 Auto ON";
+		portalAlert("Auto reload enabled. Page will refresh after changes.", "ok");
+	} else {
+		btn.className = "home-toggle home-toggle-off";
+		btn.textContent = "🔄 Auto OFF";
+		portalAlert("Auto reload disabled.", "ok");
+	}
+});
+
+/* --- Mail Notifications toggle --- */
 document.getElementById("mail-toggle-btn").addEventListener("click", function () {
 	var btn = this;
 	var statusText = document.getElementById("mail-status-text");
@@ -244,20 +280,13 @@ document.getElementById("mail-toggle-btn").addEventListener("click", function ()
 				statusText.innerHTML = '— <strong style="color: #EF4444;">OFF</strong>';
 				portalAlert("Email notifications disabled. In-app notifications still work.", "ok");
 			}
+			/* Auto reload after toggle if enabled */
+			if (getAutoReload()) {
+				setTimeout(function () { location.reload(); }, 800);
+			}
 		})
 		.catch(function () {
 			btn.classList.remove("loading");
-			portalCall("functional_demo.portal.get_mail_notifications_status", {})
-				.then(function (enabled) {
-					if (enabled) {
-						btn.className = "home-toggle home-toggle-on";
-						btn.textContent = "✅ ON";
-					} else {
-						btn.className = "home-toggle home-toggle-off";
-						btn.textContent = "🔴 OFF";
-					}
-				})
-				.catch(function () {});
 		});
 });
 </script>

@@ -42,7 +42,7 @@
 				<div>
 					<span class="greet-eyebrow">● {{ today_pretty }}</span>
 					<h1>{{ greeting }}, {{ full_name }}</h1>
-					<p>Manage your mail notification preferences.</p>
+					<p>Manage your portal preferences.</p>
 				</div>
 				<div class="greet-actions">
 					<a class="btn-portal secondary" href="/demo_portal">← Back to Home</a>
@@ -94,22 +94,44 @@
 						</div>
 					</div>
 
+					<!-- Auto Reload Section -->
+					<div style="margin-top: 16px; padding: 20px 24px; background: #F9FAFB; border-radius: 12px; border: 1px solid #E5E7EB;">
+						<div style="display: flex; align-items: center; justify-content: space-between; gap: 16px;">
+							<div>
+								<div style="font-weight: 700; color: #05133C; font-size: 16px; margin-bottom: 6px;">
+									Auto Reload
+								</div>
+								<div style="color: #71717B; font-size: 13px;" id="auto-reload-status-text">
+									{% if auto_reload_enabled %}
+									<strong style="color: #10B981;">ON</strong> — Page reloads automatically after every toggle change.
+									{% else %}
+									<strong style="color: #EF4444;">OFF</strong> — Manual reload required after changes.
+									{% endif %}
+								</div>
+							</div>
+							<button
+								type="button"
+								id="auto-reload-btn"
+								class="settings-toggle {% if auto_reload_enabled %}toggle-on{% else %}toggle-off{% endif %}"
+							>
+								{% if auto_reload_enabled %}
+								✅ ON
+								{% else %}
+								🔴 OFF
+								{% endif %}
+							</button>
+						</div>
+					</div>
+
 					<!-- Info Box -->
 					<div style="margin-top: 20px; padding: 16px 20px; background: #EFF6FF; border-radius: 10px; border: 1px solid #BFDBFE;">
 						<div style="display: flex; align-items: flex-start; gap: 10px;">
 							<span style="font-size: 18px;">💡</span>
 							<div style="color: #1E40AF; font-size: 13px; line-height: 1.6;">
-								<strong>When emails are ON:</strong> You receive emails for scheduled demos, completions, reminders, follow-ups, and trial periods.<br>
-								<strong>When emails are OFF:</strong> Emails are stopped but in-app notifications (desk &amp; portal bell) and web push popups still work.
+								<strong>Email Notifications:</strong> When ON, you receive emails for scheduled demos, completions, reminders, follow-ups, and trial periods. When OFF, emails are stopped but in-app notifications still work.<br>
+								<strong>Auto Reload:</strong> When ON, the page automatically reloads after you toggle any setting so changes take effect immediately.
 							</div>
 						</div>
-					</div>
-
-					<!-- Reload Button -->
-					<div style="margin-top: 20px; display: flex; gap: 10px;">
-						<button type="button" id="reload-settings-btn" class="btn-portal secondary" onclick="location.reload();">
-							🔄 Reload Page
-						</button>
 					</div>
 				</div>
 			</div>
@@ -151,13 +173,58 @@
 		box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
 		transform: translateY(-1px);
 	}
-	#mail-toggle-btn.loading {
+	.settings-toggle.loading {
 		opacity: 0.6;
 		pointer-events: none;
 	}
 </style>
 
 <script>
+/* Auto Reload: stored in localStorage per-user so it persists across reloads */
+function getAutoReload() {
+	return localStorage.getItem("portal_auto_reload") === "on";
+}
+function setAutoReload(val) {
+	localStorage.setItem("portal_auto_reload", val ? "on" : "off");
+}
+
+/* Init auto-reload button from localStorage on page load */
+(function () {
+	var btn = document.getElementById("auto-reload-btn");
+	var statusText = document.getElementById("auto-reload-status-text");
+	if (!btn) return;
+	if (getAutoReload()) {
+		btn.className = "settings-toggle toggle-on";
+		btn.textContent = "✅ ON";
+		if (statusText) statusText.innerHTML = '<strong style="color: #10B981;">ON</strong> — Page reloads automatically after every toggle change.';
+	} else {
+		btn.className = "settings-toggle toggle-off";
+		btn.textContent = "🔴 OFF";
+		if (statusText) statusText.innerHTML = '<strong style="color: #EF4444;">OFF</strong> — Manual reload required after changes.';
+	}
+})();
+
+/* --- Auto Reload toggle --- */
+document.getElementById("auto-reload-btn").addEventListener("click", function () {
+	var btn = this;
+	var statusText = document.getElementById("auto-reload-status-text");
+	var current = getAutoReload();
+	var newVal = !current;
+	setAutoReload(newVal);
+	if (newVal) {
+		btn.className = "settings-toggle toggle-on";
+		btn.textContent = "✅ ON";
+		statusText.innerHTML = '<strong style="color: #10B981;">ON</strong> — Page reloads automatically after every toggle change.';
+		portalAlert("Auto reload enabled.", "ok");
+	} else {
+		btn.className = "settings-toggle toggle-off";
+		btn.textContent = "🔴 OFF";
+		statusText.innerHTML = '<strong style="color: #EF4444;">OFF</strong> — Manual reload required after changes.';
+		portalAlert("Auto reload disabled.", "ok");
+	}
+});
+
+/* --- Mail Notifications toggle --- */
 document.getElementById("mail-toggle-btn").addEventListener("click", function () {
 	var btn = this;
 	var statusText = document.getElementById("mail-status-text");
@@ -178,20 +245,13 @@ document.getElementById("mail-toggle-btn").addEventListener("click", function ()
 				statusText.innerHTML = 'Your email notifications are <strong style="color: #EF4444;">OFF</strong> — emails are stopped.';
 				portalAlert("Email notifications disabled. In-app notifications still work.", "ok");
 			}
+			/* Auto reload after toggle if enabled */
+			if (getAutoReload()) {
+				setTimeout(function () { location.reload(); }, 800);
+			}
 		})
 		.catch(function () {
 			btn.classList.remove("loading");
-			portalCall("functional_demo.portal.get_mail_notifications_status", {})
-				.then(function (enabled) {
-					if (enabled) {
-						btn.className = "settings-toggle toggle-on";
-						btn.textContent = "✅ ON";
-					} else {
-						btn.className = "settings-toggle toggle-off";
-						btn.textContent = "🔴 OFF";
-					}
-				})
-				.catch(function () {});
 		});
 });
 </script>

@@ -71,7 +71,10 @@ def can_manage_consultants(user=None):
 	user = user or frappe.session.user
 	if user == "Administrator":
 		return True
-	return bool(user_roles(user) & {"Functional Team Manager", "System Manager"})# ---------------------------------------------------------------------------
+	return bool(user_roles(user) & {"Functional Team Manager", "System Manager"})
+
+
+# ---------------------------------------------------------------------------
 # mail notifications toggle (per-user)
 # ---------------------------------------------------------------------------
 
