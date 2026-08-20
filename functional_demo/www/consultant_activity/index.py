@@ -12,10 +12,10 @@ def get_context(context):
 	(and System Manager / Administrator for convenience)."""
 	portal_context(
 		context,
-		_(("Consultant Activity")),
+		_("Consultant Activity"),
 		["Functional Team Manager"],
 		active="consultant_activity",
-		subtitle=_(("Overview of all consultants and their demo activity")),
+		subtitle=_("Overview of all consultants and their demo activity"),
 	)
 
 	# Consultants with full activity details
@@ -38,7 +38,7 @@ def get_context(context):
 				"functional_consultant": c.name,
 				"demo_status": "In Progress",
 			},
-			fields=["name", "customer", "scheduled_date", "start_time"],
+			fields=["name", "customer", "scheduled_date", "start_time", "interested_module", "demo_request"],
 			limit=1,
 		) or []
 
@@ -49,7 +49,7 @@ def get_context(context):
 				"functional_consultant": c.name,
 				"demo_status": ["in", ["Scheduled", "Rescheduled"]],
 			},
-			fields=["name", "customer", "scheduled_date", "start_time"],
+			fields=["name", "customer", "scheduled_date", "start_time", "interested_module", "demo_request"],
 			order_by="scheduled_date asc",
 			limit_page_length=10,
 		) or []
@@ -62,7 +62,7 @@ def get_context(context):
 				"demo_status": ["in", ["Scheduled", "In Progress"]],
 				"scheduled_date": frappe.utils.today(),
 			},
-			fields=["name", "customer", "scheduled_date", "start_time", "demo_status"],
+			fields=["name", "customer", "scheduled_date", "start_time", "demo_status", "interested_module", "demo_request"],
 			order_by="start_time asc",
 		) or []
 
@@ -73,10 +73,13 @@ def get_context(context):
 		) or 0
 
 		# Pending assigned requests (no session yet)
-		pending_count = frappe.db.count(
+		pending_requests = frappe.get_all(
 			"Demo Request",
-			{"functional_consultant": c.name, "status": "Assigned"},
-		) or 0
+			filters={"functional_consultant": c.name, "status": "Assigned"},
+			fields=["name", "customer", "interested_module", "preferred_demo_date", "sales_person"],
+			order_by="preferred_demo_date asc",
+		) or []
+		pending_count = len(pending_requests)
 
 		# In-progress session count
 		in_progress_count = len(active_session)
@@ -84,16 +87,25 @@ def get_context(context):
 		# Upcoming scheduled count
 		upcoming_count = len(upcoming)
 
-		for sess in upcoming + todays:
+		# Enrich sessions with interested_module from linked demo_request if missing
+		all_sessions = active_session + upcoming + todays
+		for sess in all_sessions:
 			sess["date_display"] = (
 				frappe.utils.format_date(sess.get("scheduled_date"), "medium")
 				if sess.get("scheduled_date")
 				else "-"
 			)
-		for sess in active_session:
-			sess["date_display"] = (
-				frappe.utils.format_date(sess.get("scheduled_date"), "medium")
-				if sess.get("scheduled_date")
+			# If interested_module is missing on session, try to get it from demo_request
+			if not sess.get("interested_module") and sess.get("demo_request"):
+				mod = frappe.db.get_value("Demo Request", sess["demo_request"], "interested_module")
+				if mod:
+					sess["interested_module"] = mod
+
+		# Enrich pending requests with date display
+		for pr in pending_requests:
+			pr["date_display"] = (
+				frappe.utils.format_date(pr.get("preferred_demo_date"), "medium")
+				if pr.get("preferred_demo_date")
 				else "-"
 			)
 
@@ -111,6 +123,10 @@ def get_context(context):
 			status_label = "Free"
 			status_class = "b-draft"
 
+		# Next upcoming session details (for the main table row)
+		next_session = upcoming[0] if upcoming else None
+		next_pending = pending_requests[0] if pending_requests else None
+
 		consultant_details.append({
 			"name": c.name,
 			"consultant_name": c.consultant_name,
@@ -119,8 +135,11 @@ def get_context(context):
 			"status_label": status_label,
 			"status_class": status_class,
 			"active_session": active_session[0] if active_session else None,
+			"next_session": next_session,
+			"next_pending": next_pending,
 			"upcoming_sessions": upcoming,
 			"todays_sessions": todays,
+			"pending_requests": pending_requests,
 			"completed_count": completed_count,
 			"pending_count": pending_count,
 			"in_progress_count": in_progress_count,

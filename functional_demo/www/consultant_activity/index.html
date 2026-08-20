@@ -43,7 +43,7 @@
 				<div>
 					<span class="greet-eyebrow">● {{ today_pretty }}</span>
 					<h1>{{ greeting }}, {{ full_name }}</h1>
-					<p>Overview of all functional consultants and their current activity.</p>
+					<p>Overview of all functional consultants and their current demo activity.</p>
 				</div>
 			</div>
 
@@ -80,16 +80,17 @@
 			<div class="portal-card" style="margin-bottom: 24px;">
 				<div class="card-head"><h2>Consultant Activity</h2></div>
 				{% if consultant_details %}
-				<div class="card-body flush">
-					<table class="table-portal">
+				<div class="card-body flush" style="overflow-x: auto;">
+					<table class="table-portal" style="min-width: 1100px;">
 						<thead>
 							<tr>
-								<th>Consultant</th>
+								<th style="min-width: 150px;">Consultant</th>
 								<th>Specialization</th>
 								<th>Availability</th>
 								<th>Status</th>
-								<th>Active Demo</th>
-								<th>Today</th>
+								<th style="min-width: 180px;">Active Demo</th>
+								<th>Scheduled Date</th>
+								<th>Interested Template</th>
 								<th>Upcoming</th>
 								<th>Pending</th>
 								<th>Completed</th>
@@ -98,35 +99,62 @@
 						<tbody>
 							{% for c in consultant_details %}
 							<tr>
+								<!-- Consultant Name -->
 								<td>
 									<div style="display: flex; align-items: center; gap: 10px;">
 										<div style="width: 34px; height: 34px; border-radius: 50%; background: {% if c.active_session %}#DCFBEA{% elif c.upcoming_sessions %}#E8EEFF{% else %}#F3F4F6{% endif %}; display: flex; align-items: center; justify-content: center; font-weight: 700; color: {% if c.active_session %}#009A52{% elif c.upcoming_sessions %}#114EFF{% else %}#9CA3AF{% endif %}; font-size: 13px; flex-shrink: 0;">{{ c.consultant_name[:1] }}</div>
 										<span style="font-weight: 600; color: #05133C;">{{ c.consultant_name }}</span>
 									</div>
 								</td>
+								<!-- Specialization -->
 								<td>{{ c.specialization }}</td>
+								<!-- Availability -->
 								<td>{{ c.availability }}</td>
+								<!-- Status -->
 								<td><span class="badge {{ c.status_class }}">{{ c.status_label }}</span></td>
+								<!-- Active Demo (customer + link) -->
 								<td>
 									{% if c.active_session %}
 										<a href="/functional_portal/session?name={{ c.active_session.name }}" style="color: #009A52; font-weight: 600;">{{ c.active_session.customer or '-' }}</a>
 										<div style="font-size: 11px; color: #71717B;">Started {{ c.active_session.start_time or '' }}</div>
+									{% elif c.next_session %}
+										<span style="color: #05133C; font-weight: 500;">{{ c.next_session.customer or '-' }}</span>
+										<div style="font-size: 11px; color: #71717B;">{{ c.next_session.date_display }}</div>
+									{% elif c.next_pending %}
+										<span style="color: #D97706; font-weight: 500;">{{ c.next_pending.customer or '-' }}</span>
+										<div style="font-size: 11px; color: #9CA3AF;">Awaiting schedule</div>
 									{% else %}
 										<span style="color: #9CA3AF;">—</span>
 									{% endif %}
 								</td>
+								<!-- Scheduled Date -->
 								<td>
-									{% if c.todays_sessions %}
-										{% for s in c.todays_sessions %}
-										<div style="font-size: 12px; padding: 2px 0;">
-											<span style="color: #71717B;">{{ s.start_time or '-' }}</span>
-											<span style="color: #05133C; font-weight: 500;"> {{ s.customer or '-' }}</span>
-										</div>
-										{% endfor %}
+									{% if c.active_session and c.active_session.scheduled_date %}
+										<span style="color: #009A52; font-weight: 600;">{{ c.active_session.date_display }}</span>
+									{% elif c.next_session and c.next_session.scheduled_date %}
+										<span style="color: #05133C; font-weight: 500;">{{ c.next_session.date_display }}</span>
+									{% elif c.next_pending and c.next_pending.preferred_demo_date %}
+										<span style="color: #D97706;">{{ c.next_pending.date_display }}</span>
+									{% else %}
+										<span style="color: #9CA3AF;">—</span>
+									{% endif %}
+									{% if c.upcoming_sessions|length > 1 %}
+										<div style="font-size: 11px; color: #114EFF;">+{{ c.upcoming_sessions|length - 1 }} more</div>
+									{% endif %}
+								</td>
+								<!-- Interested Template -->
+								<td>
+									{% if c.active_session and c.active_session.interested_module %}
+										<span style="color: #05133C; font-weight: 500;">{{ c.active_session.interested_module }}</span>
+									{% elif c.next_session and c.next_session.interested_module %}
+										<span style="color: #05133C;">{{ c.next_session.interested_module }}</span>
+									{% elif c.next_pending and c.next_pending.interested_module %}
+										<span style="color: #D97706;">{{ c.next_pending.interested_module }}</span>
 									{% else %}
 										<span style="color: #9CA3AF;">—</span>
 									{% endif %}
 								</td>
+								<!-- Upcoming Sessions -->
 								<td>
 									{% if c.upcoming_sessions %}
 										<span style="font-weight: 600; color: #05133C;">{{ c.upcoming_count }}</span>
@@ -140,13 +168,21 @@
 										<span style="color: #9CA3AF;">0</span>
 									{% endif %}
 								</td>
+								<!-- Pending -->
 								<td>
 									{% if c.pending_count %}
 										<span style="font-weight: 600; color: #D97706;">{{ c.pending_count }}</span>
+										{% for pr in c.pending_requests[:2] %}
+										<div style="font-size: 11px; color: #71717B;">{{ pr.customer or '-' }} · {{ pr.interested_module or '-' }}</div>
+										{% endfor %}
+										{% if c.pending_requests|length > 2 %}
+										<div style="font-size: 11px; color: #D97706;">+{{ c.pending_requests|length - 2 }} more</div>
+										{% endif %}
 									{% else %}
 										<span style="color: #9CA3AF;">0</span>
 									{% endif %}
 								</td>
+								<!-- Completed -->
 								<td>
 									<span style="font-weight: 700; color: #009A52;">{{ c.completed_count }}</span>
 								</td>
