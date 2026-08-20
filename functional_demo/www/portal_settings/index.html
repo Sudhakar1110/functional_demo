@@ -123,15 +123,48 @@
 						</div>
 					</div>
 
-					<!-- Info Box -->
+					{% if is_admin %}
+					<!-- Admin: Hide Results Toggle -->
+					<div style="margin-top: 16px; padding: 20px 24px; background: #FFF7ED; border-radius: 12px; border: 1px solid #FDBA74;">
+						<div style="display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;">
+							<div style="flex: 1; min-width: 200px;">
+								<div style="display: flex; align-items: center; gap: 6px; margin-bottom: 6px;">
+									<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;color:#F97316;flex-shrink:0;"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+								<span style="font-weight: 700; color: #05133C; font-size: 16px;">🔒 Hide Results (Admin)</span>
+							</div>
+							<div style="color: #71717B; font-size: 13px;" id="results-status-text">
+								{% if results_hidden %}
+								Results are <strong style="color: #EF4444;">HIDDEN</strong> for all users. Only admins can see them.
+								{% else %}
+								Results are <strong style="color: #10B981;">VISIBLE</strong> to all users.
+								{% endif %}
+							</div>
+						</div>
+						<button
+							type="button"
+							id="results-toggle-btn"
+							class="settings-toggle {% if results_hidden %}toggle-off{% else %}toggle-on{% endif %}"
+						>
+							{% if results_hidden %}
+							🔴 HIDDEN
+							{% else %}
+							✅ VISIBLE
+							{% endif %}
+						</button>
+					</div>
+				</div>
+				{% endif %}
+
+				<!-- Info Box -->
 					<div style="margin-top: 20px; padding: 16px 20px; background: #EFF6FF; border-radius: 10px; border: 1px solid #BFDBFE;">
 						<div style="display: flex; align-items: flex-start; gap: 10px;">
 							<span style="font-size: 18px;">💡</span>
 							<div style="color: #1E40AF; font-size: 13px; line-height: 1.6;">
 								<strong>Email Notifications:</strong> When ON, you receive emails for scheduled demos, completions, reminders, follow-ups, and trial periods. When OFF, emails are stopped but in-app notifications still work.<br>
-								<strong>Auto Reload:</strong> When ON, the page automatically reloads after you toggle any setting so changes take effect immediately.
+								<strong>Auto Reload:</strong> When ON, the page automatically reloads after you toggle any setting so changes take effect immediately.{% if is_admin %}<br>
+								<strong>Hide Results:</strong> Admin only. When ON, the Results section is hidden for all users except admins. When OFF, Results are visible to everyone.{% endif %}
 							</div>
-						</div>
+					</div>
 					</div>
 				</div>
 			</div>
@@ -229,30 +262,62 @@ document.getElementById("mail-toggle-btn").addEventListener("click", function ()
 	var btn = this;
 	var statusText = document.getElementById("mail-status-text");
 	btn.classList.add("loading");
-	btn.textContent = "Updating...";
+	btn.textContent = "Updating...";				portalCall("functional_demo.portal.toggle_mail_notifications", {})
+				.then(function (enabled) {
+					btn.classList.remove("loading");
+					if (enabled) {
+						btn.className = "settings-toggle toggle-on";
+						btn.textContent = "✅ ON";
+						statusText.innerHTML = 'Your email notifications are <strong style="color: #10B981;">ON</strong> — you will receive emails for demo events.';
+						portalAlert("Email notifications enabled successfully.", "ok");
+					} else {
+						btn.className = "settings-toggle toggle-off";
+						btn.textContent = "🔴 OFF";
+						statusText.innerHTML = 'Your email notifications are <strong style="color: #EF4444;">OFF</strong> — emails are stopped.';
+						portalAlert("Email notifications disabled. In-app notifications still work.", "ok");
+					}
+					/* Auto reload after toggle if enabled */
+					if (getAutoReload()) {
+						setTimeout(function () { location.reload(); }, 800);
+					}
+				})
+				.catch(function () {
+					btn.classList.remove("loading");
+				});
+			});
 
-	portalCall("functional_demo.portal.toggle_mail_notifications", {})
-		.then(function (enabled) {
-			btn.classList.remove("loading");
-			if (enabled) {
-				btn.className = "settings-toggle toggle-on";
-				btn.textContent = "✅ ON";
-				statusText.innerHTML = 'Your email notifications are <strong style="color: #10B981;">ON</strong> — you will receive emails for demo events.';
-				portalAlert("Email notifications enabled successfully.", "ok");
-			} else {
-				btn.className = "settings-toggle toggle-off";
-				btn.textContent = "🔴 OFF";
-				statusText.innerHTML = 'Your email notifications are <strong style="color: #EF4444;">OFF</strong> — emails are stopped.';
-				portalAlert("Email notifications disabled. In-app notifications still work.", "ok");
-			}
-			/* Auto reload after toggle if enabled */
-			if (getAutoReload()) {
-				setTimeout(function () { location.reload(); }, 800);
-			}
-		})
-		.catch(function () {
-			btn.classList.remove("loading");
-		});
-});
-</script>
+/* --- Hide Results toggle (admin only) --- */
+var resultsToggleBtn = document.getElementById("results-toggle-btn");
+if (resultsToggleBtn) {
+	resultsToggleBtn.addEventListener("click", function () {
+		var btn = this;
+		var statusText = document.getElementById("results-status-text");
+		btn.classList.add("loading");
+		btn.textContent = "Updating...";
+
+		portalCall("functional_demo.portal.toggle_results_visibility", {})
+			.then(function (result) {
+				btn.classList.remove("loading");
+				if (result && result.hidden) {
+					btn.className = "settings-toggle toggle-off";
+					btn.textContent = "🔴 HIDDEN";
+					statusText.innerHTML = 'Results are <strong style="color: #EF4444;">HIDDEN</strong> for all users. Only admins can see them.';
+					portalAlert("Results are now hidden for all users.", "ok");
+				} else {
+					btn.className = "settings-toggle toggle-on";
+					btn.textContent = "✅ VISIBLE";
+					statusText.innerHTML = 'Results are <strong style="color: #10B981;">VISIBLE</strong> to all users.';
+					portalAlert("Results are now visible to all users.", "ok");
+				}
+				/* Auto reload after toggle if enabled */
+				if (getAutoReload()) {
+					setTimeout(function () { location.reload(); }, 800);
+				}
+			})
+			.catch(function () {
+				btn.classList.remove("loading");
+			});
+	});
+}
+		</script>
 {% endblock %}

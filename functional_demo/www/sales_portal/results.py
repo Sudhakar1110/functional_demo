@@ -4,10 +4,14 @@
 import frappe
 from frappe import _
 
-from functional_demo.portal import list_note, portal_context, sales_stats
-
+from functional_demo.portal import is_admin, is_results_hidden, list_note, portal_context, sales_stats
 
 def get_context(context):
+	# If results are hidden by admin, non-admin users cannot access this page
+	if is_results_hidden() and not is_admin():
+		frappe.local.flags.redirect_location = "/demo_portal"
+		raise frappe.Redirect
+
 	portal_context(
 		context,
 		_("Demo Results"),

@@ -177,6 +177,47 @@ def toggle_mail_notifications():
 	return not current
 
 
+# ---------------------------------------------------------------------------
+# results visibility toggle (site-wide, admin-only)
+# ---------------------------------------------------------------------------
+
+RESULTS_HIDDEN_KEY = "demo_portal_results_hidden"
+
+
+def is_results_hidden():
+	"""Return True when Results are hidden for all users (admin toggled ON).
+	
+	Site-wide setting stored via frappe.db.get_default so it persists
+	across reloads and applies to every user.
+	"""
+	return frappe.db.get_default(RESULTS_HIDDEN_KEY) == "1"
+
+
+@frappe.whitelist()
+def get_results_visibility_status():
+	"""Return the current results visibility setting."""
+	return {"hidden": is_results_hidden()}
+
+
+@frappe.whitelist()
+def toggle_results_visibility():
+	"""Toggle the results visibility setting. Admin / System Manager only.
+	
+	When ON, results are hidden for ALL users. When OFF, results are shown.
+	Returns the new state dict.
+	"""
+	if not is_admin():
+		frappe.throw(
+			_("Only administrators can change this setting."),
+			frappe.PermissionError,
+		)
+	current = is_results_hidden()
+	new_value = "1" if not current else "0"
+	frappe.db.set_default(RESULTS_HIDDEN_KEY, new_value)
+	frappe.db.commit()
+	return {"hidden": not current}
+
+
 def consultant_of_user(user=None):
 	"""Functional Consultant record linked to the current user.		Administrator gets a consultant profile auto-created on first access so the
 		whole portal (My Sessions, Follow-ups, …) works right away for the site
@@ -268,13 +309,16 @@ def sidebar_items(active):
 
 	items = [{"label": _("Home"), "route": "/demo_portal", "icon": ICON_HOME, "active": active == "home"}]
 
+	results_hidden = is_results_hidden()
 	if is_sales():
 		items += [
 			{"label": _("Sales Home"), "route": "/sales_portal", "icon": ICON_SALES, "active": active == "sales"},
 			{"label": _("Sales"), "route": "/sales_portal/my_leads", "icon": ICON_LEADS, "active": active == "leads"},
 			{"label": _("Demo Requests"), "route": "/sales_portal/demo_requests", "icon": ICON_REQUESTS, "active": active == "requests"},
-			{"label": _("Results"), "route": "/sales_portal/results", "icon": ICON_RESULTS, "active": active == "results"},
-			# Follow-ups are sales-team-only
+		]
+		if not results_hidden or is_admin():
+			items.append({"label": _("Results"), "route": "/sales_portal/results", "icon": ICON_RESULTS, "active": active == "results"})
+		items += [
 			{"label": _("Follow-ups"), "route": "/functional_portal/follow_ups", "icon": ICON_FOLLOWUPS, "active": active == "follow_ups"},
 			{"label": _("Trial Dashboard"), "route": "/sales_portal/trials", "icon": ICON_TRIALS, "active": active == "trials"},
 		]
