@@ -2,7 +2,9 @@
 # License: GNU General Public License (v3). See LICENSE
 
 import frappe
-from frappe import _from functional_demo.portal import (
+from frappe import _
+
+from functional_demo.portal import (
 	functional_stats,
 	is_developer,
 	is_functional,
