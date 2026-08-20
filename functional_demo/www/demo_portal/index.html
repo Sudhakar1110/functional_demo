@@ -141,11 +141,84 @@
 					<div class="kpi-label">Completed</div>
 					<div class="kpi-value">{{ functional.completed }}</div>
 					<div class="kpi-note">Demos delivered</div>
-				</div>
-			</div>
+				</div>				</div>
 			{% endif %}
+
+			<!-- Mail Notifications Toggle + Reload Button (all users) -->
+			<div style="display: flex; align-items: center; gap: 12px; margin-top: 26px; padding: 14px 20px; background: #F9FAFB; border-radius: 10px; border: 1px solid #E5E7EB;">
+				<div style="flex: 1;">
+					<div style="font-weight: 600; color: #05133C; font-size: 13px;">Mail Notifications</div>
+					<div style="color: #71717B; font-size: 12px;" id="mail-status-text">
+						{% if mail_notifications_enabled %}
+						Emails are <strong style="color: #10B981;">ON</strong>
+						{% else %}
+						Emails are <strong style="color: #EF4444;">OFF</strong>
+						{% endif %}
+					</div>
+				</div>
+				<button type="button" id="mail-toggle-btn"
+					class="btn-portal {% if mail_notifications_enabled %}mail-on{% else %}mail-off{% endif %}"
+					style="min-width: 90px; font-size: 12px; font-weight: 600; padding: 8px 16px; border-radius: 8px; border: none; cursor: pointer; transition: all 0.3s ease;">
+					{% if mail_notifications_enabled %}✅ ON{% else %}🔴 OFF{% endif %}
+				</button>
+				<button type="button" id="reload-btn"
+					style="min-width: 90px; font-size: 12px; font-weight: 600; padding: 8px 16px; border-radius: 8px; border: 1px solid #E5E7EB; background: #fff; color: #05133C; cursor: pointer; transition: all 0.3s ease;"
+					onclick="location.reload();">
+					🔄 Reload
+				</button>
+			</div>
 		</div>
 	</div>
 	</div>
 </div>
+
+<style>
+	.mail-on {
+		background: #10B981;
+		color: #fff;
+	}
+	.mail-on:hover {
+		background: #059669;
+	}
+	.mail-off {
+		background: #EF4444;
+		color: #fff;
+	}
+	.mail-off:hover {
+		background: #DC2626;
+	}
+	#mail-toggle-btn.loading {
+		opacity: 0.6;
+		pointer-events: none;
+	}
+</style>
+
+<script>
+function toggleMailNotifications() {
+	var btn = document.getElementById("mail-toggle-btn");
+	var statusText = document.getElementById("mail-status-text");
+	btn.classList.add("loading");
+	btn.textContent = "...";
+
+	portalCall("functional_demo.portal.toggle_mail_notifications", {})
+		.then(function (enabled) {
+			btn.classList.remove("loading");
+			if (enabled) {
+				btn.className = "btn-portal mail-on";
+				btn.textContent = "✅ ON";
+				statusText.innerHTML = 'Emails are <strong style="color: #10B981;">ON</strong>';
+				portalAlert("Email notifications enabled.", "ok");
+			} else {
+				btn.className = "btn-portal mail-off";
+				btn.textContent = "🔴 OFF";
+				statusText.innerHTML = 'Emails are <strong style="color: #EF4444;">OFF</strong>';
+				portalAlert("Email notifications disabled. In-app notifications still work.", "ok");
+			}
+		})
+		.catch(function () {
+			btn.classList.remove("loading");
+		});
+}
+document.getElementById("mail-toggle-btn").addEventListener("click", toggleMailNotifications);
+</script>
 {% endblock %}

@@ -42,7 +42,7 @@
 				<div>
 					<span class="greet-eyebrow">● {{ today_pretty }}</span>
 					<h1>{{ greeting }}, {{ full_name }}</h1>
-					<p>Manage portal settings. Only administrators can access this page.</p>
+					<p>Manage your mail notification preferences.</p>
 				</div>
 			</div>
 
@@ -52,8 +52,8 @@
 				</div>
 				<div class="card-body">
 					<p style="color: #71717B; font-size: 14px; margin-bottom: 20px;">
-						Control email notifications and the Sales portal visibility.
-						When disabled, all email notifications are turned off and the Sales option is completely hidden for all users.
+						Control whether you receive email notifications. When OFF, emails are stopped but
+						in-app notifications (desk bell and portal bell) still work.
 					</p>
 
 					<div style="display: flex; align-items: center; gap: 16px; padding: 20px; background: #F9FAFB; border-radius: 10px; border: 1px solid #E5E7EB;">
@@ -63,9 +63,9 @@
 							</div>
 							<div style="color: #71717B; font-size: 13px;" id="mail-status-text">
 								{% if mail_notifications_enabled %}
-								Currently <strong style="color: #10B981;">ON</strong> — Sales portal is visible and email notifications are active.
+								Currently <strong style="color: #10B981;">ON</strong> — You will receive email notifications.
 								{% else %}
-								Currently <strong style="color: #EF4444;">OFF</strong> — Sales portal is hidden and email notifications are disabled.
+								Currently <strong style="color: #EF4444;">OFF</strong> — Emails are stopped. In-app notifications still work.
 								{% endif %}
 							</div>
 						</div>
@@ -88,12 +88,12 @@
 						<div style="display: flex; align-items: flex-start; gap: 10px;">
 							<span style="font-size: 18px;">ℹ️</span>
 							<div>
-								<div style="font-weight: 600; color: #9A3412; font-size: 13px; margin-bottom: 4px;">What happens when you turn OFF notifications?</div>
+								<div style="font-weight: 600; color: #9A3412; font-size: 13px; margin-bottom: 4px;">What happens when you turn OFF email notifications?</div>
 								<ul style="color: #9A3412; font-size: 12px; margin: 0; padding-left: 16px;">
-									<li>All email notifications are stopped (demo scheduled, completed, reminders, etc.)</li>
-									<li>The Sales Portal is completely hidden for ALL users</li>
-									<li>Sales-related sidebar items disappear for everyone</li>
-									<li>The Functional Portal and other sections remain unaffected</li>
+									<li>Email notifications are stopped (demo scheduled, completed, reminders, etc.)</li>
+									<li>In-app notifications still appear in the desk bell and portal bell</li>
+									<li>Web push popups still work when configured</li>
+									<li>You can turn emails back on anytime</li>
 								</ul>
 							</div>
 						</div>
@@ -149,29 +149,17 @@ function toggleMailNotifications() {
 			if (enabled) {
 				btn.className = "btn-portal toggle-on";
 				btn.textContent = "✅ ON";
-				statusText.innerHTML = 'Currently <strong style="color: #10B981;">ON</strong> — Sales portal is visible and email notifications are active.';
-				portalAlert("Mail notifications enabled. Sales portal is now visible for all users.", "ok");
+				statusText.innerHTML = 'Currently <strong style="color: #10B981;">ON</strong> — You will receive email notifications.';
+				portalAlert("Email notifications enabled.", "ok");
 			} else {
 				btn.className = "btn-portal toggle-off";
 				btn.textContent = "🔴 OFF";
-				statusText.innerHTML = 'Currently <strong style="color: #EF4444;">OFF</strong> — Sales portal is hidden and email notifications are disabled.';
-				portalAlert("Mail notifications disabled. Sales portal is now hidden for all users.", "ok");
+				statusText.innerHTML = 'Currently <strong style="color: #EF4444;">OFF</strong> — Emails are stopped. In-app notifications still work.';
+				portalAlert("Email notifications disabled. In-app notifications still work.", "ok");
 			}
 		})
-		.catch(function (err) {
+		.catch(function () {
 			btn.classList.remove("loading");
-			// Revert button text based on current state
-			portalCall("functional_demo.portal.is_mail_notifications_enabled", {})
-				.then(function (enabled) {
-					if (enabled) {
-						btn.className = "btn-portal toggle-on";
-						btn.textContent = "✅ ON";
-					} else {
-						btn.className = "btn-portal toggle-off";
-						btn.textContent = "🔴 OFF";
-					}
-				})
-				.catch(function () {});
 		});
 }
 </script>

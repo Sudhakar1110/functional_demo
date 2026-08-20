@@ -8,18 +8,13 @@ from functional_demo.portal import is_admin, is_mail_notifications_enabled, port
 
 
 def get_context(context):
-	"""Admin-only portal settings page for toggling mail notifications."""
+	"""Portal settings page — all logged-in users can toggle their own
+	mail notification preference."""
 	portal_context(
 		context,
 		_("Portal Settings"),
 		["Sales User", "Sales Manager", "Functional Consultant", "Functional Team Manager"],
 		active="settings",
-		subtitle=_("Manage portal settings"),
+		subtitle=_("Manage your portal settings"),
 	)
-	# Only admins can see this page
-	if not is_admin():
-		frappe.throw(
-			_("Only administrators can access portal settings."),
-			frappe.PermissionError,
-		)
 	context.mail_notifications_enabled = is_mail_notifications_enabled()

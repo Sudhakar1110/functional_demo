@@ -28,12 +28,11 @@ def get_context(context):
 		active="home",
 		subtitle=_("One simple workspace for the complete demo workflow"),
 	)
-	# Hide sales for ALL users when mail notifications are disabled by admin
-	mail_enabled = is_mail_notifications_enabled()
-	context.show_sales = is_sales() and mail_enabled
+	context.show_sales = is_sales()
 	context.show_functional = is_functional()
 	context.show_manager = is_manager()
-	context.mail_notifications_enabled = mail_enabled
+	# Per-user mail notification toggle
+	context.mail_notifications_enabled = is_mail_notifications_enabled()
 	if context.show_sales:
 		context.sales = sales_stats()
 	if context.show_functional:

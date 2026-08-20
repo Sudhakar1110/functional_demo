@@ -71,44 +71,45 @@ def can_manage_consultants(user=None):
 	user = user or frappe.session.user
 	if user == "Administrator":
 		return True
-	return bool(user_roles(user) & {"Functional Team Manager", "System Manager"})
-
-
+	return bool(user_roles(user) & {"Functional Team Manager", "System Manager"})# ---------------------------------------------------------------------------
+# mail notifications toggle (per-user)
 # ---------------------------------------------------------------------------
-# mail notifications toggle (admin only)
-# ---------------------------------------------------------------------------
-
-def is_mail_notifications_enabled():
-	"""Return True when mail notifications are ON (the default).
+def is_mail_notifications_enabled(user=None):
+	"""Return True when mail notifications are ON for the user (the default).
 	
-	The setting is stored in tabSingles and managed via the
-	/portal_settings page (admin only).
+	Per-user setting stored in tabSingles. Each user controls their own
+	email notification preference.
 	"""
-	value = frappe.db.get_default("demo_portal_mail_notifications")
+	user = user or frappe.session.user
+	key = "demo_portal_mail_notifications_{0}".format(user)
+	value = frappe.db.get_default(key)
 	# Default to enabled (1) when the setting has never been set.
 	return value != 0
 
 
 @frappe.whitelist()
 def get_mail_notifications_status():
-	"""Return the current mail notifications setting (for the JS toggle)."""
+	"""Return the current mail notifications setting for the current user."""
 	return is_mail_notifications_enabled()
 
 
 @frappe.whitelist()
 def toggle_mail_notifications():
-	"""Toggle the mail notifications setting. Admin only.
+	"""Toggle the mail notifications setting for the current user.
 	
+	All logged-in users can toggle their own email notification preference.
 	Returns the new state (True = enabled, False = disabled).
 	"""
-	if not is_admin():
+	user = frappe.session.user
+	if not user or user == "Guest":
 		frappe.throw(
-			_("Only administrators can change this setting."),
+			_("Please log in to change this setting."),
 			frappe.PermissionError,
 		)
-	current = is_mail_notifications_enabled()
+	current = is_mail_notifications_enabled(user)
 	new_value = 0 if current else 1
-	frappe.db.set_default("demo_portal_mail_notifications", new_value)
+	key = "demo_portal_mail_notifications_{0}".format(user)
+	frappe.db.set_default(key, new_value)
 	return not current
 
 
@@ -195,10 +196,7 @@ def sidebar_items(active):
 	"""Sidebar menu for the current user. The sales team sees all content
 	(sales + functional); functional team members see only functional-related
 	sections (never the sales ones); the feedback-only Developer role sees only
-	Feedback.
-	
-	When mail notifications are disabled by the admin, the Sales sections are
-	hidden for ALL users."""
+	Feedback."""
 	if is_developer():
 		return [
 			{"label": _("Feedback"), "route": "/feedback", "icon": ICON_FEEDBACK, "active": active == "feedback"},
@@ -206,9 +204,7 @@ def sidebar_items(active):
 
 	items = [{"label": _("Home"), "route": "/demo_portal", "icon": ICON_HOME, "active": active == "home"}]
 
-	# Hide all sales sections when mail notifications are disabled
-	mail_enabled = is_mail_notifications_enabled()
-	if is_sales() and mail_enabled:
+	if is_sales():
 		items += [
 			{"label": _("Sales Home"), "route": "/sales_portal", "icon": ICON_SALES, "active": active == "sales"},
 			{"label": _("Sales"), "route": "/sales_portal/my_leads", "icon": ICON_LEADS, "active": active == "leads"},
@@ -240,9 +236,8 @@ def sidebar_items(active):
 	if is_manager():
 		items.append({"label": _("Feedback"), "route": "/feedback", "icon": ICON_FEEDBACK, "active": active == "feedback"})
 
-	# Admin settings (Administrator / System Manager only)
-	if is_admin():
-		items.append({"label": _("Settings"), "route": "/portal_settings", "icon": ICON_MANAGER, "active": active == "settings"})
+	# Settings (all logged-in users)
+	items.append({"label": _("Settings"), "route": "/portal_settings", "icon": ICON_MANAGER, "active": active == "settings"})
 
 	return items
 
@@ -256,8 +251,6 @@ def create_notification(for_user, subject, document_type, document_name):
 		
 	Skips when mail notifications are disabled by the admin."""
 	if not for_user or for_user == "Guest":
-		return
-	if not is_mail_notifications_enabled():
 		return
 	try:
 		# Frappe v15+ turned Notification Log.type from a Select into a Link to
@@ -296,8 +289,7 @@ def create_notification(for_user, subject, document_type, document_name):
 			message=frappe.get_traceback(),
 		)
 
-	if is_mail_notifications_enabled():
-		_send_web_push(for_user, subject, document_type, document_name, note.name)
+	_send_web_push(for_user, subject, document_type, document_name, note.name)
 
 def _push_target_url(document_type, document_name):
 	"""Portal route a Web Push notification should open when clicked - mirrors

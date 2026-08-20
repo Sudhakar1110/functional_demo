@@ -4,7 +4,7 @@
 import frappe
 from frappe import _
 
-from functional_demo.portal import consultant_of_user, is_mail_notifications_enabled, portal_context
+from functional_demo.portal import consultant_of_user, portal_context
 
 MODULES = [
 	"", "Law Management", "Hospitality", "Medical Store", "Retail & Supermarket",
@@ -40,9 +40,6 @@ def _consultants_with_templates():
 
 
 def get_context(context):
-	if not is_mail_notifications_enabled():
-		frappe.local.flags.redirect_location = "/demo_portal"
-		raise frappe.Redirect
 	portal_context(
 		context,
 		_("Demo Request"),

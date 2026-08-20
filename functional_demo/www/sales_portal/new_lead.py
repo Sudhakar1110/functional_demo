@@ -4,7 +4,7 @@
 import frappe
 from frappe import _
 
-from functional_demo.portal import is_mail_notifications_enabled, portal_context
+from functional_demo.portal import portal_context
 
 LEAD_STATUSES = ["Lead", "Open", "Replied", "Opportunity", "Quotation", "Interested", "Converted", "Do Not Contact"]
 # Fallback sources for sites where the Lead doctype has no source options yet
@@ -12,9 +12,6 @@ DEFAULT_SOURCES = ["Website", "Referral", "Cold Call", "Existing Customer", "Soc
 
 
 def get_context(context):
-	if not is_mail_notifications_enabled():
-		frappe.local.flags.redirect_location = "/demo_portal"
-		raise frappe.Redirect
 	portal_context(
 		context,
 		_("New Sales Person"),
