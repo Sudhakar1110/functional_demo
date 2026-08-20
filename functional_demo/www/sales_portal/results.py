@@ -4,10 +4,13 @@
 import frappe
 from frappe import _
 
-from functional_demo.portal import list_note, portal_context, sales_stats
+from functional_demo.portal import is_mail_notifications_enabled, list_note, portal_context, sales_stats
 
 
 def get_context(context):
+	if not is_mail_notifications_enabled():
+		frappe.local.flags.redirect_location = "/demo_portal"
+		raise frappe.Redirect
 	portal_context(
 		context,
 		_("Demo Results"),

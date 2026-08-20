@@ -74,6 +74,44 @@ def can_manage_consultants(user=None):
 	return bool(user_roles(user) & {"Functional Team Manager", "System Manager"})
 
 
+# ---------------------------------------------------------------------------
+# mail notifications toggle (admin only)
+# ---------------------------------------------------------------------------
+
+def is_mail_notifications_enabled():
+	"""Return True when mail notifications are ON (the default).
+	
+	The setting is stored in frappe.defaults and managed via the
+	/portal_settings page (admin only).
+	"""
+	value = frappe.defaults.get_default("demo_portal_mail_notifications")
+	# Default to enabled (1) when the setting has never been set.
+	return value != 0
+
+
+@frappe.whitelist()
+def get_mail_notifications_status():
+	"""Return the current mail notifications setting (for the JS toggle)."""
+	return is_mail_notifications_enabled()
+
+
+@frappe.whitelist()
+def toggle_mail_notifications():
+	"""Toggle the mail notifications setting. Admin only.
+	
+	Returns the new state (True = enabled, False = disabled).
+	"""
+	if not is_admin():
+		frappe.throw(
+			_("Only administrators can change this setting."),
+			frappe.PermissionError,
+		)
+	current = is_mail_notifications_enabled()
+	new_value = 0 if current else 1
+	frappe.defaults.set_default("demo_portal_mail_notifications", new_value)
+	return not current
+
+
 def consultant_of_user(user=None):
 	"""Functional Consultant record linked to the current user.		Administrator gets a consultant profile auto-created on first access so the
 		whole portal (My Sessions, Follow-ups, …) works right away for the site
@@ -157,7 +195,10 @@ def sidebar_items(active):
 	"""Sidebar menu for the current user. The sales team sees all content
 	(sales + functional); functional team members see only functional-related
 	sections (never the sales ones); the feedback-only Developer role sees only
-	Feedback."""
+	Feedback.
+	
+	When mail notifications are disabled by the admin, the Sales sections are
+	hidden for ALL users."""
 	if is_developer():
 		return [
 			{"label": _("Feedback"), "route": "/feedback", "icon": ICON_FEEDBACK, "active": active == "feedback"},
@@ -165,7 +206,9 @@ def sidebar_items(active):
 
 	items = [{"label": _("Home"), "route": "/demo_portal", "icon": ICON_HOME, "active": active == "home"}]
 
-	if is_sales():
+	# Hide all sales sections when mail notifications are disabled
+	mail_enabled = is_mail_notifications_enabled()
+	if is_sales() and mail_enabled:
 		items += [
 			{"label": _("Sales Home"), "route": "/sales_portal", "icon": ICON_SALES, "active": active == "sales"},
 			{"label": _("Sales"), "route": "/sales_portal/my_leads", "icon": ICON_LEADS, "active": active == "leads"},
@@ -197,6 +240,10 @@ def sidebar_items(active):
 	if is_manager():
 		items.append({"label": _("Feedback"), "route": "/feedback", "icon": ICON_FEEDBACK, "active": active == "feedback"})
 
+	# Admin settings (Administrator / System Manager only)
+	if is_admin():
+		items.append({"label": _("Settings"), "route": "/portal_settings", "icon": ICON_MANAGER, "active": active == "settings"})
+
 	return items
 
 
@@ -205,9 +252,12 @@ def create_notification(for_user, subject, document_type, document_name):
 	notification bell and in the ERPNext desk bell (both read Notification Log).
 	Also fires a Web Push (OS-level popup with sound) to the user's subscribed
 	browsers when the site has VAPID keys configured, so the user sees the
-	notification even when they are on another page/site entirely.
-	A failure is logged but never blocks the action that triggered it."""
+	notification even when they are on another page/site entirely.	A failure is logged but never blocks the action that triggered it.
+		
+	Skips when mail notifications are disabled by the admin."""
 	if not for_user or for_user == "Guest":
+		return
+	if not is_mail_notifications_enabled():
 		return
 	try:
 		# Frappe v15+ turned Notification Log.type from a Select into a Link to
@@ -246,7 +296,8 @@ def create_notification(for_user, subject, document_type, document_name):
 			message=frappe.get_traceback(),
 		)
 
-	_send_web_push(for_user, subject, document_type, document_name, note.name)
+	if is_mail_notifications_enabled():
+		_send_web_push(for_user, subject, document_type, document_name, note.name)
 
 def _push_target_url(document_type, document_name):
 	"""Portal route a Web Push notification should open when clicked - mirrors
@@ -346,7 +397,11 @@ def send_branded_email(
 	"""Send a professional, on-brand HTML email (navy/mint design system, the
 	same look as the portal). rows is a list of (label, value) pairs rendered
 	as a clean two-column table; cta_text / cta_url render a mint action
-	button. Mail failures are logged by the callers, never raised here."""
+	button. Mail failures are logged by the callers, never raised here.
+	
+	Skips sending when mail notifications are disabled by the admin."""
+	if not is_mail_notifications_enabled():
+		return
 	import html as _html
 
 	def esc(value):

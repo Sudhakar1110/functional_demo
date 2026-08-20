@@ -1,0 +1,178 @@
+{% extends "templates/web.html" %}
+{% block banner %}{% endblock %}
+{% block navbar %}{% endblock %}
+{% block footer %}{% endblock %}
+{% block style %}{% include "functional_demo/templates/includes/portal_style.html" %}{% endblock %}
+{% block script %}{% include "functional_demo/templates/includes/portal_script.html" %}{% endblock %}
+{% block content %}
+<div class="portal-layout">
+	<header class="portal-topbar">
+		<button class="sidebar-toggle" id="sidebar-toggle" aria-label="Menu">&#9776;</button>
+		<a class="topbar-brand" href="/demo_portal">
+			<img class="brand-logo" src="/assets/functional_demo/images/brand_logo.jpg" alt="Brand Logo" />
+			<div class="brand-text">
+				<span class="brand-name">Demo Portal</span>
+				<span class="brand-sub">Sales &amp; Functional</span>
+			</div>
+		</a>
+		<div class="topbar-title">
+			<h1>{{ title }}</h1>
+			<p>{{ subtitle }}</p>
+		</div>
+		<div class="topbar-right">
+			<span class="portal-avatar">{{ full_name[:1] }}</span>
+			<span class="portal-user-name">{{ full_name }}</span>
+			<a class="btn-desk" href="/app">Open Desk</a>
+		</div>
+	</header>
+	<div class="portal-body">
+		<aside class="portal-sidebar" id="portal-sidebar">
+			<div class="sidebar-menu">
+			{% for item in sidebar_items %}
+			<a class="sidebar-item {% if item.active %}active{% endif %}" href="{{ item.route }}">
+				<span class="sidebar-icon">{{ item.icon | safe }}</span>{{ item.label }}
+			</a>
+			{% endfor %}
+		</div>
+	</aside>
+	<div class="sidebar-overlay"></div>
+	<div class="portal-main">
+		<div class="portal-content">
+			<div class="dash-greet">
+				<div>
+					<span class="greet-eyebrow">● {{ today_pretty }}</span>
+					<h1>{{ greeting }}, {{ full_name }}</h1>
+					<p>Manage portal settings. Only administrators can access this page.</p>
+				</div>
+			</div>
+
+			<div class="portal-card" style="max-width: 700px;">
+				<div class="card-head">
+					<h2>Mail Notifications</h2>
+				</div>
+				<div class="card-body">
+					<p style="color: #71717B; font-size: 14px; margin-bottom: 20px;">
+						Control email notifications and the Sales portal visibility.
+						When disabled, all email notifications are turned off and the Sales option is completely hidden for all users.
+					</p>
+
+					<div style="display: flex; align-items: center; gap: 16px; padding: 20px; background: #F9FAFB; border-radius: 10px; border: 1px solid #E5E7EB;">
+						<div style="flex: 1;">
+							<div style="font-weight: 600; color: #05133C; font-size: 15px; margin-bottom: 4px;">
+								Email Notifications
+							</div>
+							<div style="color: #71717B; font-size: 13px;" id="mail-status-text">
+								{% if mail_notifications_enabled %}
+								Currently <strong style="color: #10B981;">ON</strong> — Sales portal is visible and email notifications are active.
+								{% else %}
+								Currently <strong style="color: #EF4444;">OFF</strong> — Sales portal is hidden and email notifications are disabled.
+								{% endif %}
+							</div>
+						</div>
+						<button
+							type="button"
+							id="mail-toggle-btn"
+							class="btn-portal {% if mail_notifications_enabled %}toggle-on{% else %}toggle-off{% endif %}"
+							style="min-width: 120px; font-weight: 600; transition: all 0.3s ease;"
+							onclick="toggleMailNotifications()"
+						>
+							{% if mail_notifications_enabled %}
+							✅ ON
+							{% else %}
+							🔴 OFF
+							{% endif %}
+						</button>
+					</div>
+
+					<div style="margin-top: 20px; padding: 16px; background: #FFF7ED; border-radius: 8px; border: 1px solid #FDBA74;">
+						<div style="display: flex; align-items: flex-start; gap: 10px;">
+							<span style="font-size: 18px;">ℹ️</span>
+							<div>
+								<div style="font-weight: 600; color: #9A3412; font-size: 13px; margin-bottom: 4px;">What happens when you turn OFF notifications?</div>
+								<ul style="color: #9A3412; font-size: 12px; margin: 0; padding-left: 16px;">
+									<li>All email notifications are stopped (demo scheduled, completed, reminders, etc.)</li>
+									<li>The Sales Portal is completely hidden for ALL users</li>
+									<li>Sales-related sidebar items disappear for everyone</li>
+									<li>The Functional Portal and other sections remain unaffected</li>
+								</ul>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	</div>
+</div>
+
+<style>
+	.toggle-on {
+		background: #10B981 !important;
+		color: #fff !important;
+		border: none;
+		cursor: pointer;
+		padding: 10px 24px;
+		border-radius: 8px;
+		font-size: 14px;
+	}
+	.toggle-on:hover {
+		background: #059669 !important;
+	}
+	.toggle-off {
+		background: #EF4444 !important;
+		color: #fff !important;
+		border: none;
+		cursor: pointer;
+		padding: 10px 24px;
+		border-radius: 8px;
+		font-size: 14px;
+	}
+	.toggle-off:hover {
+		background: #DC2626 !important;
+	}
+	#mail-toggle-btn.loading {
+		opacity: 0.6;
+		pointer-events: none;
+	}
+</style>
+
+<script>
+function toggleMailNotifications() {
+	var btn = document.getElementById("mail-toggle-btn");
+	var statusText = document.getElementById("mail-status-text");
+	btn.classList.add("loading");
+	btn.textContent = "Updating...";
+
+	portalCall("functional_demo.portal.toggle_mail_notifications", {})
+		.then(function (enabled) {
+			btn.classList.remove("loading");
+			if (enabled) {
+				btn.className = "btn-portal toggle-on";
+				btn.textContent = "✅ ON";
+				statusText.innerHTML = 'Currently <strong style="color: #10B981;">ON</strong> — Sales portal is visible and email notifications are active.';
+				portalAlert("Mail notifications enabled. Sales portal is now visible for all users.", "ok");
+			} else {
+				btn.className = "btn-portal toggle-off";
+				btn.textContent = "🔴 OFF";
+				statusText.innerHTML = 'Currently <strong style="color: #EF4444;">OFF</strong> — Sales portal is hidden and email notifications are disabled.';
+				portalAlert("Mail notifications disabled. Sales portal is now hidden for all users.", "ok");
+			}
+		})
+		.catch(function (err) {
+			btn.classList.remove("loading");
+			// Revert button text based on current state
+			portalCall("functional_demo.portal.is_mail_notifications_enabled", {})
+				.then(function (enabled) {
+					if (enabled) {
+						btn.className = "btn-portal toggle-on";
+						btn.textContent = "✅ ON";
+					} else {
+						btn.className = "btn-portal toggle-off";
+						btn.textContent = "🔴 OFF";
+					}
+				})
+				.catch(function () {});
+		});
+}
+</script>
+{% endblock %}
