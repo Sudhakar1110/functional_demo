@@ -81,10 +81,10 @@ def can_manage_consultants(user=None):
 def is_mail_notifications_enabled():
 	"""Return True when mail notifications are ON (the default).
 	
-	The setting is stored in frappe.defaults and managed via the
+	The setting is stored in tabSingles and managed via the
 	/portal_settings page (admin only).
 	"""
-	value = frappe.defaults.get_default("demo_portal_mail_notifications")
+	value = frappe.db.get_default("demo_portal_mail_notifications")
 	# Default to enabled (1) when the setting has never been set.
 	return value != 0
 
@@ -108,7 +108,7 @@ def toggle_mail_notifications():
 		)
 	current = is_mail_notifications_enabled()
 	new_value = 0 if current else 1
-	frappe.defaults.set_default("demo_portal_mail_notifications", new_value)
+	frappe.db.set_default("demo_portal_mail_notifications", new_value)
 	return not current
 
 
