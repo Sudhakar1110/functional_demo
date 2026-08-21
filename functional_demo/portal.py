@@ -594,6 +594,17 @@ def greeting():
 	return _("Good evening")
 
 
+# Status display mapping — only changes what the user sees, not the DB value
+STATUS_DISPLAY = {
+	"Converted": "Demo Completed",
+}
+
+
+def display_status(val):
+	"""Return the user-friendly display name for a status value."""
+	return STATUS_DISPLAY.get(val, val) if val else val
+
+
 def portal_context(context, title, required_roles, active, subtitle=""):
 	"""Standard context setup for login-required, role-guarded portal pages."""
 	context.login_required = True
@@ -619,6 +630,7 @@ def portal_context(context, title, required_roles, active, subtitle=""):
 	context.greeting = greeting()
 	context.today_pretty = frappe.utils.now_datetime().strftime("%A, %d %B %Y")
 	context.sidebar_items = sidebar_items(active)
+	context.display_status = display_status
 	# Full-bleed dashboard layout: skip the standard website container
 	# (web.html renders <main class="container my-4"> unless full_width is set)
 	context.full_width = True

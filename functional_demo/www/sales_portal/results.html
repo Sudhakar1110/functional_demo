@@ -133,7 +133,7 @@
 								<td>{{ r.interested or "-" }}</td>
 								<td>{{ r.requirements_met or "-" }}</td>
 								<td>{% if r.follow_up_required %}<span class="badge b-followup-required">Yes</span>{% else %}No{% endif %}</td>
-								<td>{{ r.final_result or "-" }}</td>
+								<td>{{ display_status(r.final_result) or "-" }}</td>
 								<td><span class="badge b-{{ r.demo_status|lower|replace(' ', '-') }}">{{ r.demo_status }}</span></td>
 							</tr>
 							{% if r.overall_feedback %}

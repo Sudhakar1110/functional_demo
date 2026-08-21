@@ -111,7 +111,7 @@
 									{% if r.session_status %}
 										<span class="badge b-{{ r.session_status|lower|replace(' ', '-') }}">{{ r.session_status }}</span>
 									{% elif r.status %}
-										<span class="badge b-{{ r.status|lower|replace(' ', '-') }}">{{ r.status }}</span>
+										<span class="badge b-{{ r.status|lower|replace(' ', '-') }}">{{ display_status(r.status) }}</span>
 									{% else %}
 										<span class="badge b-assigned">Assigned</span>
 									{% endif %}

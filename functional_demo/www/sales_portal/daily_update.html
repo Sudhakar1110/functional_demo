@@ -116,7 +116,7 @@
 								<td>{{ r.sales_person or "-" }}</td>
 								<td>{{ r.interested_module or "-" }}</td>
 								<td>{% if r.priority %}<span class="chip {{ r.priority|lower }}">{{ r.priority }}</span>{% else %}-{% endif %}</td>
-								<td><span class="badge b-{{ r.status|lower|replace(' ', '-') }}">{{ r.status }}</span></td>
+								<td><span class="badge b-{{ r.status|lower|replace(' ', '-') }}">{{ display_status(r.status) }}</span></td>
 							</tr>
 							{% endfor %}
 						</tbody>
@@ -150,7 +150,7 @@
 								<td><strong>{{ r.customer or "-" }}</strong></td>
 								<td>{{ r.sales_person or "-" }}</td>
 								<td>{{ r.interested_module or "-" }}</td>
-								<td><span class="badge b-{{ r.status|lower|replace(' ', '-') }}">{{ r.status }}</span></td>
+								<td><span class="badge b-{{ r.status|lower|replace(' ', '-') }}">{{ display_status(r.status) }}</span></td>
 								<td class="muted">{{ r.modified }}</td>
 							</tr>
 							{% endfor %}
@@ -191,7 +191,7 @@
 									{% elif s.final_result == "Not Interested" %}
 									<span class="badge b-not-interested">Not Interested</span>
 									{% else %}
-									<span class="badge b-scheduled">{{ s.final_result or "Pending" }}</span>
+									<span class="badge b-scheduled">{{ display_status(s.final_result) or "Pending" }}</span>
 									{% endif %}
 								</td>
 								<td>
@@ -319,7 +319,7 @@
 								<td><strong>{{ f.customer or "-" }}</strong></td>
 								<td>{{ f.sales_person or "-" }}</td>
 								<td>{% if f.demo_request %}<a href="/sales_portal/demo_request?name={{ f.demo_request }}">{{ f.demo_request }}</a>{% else %}-{% endif %}</td>
-								<td><span class="badge b-{{ f.status|lower|replace(' ', '-') }}">{{ f.status }}</span></td>
+								<td><span class="badge b-{{ f.status|lower|replace(' ', '-') }}">{{ display_status(f.status) }}</span></td>
 								<td style="max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ f.remarks or f.subject or "-" }}</td>
 							</tr>
 							{% endfor %}
@@ -368,7 +368,7 @@
 								<td><strong>{{ r.customer or "-" }}</strong></td>
 								<td>{{ r.sales_person or "-" }}</td>
 								<td>{{ r.interested_module or "-" }}</td>
-								<td><span class="badge b-{{ r.status|lower|replace(' ', '-') }}">{{ r.status }}</span></td>
+								<td><span class="badge b-{{ r.status|lower|replace(' ', '-') }}">{{ display_status(r.status) }}</span></td>
 								<td>
 									{% if r.days_pending > 10 %}
 									<span style="color: #DC2626; font-weight: 700;">{{ r.days_pending }} days</span>

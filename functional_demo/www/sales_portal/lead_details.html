@@ -61,7 +61,7 @@
 		<div class="flex-between mb-16">
 			<h2 style="margin: 0; font-size: 20px; font-weight: 800; color: #05133C;">Lead Details — {{ request.name }}</h2>
 			<div style="display: flex; gap: 10px;">
-				<span class="badge b-{{ request.status|lower|replace(' ', '-') }}">{{ request.status }}</span>
+				<span class="badge b-{{ request.status|lower|replace(' ', '-') }}">{{ display_status(request.status) }}</span>
 				{% if request.priority %}<span class="chip {{ request.priority|lower }}">{{ request.priority }}</span>{% endif %}
 			</div>
 		</div>
@@ -184,7 +184,7 @@
 								<td>{{ s.scheduled_date or "-" }}</td>
 								<td>{{ s.interested_module or "-" }}</td>
 								<td><span class="badge b-{{ s.demo_status|lower|replace(' ', '-') }}">{{ s.demo_status }}</span></td>
-								<td>{{ s.final_result or "-" }}</td>
+								<td>{{ display_status(s.final_result) or "-" }}</td>
 							</tr>
 							{% endfor %}
 						</tbody>
@@ -214,7 +214,7 @@
 								<td><a href="/functional_portal/follow_ups">{{ f.name }}</a></td>
 								<td>{{ f.assigned_display }}</td>
 								<td>{{ f.due_display }}</td>
-								<td><span class="badge b-{{ f.status|lower|replace(' ', '-') }}">{{ f.status }}</span></td>
+								<td><span class="badge b-{{ f.status|lower|replace(' ', '-') }}">{{ display_status(f.status) }}</span></td>
 							</tr>
 							{% endfor %}
 						</tbody>

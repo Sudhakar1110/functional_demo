@@ -179,7 +179,7 @@
 										</ul>
 										{% else %}<span class="muted">-</span>{% endif %}
 									</td>
-									<td>{{ f.final_result or "-" }}</td>
+									<td>{{ display_status(f.final_result) or "-" }}</td>
 								</tr>
 								{% endfor %}
 							</tbody>

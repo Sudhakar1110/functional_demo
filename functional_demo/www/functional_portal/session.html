@@ -68,8 +68,8 @@
 						<h2>{{ s.name }}</h2>
 						<div style="margin-top: 8px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
 							<span class="badge b-{{ s.demo_status|lower|replace(' ', '-') }}">{{ s.demo_status }}</span>
-							{% if r.status %}<span class="badge b-{{ r.status|lower|replace(' ', '-') }}">Request: {{ r.status }}</span>{% endif %}
-							{% if s.final_result %}<span class="badge b-{{ s.final_result|lower|replace(' ', '-') }}">Result: {{ s.final_result }}</span>{% endif %}
+							{% if r.status %}<span class="badge b-{{ r.status|lower|replace(' ', '-') }}">Request: {{ display_status(r.status) }}</span>{% endif %}
+							{% if s.final_result %}<span class="badge b-{{ s.final_result|lower|replace(' ', '-') }}">Result: {{ display_status(s.final_result) }}</span>{% endif %}
 						</div>
 					</div>
 					<div style="display: flex; gap: 8px; flex-wrap: wrap;">

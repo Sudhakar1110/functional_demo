@@ -135,7 +135,7 @@
 					<div>
 						<h2>{{ doc.name }}</h2>
 						<div style="margin-top: 8px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
-							<span class="badge b-{{ doc.status|lower|replace(' ', '-') }}">{{ doc.status }}</span>
+							<span class="badge b-{{ doc.status|lower|replace(' ', '-') }}">{{ display_status(doc.status) }}</span>
 							{% if doc.priority %}<span class="chip {{ doc.priority|lower }}">{{ doc.priority }} priority</span>{% endif %}
 							{% if doc.sla_breached %}<span class="badge b-sla-breached">SLA Breached</span>{% elif doc.sla_due_date %}<span class="chip">SLA due {{ doc.sla_due_date }}</span>{% endif %}
 							<span class="muted">Created: {{ doc.creation.strftime('%d %b %Y, %H:%M') if doc.creation else '-' }}</span>

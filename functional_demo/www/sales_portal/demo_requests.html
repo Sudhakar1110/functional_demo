@@ -89,7 +89,7 @@
 								<td>{% if r.priority %}<span class="chip {{ r.priority|lower }}">{{ r.priority }}</span>{% else %}-{% endif %}</td>
 								<td>{{ r.functional_consultant or "-" }}</td>
 								<td>{{ r.preferred_demo_date or "-" }}</td>
-								<td><span class="badge b-{{ r.status|lower|replace(' ', '-') }}">{{ r.status }}</span></td>
+								<td><span class="badge b-{{ r.status|lower|replace(' ', '-') }}">{{ display_status(r.status) }}</span></td>
 								<td>{% if r.sla_breached %}<span class="badge b-sla-breached">Breached</span>{% elif r.sla_due_date %}<span class="chip">{{ r.sla_due_date }}</span>{% else %}-{% endif %}</td>
 							</tr>
 							{% endfor %}

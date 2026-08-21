@@ -93,10 +93,10 @@
 									{% if s.is_session %}
 									<span class="badge b-{{ s.demo_status|lower|replace(' ', '-') }}">{{ s.demo_status }}</span>
 									{% else %}
-									<span class="badge b-assigned">{{ s.status }}</span>
+									<span class="badge b-assigned">{{ display_status(s.status) }}</span>
 									{% endif %}
 								</td>
-								<td>{{ s.final_result or "-" }}</td>
+								<td>{{ display_status(s.final_result) or "-" }}</td>
 								<td>
 									{% if s.is_session and s.demo_status in ["Scheduled", "In Progress", "Rescheduled"] %}
 									<a class="btn-portal sm" href="/functional_portal/session?name={{ s.name }}">{% if is_sales %}Open{% else %}Conduct Demo &rarr;{% endif %}</a>

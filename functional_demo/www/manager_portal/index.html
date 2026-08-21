@@ -124,7 +124,7 @@
 								<td>{{ r.interested_module or "-" }}</td>
 								<td>{% if r.priority %}<span class="chip {{ r.priority|lower }}">{{ r.priority }}</span>{% else %}-{% endif %}</td>
 								<td>{{ r.consultant_name }}</td>
-								<td><span class="badge b-{{ r.status|lower|replace(' ', '-') }}">{{ r.status }}</span></td>
+								<td><span class="badge b-{{ r.status|lower|replace(' ', '-') }}">{{ display_status(r.status) }}</span></td>
 								<td>
 									{% if r.status in ["Manager Review", "Requested", "Draft"] %}
 									<select class="manager-assign-select" data-request="{{ r.name }}" style="font-size: 12px; padding: 4px 8px; border: 1px solid #E5E7EB; border-radius: 6px;">
@@ -254,7 +254,7 @@
 								<td>{{ s.date_display }}</td>
 								<td>{{ s.start_time or "-" }}</td>
 								<td><span class="badge b-{{ s.demo_status|lower|replace(' ', '-') }}">{{ s.demo_status }}</span></td>
-								<td>{% if s.final_result %}<span class="badge b-{{ s.final_result|lower|replace(' ', '-') }}">{{ s.final_result }}</span>{% else %}-{% endif %}</td>
+								<td>{% if s.final_result %}<span class="badge b-{{ s.final_result|lower|replace(' ', '-') }}">{{ display_status(s.final_result) }}</span>{% else %}-{% endif %}</td>
 							</tr>
 							{% endfor %}
 						</tbody>
