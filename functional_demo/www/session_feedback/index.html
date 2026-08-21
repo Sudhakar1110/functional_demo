@@ -20,6 +20,26 @@
 	.sf-btn-done { background: #DCFBEA; color: #009A52; }
 	.sf-pending { color: #009A52; font-weight: 600; }
 	.sf-done { color: #71717B; }
+	.sf-modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; justify-content: center; align-items: center; }
+	.sf-modal-overlay.active { display: flex; }
+	.sf-modal { background: #fff; border-radius: 12px; width: 90%; max-width: 560px; max-height: 85vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+	.sf-modal-head { padding: 20px 24px 0; display: flex; justify-content: space-between; align-items: center; }
+	.sf-modal-head h2 { font-size: 18px; font-weight: 700; color: #05133C; margin: 0; }
+	.sf-modal-close { background: none; border: none; font-size: 22px; cursor: pointer; color: #9CA3AF; padding: 0 4px; }
+	.sf-modal-body { padding: 16px 24px; }
+	.sf-modal-foot { padding: 12px 24px 20px; display: flex; gap: 10px; justify-content: flex-end; }
+	.sf-form-row { margin-bottom: 14px; }
+	.sf-form-row label { display: block; font-size: 12px; font-weight: 600; color: #71717B; margin-bottom: 4px; }
+	.sf-form-row input, .sf-form-row select, .sf-form-row textarea { width: 100%; padding: 8px 12px; border: 1px solid #E5E7EB; border-radius: 6px; font-size: 13px; box-sizing: border-box; }
+	.sf-form-row textarea { min-height: 80px; resize: vertical; }
+	.sf-form-row .sf-hint { font-size: 11px; color: #9CA3AF; margin-top: 3px; }
+	.sf-submit-btn { padding: 10px 24px; background: #114EFF; color: #fff; border: none; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer; }
+	.sf-submit-btn:hover { background: #0D3FCC; }
+	.sf-submit-btn:disabled { background: #9CA3AF; cursor: not-allowed; }
+	.sf-cancel-btn { padding: 10px 20px; background: #F3F4F6; color: #71717B; border: none; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer; }
+	.sf-toast { position: fixed; top: 20px; right: 20px; padding: 14px 20px; border-radius: 8px; color: #fff; font-size: 14px; font-weight: 600; z-index: 99999; display: none; }
+	.sf-toast.success { background: #009A52; display: block; }
+	.sf-toast.error { background: #DC2626; display: block; }
 </style>
 {% endblock %}
 {% block content %}
@@ -122,7 +142,10 @@
 									{% if s.has_feedback %}
 									<button class="sf-btn sf-btn-done" disabled>✅ Sent</button>
 									{% else %}
-									<button class="sf-btn sf-btn-primary" onclick="openFeedbackDialog('{{ s.name }}', '{{ s.customer_display }}', '{{ s.consultant_display }}')">💬 Send Feedback</button>
+									<button class="sf-btn sf-btn-primary sf-open-btn"
+										data-session="{{ s.name }}"
+										data-customer="{{ s.customer_display }}"
+										data-consultant="{{ s.consultant_display }}">💬 Send Feedback</button>
 									{% endif %}
 								</td>
 							</tr>
@@ -136,46 +159,141 @@
 	</div>
 	</div>
 </div>
+
+<!-- Feedback Modal -->
+<div class="sf-modal-overlay" id="sf-modal">
+	<div class="sf-modal">
+		<div class="sf-modal-head">
+			<h2>Send Feedback to Dev Team</h2>
+			<button class="sf-modal-close" id="sf-close">&times;</button>
+		</div>
+		<div class="sf-modal-body">
+			<div class="sf-form-row">
+				<label>Demo Session</label>
+				<input type="text" id="sf-session" readonly style="background: #F9FAFB;">
+			</div>
+			<div class="sf-form-row">
+				<label>Customer</label>
+				<input type="text" id="sf-customer" readonly style="background: #F9FAFB;">
+			</div>
+			<div class="sf-form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+				<div>
+					<label>Feedback Type</label>
+					<select id="sf-type">
+						<option value="Bug">Bug</option>
+						<option value="Feature Request">Feature Request</option>
+						<option value="Improvement">Improvement</option>
+						<option value="General">General</option>
+					</select>
+				</div>
+				<div>
+					<label>Priority</label>
+					<select id="sf-priority">
+						<option value="Low">Low</option>
+						<option value="Medium" selected>Medium</option>
+						<option value="High">High</option>
+						<option value="Critical">Critical</option>
+					</select>
+				</div>
+			</div>
+			<div class="sf-form-row">
+				<label>Subject</label>
+				<input type="text" id="sf-subject" placeholder="Brief summary of the feedback">
+			</div>
+			<div class="sf-form-row">
+				<label>Description</label>
+				<textarea id="sf-description" placeholder="Detailed feedback for the development team..."></textarea>
+			</div>
+		</div>
+		<div class="sf-modal-foot">
+			<button class="sf-cancel-btn" id="sf-cancel-btn">Cancel</button>
+			<button class="sf-submit-btn" id="sf-submit">Send Feedback</button>
+		</div>
+	</div>
+</div>
+
+<!-- Toast -->
+<div class="sf-toast" id="sf-toast"></div>
 {% endblock %}
 
 {% block script %}
 {% include "functional_demo/templates/includes/portal_script.html" %}
 <script>
-function openFeedbackDialog(session, customer, consultant) {
-	var d = new frappe.ui.Dialog({
-		title: "Send Feedback to Development Team",
-		fields: [
-			{ fieldname: "demo_session", label: "Demo Session", fieldtype: "Data", default: session, read_only: 1 },
-			{ fieldname: "feedback_type", label: "Feedback Type", fieldtype: "Select", options: "Bug\nFeature Request\nImprovement\nGeneral", default: "Bug", reqd: 1 },
-			{ fieldname: "priority", label: "Priority", fieldtype: "Select", options: "Low\nMedium\nHigh\nCritical", default: "Medium", reqd: 1 },
-			{ fieldname: "subject", label: "Subject", fieldtype: "Data", reqd: 1, description: "Brief summary of the feedback" },
-			{ fieldname: "description", label: "Description", fieldtype: "Small Text", reqd: 1, description: "Detailed feedback for the development team" },
-		],
-		primary_action_label: "Send Feedback",
-		primary_action(values) {
-			frappe.call({
-				method: "frappe.client.insert",
-				args: {
-					doc: {
-						doctype: "Session Feedback",
-						demo_session: values.demo_session,
-						feedback_type: values.feedback_type,
-						priority: values.priority,
-						subject: values.subject,
-						description: values.description,
-					}
-				},
-				callback: function(r) {
-					if (r.message) {
-						frappe.show_alert({ message: "Feedback sent to development team!", indicator: "green" });
-						d.hide();
-						window.location.reload();
-					}
-				},
-			});
-		},
+(function() {
+	var overlay = document.getElementById("sf-modal");
+	var closeBtn = document.getElementById("sf-close");
+	var cancelBtn = document.getElementById("sf-cancel-btn");
+	var submitBtn = document.getElementById("sf-submit");
+	var toast = document.getElementById("sf-toast");
+
+	function openModal(session, customer, consultant) {
+		document.getElementById("sf-session").value = session;
+		document.getElementById("sf-customer").value = customer;
+		document.getElementById("sf-subject").value = "";
+		document.getElementById("sf-description").value = "";
+		overlay.classList.add("active");
+	}
+
+	function closeModal() {
+		overlay.classList.remove("active");
+	}
+
+	function showToast(msg, type) {
+		toast.textContent = msg;
+		toast.className = "sf-toast " + type;
+		setTimeout(function() { toast.className = "sf-toast"; }, 3000);
+	}
+
+	// Open button clicks
+	document.querySelectorAll(".sf-open-btn").forEach(function(btn) {
+		btn.addEventListener("click", function() {
+			openModal(
+				btn.getAttribute("data-session"),
+				btn.getAttribute("data-customer"),
+				btn.getAttribute("data-consultant")
+			);
+		});
 	});
-	d.show();
-}
+
+	closeBtn.addEventListener("click", closeModal);
+	cancelBtn.addEventListener("click", closeModal);
+	overlay.addEventListener("click", function(e) {
+		if (e.target === overlay) closeModal();
+	});
+
+	// Submit
+	submitBtn.addEventListener("click", function() {
+		var session = document.getElementById("sf-session").value;
+		var fbType = document.getElementById("sf-type").value;
+		var priority = document.getElementById("sf-priority").value;
+		var subject = document.getElementById("sf-subject").value.trim();
+		var description = document.getElementById("sf-description").value.trim();
+
+		if (!subject) { showToast("Please enter a subject.", "error"); return; }
+		if (!description) { showToast("Please enter a description.", "error"); return; }
+
+		submitBtn.disabled = true;
+		submitBtn.textContent = "Sending...";
+
+		portalCall("frappe.client.insert", {
+			doc: JSON.stringify({
+				doctype: "Session Feedback",
+				demo_session: session,
+				feedback_type: fbType,
+				priority: priority,
+				subject: subject,
+				description: description,
+			})
+		}).then(function() {
+			showToast("Feedback sent to development team!", "success");
+			closeModal();
+			setTimeout(function() { window.location.reload(); }, 1000);
+		}).catch(function(err) {
+			showToast("Error: " + (err.message || "Failed to send"), "error");
+			submitBtn.disabled = false;
+			submitBtn.textContent = "Send Feedback";
+		});
+	});
+})();
 </script>
 {% endblock %}

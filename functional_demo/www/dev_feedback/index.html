@@ -26,6 +26,26 @@
 	.df-btn-respond { background: #114EFF; color: #fff; }
 	.df-btn-respond:hover { background: #0D3FCC; }
 	.df-desc { max-width: 280px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+	.df-modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; justify-content: center; align-items: center; }
+	.df-modal-overlay.active { display: flex; }
+	.df-modal { background: #fff; border-radius: 12px; width: 90%; max-width: 560px; max-height: 85vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+	.df-modal-head { padding: 20px 24px 0; display: flex; justify-content: space-between; align-items: center; }
+	.df-modal-head h2 { font-size: 18px; font-weight: 700; color: #05133C; margin: 0; }
+	.df-modal-close { background: none; border: none; font-size: 22px; cursor: pointer; color: #9CA3AF; padding: 0 4px; }
+	.df-modal-body { padding: 16px 24px; }
+	.df-modal-foot { padding: 12px 24px 20px; display: flex; gap: 10px; justify-content: flex-end; }
+	.df-form-row { margin-bottom: 14px; }
+	.df-form-row label { display: block; font-size: 12px; font-weight: 600; color: #71717B; margin-bottom: 4px; }
+	.df-form-row input, .df-form-row select, .df-form-row textarea { width: 100%; padding: 8px 12px; border: 1px solid #E5E7EB; border-radius: 6px; font-size: 13px; box-sizing: border-box; }
+	.df-form-row textarea { min-height: 80px; resize: vertical; }
+	.df-form-row .df-hint { font-size: 11px; color: #9CA3AF; margin-top: 3px; }
+	.df-submit-btn { padding: 10px 24px; background: #114EFF; color: #fff; border: none; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer; }
+	.df-submit-btn:hover { background: #0D3FCC; }
+	.df-submit-btn:disabled { background: #9CA3AF; cursor: not-allowed; }
+	.df-cancel-btn { padding: 10px 20px; background: #F3F4F6; color: #71717B; border: none; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer; }
+	.df-toast { position: fixed; top: 20px; right: 20px; padding: 14px 20px; border-radius: 8px; color: #fff; font-size: 14px; font-weight: 600; z-index: 99999; display: none; }
+	.df-toast.success { background: #009A52; display: block; }
+	.df-toast.error { background: #DC2626; display: block; }
 </style>
 {% endblock %}
 {% block content %}
@@ -141,7 +161,13 @@
 								<td><span class="df-badge df-status-{{ fb.status|lower|replace(' ', '-') }}">{{ fb.status }}</span></td>
 								<td>
 									{% if fb.status != "Closed" %}
-									<button class="df-btn df-btn-respond" onclick="respondToFeedback('{{ fb.name }}')">💬 Respond</button>
+									<button class="df-btn df-btn-respond df-respond-btn"
+										data-name="{{ fb.name }}"
+										data-subject="{{ fb.subject }}"
+										data-desc="{{ fb.description }}"
+										data-type="{{ fb.feedback_type }}"
+										data-priority="{{ fb.priority }}"
+										data-status="{{ fb.status }}">💬 Respond</button>
 									{% else %}
 									<span style="color: #9CA3AF; font-size: 12px;">Closed</span>
 									{% endif %}
@@ -162,53 +188,131 @@
 	</div>
 	</div>
 </div>
+
+<!-- Response Modal -->
+<div class="df-modal-overlay" id="df-modal">
+	<div class="df-modal">
+		<div class="df-modal-head">
+			<h2>Respond to Feedback</h2>
+			<button class="df-modal-close" id="df-close">&times;</button>
+		</div>
+		<div class="df-modal-body">
+			<div class="df-form-row">
+				<label>Feedback ID</label>
+				<input type="text" id="df-name" readonly style="background: #F9FAFB;">
+			</div>
+			<div class="df-form-row">
+				<label>Subject</label>
+				<input type="text" id="df-subject" readonly style="background: #F9FAFB;">
+			</div>
+			<div class="df-form-row">
+				<label>Type / Priority</label>
+				<input type="text" id="df-type-priority" readonly style="background: #F9FAFB;">
+			</div>
+			<div class="df-form-row">
+				<label>Manager's Feedback</label>
+				<textarea id="df-manager-desc" readonly style="background: #F9FAFB;"></textarea>
+			</div>
+			<div class="df-form-row">
+				<label>Your Response</label>
+				<textarea id="df-response" placeholder="Write your response to the manager..."></textarea>
+			</div>
+			<div class="df-form-row">
+				<label>Update Status To</label>
+				<select id="df-status">
+					<option value="Open">Open</option>
+					<option value="In Progress">In Progress</option>
+					<option value="Resolved">Resolved</option>
+					<option value="Closed">Closed</option>
+				</select>
+			</div>
+		</div>
+		<div class="df-modal-foot">
+			<button class="df-cancel-btn" id="df-cancel-btn">Cancel</button>
+			<button class="df-submit-btn" id="df-submit">Submit Response</button>
+		</div>
+	</div>
+</div>
+
+<!-- Toast -->
+<div class="df-toast" id="df-toast"></div>
 {% endblock %}
 
 {% block script %}
 {% include "functional_demo/templates/includes/portal_script.html" %}
 <script>
-function respondToFeedback(name) {
-	frappe.call({
-		method: "frappe.client.get_value",
-		args: { doctype: "Session Feedback", filters: { name: name }, fieldname: ["subject", "description", "feedback_type", "priority", "status"] },
-		callback: function(r) {
-			if (!r.message) return;
-			var fb = r.message;
-			var d = new frappe.ui.Dialog({
-				title: "Respond to Feedback: " + name,
-				fields: [
-					{ fieldname: "info", label: "Subject", fieldtype: "Data", default: fb.subject, read_only: 1 },
-					{ fieldname: "type_info", label: "Type / Priority", fieldtype: "Data", default: fb.feedback_type + " / " + fb.priority, read_only: 1 },
-					{ fieldname: "desc_info", label: "Manager's Feedback", fieldtype: "Small Text", default: fb.description, read_only: 1 },
-					{ fieldname: "sb", fieldtype: "Section Break", label: "Your Response" },
-					{ fieldname: "developer_response", label: "Response", fieldtype: "Small Text", reqd: 1, description: "Your response to the manager's feedback" },
-					{ fieldname: "status", label: "Update Status To", fieldtype: "Select", options: "Open\nIn Progress\nResolved\nClosed", default: fb.status, reqd: 1 },
-				],
-				primary_action_label: "Submit Response",
-				primary_action(values) {
-					frappe.call({
-						method: "frappe.client.set_value",
-						args: {
-							doctype: "Session Feedback",
-							name: name,
-							fieldname: {
-								developer_response: values.developer_response,
-								responded_by: frappe.session.user,
-								responded_on: frappe.datetime.now_datetime(),
-								status: values.status,
-							}
-						},
-						callback: function() {
-							frappe.show_alert({ message: "Response submitted!", indicator: "green" });
-							d.hide();
-							window.location.reload();
-						},
-					});
-				},
-			});
-			d.show();
-		},
+(function() {
+	var overlay = document.getElementById("df-modal");
+	var closeBtn = document.getElementById("df-close");
+	var cancelBtn = document.getElementById("df-cancel-btn");
+	var submitBtn = document.getElementById("df-submit");
+	var toast = document.getElementById("df-toast");
+
+	function openModal(name, subject, desc, fbType, priority, status) {
+		document.getElementById("df-name").value = name;
+		document.getElementById("df-subject").value = subject;
+		document.getElementById("df-type-priority").value = fbType + " / " + priority;
+		document.getElementById("df-manager-desc").value = desc;
+		document.getElementById("df-status").value = status;
+		document.getElementById("df-response").value = "";
+		overlay.classList.add("active");
+	}
+
+	function closeModal() { overlay.classList.remove("active"); }
+
+	function showToast(msg, type) {
+		toast.textContent = msg;
+		toast.className = "df-toast " + type;
+		setTimeout(function() { toast.className = "df-toast"; }, 3000);
+	}
+
+	// Open button clicks
+	document.querySelectorAll(".df-respond-btn").forEach(function(btn) {
+		btn.addEventListener("click", function() {
+			openModal(
+				btn.getAttribute("data-name"),
+				btn.getAttribute("data-subject"),
+				btn.getAttribute("data-desc"),
+				btn.getAttribute("data-type"),
+				btn.getAttribute("data-priority"),
+				btn.getAttribute("data-status")
+			);
+		});
 	});
-}
+
+	closeBtn.addEventListener("click", closeModal);
+	cancelBtn.addEventListener("click", closeModal);
+	overlay.addEventListener("click", function(e) { if (e.target === overlay) closeModal(); });
+
+	// Submit
+	submitBtn.addEventListener("click", function() {
+		var name = document.getElementById("df-name").value;
+		var response = document.getElementById("df-response").value.trim();
+		var status = document.getElementById("df-status").value;
+
+		if (!response) { showToast("Please enter a response.", "error"); return; }
+
+		submitBtn.disabled = true;
+		submitBtn.textContent = "Submitting...";
+
+		portalCall("frappe.client.set_value", {
+			doctype: "Session Feedback",
+			name: name,
+			fieldname: JSON.stringify({
+				developer_response: response,
+				responded_by: frappe.session.user,
+				status: status,
+			})
+		}).then(function() {
+			showToast("Response submitted!", "success");
+			closeModal();
+			setTimeout(function() { window.location.reload(); }, 1000);
+		}).catch(function(err) {
+			showToast("Error: " + (err.message || "Failed"), "error");
+			submitBtn.disabled = false;
+			submitBtn.textContent = "Submit Response";
+		});
+	});
+})();
 </script>
 {% endblock %}
