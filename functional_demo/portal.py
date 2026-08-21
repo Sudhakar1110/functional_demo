@@ -306,7 +306,6 @@ def sidebar_items(active):
 		return [
 			{"label": _("Home"), "route": "/demo_portal", "icon": ICON_HOME, "active": active == "home"},
 			{"label": _("Developer Feedback"), "route": "/dev_feedback", "icon": ICON_FEEDBACK, "active": active == "dev_feedback"},
-			{"label": _("Feedback"), "route": "/feedback", "icon": ICON_FEEDBACK, "active": active == "feedback"},
 		]
 
 	items = [{"label": _("Home"), "route": "/demo_portal", "icon": ICON_HOME, "active": active == "home"}]
