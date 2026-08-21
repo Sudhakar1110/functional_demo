@@ -158,26 +158,4 @@ def get_context(context):
 		else:
 			s["consultant_name"] = "-"
 	context.sessions = sessions
-	# ── Pipeline Funnel ───────────────────────────────────────────────
-	all_reqs = frappe.get_all(
-		"Demo Request",
-		fields=["name", "status"],
-		limit_page_length=5000,
-	) or []
-	funnel = {}
-	for r in all_reqs:
-		s = r.get("status") or "Draft"
-		funnel[s] = funnel.get(s, 0) + 1
-	context.pipeline_funnel = [
-		{"label": "Draft", "count": funnel.get("Draft", 0), "color": "#9CA3AF"},
-		{"label": "Requested", "count": funnel.get("Requested", 0), "color": "#114EFF"},
-		{"label": "Manager Review", "count": funnel.get("Manager Review", 0), "color": "#D97706"},
-		{"label": "Assigned", "count": funnel.get("Assigned", 0), "color": "#7C3AED"},
-		{"label": "Scheduled", "count": funnel.get("Scheduled", 0), "color": "#114EFF"},
-		{"label": "Demo In Progress", "count": funnel.get("Demo In Progress", 0), "color": "#D96C0A"},
-		{"label": "Completed", "count": funnel.get("Demo Completed", 0), "color": "#009A52"},
-		{"label": "Follow-up Required", "count": funnel.get("Follow-up Required", 0), "color": "#A16207"},
-		{"label": "Converted", "count": funnel.get("Converted", 0), "color": "#009A52"},
-		{"label": "Not Interested", "count": funnel.get("Not Interested", 0), "color": "#E11D48"},
-	]
 	return context

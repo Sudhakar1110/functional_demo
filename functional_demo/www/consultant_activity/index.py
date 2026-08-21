@@ -262,4 +262,24 @@ def get_context(context):
     context.specializations = specializations
     context.availabilities = ["Available", "Busy", "On Leave", "Unavailable"]
 
+    # ── Demo Schedule Pipeline Funnel ────────────────────────────────
+    all_sessions = frappe.get_all(
+        "Demo Session",
+        fields=["name", "demo_status"],
+        limit_page_length=5000,
+        ignore_permissions=True,
+    ) or []
+    session_funnel = {}
+    for s in all_sessions:
+        st = s.get("demo_status") or "Scheduled"
+        session_funnel[st] = session_funnel.get(st, 0) + 1
+    context.pipeline_funnel = [
+        {"label": "Scheduled", "count": session_funnel.get("Scheduled", 0), "color": "#114EFF"},
+        {"label": "Rescheduled", "count": session_funnel.get("Rescheduled", 0), "color": "#7C3AED"},
+        {"label": "In Progress", "count": session_funnel.get("In Progress", 0), "color": "#D96C0A"},
+        {"label": "Completed", "count": session_funnel.get("Completed", 0), "color": "#009A52"},
+        {"label": "Cancelled", "count": session_funnel.get("Cancelled", 0), "color": "#E11D48"},
+        {"label": "Closed", "count": session_funnel.get("Closed", 0), "color": "#9CA3AF"},
+    ]
+
     return context

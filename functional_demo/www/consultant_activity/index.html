@@ -163,6 +163,31 @@
 				</div>
 			</div>
 
+			<!-- Pipeline Funnel — Demo Schedules -->
+			<div class="portal-card" style="margin-bottom: 24px;">
+				<div class="card-head"><h2>Demo Schedule Pipeline</h2></div>
+				<div class="card-body">
+					{% set max_count = [] %}
+					{% for stage in pipeline_funnel %}
+						{% if stage.count > (max_count[0] if max_count else 0) %}
+							{% if max_count.append(stage.count) %}{% endif %}
+						{% endif %}
+					{% endfor %}
+					{% set max_val = max_count[0] if max_count else 1 %}
+					{% for stage in pipeline_funnel %}
+					<div class="bar-row">
+						<div class="bar-label">{{ stage.label }}</div>
+						<div class="bar-track">
+							<div class="progress-track">
+								<div class="progress-fill" style="width: {{ (stage.count / max_val * 100) if max_val else 0 }}%; background: {{ stage.color }};"></div>
+							</div>
+						</div>
+						<div class="bar-val">{{ stage.count }}</div>
+					</div>
+					{% endfor %}
+				</div>
+			</div>
+
 			<!-- Consultant Activity Cards -->
 			{% if consultant_details %}
 			{% for c in consultant_details %}
