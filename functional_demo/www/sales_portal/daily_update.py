@@ -3,9 +3,15 @@
 
 import frappe
 from frappe import _
-from frappe.utils import add_days, date_diff, getdate, get_start_of_day, get_end_of_day
+from frappe.utils import add_days, date_diff, getdate
 
 from functional_demo.portal import portal_context
+
+
+def _day_range(d):
+	"""Return (start, end) datetime strings for a given date."""
+	ds = str(d)
+	return ds + " 00:00:00", ds + " 23:59:59"
 
 
 def get_context(context):
@@ -19,14 +25,13 @@ def get_context(context):
 
     today = getdate(frappe.utils.today())
     tomorrow = add_days(today, 1)
-    today_start = get_start_of_day(today)
-    today_end = get_end_of_day(today)
+    day_start, day_end = _day_range(today)
 
     # ── Today's Activity ──────────────────────────────────────────────
     # New requests created today
     new_requests = frappe.get_all(
         "Demo Request",
-        filters={"creation": ["between", [today_start, today_end]]},
+        filters={"creation": ["between", [day_start, day_end]]},
         fields=["name", "customer", "sales_person", "priority", "status", "interested_module", "creation"],
         order_by="creation desc",
     ) or []
@@ -34,7 +39,7 @@ def get_context(context):
     # Status changes today — requests modified today with a different status
     modified_today = frappe.get_all(
         "Demo Request",
-        filters={"modified": ["between", [today_start, today_end]]},
+        filters={"modified": ["between", [day_start, day_end]]},
         fields=["name", "customer", "sales_person", "status", "priority", "interested_module", "modified"],
         order_by="modified desc",
     ) or []
@@ -47,7 +52,7 @@ def get_context(context):
     completed_today = frappe.get_all(
         "Demo Session",
         filters={
-            "completed_on": ["between", [today_start, today_end]],
+            "completed_on": ["between", [day_start, day_end]],
             "demo_status": "Completed",
         },
         fields=["name", "customer", "sales_person", "functional_consultant", "final_result", "overall_feedback", "completed_on", "demo_request"],
@@ -58,7 +63,7 @@ def get_context(context):
     followups_done = frappe.get_all(
         "Demo Follow Up",
         filters={
-            "modified": ["between", [today_start, today_end]],
+            "modified": ["between", [day_start, day_end]],
             "status": "Completed",
         },
         fields=["name", "customer", "sales_person", "demo_request", "follow_up_date", "modified"],
