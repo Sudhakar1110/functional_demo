@@ -2,9 +2,7 @@
 {% block banner %}{% endblock %}
 {% block navbar %}{% endblock %}
 {% block footer %}{% endblock %}
-{% block style %}{% include "functional_demo/templates/includes/portal_style.html" %}{% endblock %}
-{% block script %}{% include "functional_demo/templates/includes/portal_script.html" %}{% endblock %}
-{% block content %}
+{% block style %}{% include "functional_demo/templates/includes/portal_style.html" %}
 <style>
 .feedback-filter { display: flex; align-items: center; gap: 8px; }
 .feedback-filter select {
@@ -25,11 +23,16 @@
 	box-shadow: 0 0 0 3px rgba(17, 78, 255, 0.14);
 }
 .feedback-filter .filter-clear { font-size: 13px; color: #114EFF; text-decoration: none; font-weight: 600; }
-/* template chip acts as a link - clicking opens that template's own section */
 .chip-link { text-decoration: none; display: inline-block; }
 .chip-link:hover .chip { box-shadow: 0 0 0 2px rgba(17, 78, 255, 0.25); }
 .template-section { border-top: 3px solid var(--bx-gradient, #114EFF); }
+.feedback-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.feedback-scroll::-webkit-scrollbar { height: 6px; }
+.feedback-scroll::-webkit-scrollbar-thumb { background: #D9DCE3; border-radius: 3px; }
 </style>
+{% endblock %}
+{% block script %}{% include "functional_demo/templates/includes/portal_script.html" %}{% endblock %}
+{% block content %}
 <div class="portal-layout">
 	<header class="portal-topbar">
 		<button class="sidebar-toggle" id="sidebar-toggle" aria-label="Menu">&#9776;</button>
@@ -61,53 +64,66 @@
 			</div>
 		</aside>
 		<div class="sidebar-overlay"></div>
-		<div class="portal-main">				<div class="portal-content">
-					{% if list_note %}<div class="muted" style="margin-bottom: 16px;">{{ list_note }}</div>{% endif %}
-					{% if template_summary %}
-					<div class="portal-card template-section" style="margin-bottom: 22px;">
-						<div class="card-head">
-							<div>
-								<h2>{{ selected_template }} — Overall Feedback</h2>
-								<p class="text-muted" style="margin: 3px 0 0; font-size: 13px;">Everything recorded for this template, newest first.</p>
-							</div>
-							<a class="filter-clear" href="/feedback">View all templates</a>
+		<div class="portal-main">
+			<div class="portal-content">
+
+				<!-- Greeting -->
+				<div class="dash-greet">
+					<div>
+						<span class="greet-eyebrow">● {{ today_pretty }}</span>
+						<h1>{{ greeting }}, {{ full_name }}</h1>
+						<p>Feedback recorded against completed demos. Filter by template to drill down.</p>
+					</div>
+				</div>
+
+				{% if list_note %}<div class="muted" style="margin-bottom: 16px;">{{ list_note }}</div>{% endif %}
+
+				{% if template_summary %}
+				<div class="portal-card template-section" style="margin-bottom: 22px;">
+					<div class="card-head">
+						<div>
+							<h2>{{ selected_template }} — Overall Feedback</h2>
+							<p class="text-muted" style="margin: 3px 0 0; font-size: 13px;">Everything recorded for this template, newest first.</p>
 						</div>
-						<div class="card-body">
-							<div class="kpi-grid" style="margin-bottom: 0;">
-								<div class="kpi-card">
-									<div class="kpi-label">Feedback Entries</div>
-									<div class="kpi-value">{{ template_summary.count }}</div>
-								</div>
-								<div class="kpi-card kpi-green">
-									<div class="kpi-label">Interested</div>
-									<div class="kpi-value">{{ template_summary.interested }}</div>
-								</div>
-								<div class="kpi-card kpi-red">
-									<div class="kpi-label">Not Interested</div>
-									<div class="kpi-value">{{ template_summary.not_interested }}</div>
-								</div>
-								<div class="kpi-card kpi-blue">
-									<div class="kpi-label">Requirements Fully Met</div>
-									<div class="kpi-value">{{ template_summary.fully_met }}</div>
-								</div>
-								<div class="kpi-card kpi-amber">
-									<div class="kpi-label">Partially Met</div>
-									<div class="kpi-value">{{ template_summary.partially_met }}</div>
-								</div>
-								<div class="kpi-card kpi-red">
-									<div class="kpi-label">Not Met</div>
-									<div class="kpi-value">{{ template_summary.not_met }}</div>
-								</div>
-								<div class="kpi-card kpi-teal">
-									<div class="kpi-label">Converted</div>
-									<div class="kpi-value">{{ template_summary.converted }}</div>
-								</div>
+						<a class="filter-clear" href="/feedback">View all templates</a>
+					</div>
+					<div class="card-body">
+						<div class="kpi-grid" style="margin-bottom: 0;">
+							<div class="kpi-card">
+								<div class="kpi-label">Feedback Entries</div>
+								<div class="kpi-value">{{ template_summary.count }}</div>
+							</div>
+							<div class="kpi-card kpi-green">
+								<div class="kpi-label">Interested</div>
+								<div class="kpi-value">{{ template_summary.interested }}</div>
+							</div>
+							<div class="kpi-card kpi-red">
+								<div class="kpi-label">Not Interested</div>
+								<div class="kpi-value">{{ template_summary.not_interested }}</div>
+							</div>
+							<div class="kpi-card kpi-blue">
+								<div class="kpi-label">Requirements Fully Met</div>
+								<div class="kpi-value">{{ template_summary.fully_met }}</div>
+							</div>
+							<div class="kpi-card kpi-amber">
+								<div class="kpi-label">Partially Met</div>
+								<div class="kpi-value">{{ template_summary.partially_met }}</div>
+							</div>
+							<div class="kpi-card kpi-red">
+								<div class="kpi-label">Not Met</div>
+								<div class="kpi-value">{{ template_summary.not_met }}</div>
+							</div>
+							<div class="kpi-card kpi-teal">
+								<div class="kpi-label">Converted</div>
+								<div class="kpi-value">{{ template_summary.converted }}</div>
 							</div>
 						</div>
 					</div>
-					{% endif %}
+				</div>
+				{% endif %}
 
-					<div class="flex-between mb-16">
+				<!-- Header row with title + filter -->
+				<div class="flex-between mb-16">
 					<div>
 						<h2 style="margin: 0; font-size: 20px; font-weight: 800; color: #05133C;">Demo Feedback ({{ total_feedback }})</h2>
 						<p class="text-muted" style="margin: 4px 0 0;">Feedback recorded against the demos, newest first{% if selected_template %} · filtered to <strong>{{ selected_template }}</strong>{% endif %}.</p>
@@ -122,24 +138,25 @@
 						<noscript><button type="submit" class="btn-portal sm">Filter</button></noscript>
 						{% if selected_template %}<a class="filter-clear" href="/feedback">Clear</a>{% endif %}
 					</form>
-					</div>
+				</div>
 
+				<!-- Feedback Table Card -->
 				<div class="portal-card">
 					{% if feedback %}
-					<div class="card-body flush">
-						<table class="table-portal">
+					<div class="card-body flush feedback-scroll">
+						<table class="table-portal" style="min-width: 1200px;">
 							<thead>
 								<tr>
-									<th>Session</th>
-									<th>Leads</th>
-									<th>Sales Person</th>
-									<th>Template</th>
-									<th>Date</th>
-									<th>Overall Feedback</th>
-									<th>Interested</th>
-									<th>Requirements Met</th>
-									<th>Questions / Changes</th>
-									<th>Result</th>
+									<th style="min-width: 120px;">Session</th>
+									<th style="min-width: 140px;">Leads</th>
+									<th style="min-width: 110px;">Sales Person</th>
+									<th style="min-width: 130px;">Template</th>
+									<th style="min-width: 100px;">Date</th>
+									<th style="min-width: 200px;">Overall Feedback</th>
+									<th style="min-width: 100px;">Interested</th>
+									<th style="min-width: 110px;">Requirements Met</th>
+									<th style="min-width: 200px;">Questions / Changes</th>
+									<th style="min-width: 110px;">Result</th>
 								</tr>
 							</thead>
 							<tbody>
@@ -150,12 +167,14 @@
 									<td>{{ f.sales_person }}</td>
 									<td><a class="chip-link" href="/feedback?template={{ f.template | urlencode }}" title="Show {{ f.template }} feedback"><span class="chip">{{ f.template }}</span></a></td>
 									<td class="muted">{{ f.date }}</td>
-									<td class="wrap" style="max-width: 320px;"><strong style="color: #05133C; background: #FEF3C7; padding: 3px 8px; border-radius: 6px; display: inline-block; border-left: 3px solid #F59E0B;">{{ f.overall_feedback or "-" }}</strong></td>
+									<td style="max-width: 280px;">
+										<strong style="color: #05133C; background: #FEF3C7; padding: 3px 8px; border-radius: 6px; display: inline-block; border-left: 3px solid #F59E0B; font-size: 13px;">{{ f.overall_feedback or "-" }}</strong>
+									</td>
 									<td>{{ f.interested or "-" }}</td>
 									<td>{{ f.requirements_met or "-" }}</td>
 									<td>
 										{% if f.feedback_items %}
-										<ul style="margin: 0; padding-left: 16px;">
+										<ul style="margin: 0; padding-left: 16px; font-size: 13px;">
 											{% for it in f.feedback_items %}<li><strong>{{ it.item_type }}:</strong> {{ it.description }}</li>{% endfor %}
 										</ul>
 										{% else %}<span class="muted">-</span>{% endif %}
