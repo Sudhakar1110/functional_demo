@@ -12,7 +12,7 @@ MANAGER_ROLES = ("Sales Manager", "Functional Team Manager")
 # page (portal /feedback + desk /app/demo-feedback). The standard Frappe
 # 'Developer' role is used as the feedback-only role here, and the legacy custom
 # 'Feedback Viewer' role is kept as an equivalent alias for existing installs.
-DEVELOPER_ROLES = ("Feedback Viewer",)
+DEVELOPER_ROLES = ("Feedback Viewer", "Developer")
 
 
 # ---------------------------------------------------------------------------
