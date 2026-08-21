@@ -506,7 +506,10 @@ def run_sla_escalation_checks():
 			_log_sla_activity(row.name, row.get("sla_due_date"))
 		changed = True
 	if changed:
-		frappe.db.commit()def _escalate_to_managers(request_name, sla_due_date):
+		frappe.db.commit()
+
+
+def _escalate_to_managers(request_name, sla_due_date):
 	"""Notify every Sales / Functional manager AND the sales person about the breached request."""
 	managers = {
 		r[0]
