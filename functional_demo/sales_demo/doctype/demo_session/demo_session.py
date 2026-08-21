@@ -725,11 +725,18 @@ class DemoSession(Document):
 		# The idempotency guard in create_follow_up prevents duplicates
 		# if complete_demo already created one.
 		if result == "Converted":
-			self.create_follow_up(
-				add_days(today(), 7),
-				"Follow up after Demo Completed",
-				self.sales_person,
-			)
+			try:
+				self.create_follow_up(
+					add_days(today(), 7),
+					"Follow up after Demo Completed",
+					self.sales_person,
+				)
+			except Exception:
+				# Follow-up creation must never block the final result
+				frappe.log_error(
+					title=_("Could not create follow-up for {0}").format(self.name),
+					message=frappe.get_traceback(),
+				)
 
 	def _apply_request_final_result(self, result):
 		"""Move the Demo Request to the matching final state without letting the

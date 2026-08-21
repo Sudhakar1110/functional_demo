@@ -61,18 +61,23 @@ def get_context(context):
 
     # ------------------------------------------------------------------
     # All follow-ups for current sales user
-    # ------------------------------------------------------------------
-    all_followups = frappe.get_all(
-        "Demo Follow Up",
-        fields=[
-            "name", "demo_request", "demo_session", "customer",
-            "sales_person", "functional_consultant", "subject",
-            "follow_up_date", "status", "outcome", "next_action",
-            "remarks", "assigned_to", "creation",
-        ],
-        order_by="follow_up_date asc",
-        limit_page_length=2000,
-    ) or []
+    # ------------------------------------------------------------------	# ignore_permissions: the page is already role-gated by portal_context
+	# (Sales User / Sales Manager only). Row-level permission filters on
+	# Demo Follow Up can hide follow-ups that a consultant created (assigned
+	# to the sales person) when the sales_person field is empty on the
+	# session — so we bypass them here and rely on the page-level guard.
+	all_followups = frappe.get_all(
+		"Demo Follow Up",
+		fields=[
+			"name", "demo_request", "demo_session", "customer",
+			"sales_person", "functional_consultant", "subject",
+			"follow_up_date", "status", "outcome", "next_action",
+			"remarks", "assigned_to", "creation",
+		],
+		order_by="follow_up_date asc",
+		limit_page_length=2000,
+		ignore_permissions=True,
+	) or []
 
     # ------------------------------------------------------------------
     # Resolve display names in bulk
