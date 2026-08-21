@@ -720,6 +720,16 @@ class DemoSession(Document):
 		self.notify_sales_final_result(result)
 		if result in ("Converted", "Not Interested", "Closed"):
 			self._apply_request_final_result(result)
+		# When the final result is Demo Completed (Converted), create a
+		# follow-up so the demo appears in the sales Follow-up Tracker.
+		# The idempotency guard in create_follow_up prevents duplicates
+		# if complete_demo already created one.
+		if result == "Converted":
+			self.create_follow_up(
+				add_days(today(), 7),
+				"Follow up after Demo Completed",
+				self.sales_person,
+			)
 
 	def _apply_request_final_result(self, result):
 		"""Move the Demo Request to the matching final state without letting the
