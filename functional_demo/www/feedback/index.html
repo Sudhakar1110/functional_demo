@@ -150,7 +150,7 @@
 									<td>{{ f.sales_person }}</td>
 									<td><a class="chip-link" href="/feedback?template={{ f.template | urlencode }}" title="Show {{ f.template }} feedback"><span class="chip">{{ f.template }}</span></a></td>
 									<td class="muted">{{ f.date }}</td>
-									<td class="wrap" style="max-width: 320px;">{{ f.overall_feedback or "-" }}</td>
+									<td class="wrap" style="max-width: 320px;"><strong style="color: #05133C; background: #FEF3C7; padding: 3px 8px; border-radius: 6px; display: inline-block; border-left: 3px solid #F59E0B;">{{ f.overall_feedback or "-" }}</strong></td>
 									<td>{{ f.interested or "-" }}</td>
 									<td>{{ f.requirements_met or "-" }}</td>
 									<td>

@@ -279,7 +279,7 @@
 					<table class="kv-table">
 						<tbody>
 							<tr><td class="kv-label">Demo Notes</td><td class="kv-value plain">{{ s.demo_notes or "—" }}</td></tr>
-							<tr><td class="kv-label">Overall Feedback</td><td class="kv-value plain">{{ s.overall_feedback or "—" }}</td></tr>
+							<tr><td class="kv-label" style="font-weight: 700;">Overall Feedback</td><td class="kv-value plain" style="background: #FEF3C7; padding: 12px 16px; border-left: 4px solid #F59E0B; border-radius: 0 8px 8px 0; font-weight: 700; color: #05133C;">{{ s.overall_feedback or "—" }}</td></tr>
 							<tr><td class="kv-label">Interested</td><td class="kv-value">{{ s.interested or "—" }}</td></tr>
 							<tr><td class="kv-label">Requirements Met</td><td class="kv-value">{{ s.requirements_met or "—" }}</td></tr>
 							<tr><td class="kv-label">Follow-up Required</td><td class="kv-value">{% if s.follow_up_required %}Yes{% else %}No{% endif %}</td></tr>
