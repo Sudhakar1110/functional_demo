@@ -9,7 +9,7 @@ frappe.listview_settings["Demo Request"] = {
 			"Demo In Progress": [__("In Progress"), "yellow"],
 			"Demo Completed": [__("Completed"), "green"],
 			"Follow-up Required": [__("Follow-up Required"), "blue"],
-			Converted: [__("Converted"), "green"],
+			Converted: [__("Demo Completed"), "green"],
 			"Not Interested": [__("Not Interested"), "red"],
 			Cancelled: [__("Cancelled"), "red"],
 			Closed: [__("Closed"), "grey"],

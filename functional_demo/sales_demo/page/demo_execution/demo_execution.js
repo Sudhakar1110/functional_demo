@@ -334,7 +334,7 @@ frappe.pages["demo-execution"].on_page_load = function (wrapper) {
 	function result_dialog(name) {
 		const dialog = new frappe.ui.Dialog({
 			title: __("Set Final Result"),
-			fields: [{ fieldname: "result", label: __("Final Result"), fieldtype: "Select", reqd: 1, options: ["Converted", "Not Interested", "Closed"] }],
+			fields: [{ fieldname: "result", label: __("Final Result"), fieldtype: "Select", reqd: 1, options: ["Converted:Demo Completed", "Not Interested", "Closed"] }],
 			primary_action_label: __("Set Result"),
 			primary_action(values) {
 				frappe.confirm(__("Close this demo with result '{0}'? The Demo Request will also be updated.", [values.result]), () => {

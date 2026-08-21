@@ -80,7 +80,7 @@ frappe.pages["demo-feedback"].on_page_load = function (wrapper) {
 					<div class="demo-fb-summary-card s-blue"><div class="s-label">${__("Requirements Fully Met")}</div><div class="s-value">${count(entries, "requirements_met", "Fully Met")}</div></div>
 					<div class="demo-fb-summary-card s-amber"><div class="s-label">${__("Partially Met")}</div><div class="s-value">${count(entries, "requirements_met", "Partially Met")}</div></div>
 					<div class="demo-fb-summary-card s-red"><div class="s-label">${__("Not Met")}</div><div class="s-value">${count(entries, "requirements_met", "Not Met")}</div></div>
-					<div class="demo-fb-summary-card s-teal"><div class="s-label">${__("Converted")}</div><div class="s-value">${count(entries, "final_result", "Converted")}</div></div>
+					<div class="demo-fb-summary-card s-teal"><div class="s-label">${__("Demo Completed")}</div><div class="s-value">${count(entries, "final_result", "Converted")}</div></div>
 				</div>
 			</div>`;
 	}
