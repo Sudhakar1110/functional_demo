@@ -74,134 +74,254 @@
 					<div class="kpi-value">{{ total_completed }}</div>
 					<div class="kpi-note">Demos delivered</div>
 				</div>
+				<div class="kpi-card kpi-orange">
+					<div class="kpi-label">Pending</div>
+					<div class="kpi-value">{{ total_pending }}</div>
+					<div class="kpi-note">Awaiting scheduling</div>
+				</div>
+				<div class="kpi-card kpi-red">
+					<div class="kpi-label">SLA Breached</div>
+					<div class="kpi-value">{{ total_sla_breached }}</div>
+					<div class="kpi-note">Overdue assignments</div>
+				</div>
+				<div class="kpi-card kpi-teal">
+					<div class="kpi-label">Rescheduled</div>
+					<div class="kpi-value">{{ total_rescheduled }}</div>
+					<div class="kpi-note">Rescheduled demos</div>
+				</div>
+				<div class="kpi-card kpi-blue">
+					<div class="kpi-label">Avg Demos</div>
+					<div class="kpi-value">{{ avg_demos }}</div>
+					<div class="kpi-note">Per consultant</div>
+				</div>
 			</div>
 
-			<!-- Consultant Activity Table -->
+			<!-- Filters & Sort -->
 			<div class="portal-card" style="margin-bottom: 24px;">
-				<div class="card-head"><h2>Consultant Activity</h2></div>
-				{% if consultant_details %}
-				<div class="card-body flush" style="overflow-x: auto;">
-					<table class="table-portal" style="min-width: 1100px;">
-						<thead>
-							<tr>
-								<th style="min-width: 150px;">Consultant</th>
-								<th>Specialization</th>
-								<th>Availability</th>
-								<th>Status</th>
-								<th style="min-width: 180px;">Active Demo</th>
-								<th>Scheduled Date</th>
-								<th>Interested Template</th>
-								<th>Upcoming</th>
-								<th>Pending</th>
-								<th>Completed</th>
-							</tr>
-						</thead>
-						<tbody>
-							{% for c in consultant_details %}
-							<tr>
-								<!-- Consultant Name -->
-								<td>
-									<div style="display: flex; align-items: center; gap: 10px;">
-										<div style="width: 34px; height: 34px; border-radius: 50%; background: {% if c.active_session %}#DCFBEA{% elif c.upcoming_sessions %}#E8EEFF{% else %}#F3F4F6{% endif %}; display: flex; align-items: center; justify-content: center; font-weight: 700; color: {% if c.active_session %}#009A52{% elif c.upcoming_sessions %}#114EFF{% else %}#9CA3AF{% endif %}; font-size: 13px; flex-shrink: 0;">{{ c.consultant_name[:1] }}</div>
-										<span style="font-weight: 600; color: #05133C;">{{ c.consultant_name }}</span>
-									</div>
-								</td>
-								<!-- Specialization -->
-								<td>{{ c.specialization }}</td>
-								<!-- Availability -->
-								<td>{{ c.availability }}</td>
-								<!-- Status -->
-								<td><span class="badge {{ c.status_class }}">{{ c.status_label }}</span></td>
-								<!-- Active Demo (customer + link) -->
-								<td>
-									{% if c.active_session %}
-										<a href="/functional_portal/session?name={{ c.active_session.name }}" style="color: #009A52; font-weight: 600;">{{ c.active_session.customer or '-' }}</a>
-										<div style="font-size: 11px; color: #71717B;">Started {{ c.active_session.start_time or '' }}</div>
-									{% elif c.next_session %}
-										<span style="color: #05133C; font-weight: 500;">{{ c.next_session.customer or '-' }}</span>
-										<div style="font-size: 11px; color: #71717B;">{{ c.next_session.date_display }}</div>
-									{% elif c.next_pending %}
-										<span style="color: #D97706; font-weight: 500;">{{ c.next_pending.customer or '-' }}</span>
-										<div style="font-size: 11px; color: #9CA3AF;">Awaiting schedule</div>
-									{% else %}
-										<span style="color: #9CA3AF;">—</span>
-									{% endif %}
-								</td>
-								<!-- Scheduled Date -->
-								<td>
-									{% if c.active_session and c.active_session.scheduled_date %}
-										<span style="color: #009A52; font-weight: 600;">{{ c.active_session.date_display }}</span>
-									{% elif c.next_session and c.next_session.scheduled_date %}
-										<span style="color: #05133C; font-weight: 500;">{{ c.next_session.date_display }}</span>
-									{% elif c.next_pending and c.next_pending.preferred_demo_date %}
-										<span style="color: #D97706;">{{ c.next_pending.date_display }}</span>
-									{% else %}
-										<span style="color: #9CA3AF;">—</span>
-									{% endif %}
-									{% if c.upcoming_sessions|length > 1 %}
-										<div style="font-size: 11px; color: #114EFF;">+{{ c.upcoming_sessions|length - 1 }} more</div>
-									{% endif %}
-								</td>
-								<!-- Interested Template -->
-								<td>
-									{% if c.active_session and c.active_session.interested_module %}
-										<span style="color: #05133C; font-weight: 500;">{{ c.active_session.interested_module }}</span>
-									{% elif c.next_session and c.next_session.interested_module %}
-										<span style="color: #05133C;">{{ c.next_session.interested_module }}</span>
-									{% elif c.next_pending and c.next_pending.interested_module %}
-										<span style="color: #D97706;">{{ c.next_pending.interested_module }}</span>
-									{% else %}
-										<span style="color: #9CA3AF;">—</span>
-									{% endif %}
-								</td>
-								<!-- Upcoming Sessions -->
-								<td>
-									{% if c.upcoming_sessions %}
-										<span style="font-weight: 600; color: #05133C;">{{ c.upcoming_count }}</span>
-										{% for s in c.upcoming_sessions[:2] %}
-										<div style="font-size: 11px; color: #71717B;">{{ s.date_display }} — {{ s.customer or '-' }}</div>
-										{% endfor %}
-										{% if c.upcoming_sessions|length > 2 %}
-										<div style="font-size: 11px; color: #114EFF;">+{{ c.upcoming_sessions|length - 2 }} more</div>
-										{% endif %}
-									{% else %}
-										<span style="color: #9CA3AF;">0</span>
-									{% endif %}
-								</td>
-								<!-- Pending -->
-								<td>
-									{% if c.pending_count %}
-										<span style="font-weight: 600; color: #D97706;">{{ c.pending_count }}</span>
-										{% for pr in c.pending_requests[:2] %}
-										<div style="font-size: 11px; color: #71717B;">{{ pr.customer or '-' }} · {{ pr.interested_module or '-' }}</div>
-										{% endfor %}
-										{% if c.pending_requests|length > 2 %}
-										<div style="font-size: 11px; color: #D97706;">+{{ c.pending_requests|length - 2 }} more</div>
-										{% endif %}
-									{% else %}
-										<span style="color: #9CA3AF;">0</span>
-									{% endif %}
-								</td>
-								<!-- Completed -->
-								<td>
-									<span style="font-weight: 700; color: #009A52;">{{ c.completed_count }}</span>
-								</td>
-							</tr>
-							{% endfor %}
-						</tbody>
-					</table>
+				<div class="card-body" style="padding: 16px 24px;">
+					<form method="GET" style="display: flex; gap: 16px; align-items: flex-end; flex-wrap: wrap;">
+						<div style="display: flex; flex-direction: column; gap: 4px;">
+							<label style="font-size: 12px; font-weight: 600; color: #71717B;">Specialization</label>
+							<select name="specialization" style="padding: 8px 12px; border: 1px solid #E5E7EB; border-radius: 6px; font-size: 13px; min-width: 160px;">
+								<option value="">All Specializations</option>
+								{% for spec in specializations %}
+								<option value="{{ spec }}" {% if filter_spec == spec %}selected{% endif %}>{{ spec }}</option>
+								{% endfor %}
+							</select>
+						</div>
+						<div style="display: flex; flex-direction: column; gap: 4px;">
+							<label style="font-size: 12px; font-weight: 600; color: #71717B;">Availability</label>
+							<select name="availability" style="padding: 8px 12px; border: 1px solid #E5E7EB; border-radius: 6px; font-size: 13px; min-width: 140px;">
+								<option value="">All</option>
+								{% for av in availabilities %}
+								<option value="{{ av }}" {% if filter_avail == av %}selected{% endif %}>{{ av }}</option>
+								{% endfor %}
+							</select>
+						</div>
+						<div style="display: flex; flex-direction: column; gap: 4px;">
+							<label style="font-size: 12px; font-weight: 600; color: #71717B;">Status</label>
+							<select name="status" style="padding: 8px 12px; border: 1px solid #E5E7EB; border-radius: 6px; font-size: 13px; min-width: 130px;">
+								<option value="">All</option>
+								<option value="in_progress" {% if filter_status == "in_progress" %}selected{% endif %}>In Progress</option>
+								<option value="scheduled" {% if filter_status == "scheduled" %}selected{% endif %}>Scheduled</option>
+								<option value="pending" {% if filter_status == "pending" %}selected{% endif %}>Pending</option>
+								<option value="free" {% if filter_status == "free" %}selected{% endif %}>Free</option>
+							</select>
+						</div>
+						<div style="display: flex; flex-direction: column; gap: 4px;">
+							<label style="font-size: 12px; font-weight: 600; color: #71717B;">Sort By</label>
+							<select name="sort" style="padding: 8px 12px; border: 1px solid #E5E7EB; border-radius: 6px; font-size: 13px; min-width: 140px;">
+								<option value="name" {% if sort_by == "name" %}selected{% endif %}>Name</option>
+								<option value="completed" {% if sort_by == "completed" %}selected{% endif %}>Completed</option>
+								<option value="pending" {% if sort_by == "pending" %}selected{% endif %}>Pending</option>
+								<option value="status" {% if sort_by == "status" %}selected{% endif %}>Status</option>
+							</select>
+						</div>
+						<button type="submit" style="padding: 8px 20px; background: #114EFF; color: #fff; border: none; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer;">Filter</button>
+						<a href="/consultant_activity" style="padding: 8px 16px; background: #F3F4F6; color: #71717B; border: none; border-radius: 6px; font-size: 13px; text-decoration: none;">Reset</a>
+					</form>
 				</div>
-				{% else %}
-				<div class="empty-state">
-					<div class="empty-icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
-					<h3>No consultants found</h3>
-					<p>Add Functional Consultants in ERPNext to see their activity here.</p>
-				</div>
-				{% endif %}
 			</div>
+
+			<!-- Consultant Activity Cards -->
+			{% if consultant_details %}
+			{% for c in consultant_details %}
+			<div class="portal-card consultant-detail-card" style="margin-bottom: 16px;" id="card-{{ c.name }}">
+				<div class="card-head" style="display: flex; justify-content: space-between; align-items: center; cursor: pointer; padding: 16px 24px;" onclick="toggleConsultant('{{ c.name }}')">
+					<div style="display: flex; align-items: center; gap: 14px;">
+						<div style="width: 42px; height: 42px; border-radius: 50%; background: {% if c.active_session %}#DCFBEA{% elif c.upcoming_sessions %}#E8EEFF{% elif c.pending_count %}#FEF3C7{% else %}#F3F4F6{% endif %}; display: flex; align-items: center; justify-content: center; font-weight: 700; color: {% if c.active_session %}#009A52{% elif c.upcoming_sessions %}#114EFF{% elif c.pending_count %}#D97706{% else %}#9CA3AF{% endif %}; font-size: 16px;">{{ c.consultant_name[:1] }}</div>
+						<div>
+							<div style="font-weight: 700; font-size: 16px; color: #05133C;">{{ c.consultant_name }}</div>
+							<div style="font-size: 12px; color: #71717B;">{{ c.specialization }} · {{ c.experience_years }} yrs exp · {{ c.department or 'No dept' }}</div>
+						</div>
+					</div>
+					<div style="display: flex; align-items: center; gap: 12px;">
+						<span class="badge {{ c.status_class }}">{{ c.status_label }}</span>
+						<span class="toggle-arrow" id="arrow-{{ c.name }}" style="font-size: 18px; color: #9CA3AF; transition: transform 0.2s;">▼</span>
+					</div>
+				</div>
+				<div class="card-body" id="body-{{ c.name }}" style="display: none; padding: 0 24px 20px;">
+					<!-- Profile Details -->
+					<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 20px; padding: 16px; background: #F9FAFB; border-radius: 8px;">
+						<div>
+							<div style="font-size: 11px; color: #9CA3AF; text-transform: uppercase; font-weight: 600;">User</div>
+							<div style="font-size: 13px; color: #05133C; font-weight: 500;">{{ c.user or '—' }}</div>
+						</div>
+						<div>
+							<div style="font-size: 11px; color: #9CA3AF; text-transform: uppercase; font-weight: 600;">Availability</div>
+							<div style="font-size: 13px; color: {% if c.availability == 'Available' %}#009A52{% elif c.availability == 'Busy' %}#D97706{% else %}#9CA3AF{% endif %}; font-weight: 500;">{{ c.availability }}</div>
+						</div>
+						<div>
+							<div style="font-size: 11px; color: #9CA3AF; text-transform: uppercase; font-weight: 600;">Hours</div>
+							<div style="font-size: 13px; color: #05133C; font-weight: 500;">{{ c.available_from or '—' }} – {{ c.available_to or '—' }}</div>
+						</div>
+						<div>
+							<div style="font-size: 11px; color: #9CA3AF; text-transform: uppercase; font-weight: 600;">Phone</div>
+							<div style="font-size: 13px; color: #05133C; font-weight: 500;">{{ c.phone or '—' }}</div>
+						</div>
+						<div>
+							<div style="font-size: 11px; color: #9CA3AF; text-transform: uppercase; font-weight: 600;">Email</div>
+							<div style="font-size: 13px; color: #05133C; font-weight: 500;">{{ c.email or '—' }}</div>
+						</div>
+						<div>
+							<div style="font-size: 11px; color: #9CA3AF; text-transform: uppercase; font-weight: 600;">Completed Demos</div>
+							<div style="font-size: 13px; color: #009A52; font-weight: 700;">{{ c.completed_count }}</div>
+						</div>
+						<div>
+							<div style="font-size: 11px; color: #9CA3AF; text-transform: uppercase; font-weight: 600;">Rescheduled</div>
+							<div style="font-size: 13px; color: #D97706; font-weight: 700;">{{ c.rescheduled_count }}</div>
+						</div>
+						<div>
+							<div style="font-size: 11px; color: #9CA3AF; text-transform: uppercase; font-weight: 600;">SLA Breached</div>
+							<div style="font-size: 13px; color: {% if c.sla_breached_count > 0 %}#DC2626{% else %}#009A52{% endif %}; font-weight: 700;">{{ c.sla_breached_count }}</div>
+						</div>
+					</div>
+
+					<!-- Active / In-Progress Session -->
+					{% if c.active_session %}
+					<div style="margin-bottom: 20px;">
+						<h3 style="font-size: 14px; font-weight: 700; color: #05133C; margin-bottom: 10px;">🔴 Live Demo</h3>
+						<div style="padding: 14px 18px; background: #DCFBEA; border-left: 4px solid #009A52; border-radius: 8px;">
+							<div style="display: flex; justify-content: space-between; align-items: center;">
+								<div>
+									<a href="/functional_portal/session?name={{ c.active_session.name }}" style="font-weight: 700; color: #009A52; text-decoration: none; font-size: 15px;">{{ c.active_session.customer or '—' }}</a>
+									<div style="font-size: 12px; color: #71717B; margin-top: 2px;">Started {{ c.active_session.start_time or '' }} · {{ c.active_session.date_display }}</div>
+								</div>
+								<div style="text-align: right;">
+									<div style="font-size: 11px; color: #71717B;">Module</div>
+									<div style="font-size: 13px; font-weight: 600; color: #05133C;">{{ c.active_session.interested_module or '—' }}</div>
+								</div>
+							</div>
+							<div style="display: flex; gap: 16px; margin-top: 8px;">
+								<span style="font-size: 11px; color: #71717B;">Type: <strong style="color: #05133C;">{{ c.active_session.demo_type or 'Standard' }}</strong></span>
+								{% if c.active_session.meeting_link %}
+								<a href="{{ c.active_session.meeting_link }}" target="_blank" style="font-size: 11px; color: #114EFF; font-weight: 600;">Join Meeting →</a>
+								{% endif %}
+							</div>
+						</div>
+					</div>
+					{% endif %}
+
+					<!-- Upcoming Sessions -->
+					{% if c.upcoming_sessions %}
+					<div style="margin-bottom: 20px;">
+						<h3 style="font-size: 14px; font-weight: 700; color: #05133C; margin-bottom: 10px;">📅 Upcoming Sessions ({{ c.upcoming_count }})</h3>
+						<div style="display: flex; flex-direction: column; gap: 8px;">
+							{% for s in c.upcoming_sessions %}
+							<div style="padding: 12px 16px; background: #E8EEFF; border-left: 4px solid #114EFF; border-radius: 8px; display: flex; justify-content: space-between; align-items: center;">
+								<div>
+									<a href="/functional_portal/session?name={{ s.name }}" style="font-weight: 600; color: #114EFF; text-decoration: none;">{{ s.customer or '—' }}</a>
+									<div style="font-size: 12px; color: #71717B;">{{ s.date_display }} at {{ s.start_time or '—' }}</div>
+								</div>
+								<div style="text-align: right;">
+									<span class="badge {% if s.demo_status == 'Rescheduled' %}b-rescheduled{% else %}b-scheduled{% endif %}">{{ s.demo_status }}</span>
+									<div style="font-size: 11px; color: #71717B;">{{ s.interested_module or '—' }}</div>
+								</div>
+							</div>
+							{% endfor %}
+						</div>
+					</div>
+					{% endif %}
+
+					<!-- Pending Requests -->
+					{% if c.pending_requests %}
+					<div style="margin-bottom: 20px;">
+						<h3 style="font-size: 14px; font-weight: 700; color: #05133C; margin-bottom: 10px;">⏳ Pending Requests ({{ c.pending_count }})</h3>
+						<div style="display: flex; flex-direction: column; gap: 8px;">
+							{% for pr in c.pending_requests %}
+							<div style="padding: 12px 16px; background: #FEF3C7; border-left: 4px solid #D97706; border-radius: 8px; display: flex; justify-content: space-between; align-items: center;">
+								<div>
+									<a href="/demo_request?name={{ pr.name }}" style="font-weight: 600; color: #D97706; text-decoration: none;">{{ pr.name }}</a>
+									<div style="font-size: 13px; color: #05133C; font-weight: 500;">{{ pr.customer or '—' }} · {{ pr.interested_module or '—' }}</div>
+									<div style="font-size: 11px; color: #71717B; margin-top: 2px;">Preferred: {{ pr.date_display }} · Sales: {{ pr.sales_person or '—' }}</div>
+								</div>
+								<div style="text-align: right;">
+									<span class="badge {% if pr.priority == 'Critical' %}b-rejected{% elif pr.priority == 'High' %}b-rejected{% elif pr.priority == 'Medium' %}b-manager-review{% else %}b-draft{% endif %}">{{ pr.priority or 'Medium' }}</span>
+									<div style="font-size: 11px; color: {% if pr.sla_breached %}#DC2626{% else %}#71717B{% endif %}; font-weight: {% if pr.sla_breached %}700{% else %}400{% endif %};">{% if pr.sla_breached %}⚠ SLA Breached{% else %}{{ pr.days_pending or 0 }}d pending{% endif %}</div>
+								</div>
+							</div>
+							{% endfor %}
+						</div>
+					</div>
+					{% endif %}
+
+					<!-- Recent Completed Demos -->
+					{% if c.recent_completed %}
+					<div style="margin-bottom: 16px;">
+						<h3 style="font-size: 14px; font-weight: 700; color: #05133C; margin-bottom: 10px;">✅ Recent Completed Demos</h3>
+						<div style="display: flex; flex-direction: column; gap: 8px;">
+							{% for rc in c.recent_completed %}
+							<div style="padding: 12px 16px; background: #F0FDF4; border-left: 4px solid #009A52; border-radius: 8px; display: flex; justify-content: space-between; align-items: center;">
+								<div>
+									<div style="font-weight: 600; color: #05133C;">{{ rc.customer or '—' }}</div>
+									<div style="font-size: 12px; color: #71717B;">{{ rc.completed_display }} · {{ rc.demo_type or 'Standard' }}</div>
+								</div>
+								<div style="text-align: right;">
+									<span class="badge {% if rc.final_result == 'Converted' %}b-scheduled{% elif rc.final_result == 'Not Interested' %}b-rejected{% else %}b-manager-review{% endif %}">{{ rc.final_result or 'Pending' }}</span>
+									{% if rc.overall_feedback %}
+									<div style="font-size: 11px; color: #D97706; font-weight: 500; max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">⭐ {{ rc.overall_feedback }}</div>
+									{% endif %}
+								</div>
+							</div>
+							{% endfor %}
+						</div>
+					</div>
+					{% endif %}
+				</div>
+			</div>
+			{% endfor %}
+			{% else %}
+			<div class="empty-state">
+				<div class="empty-icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+				<h3>No consultants found</h3>
+				<p>Add Functional Consultants in ERPNext to see their activity here.</p>
+			</div>
+			{% endif %}
 
 		</div>
 	</div>
 	</div>
 </div>
+{% endblock %}
+
+{% block style %}
+{{ super() }}
+<style>
+	.toggle-arrow { display: inline-block; }
+	.toggle-arrow.open { transform: rotate(180deg); }
+</style>
+<script>
+	function toggleConsultant(name) {
+		var body = document.getElementById('body-' + name);
+		var arrow = document.getElementById('arrow-' + name);
+		if (!body) return;
+		if (body.style.display === 'none' || body.style.display === '') {
+			body.style.display = 'block';
+			if (arrow) arrow.classList.add('open');
+		} else {
+			body.style.display = 'none';
+			if (arrow) arrow.classList.remove('open');
+		}
+	}
+</script>
 {% endblock %}
