@@ -1,0 +1,430 @@
+{% extends "templates/web.html" %}
+{% block banner %}{% endblock %}
+{% block navbar %}{% endblock %}
+{% block footer %}{% endblock %}
+{% block style %}{% include "functional_demo/templates/includes/portal_style.html" %}
+<style>
+	.ft-overdue-card { background: #FEF2F2; border-left: 5px solid #DC2626; border-radius: 10px; padding: 20px 24px; margin-bottom: 20px; }
+	.ft-overdue-card h3 { color: #DC2626; font-size: 16px; font-weight: 700; margin: 0 0 14px; }
+	.ft-overdue-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #FECACA; }
+	.ft-overdue-row:last-child { border-bottom: none; }
+	.ft-overdue-info { flex: 1; }
+	.ft-overdue-info .cust { font-weight: 700; color: #05133C; font-size: 14px; }
+	.ft-overdue-info .sub { font-size: 12px; color: #71717B; margin-top: 2px; }
+	.ft-overdue-badge { display: inline-flex; align-items: center; gap: 4px; background: #FEE2E2; color: #DC2626; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 999px; }
+	.ft-action-btn { padding: 5px 12px; border: none; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; }
+	.ft-btn-done { background: #DCFBEA; color: #009A52; }
+	.ft-btn-done:hover { background: #BBF7D0; }
+	.ft-btn-reschedule { background: #FEF3C7; color: #D97706; }
+	.ft-btn-reschedule:hover { background: #FDE68A; }
+
+	.ft-today-card { background: #FFFBE6; border-left: 5px solid #F59E0B; border-radius: 10px; padding: 20px 24px; margin-bottom: 20px; }
+	.ft-today-card h3 { color: #D97706; font-size: 16px; font-weight: 700; margin: 0 0 14px; }
+	.ft-today-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #FDE68A; }
+	.ft-today-row:last-child { border-bottom: none; }
+
+	.ft-table-scroll { overflow-x: auto; }
+	.ft-table-scroll table { min-width: 1100px; width: 100%; border-collapse: collapse; }
+	.ft-table-scroll th { font-size: 11px; font-weight: 700; color: #71717B; text-transform: uppercase; letter-spacing: 0.04em; padding: 8px 10px; text-align: left; border-bottom: 2px solid #E5E7EB; white-space: nowrap; }
+	.ft-table-scroll td { padding: 10px 10px; font-size: 13px; color: #05133C; border-bottom: 1px solid #F3F4F6; vertical-align: middle; }
+	.ft-table-scroll tr:hover td { background: #F9FAFB; }
+
+	.ft-filter-bar { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 20px; padding: 14px 20px; background: #F9FAFB; border-radius: 10px; }
+	.ft-filter-bar select, .ft-filter-bar input { padding: 7px 10px; border: 1px solid #E5E7EB; border-radius: 6px; font-size: 13px; }
+	.ft-filter-bar label { font-size: 11px; font-weight: 600; color: #71717B; display: block; margin-bottom: 3px; }
+	.ft-filter-btn { padding: 7px 18px; background: #114EFF; color: #fff; border: none; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; }
+	.ft-filter-reset { padding: 7px 14px; background: #F3F4F6; color: #71717B; border: none; border-radius: 6px; font-size: 13px; text-decoration: none; }
+
+	.ft-badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 700; white-space: nowrap; }
+	.b-open { background: #DBEAFE; color: #1D4ED8; }
+	.b-in-progress { background: #FEF3C7; color: #D97706; }
+	.b-completed { background: #DCFBEA; color: #009A52; }
+	.b-overdue { background: #FEE2E2; color: #DC2626; }
+
+	.ft-history-card { background: #F9FAFB; border-radius: 8px; padding: 14px 18px; margin-top: 8px; border-left: 4px solid #114EFF; }
+	.ft-history-row { padding: 8px 0; border-bottom: 1px solid #E5E7EB; font-size: 12px; color: #05133C; }
+	.ft-history-row:last-child { border-bottom: none; }
+
+	.ft-empty { text-align: center; padding: 40px 20px; color: #9CA3AF; }
+	.ft-empty h3 { font-size: 16px; color: #71717B; margin: 10px 0 6px; }
+	.ft-empty p { font-size: 13px; }
+</style>
+{% endblock %}
+{% block content %}
+<div class="portal-layout">
+	<header class="portal-topbar">
+		<button class="sidebar-toggle" id="sidebar-toggle" aria-label="Menu">&#9776;</button>
+		<a class="topbar-brand" href="/demo_portal">
+			<img class="brand-logo" src="/assets/functional_demo/images/brand_logo.jpg" alt="Brand Logo" />
+			<div class="brand-text">
+				<span class="brand-name">Demo Portal</span>
+				<span class="brand-sub">Sales &amp; Functional</span>
+			</div>
+		</a>
+		<div class="topbar-title">
+			<h1>{{ title }}</h1>
+			<p>{{ subtitle }}</p>
+		</div>
+		<div class="topbar-right">
+			<span class="portal-avatar">{{ full_name[:1] }}</span>
+			<span class="portal-user-name">{{ full_name }}</span>
+			<a class="btn-desk" href="/app">Open Desk</a>
+		</div>
+	</header>
+	<div class="portal-body">
+		<aside class="portal-sidebar" id="portal-sidebar">
+			<div class="sidebar-menu">
+			{% for item in sidebar_items %}
+			<a class="sidebar-item {% if item.active %}active{% endif %}" href="{{ item.route }}">
+				<span class="sidebar-icon">{{ item.icon | safe }}</span>{{ item.label }}
+			</a>
+			{% endfor %}
+		</div>
+	</aside>
+	<div class="sidebar-overlay"></div>
+	<div class="portal-main">
+		<div class="portal-content">
+
+			<!-- Greeting -->
+			<div class="dash-greet">
+				<div>
+					<span class="greet-eyebrow">● {{ today_pretty }}</span>
+					<h1>{{ greeting }}, {{ full_name }}</h1>
+					<p>Track, complete, and manage your follow-ups — all in one place.</p>
+				</div>
+			</div>
+
+			<!-- KPI Cards -->
+			<div class="kpi-grid" style="margin-bottom: 24px;">
+				<div class="kpi-card">
+					<div class="kpi-label">Total Follow-ups</div>
+					<div class="kpi-value">{{ total }}</div>
+					<div class="kpi-note">All assigned to you</div>
+				</div>
+				<div class="kpi-card kpi-red">
+					<div class="kpi-label">Overdue</div>
+					<div class="kpi-value">{{ total_overdue }}</div>
+					<div class="kpi-note">Need immediate attention</div>
+				</div>
+				<div class="kpi-card kpi-amber">
+					<div class="kpi-label">Due Today</div>
+					<div class="kpi-value">{{ total_today }}</div>
+					<div class="kpi-note">{{ today_date_display }}</div>
+				</div>
+				<div class="kpi-card kpi-blue">
+					<div class="kpi-label">Upcoming</div>
+					<div class="kpi-value">{{ total_upcoming }}</div>
+					<div class="kpi-note">Future follow-ups</div>
+				</div>
+				<div class="kpi-card kpi-green">
+					<div class="kpi-label">This Week</div>
+					<div class="kpi-value">{{ this_week }}</div>
+					<div class="kpi-note">Next 7 days</div>
+				</div>
+				<div class="kpi-card">
+					<div class="kpi-label">Completed</div>
+					<div class="kpi-value">{{ total_completed }}</div>
+					<div class="kpi-note">Done &amp; closed</div>
+				</div>
+				<div class="kpi-card kpi-amber">
+					<div class="kpi-label">Open</div>
+					<div class="kpi-value">{{ total_open }}</div>
+					<div class="kpi-note">Active follow-ups</div>
+				</div>
+			</div>
+
+			<!-- Overdue Alert -->
+			{% if overdue_list %}
+			<div class="ft-overdue-card">
+				<h3>⚠ {{ total_overdue }} Overdue Follow-up{{ "s" if total_overdue != 1 }} Need Attention</h3>
+				{% for fu in overdue_list %}
+				<div class="ft-overdue-row">
+					<div class="ft-overdue-info">
+						<div class="cust">{{ fu.customer_display }}{% if fu.subject %} — {{ fu.subject }}{% endif %}</div>
+						<div class="sub">Due: {{ fu.due_display }} · Consultant: {{ fu.consultant_display }} · Request: {{ fu.demo_request or "-" }}</div>
+					</div>
+					<div style="display: flex; align-items: center; gap: 8px;">
+						<span class="ft-overdue-badge">{{ fu.days_overdue }}d overdue</span>
+						<button class="ft-action-btn ft-btn-done" onclick="completeFollowup('{{ fu.name }}')">✅ Done</button>
+						<button class="ft-action-btn ft-btn-reschedule" onclick="rescheduleFollowup('{{ fu.name }}')">📅 Reschedule</button>
+					</div>
+				</div>
+				{% endfor %}
+			</div>
+			{% endif %}
+
+			<!-- Today's Action List -->
+			{% if today_list %}
+			<div class="ft-today-card">
+				<h3>📅 Today — {{ today_date_display }} ({{ total_today }} follow-up{{ "s" if total_today != 1 }})</h3>
+				{% for fu in today_list %}
+				<div class="ft-today-row">
+					<div class="ft-overdue-info">
+						<div class="cust">{{ fu.customer_display }}{% if fu.subject %} — {{ fu.subject }}{% endif %}</div>
+						<div class="sub">Consultant: {{ fu.consultant_display }} · Request: {{ fu.demo_request or "-" }} · Assigned to: {{ fu.assigned_display }}</div>
+					</div>
+					<div style="display: flex; align-items: center; gap: 8px;">
+						<span class="ft-badge b-open">{{ fu.status }}</span>
+						<button class="ft-action-btn ft-btn-done" onclick="completeFollowup('{{ fu.name }}')">✅ Done</button>
+						<button class="ft-action-btn ft-btn-reschedule" onclick="rescheduleFollowup('{{ fu.name }}')">📅 Reschedule</button>
+					</div>
+				</div>
+				{% endfor %}
+			</div>
+			{% endif %}
+
+			<!-- Upcoming This Week -->
+			{% if upcoming_list %}
+			<div class="portal-card" style="margin-bottom: 20px;">
+				<div class="card-head" style="padding: 14px 20px;">
+					<h2 style="font-size: 15px; font-weight: 700; color: #05133C; margin: 0;">📅 Upcoming Follow-ups ({{ total_upcoming }})</h2>
+				</div>
+				<div class="card-body ft-table-scroll">
+					<table>
+						<thead>
+							<tr>
+								<th>Customer</th>
+								<th>Subject</th>
+								<th>Due Date</th>
+								<th>Consultant</th>
+								<th>Status</th>
+								<th>Action</th>
+							</tr>
+						</thead>
+						<tbody>
+							{% for fu in upcoming_list %}
+							<tr>
+								<td><strong>{{ fu.customer_display }}</strong></td>
+								<td>{{ fu.subject or "-" }}</td>
+								<td>{{ fu.due_display }}</td>
+								<td>{{ fu.consultant_display }}</td>
+								<td><span class="ft-badge b-open">{{ fu.status }}</span></td>
+								<td>
+									<button class="ft-action-btn ft-btn-done" onclick="completeFollowup('{{ fu.name }}')">✅ Done</button>
+									<button class="ft-action-btn ft-btn-reschedule" onclick="rescheduleFollowup('{{ fu.name }}')">📅 Reschedule</button>
+								</td>
+							</tr>
+							{% endfor %}
+						</tbody>
+					</table>
+				</div>
+			</div>
+			{% endif %}
+
+			<!-- Filters & All Follow-ups Table -->
+			<div class="ft-filter-bar">
+				<div>
+					<label>Status</label>
+					<select id="ft-status-filter">
+						<option value="">All</option>
+						<option value="Open">Open</option>
+						<option value="In Progress">In Progress</option>
+						<option value="Overdue">Overdue</option>
+						<option value="Completed">Completed</option>
+					</select>
+				</div>
+				<div>
+					<label>Search Customer</label>
+					<input type="text" id="ft-search-cust" placeholder="Search..." style="min-width: 180px;">
+				</div>
+				<button class="ft-filter-btn" onclick="applyFilters()">Filter</button>
+				<a href="/sales_portal/followup_tracker" class="ft-filter-reset">Reset</a>
+				<button class="ft-filter-reset" style="margin-left: auto;" onclick="exportCSV()">📥 Export CSV</button>
+			</div>
+
+			<!-- All Follow-ups -->
+			<div class="portal-card" style="margin-bottom: 20px;">
+				<div class="card-head" style="padding: 14px 20px;">
+					<h2 style="font-size: 15px; font-weight: 700; color: #05133C; margin: 0;">All Follow-ups ({{ total }})</h2>
+				</div>
+				<div class="card-body ft-table-scroll" id="ft-all-table">
+					<table id="ft-all-table-body">
+						<thead>
+							<tr>
+								<th>Customer</th>
+								<th>Subject</th>
+								<th>Due Date</th>
+								<th>Consultant</th>
+								<th>Assigned To</th>
+								<th>Request</th>
+								<th>Status</th>
+								<th>Outcome</th>
+								<th>Action</th>
+							</tr>
+						</thead>
+						<tbody>
+							{% for fu in all_followups %}
+							<tr data-status="{{ fu.status }}" data-customer="{{ (fu.customer_display or '')|lower }}">
+								<td><strong>{{ fu.customer_display }}</strong></td>
+								<td>{{ fu.subject or "-" }}</td>
+								<td style="white-space: nowrap;">{{ fu.due_display }}</td>
+								<td>{{ fu.consultant_display }}</td>
+								<td>{{ fu.assigned_display }}</td>
+								<td>
+									{% if fu.demo_request %}
+									<a href="/sales_portal/demo_request?name={{ fu.demo_request }}" style="color: #114EFF; text-decoration: none; font-weight: 600;">{{ fu.demo_request }}</a>
+									{% else %}-{% endif %}
+								</td>
+								<td>
+									<span class="ft-badge {% if fu.status == 'Open' %}b-open{% elif fu.status == 'In Progress' %}b-in-progress{% elif fu.status == 'Completed' %}b-completed{% elif fu.status == 'Overdue' %}b-overdue{% endif %}">{{ fu.status }}</span>
+								</td>
+								<td>{{ fu.outcome or "-" }}</td>
+								<td style="white-space: nowrap;">
+									<button class="ft-action-btn ft-btn-done" onclick="completeFollowup('{{ fu.name }}')">✅ Done</button>
+									<button class="ft-action-btn ft-btn-reschedule" onclick="rescheduleFollowup('{{ fu.name }}')">📅</button>
+									{% if fu.demo_session %}
+									<a href="/functional_portal/session?name={{ fu.demo_session }}" style="color: #114EFF; font-size: 11px; font-weight: 600; text-decoration: none; margin-left: 4px;">👁</a>
+									{% endif %}
+								</td>
+							</tr>
+							{% endfor %}
+						</tbody>
+					</table>
+				</div>
+			</div>
+
+			<!-- Recently Completed -->
+			{% if completed_list %}
+			<div class="portal-card" style="margin-bottom: 20px;">
+				<div class="card-head" style="padding: 14px 20px;">
+					<h2 style="font-size: 15px; font-weight: 700; color: #05133C; margin: 0;">✅ Recently Completed ({{ completed_list|length }})</h2>
+				</div>
+				<div class="card-body ft-table-scroll">
+					<table>
+						<thead>
+							<tr>
+								<th>Customer</th>
+								<th>Subject</th>
+								<th>Due Date</th>
+								<th>Outcome</th>
+								<th>Remarks</th>
+							</tr>
+						</thead>
+						<tbody>
+							{% for fu in completed_list|reverse %}
+							<tr>
+								<td><strong>{{ fu.customer_display }}</strong></td>
+								<td>{{ fu.subject or "-" }}</td>
+								<td>{{ fu.due_display }}</td>
+								<td>{% if fu.outcome %}<span class="ft-badge b-completed">{{ fu.outcome }}</span>{% else %}-{% endif %}</td>
+								<td style="max-width: 260px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ fu.remarks or "-" }}</td>
+							</tr>
+							{% endfor %}
+						</tbody>
+					</table>
+				</div>
+			</div>
+			{% endif %}
+
+			<!-- Customer History (expandable per customer) -->
+			{% if customer_history %}
+			<div class="portal-card" style="margin-bottom: 20px;">
+				<div class="card-head" style="padding: 14px 20px; cursor: pointer;" onclick="toggleHistory()">
+					<h2 style="font-size: 15px; font-weight: 700; color: #05133C; margin: 0;">📋 Customer History ({{ customer_history|length }} customer{{ "s" if customer_history|length != 1 }})</h2>
+					<span id="history-arrow" style="font-size: 18px; color: #9CA3AF; transition: transform 0.2s;">▼</span>
+				</div>
+				<div id="history-body" style="display: none;">
+					<div class="card-body">
+						{% for cust_id, entries in customer_history.items() %}
+						<div style="margin-bottom: 16px;">
+							<div style="font-size: 14px; font-weight: 700; color: #05133C; margin-bottom: 8px;">👤 {{ entries[0].customer_display if entries[0].customer_display is defined else cust_id }} ({{ entries|length }} entries)</div>
+							{% for entry in entries|reverse %}
+							<div class="ft-history-row">
+								<strong>{{ entry.date }}</strong> · {{ entry.subject }} · <span class="ft-badge b-{{ entry.status|lower|replace(' ', '-') }}">{{ entry.status }}</span>
+								{% if entry.outcome %} · <span style="color: #009A52;">{{ entry.outcome }}</span>{% endif %}
+								{% if entry.remarks %}<br><span style="color: #71717B; font-style: italic;">{{ entry.remarks[:120] }}{% if entry.remarks|length > 120 %}...{% endif %}</span>{% endif %}
+							</div>
+							{% endfor %}
+						</div>
+						{% endfor %}
+					</div>
+				</div>
+			</div>
+			{% endif %}
+
+			{% if not all_followups %}
+			<div class="portal-card">
+				<div class="ft-empty">
+					<div style="font-size: 48px;">📋</div>
+					<h3>No Follow-ups Yet</h3>
+					<p>Follow-ups created from your demo requests will appear here.</p>
+				</div>
+			</div>
+			{% endif %}
+
+		</div>
+	</div>
+	</div>
+</div>
+{% endblock %}
+
+{% block script %}
+{% include "functional_demo/templates/includes/portal_script.html" %}
+<script>
+function completeFollowup(name) {
+	if (!confirm("Mark this follow-up as Completed?")) return;
+	portalCall("functional_demo.api.update_follow_up", {
+		follow_up: name,
+		status: "Completed",
+		outcome: "Demo Completed"
+	}).then(function() { window.location.reload(); });
+}
+
+function rescheduleFollowup(name) {
+	var newDate = prompt("Enter new follow-up date (YYYY-MM-DD):");
+	if (!newDate) return;
+	portalCall("functional_demo.api.update_follow_up", {
+		follow_up: name,
+		follow_up_date: newDate
+	}).then(function() { window.location.reload(); });
+}
+
+function toggleHistory() {
+	var body = document.getElementById("history-body");
+	var arrow = document.getElementById("history-arrow");
+	if (body.style.display === "none" || body.style.display === "") {
+		body.style.display = "block";
+		if (arrow) arrow.style.transform = "rotate(180deg)";
+	} else {
+		body.style.display = "none";
+		if (arrow) arrow.style.transform = "rotate(0deg)";
+	}
+}
+
+function applyFilters() {
+	var statusFilter = document.getElementById("ft-status-filter").value.toLowerCase();
+	var searchFilter = document.getElementById("ft-search-cust").value.toLowerCase();
+	var rows = document.querySelectorAll("#ft-all-table-body tbody tr");
+	rows.forEach(function(row) {
+		var rowStatus = (row.getAttribute("data-status") || "").toLowerCase();
+		var rowCustomer = (row.getAttribute("data-customer") || "");
+		var showStatus = !statusFilter || rowStatus === statusFilter || (statusFilter === "overdue" && rowStatus === "overdue");
+		var showSearch = !searchFilter || rowCustomer.indexOf(searchFilter) !== -1;
+		row.style.display = (showStatus && showSearch) ? "" : "none";
+	});
+}
+
+function exportCSV() {
+	var table = document.getElementById("ft-all-table-body");
+	if (!table) return;
+	var rows = [];
+	var headers = [];
+	table.querySelectorAll("thead th").forEach(function(th) { headers.push(th.textContent.trim()); });
+	rows.push(headers.join(","));
+	table.querySelectorAll("tbody tr").forEach(function(tr) {
+		if (tr.style.display === "none") return;
+		var cells = [];
+		tr.querySelectorAll("td").forEach(function(td) {
+			cells.push('"' + (td.textContent.trim().replace(/"/g, '""')) + '"');
+		});
+		rows.push(cells.join(","));
+	});
+	var csv = rows.join("\n");
+	var blob = new Blob([csv], { type: "text/csv" });
+	var a = document.createElement("a");
+	a.href = URL.createObjectURL(blob);
+	a.download = "followup_tracker.csv";
+	a.click();
+}
+</script>
+{% endblock %}

@@ -1843,9 +1843,9 @@ def create_consultant_profile(
 
 
 @frappe.whitelist()
-def update_follow_up(follow_up=None, status=None, outcome=None, remarks=None, next_action=None, discussion_note=None):
+def update_follow_up(follow_up=None, status=None, outcome=None, remarks=None, next_action=None, discussion_note=None, follow_up_date=None):
 	"""Update a Demo Follow Up from the portal: complete it, record the outcome,
-	and optionally append a discussion note (creates a Follow Up Note row).
+	reschedule it, and optionally append a discussion note (creates a Follow Up Note row).
 
 	The argument is optional so a client that fires the call without a value
 	gets a clear popup instead of a TypeError 500."""
@@ -1865,6 +1865,8 @@ def update_follow_up(follow_up=None, status=None, outcome=None, remarks=None, ne
 		doc.remarks = remarks
 	if next_action:
 		doc.next_action = next_action
+	if follow_up_date:
+		doc.follow_up_date = follow_up_date
 	if discussion_note:
 		doc.add_discussion_note(discussion_note)
 	doc.save()
