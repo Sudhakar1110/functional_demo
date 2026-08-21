@@ -334,7 +334,7 @@
 									<div style="font-size: 12px; color: #71717B;">{{ rc.completed_display }} · {{ rc.demo_type or 'Standard' }}</div>
 								</div>
 								<div style="text-align: right;">
-									<span class="badge {% if rc.final_result == 'Converted' %}b-completed{% elif rc.final_result == 'Not Interested' %}b-not-interested{% else %}b-scheduled{% endif %}">{{ rc.final_result or 'Pending' }}</span>
+									<span class="badge {% if rc.final_result == 'Converted' %}b-completed{% elif rc.final_result == 'Not Interested' %}b-not-interested{% else %}b-scheduled{% endif %}">{{ display_status(rc.final_result) or 'Pending' }}</span>
 									{% if rc.overall_feedback %}
 									<div style="font-size: 11px; color: #D97706; font-weight: 500; max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">⭐ {{ rc.overall_feedback }}</div>
 									{% endif %}

@@ -68,7 +68,7 @@
 			<div class="portal-card">
 				<div class="card-head">
 					<h2>All Trial Periods ({{ trials|length }})</h2>
-					<a class="btn-portal secondary sm" href="/sales_portal/demo_requests?status=Converted">View converted &rarr;</a>
+					<a class="btn-portal secondary sm" href="/sales_portal/demo_requests?status=Converted">View Demo Completed &rarr;</a>
 				</div>
 				{% if trials %}
 				<div class="card-body flush">
@@ -116,8 +116,8 @@
 				<div class="empty-state">
 					<div class="empty-icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
 					<h3>No trial periods yet</h3>
-					<p>Convert a demo request and set its trial start/end dates to see them here.</p>
-					<a class="btn-portal" href="/sales_portal/demo_requests?status=Converted">Go to converted requests</a>
+					<p>Complete a demo request and set its trial start/end dates to see them here.</p>
+					<a class="btn-portal" href="/sales_portal/demo_requests?status=Converted">Go to Demo Completed requests</a>
 				</div>
 				{% endif %}
 			</div>
