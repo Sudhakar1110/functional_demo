@@ -12,18 +12,19 @@ def get_context(context):
 	to Functional Consultants by the Functional Team Manager."""
 	portal_context(
 		context,
-		_(("Assigned Demos")),
+		_(("Assign Demo")),
 		["Functional Team Manager"],
 		active="assigned_demo",
-		subtitle=_(("Demo requests assigned to functional consultants")),
+		subtitle=_(("Review and assign demo requests to functional consultants")),
 	)
 
 	today = frappe.utils.today()
 
 	# Get all demo requests that need attention: "Manager Review" (awaiting
 	# consultant assignment) and "Assigned" (consultant assigned, awaiting
-	# scheduling). This ensures requests from the sales team reach the
-	# Functional Team Manager here as well as on the Manager Dashboard.
+	# scheduling). When the Functional Team Manager assigns a consultant
+	# from the Manager Dashboard, the request status becomes "Assigned"
+	# and appears here automatically.
 	assigned_requests = frappe.get_all(
 		"Demo Request",
 		filters={"status": ["in", ["Manager Review", "Assigned"]]},

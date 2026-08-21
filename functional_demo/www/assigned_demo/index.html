@@ -41,7 +41,7 @@
 			<div class="dash-greet">
 				<div>
 					<span class="greet-eyebrow">● {{ today_pretty }}</span>
-					<h1>{{ greeting }}, {{ full_name }}</h1>						<p>Review and assign functional consultants to incoming demo requests from the sales team.</p>
+					<h1>{{ greeting }}, {{ full_name }}</h1>						<p>Review, assign consultants and schedule demos for incoming requests from the sales team.</p>
 				</div>
 			</div>				<!-- Summary KPIs -->
 				<div class="kpi-grid" style="margin-bottom: 24px;">
@@ -68,8 +68,7 @@
 				</div>
 
 			<!-- Assigned Demo Requests Table -->
-			<div class="portal-card" style="margin-bottom: 24px;">
-				<div class="card-head"><h2>Demo Requests - Pending Action ({{ total_assigned }})</h2></div>
+			<div class="portal-card" style="margin-bottom: 24px;">								<div class="card-head"><h2>Assign Demo Requests ({{ total_assigned }})</h2></div>
 				{% if assigned_requests %}
 				<div class="card-body flush">
 					<table class="table-portal">
@@ -141,9 +140,8 @@
 				</div>
 				{% else %}
 				<div class="empty-state">
-					<div class="empty-icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg></div>
-					<h3>No pending demo requests</h3>
-					<p>Demo requests from the sales team will appear here for review and assignment.</p>
+					<div class="empty-icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg></div>										<h3>No pending demo requests</h3>
+										<p>Demo requests from the sales team and assignments from the Manager Dashboard will appear here.</p>
 				</div>
 				{% endif %}
 			</div>

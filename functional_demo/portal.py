@@ -345,7 +345,7 @@ def sidebar_items(active):
 	# Consultant Activity — Functional Team Manager only (not Sales Manager)
 	if "Functional Team Manager" in user_roles():
 		items.append({"label": _("Consultant Activity"), "route": "/consultant_activity", "icon": ICON_CONSULTANT_ACTIVITY, "active": active == "consultant_activity"})
-		items.append({"label": _("Assigned Demo"), "route": "/assigned_demo", "icon": ICON_ASSIGNED, "active": active == "assigned_demo"})
+		items.append({"label": _("Assign Demo"), "route": "/assigned_demo", "icon": ICON_ASSIGNED, "active": active == "assigned_demo"})
 
 	# Feedback is only visible to managers (Functional Team Manager / Sales Manager)
 	if is_manager():
