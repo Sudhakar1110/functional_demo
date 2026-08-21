@@ -65,31 +65,31 @@
 			</div>
 
 			<div class="kpi-grid">
-				<div class="kpi-card kpi-teal">
+				<div class="kpi-card kpi-teal" style="cursor:pointer;" onclick="kpiFilter('todays', this)">
 					<span class="kpi-icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg></span>
 					<div class="kpi-label">Today's Demos</div>
 					<div class="kpi-value">{{ stats.todays_demos }}</div>
 					<div class="kpi-note">Yours, today</div>
 				</div>
-				<div class="kpi-card kpi-amber">
+				<div class="kpi-card kpi-amber" style="cursor:pointer;" onclick="kpiFilter('In Progress', this)">
 					<span class="kpi-icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span>
 					<div class="kpi-label">In Progress</div>
 					<div class="kpi-value">{{ stats.in_progress }}</div>
 					<div class="kpi-note">Currently running</div>
 				</div>
-				<div class="kpi-card kpi-blue">
+				<div class="kpi-card kpi-blue" style="cursor:pointer;" onclick="kpiFilter('Scheduled', this)">
 					<span class="kpi-icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg></span>
 					<div class="kpi-label">Upcoming</div>
 					<div class="kpi-value">{{ stats.upcoming }}</div>
 					<div class="kpi-note">Scheduled ahead</div>
 				</div>
-				<div class="kpi-card kpi-amber">
+				<div class="kpi-card kpi-amber" style="cursor:pointer;" onclick="kpiFilter('In Progress', this)">
 					<span class="kpi-icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
 					<div class="kpi-label">Assigned to Me</div>
 					<div class="kpi-value">{{ stats.assigned_demos }}</div>
 					<div class="kpi-note">Waiting to be scheduled</div>
 				</div>
-				<div class="kpi-card kpi-green">
+				<div class="kpi-card kpi-green" style="cursor:pointer;" onclick="kpiFilter('Completed', this)">
 					<span class="kpi-icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></span>
 					<div class="kpi-label">Completed</div>
 					<div class="kpi-value">{{ stats.completed }}</div>

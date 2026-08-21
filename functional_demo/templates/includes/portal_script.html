@@ -634,5 +634,23 @@
 		apple.href = "/assets/functional_demo/images/brand_logo.jpg";
 		document.head.appendChild(apple);
 	})();
+
+	/* KPI card filtering: click a KPI card to filter the table below */
+	window.kpiFilter = function(status, el) {
+		document.querySelectorAll(".kpi-card").forEach(function(c) { c.classList.remove("active-kpi"); });
+		if (el) el.classList.add("active-kpi");
+		var tables = document.querySelectorAll(".table-portal tbody, table tbody");
+		tables.forEach(function(tbody) {
+			tbody.querySelectorAll("tr").forEach(function(row) {
+				if (status === "all") { row.style.display = ""; return; }
+				var rowStatus = row.getAttribute("data-status") || "";
+				var rowType = row.getAttribute("data-type") || "";
+				var rowSession = row.getAttribute("data-session") || "";
+				var rowFeedback = row.getAttribute("data-has-feedback") || "";
+				var match = (rowStatus === status || rowType === status || rowSession === status || rowFeedback === status);
+				row.style.display = match ? "" : "none";
+			});
+		});
+	};
 })();
 </script>

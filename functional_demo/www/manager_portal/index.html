@@ -2,7 +2,11 @@
 {% block banner %}{% endblock %}
 {% block navbar %}{% endblock %}
 {% block footer %}{% endblock %}
-{% block style %}{% include "functional_demo/templates/includes/portal_style.html" %}{% endblock %}
+{% block style %}{% include "functional_demo/templates/includes/portal_style.html" %}
+<style>
+.kpi-card.active-kpi { outline: 3px solid #114EFF; outline-offset: -3px; }
+</style>
+{% endblock %}
 {% block content %}
 <div class="portal-layout">
 	<header class="portal-topbar">
@@ -49,31 +53,31 @@
 
 			<!-- KPI Cards -->
 			<div class="kpi-grid">
-				<div class="kpi-card">
+				<div class="kpi-card" style="cursor:pointer;" onclick="kpiFilter('all', this)">
 					<span class="kpi-icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg></span>
 					<div class="kpi-label">Demo Requests</div>
 					<div class="kpi-value">{{ stats.total }}</div>
 					<div class="kpi-note">All teams</div>
 				</div>
-				<div class="kpi-card kpi-red">
+				<div class="kpi-card kpi-red" style="cursor:pointer;" onclick="kpiFilter('Manager Review', this)">
 					<span class="kpi-icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span>
 					<div class="kpi-label">Needs Review</div>
 					<div class="kpi-value">{{ stats.pending }}</div>
 					<div class="kpi-note">Draft / Requested / Manager Review</div>
 				</div>
-				<div class="kpi-card kpi-amber">
+				<div class="kpi-card kpi-amber" style="cursor:pointer;" onclick="kpiFilter('Assigned', this)">
 					<span class="kpi-icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span>
 					<div class="kpi-label">Assigned</div>
 					<div class="kpi-value">{{ stats.assigned }}</div>
 					<div class="kpi-note">Consultant assigned</div>
 				</div>
-				<div class="kpi-card kpi-blue">
+				<div class="kpi-card kpi-blue" style="cursor:pointer;" onclick="kpiFilter('Scheduled', this)">
 					<span class="kpi-icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg></span>
 					<div class="kpi-label">Scheduled</div>
 					<div class="kpi-value">{{ stats.scheduled }}</div>
 					<div class="kpi-note">Scheduled / In progress</div>
 				</div>
-				<div class="kpi-card kpi-teal">
+				<div class="kpi-card kpi-teal" style="cursor:pointer;" onclick="kpiFilter('todays', this)">
 					<span class="kpi-icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg></span>
 					<div class="kpi-label">Today's Demos</div>
 					<div class="kpi-value">{{ stats.todays_demos }}</div>
@@ -91,7 +95,7 @@
 					<div class="kpi-value">{{ stats.converted }}</div>
 					<div class="kpi-note">{{ stats.conversion_rate }}% conversion</div>
 				</div>
-				<div class="kpi-card kpi-red">
+				<div class="kpi-card kpi-red" style="cursor:pointer;" onclick="kpiFilter('Manager Review', this)">
 					<span class="kpi-icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" x2="6" y1="6" y2="18"/><line x1="6" x2="18" y1="6" y2="18"/></svg></span>
 					<div class="kpi-label">Cancelled</div>
 					<div class="kpi-value">{{ stats.cancelled }}</div>
@@ -118,7 +122,7 @@
 						</thead>
 						<tbody>
 							{% for r in all_requests %}
-							<tr>
+							<tr data-status="{{ r.status }}">
 								<td><a href="/sales_portal/demo_request?name={{ r.name }}">{{ r.name }}</a></td>
 								<td>{{ r.customer or "-" }}</td>
 								<td>{{ r.interested_module or "-" }}</td>

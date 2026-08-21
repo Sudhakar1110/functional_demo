@@ -96,37 +96,37 @@
 
 			<!-- KPI Cards -->
 			<div class="kpi-grid" style="margin-bottom: 24px;">
-				<div class="kpi-card">
+				<div class="kpi-card" style="cursor:pointer;" onclick="kpiFilter('all', this)">
 					<div class="kpi-label">Total Follow-ups</div>
 					<div class="kpi-value">{{ total }}</div>
 					<div class="kpi-note">All assigned to you</div>
 				</div>
-				<div class="kpi-card kpi-red">
+				<div class="kpi-card kpi-red" style="cursor:pointer;" onclick="kpiFilter('Overdue', this)">
 					<div class="kpi-label">Overdue</div>
 					<div class="kpi-value">{{ total_overdue }}</div>
 					<div class="kpi-note">Need immediate attention</div>
 				</div>
-				<div class="kpi-card kpi-amber">
+				<div class="kpi-card kpi-amber" style="cursor:pointer;" onclick="kpiFilter('Open', this)">
 					<div class="kpi-label">Due Today</div>
 					<div class="kpi-value">{{ total_today }}</div>
 					<div class="kpi-note">{{ today_date_display }}</div>
 				</div>
-				<div class="kpi-card kpi-blue">
+				<div class="kpi-card kpi-blue" style="cursor:pointer;" onclick="kpiFilter('Open', this)">
 					<div class="kpi-label">Upcoming</div>
 					<div class="kpi-value">{{ total_upcoming }}</div>
 					<div class="kpi-note">Future follow-ups</div>
 				</div>
-				<div class="kpi-card kpi-green">
+				<div class="kpi-card kpi-green" style="cursor:pointer;" onclick="kpiFilter('Completed', this)">
 					<div class="kpi-label">This Week</div>
 					<div class="kpi-value">{{ this_week }}</div>
 					<div class="kpi-note">Next 7 days</div>
 				</div>
-				<div class="kpi-card">
+				<div class="kpi-card" style="cursor:pointer;" onclick="kpiFilter('all', this)">
 					<div class="kpi-label">Completed</div>
 					<div class="kpi-value">{{ total_completed }}</div>
 					<div class="kpi-note">Done &amp; closed</div>
 				</div>
-				<div class="kpi-card kpi-amber">
+				<div class="kpi-card kpi-amber" style="cursor:pointer;" onclick="kpiFilter('Open', this)">
 					<div class="kpi-label">Open</div>
 					<div class="kpi-value">{{ total_open }}</div>
 					<div class="kpi-note">Active follow-ups</div>

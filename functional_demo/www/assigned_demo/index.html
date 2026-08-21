@@ -2,7 +2,11 @@
 {% block banner %}{% endblock %}
 {% block navbar %}{% endblock %}
 {% block footer %}{% endblock %}
-{% block style %}{% include "functional_demo/templates/includes/portal_style.html" %}{% endblock %}
+{% block style %}{% include "functional_demo/templates/includes/portal_style.html" %}
+<style>
+.kpi-card.active-kpi { outline: 3px solid #114EFF; outline-offset: -3px; }
+</style>
+{% endblock %}
 {% block content %}
 <div class="portal-layout">
 	<header class="portal-topbar">
@@ -45,22 +49,22 @@
 				</div>
 			</div>				<!-- Summary KPIs -->
 				<div class="kpi-grid" style="margin-bottom: 24px;">
-					<div class="kpi-card">
+					<div class="kpi-card" style="cursor:pointer;" onclick="kpiFilter('all', this)">
 						<div class="kpi-label">Total Requests</div>
 						<div class="kpi-value">{{ total_assigned }}</div>
 						<div class="kpi-note">Needs attention</div>
 					</div>
-					<div class="kpi-card kpi-amber">
+					<div class="kpi-card kpi-amber" style="cursor:pointer;" onclick="kpiFilter('Manager Review', this)">
 						<div class="kpi-label">Needs Assignment</div>
 						<div class="kpi-value">{{ pending_review }}</div>
 						<div class="kpi-note">Manager Review</div>
 					</div>
-					<div class="kpi-card kpi-blue">
+					<div class="kpi-card kpi-blue" style="cursor:pointer;" onclick="kpiFilter('Assigned', this)">
 						<div class="kpi-label">Assigned</div>
 						<div class="kpi-value">{{ without_session }}</div>
 						<div class="kpi-note">Awaiting scheduling</div>
 					</div>
-					<div class="kpi-card kpi-teal">
+					<div class="kpi-card kpi-teal" style="cursor:pointer;" onclick="kpiFilter('session', this)">
 						<div class="kpi-label">Session Created</div>
 						<div class="kpi-value">{{ with_session }}</div>
 						<div class="kpi-note">Demo session exists</div>
@@ -87,7 +91,7 @@
 						</thead>
 						<tbody>
 							{% for r in assigned_requests %}
-							<tr>
+							<tr data-status="{{ r.status }}" data-session="{{ 'yes' if r.session_name else 'no' }}">
 								<td><a href="/sales_portal/demo_request?name={{ r.name }}">{{ r.name }}</a></td>
 								<td>{{ r.customer or r.lead or "-" }}</td>
 								<td>{{ r.interested_module or "-" }}</td>
@@ -176,6 +180,15 @@
 {% block script %}
 {% include "functional_demo/templates/includes/portal_script.html" %}
 <script>
+function kpiFilter(status, el) {
+	document.querySelectorAll(".kpi-card").forEach(function(c) { c.classList.remove("active-kpi"); });
+	if (el) el.classList.add("active-kpi");
+	document.querySelectorAll(".table-portal tbody tr").forEach(function(row) {
+		if (status === "all") { row.style.display = ""; return; }
+		if (status === "session") { row.style.display = (row.getAttribute("data-session") === "yes") ? "" : "none"; return; }
+		row.style.display = (row.getAttribute("data-status") === status) ? "" : "none";
+	});
+}
 (function () {
 	"use strict";
 

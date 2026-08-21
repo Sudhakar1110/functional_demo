@@ -89,27 +89,27 @@
 					</div>
 					<div class="card-body">
 						<div class="kpi-grid" style="margin-bottom: 0;">
-							<div class="kpi-card">
+							<div class="kpi-card" style="cursor:pointer;" onclick="kpiFilter('all', this)">
 								<div class="kpi-label">Feedback Entries</div>
 								<div class="kpi-value">{{ template_summary.count }}</div>
 							</div>
-							<div class="kpi-card kpi-green">
+							<div class="kpi-card kpi-green" style="cursor:pointer;" onclick="kpiFilter('Converted', this)">
 								<div class="kpi-label">Interested</div>
 								<div class="kpi-value">{{ template_summary.interested }}</div>
 							</div>
-							<div class="kpi-card kpi-red">
+							<div class="kpi-card kpi-red" style="cursor:pointer;" onclick="kpiFilter('Not Interested', this)">
 								<div class="kpi-label">Not Interested</div>
 								<div class="kpi-value">{{ template_summary.not_interested }}</div>
 							</div>
-							<div class="kpi-card kpi-blue">
+							<div class="kpi-card kpi-blue" style="cursor:pointer;" onclick="kpiFilter('Fully Met', this)">
 								<div class="kpi-label">Requirements Fully Met</div>
 								<div class="kpi-value">{{ template_summary.fully_met }}</div>
 							</div>
-							<div class="kpi-card kpi-amber">
+							<div class="kpi-card kpi-amber" style="cursor:pointer;" onclick="kpiFilter('Partially Met', this)">
 								<div class="kpi-label">Partially Met</div>
 								<div class="kpi-value">{{ template_summary.partially_met }}</div>
 							</div>
-							<div class="kpi-card kpi-red">
+							<div class="kpi-card kpi-red" style="cursor:pointer;" onclick="kpiFilter('Not Interested', this)">
 								<div class="kpi-label">Not Met</div>
 								<div class="kpi-value">{{ template_summary.not_met }}</div>
 							</div>
@@ -161,7 +161,7 @@
 							</thead>
 							<tbody>
 								{% for f in feedback %}
-								<tr>
+								<tr data-status="{{ f.final_result }}">
 									<td><a href="/functional_portal/session?name={{ f.name }}">{{ f.name }}</a></td>
 									<td><strong>{{ f.customer }}</strong><div class="muted">{{ f.consultant }}</div></td>
 									<td>{{ f.sales_person }}</td>

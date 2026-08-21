@@ -39,25 +39,25 @@
 		<div class="portal-content">
 
 			<div class="kpi-grid">
-				<div class="kpi-card">
+				<div class="kpi-card" style="cursor:pointer;" onclick="kpiFilter('all', this)">
 					<span class="kpi-icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span>
 					<div class="kpi-label">Total Trials</div>
 					<div class="kpi-value">{{ total }}</div>
 					<div class="kpi-note">Demo Completed with trial dates</div>
 				</div>
-				<div class="kpi-card kpi-green">
+				<div class="kpi-card kpi-green" style="cursor:pointer;" onclick="kpiFilter('active', this)">
 					<span class="kpi-icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></span>
 					<div class="kpi-label">Active</div>
 					<div class="kpi-value">{{ active }}</div>
 					<div class="kpi-note">More than 7 days left</div>
 				</div>
-				<div class="kpi-card kpi-purple">
+				<div class="kpi-card kpi-purple" style="cursor:pointer;" onclick="kpiFilter('ending_soon', this)">
 					<span class="kpi-icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span>
 					<div class="kpi-label">Ending Soon</div>
 					<div class="kpi-value">{{ ending_soon }}</div>
 					<div class="kpi-note">7 days or less left</div>
 				</div>
-				<div class="kpi-card kpi-red">
+				<div class="kpi-card kpi-red" style="cursor:pointer;" onclick="kpiFilter('expired', this)">
 					<span class="kpi-icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></span>
 					<div class="kpi-label">Expired</div>
 					<div class="kpi-value">{{ expired }}</div>
@@ -86,7 +86,7 @@
 						</thead>
 						<tbody>
 							{% for t in trials %}
-							<tr>
+							<tr data-status="{{ t.status }}">
 								<td><a href="/sales_portal/demo_request?name={{ t.name }}">{{ t.name }}</a></td>
 								<td>{{ t.lead_display }}</td>
 								<td>{{ t.interested_module or "-" }}</td>
