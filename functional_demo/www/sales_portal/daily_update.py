@@ -89,7 +89,7 @@ def get_context(context):
             "follow_up_date": tomorrow,
             "status": ["in", ["Open", "In Progress"]],
         },
-        fields=["name", "customer", "sales_person", "demo_request", "follow_up_date", "status", "notes"],
+        fields=["name", "customer", "sales_person", "demo_request", "follow_up_date", "status", "remarks", "subject"],
         order_by="follow_up_date asc",
     ) or []
 

@@ -320,7 +320,7 @@
 								<td>{{ f.sales_person or "-" }}</td>
 								<td>{% if f.demo_request %}<a href="/sales_portal/demo_request?name={{ f.demo_request }}">{{ f.demo_request }}</a>{% else %}-{% endif %}</td>
 								<td><span class="badge b-{{ f.status|lower|replace(' ', '-') }}">{{ f.status }}</span></td>
-								<td style="max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ f.notes or "-" }}</td>
+								<td style="max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ f.remarks or f.subject or "-" }}</td>
 							</tr>
 							{% endfor %}
 						</tbody>
