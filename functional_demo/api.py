@@ -1710,6 +1710,23 @@ def assign_consultant(demo_request=None, consultant=None):
 	if current_state in (None, "", "Draft", "Requested", "Manager Review"):
 		doc = change_status(doc, "Assigned", ignore_permissions=True)
 
+	# Notify the sales person that their demo request has been assigned
+	# to a consultant - they need to know the request is being actioned.
+	sales_person = doc.get("sales_person")
+	if sales_person and sales_person != frappe.session.user:
+		consultant_name = frappe.db.get_value(
+			"Functional Consultant", consultant, "consultant_name"
+		) or consultant
+		customer = frappe.db.get_value("Customer", doc.customer, "customer_name") if doc.customer else (doc.lead or "-")
+		create_notification(
+			sales_person,
+			_("Demo Request {0} ({1}) has been assigned to consultant {2}.").format(
+				demo_request, customer, consultant_name
+			),
+			"Demo Request",
+			demo_request,
+		)
+
 	frappe.msgprint(_("Functional Consultant assigned to {0}.").format(demo_request))
 	return {"status": doc.get("status") or doc.get("workflow_state")}
 
