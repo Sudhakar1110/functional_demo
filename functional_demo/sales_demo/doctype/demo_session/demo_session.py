@@ -603,6 +603,8 @@ class DemoSession(Document):
 		_set("next_action")
 		_set("consultant_remarks")
 		_set("follow_up_date")
+		# Allow the final result to be set directly during completion
+		_set("final_result")
 		for flag in ("follow_up_required", "additional_demo_required"):
 			if flag in feedback and feedback[flag] not in (None, ""):
 				setattr(self, flag, 1 if feedback[flag] else 0)
@@ -629,6 +631,9 @@ class DemoSession(Document):
 				self.next_action or "Follow up after demo completion",
 				self.sales_person,
 			)
+		# Apply the final result to the Demo Request when set during completion
+		if self.final_result and self.final_result in ("Converted", "Not Interested", "Closed"):
+			self._apply_request_final_result(self.final_result)
 		self.notify_sales_completed()
 
 	def cancel_demo(self, reason=None):

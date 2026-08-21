@@ -292,7 +292,7 @@ frappe.pages["demo-execution"].on_page_load = function (wrapper) {
 			primary_action_label: __("Complete Demo"),
 			primary_action(values) {
 				dialog.hide();
-				call("functional_demo.api.complete_demo_session", { demo_session: name, feedback: values, final_result: values.final_result }, __("Demo completed and feedback recorded."), () => load_session(name));
+				call("functional_demo.api.complete_demo_session", { demo_session: name, feedback: values }, __("Demo completed and feedback recorded."), () => load_session(name));
 			},
 		});
 		dialog.show();

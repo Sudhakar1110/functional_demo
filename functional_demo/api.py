@@ -1015,17 +1015,15 @@ def start_demo_session(demo_session=None):
 
 
 @frappe.whitelist()
-def complete_demo_session(demo_session=None, feedback=None, final_result=None):
-	"""Complete a demo, record customer feedback, and optionally set the final result."""
+def complete_demo_session(demo_session=None, feedback=None):
+	"""Complete a demo and record customer feedback (including final result)."""
 	ds = _get_session(demo_session)
 	ds.complete_demo(feedback or {})
-	# Set the final result if provided (e.g. from the Complete Demo dialog)
-	if final_result and final_result != "Pending":
-		ds.set_final_result(final_result)
 	party, _consultant = _party_and_consultant(ds)
 	frappe.msgprint(_("Demo {0} for {1} completed and feedback recorded.").format(ds.name, party or "-"))
 	return {
 		"demo_status": ds.demo_status,
+		"final_result": ds.final_result,
 		"request_status": frappe.db.get_value("Demo Request", ds.demo_request, "status"),
 	}
 

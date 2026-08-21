@@ -153,7 +153,7 @@ function complete_demo_dialog(frm) {
 			dialog.hide();
 			frappe.call({
 				method: "functional_demo.api.complete_demo_session",
-				args: { demo_session: frm.doc.name, feedback: values, final_result: values.final_result },
+				args: { demo_session: frm.doc.name, feedback: values },
 				callback(r) {
 					if (r.message) frm.reload_doc();
 				},
