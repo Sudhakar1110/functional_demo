@@ -19,6 +19,8 @@
 	.sf-btn-primary:hover { background: #0D3FCC; }
 	.sf-btn-done { background: #DCFBEA; color: #009A52; }
 	.sf-pending { color: #009A52; font-weight: 600; }
+	.kpi-card.active-kpi { outline: 3px solid #114EFF; outline-offset: -3px; }
+	.sf-reset-btn { padding: 6px 16px; background: #F3F4F6; color: #71717B; border: none; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; }
 	.sf-done { color: #71717B; }
 	.sf-modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; justify-content: center; align-items: center; }
 	.sf-modal-overlay.active { display: flex; }
@@ -88,17 +90,17 @@
 
 			<!-- KPI Cards -->
 			<div class="kpi-grid" style="margin-bottom: 24px;">
-				<div class="kpi-card">
+				<div class="kpi-card" style="cursor:pointer;" onclick="sfFilter('all', this)">
 					<div class="kpi-label">Total Sessions</div>
 					<div class="kpi-value">{{ total_sessions }}</div>
 					<div class="kpi-note">Completed / Closed</div>
 				</div>
-				<div class="kpi-card kpi-green">
+				<div class="kpi-card kpi-green" style="cursor:pointer;" onclick="sfFilter('sent', this)">
 					<div class="kpi-label">Feedback Sent</div>
 					<div class="kpi-value">{{ with_feedback }}</div>
 					<div class="kpi-note">Already submitted</div>
 				</div>
-				<div class="kpi-card kpi-amber">
+				<div class="kpi-card kpi-amber" style="cursor:pointer;" onclick="sfFilter('pending', this)">
 					<div class="kpi-label">Pending Review</div>
 					<div class="kpi-value">{{ without_feedback }}</div>
 					<div class="kpi-note">No feedback yet</div>
@@ -108,10 +110,10 @@
 			<!-- Sessions Table -->
 			<div class="portal-card" style="margin-bottom: 20px;">
 				<div class="card-head" style="padding: 14px 20px;">
-					<h2 style="font-size: 15px; font-weight: 700; color: #05133C; margin: 0;">Completed Sessions ({{ total_sessions }})</h2>
+					<div style="display: flex; justify-content: space-between; align-items: center;"><h2 style="font-size: 15px; font-weight: 700; color: #05133C; margin: 0;">Completed Sessions ({{ total_sessions }})</h2><button class="sf-reset-btn" onclick="sfFilter('all', null)">Show All</button></div>
 				</div>
 				<div class="card-body sf-scroll">
-					<table>
+					<table id="sf-table">
 						<thead>
 							<tr>
 								<th>Session</th>
@@ -125,7 +127,7 @@
 						</thead>
 						<tbody>
 							{% for s in sessions %}
-							<tr>
+							<tr data-has-feedback="{{ 'yes' if s.has_feedback else 'no' }}">
 								<td><a href="/functional_portal/session?name={{ s.name }}" style="color: #114EFF; font-weight: 600; text-decoration: none;">{{ s.name }}</a></td>
 								<td><strong>{{ s.customer_display }}</strong></td>
 								<td>{{ s.consultant_display }}</td>
@@ -225,6 +227,17 @@
 	var cancelBtn = document.getElementById("sf-cancel-btn");
 	var submitBtn = document.getElementById("sf-submit");
 	var toast = document.getElementById("sf-toast");
+
+	window.sfFilter = function(filter, el) {
+		document.querySelectorAll(".kpi-card").forEach(function(c) { c.classList.remove("active-kpi"); });
+		if (el) el.classList.add("active-kpi");
+		document.querySelectorAll("#sf-table tbody tr").forEach(function(row) {
+			if (filter === "all") { row.style.display = ""; return; }
+			var hasFb = row.getAttribute("data-has-feedback");
+			if (filter === "sent") row.style.display = (hasFb === "yes") ? "" : "none";
+			if (filter === "pending") row.style.display = (hasFb === "no") ? "" : "none";
+		});
+	};
 
 	function openModal(session, customer, consultant) {
 		document.getElementById("sf-session").value = session;

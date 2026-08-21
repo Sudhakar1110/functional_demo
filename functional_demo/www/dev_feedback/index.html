@@ -46,6 +46,9 @@
 	.df-toast { position: fixed; top: 20px; right: 20px; padding: 14px 20px; border-radius: 8px; color: #fff; font-size: 14px; font-weight: 600; z-index: 99999; display: none; }
 	.df-toast.success { background: #009A52; display: block; }
 	.df-toast.error { background: #DC2626; display: block; }
+	.kpi-card.active-kpi { outline: 3px solid #114EFF; outline-offset: -3px; }
+	.df-reset-btn { padding: 6px 16px; background: #F3F4F6; color: #71717B; border: none; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; margin-bottom: 16px; }
+	.df-reset-btn:hover { background: #E5E7EB; }
 </style>
 {% endblock %}
 {% block content %}
@@ -94,32 +97,32 @@
 
 			<!-- KPI Cards -->
 			<div class="kpi-grid" style="margin-bottom: 24px;">
-				<div class="kpi-card">
+				<div class="kpi-card" style="cursor:pointer;" data-filter="all" onclick="dfFilter('all', this)">
 					<div class="kpi-label">Total Feedback</div>
 					<div class="kpi-value">{{ total }}</div>
 					<div class="kpi-note">All submissions</div>
 				</div>
-				<div class="kpi-card kpi-amber">
+				<div class="kpi-card kpi-amber" style="cursor:pointer;" data-filter="open" onclick="dfFilter('Open', this)">
 					<div class="kpi-label">Open</div>
 					<div class="kpi-value">{{ open_count }}</div>
 					<div class="kpi-note">Needs response</div>
 				</div>
-				<div class="kpi-card kpi-blue">
+				<div class="kpi-card kpi-blue" style="cursor:pointer;" data-filter="in-progress" onclick="dfFilter('In Progress', this)">
 					<div class="kpi-label">In Progress</div>
 					<div class="kpi-value">{{ in_progress }}</div>
 					<div class="kpi-note">Being worked on</div>
 				</div>
-				<div class="kpi-card kpi-green">
+				<div class="kpi-card kpi-green" style="cursor:pointer;" data-filter="resolved" onclick="dfFilter('Resolved', this)">
 					<div class="kpi-label">Resolved</div>
 					<div class="kpi-value">{{ resolved }}</div>
 					<div class="kpi-note">Fixed / Done</div>
 				</div>
-				<div class="kpi-card kpi-red">
+				<div class="kpi-card kpi-red" style="cursor:pointer;" data-filter="bug" onclick="dfFilterType('Bug', this)">
 					<div class="kpi-label">Bugs</div>
 					<div class="kpi-value">{{ bugs }}</div>
 					<div class="kpi-note">Bug reports</div>
 				</div>
-				<div class="kpi-card kpi-blue">
+				<div class="kpi-card kpi-blue" style="cursor:pointer;" data-filter="feature" onclick="dfFilterType('Feature Request', this)">
 					<div class="kpi-label">Feature Requests</div>
 					<div class="kpi-value">{{ features }}</div>
 					<div class="kpi-note">New features</div>
@@ -129,10 +132,10 @@
 			<!-- Feedback Table -->
 			<div class="portal-card" style="margin-bottom: 20px;">
 				<div class="card-head" style="padding: 14px 20px;">
-					<h2 style="font-size: 15px; font-weight: 700; color: #05133C; margin: 0;">Session Feedback ({{ total }})</h2>
+					<div style="display: flex; justify-content: space-between; align-items: center;"><h2 style="font-size: 15px; font-weight: 700; color: #05133C; margin: 0;">Session Feedback ({{ total }})</h2><button class="df-reset-btn" onclick="dfResetFilter()">Show All</button></div>
 				</div>
 				<div class="card-body df-scroll">
-					<table>
+					<table id="df-table">
 						<thead>
 							<tr>
 								<th>ID</th>
@@ -147,9 +150,8 @@
 								<th>Action</th>
 							</tr>
 						</thead>
-						<tbody>
-							{% for fb in feedback_list %}
-							<tr>
+						<tbody>								{% for fb in feedback_list %}
+								<tr data-status="{{ fb.status }}" data-type="{{ fb.feedback_type }}">
 								<td><strong>{{ fb.name }}</strong></td>
 								<td><a href="/functional_portal/session?name={{ fb.demo_session }}" style="color: #114EFF; font-weight: 600; text-decoration: none;">{{ fb.demo_session or "-" }}</a></td>
 								<td>{{ fb.customer_display }}</td>
@@ -259,6 +261,28 @@
 	}
 
 	function closeModal() { overlay.classList.remove("active"); }
+
+	function dfHighlight(el) {
+		document.querySelectorAll(".kpi-card").forEach(function(c) { c.classList.remove("active-kpi"); });
+		if (el) el.classList.add("active-kpi");
+	}
+	window.dfFilter = function(status, el) {
+		dfHighlight(el);
+		document.querySelectorAll("#df-table tbody tr").forEach(function(row) {
+			if (status === "all") { row.style.display = ""; return; }
+			row.style.display = (row.getAttribute("data-status") === status) ? "" : "none";
+		});
+	};
+	window.dfFilterType = function(type, el) {
+		dfHighlight(el);
+		document.querySelectorAll("#df-table tbody tr").forEach(function(row) {
+			row.style.display = (row.getAttribute("data-type") === type) ? "" : "none";
+		});
+	};
+	window.dfResetFilter = function() {
+		dfHighlight(null);
+		document.querySelectorAll("#df-table tbody tr").forEach(function(row) { row.style.display = ""; });
+	};
 
 	function showToast(msg, type) {
 		toast.textContent = msg;
