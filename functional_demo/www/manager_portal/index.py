@@ -15,7 +15,14 @@ def get_context(context):
 		active="manager",
 		subtitle=_("Monitor the whole demo pipeline"),
 	)
-	context.stats = manager_stats()
+	# Determine which sections to show based on role
+	from functional_demo.portal import is_sales, is_functional
+	user_roles_set = frappe.get_roles()
+	context.is_sales_manager = "Sales Manager" in user_roles_set
+	context.is_functional_manager = "Functional Team Manager" in user_roles_set
+	# Pass role to filter stats (functional = consultant data, sales = sales data)
+	role = "functional" if context.is_functional_manager and not context.is_sales_manager else "sales" if context.is_sales_manager and not context.is_functional_manager else None
+	context.stats = manager_stats(role)
 	# Pending Manager Review requests
 	pending = frappe.get_all(
 		"Demo Request",

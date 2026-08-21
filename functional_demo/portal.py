@@ -771,7 +771,10 @@ def functional_stats(user=None):
 	}
 
 
-def manager_stats():
+def manager_stats(role=None):
+	"""Return dashboard stats. When *role* is 'functional' only consultant-
+	related data is returned; when 'sales' only sales-related data.
+	Both roles always get the shared pipeline counts."""
 	today = frappe.utils.today()
 
 	by_status = dict(
@@ -793,7 +796,7 @@ def manager_stats():
 		group by fc.name
 		order by active_demos desc
 		"""
-	)
+	) if role != 'sales' else []
 
 	sales_performance = frappe.db.sql(
 		"""
@@ -805,7 +808,7 @@ def manager_stats():
 		group by sales_person
 		order by total_requests desc
 		"""
-	)
+	) if role != 'functional' else []
 
 	module_wise = frappe.db.sql(
 		"select interested_module, count(*) from `tabDemo Request` group by interested_module order by count(*) desc"

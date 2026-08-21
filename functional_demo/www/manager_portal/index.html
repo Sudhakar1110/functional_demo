@@ -160,6 +160,7 @@
 				{% endif %}
 			</div>
 
+			{% if is_functional_manager %}
 			<!-- Consultant Activity -->
 			<div class="portal-card" style="margin-bottom: 22px;">
 				<div class="card-head"><h2>Consultant Activity</h2></div>
@@ -231,6 +232,7 @@
 				</div>
 				{% endif %}
 			</div>
+			{% endif %}
 
 			<!-- Recent Demo Sessions -->
 			<div class="portal-card" style="margin-bottom: 22px;">
@@ -274,7 +276,8 @@
 			</div>
 
 			<!-- Two Column: Sales Performance + Template-wise -->
-			<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 22px; margin-bottom: 22px;">
+			<div style="display: grid; grid-template-columns: {% if is_sales_manager %}1fr 1fr{% else %}1fr{% endif %}; gap: 22px; margin-bottom: 22px;">
+				{% if is_sales_manager %}
 				<div class="portal-card">
 					<div class="card-head"><h2>Sales Team Performance</h2></div>
 					{% if stats.sales_performance %}
@@ -304,6 +307,7 @@
 					<div class="empty-state"><p class="text-muted">No requests yet.</p></div>
 					{% endif %}
 				</div>
+				{% endif %}
 
 				<div class="portal-card">
 					<div class="card-head"><h2>Template-wise Demo Requests</h2></div>
