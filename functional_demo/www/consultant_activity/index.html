@@ -170,22 +170,24 @@
 				<div class="card-body">
 					{% for p in pipeline_data %}
 					<div style="padding: 14px 0; {% if not loop.last %}border-bottom: 1px solid #F3F4F6;{% endif %}">
-						<div style="display: flex; align-items: center; gap: 12px; margin-bottom: 10px;">
+						<div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
 							<div style="width: 36px; height: 36px; border-radius: 50%; background: {% if p.total > 0 %}#E8EEFF{% else %}#F3F4F6{% endif %}; display: flex; align-items: center; justify-content: center; font-weight: 700; color: {% if p.total > 0 %}#114EFF{% else %}#9CA3AF{% endif %}; font-size: 14px; flex-shrink: 0;">{{ p.consultant_initial }}</div>
 							<div style="flex: 1; min-width: 0;">
 								<div style="font-weight: 700; font-size: 15px; color: #05133C;">{{ p.consultant_name }}</div>
 								<div style="font-size: 12px; color: #71717B;">{{ p.total }} total demo{{ 's' if p.total != 1 else '' }}</div>
 							</div>
 						</div>
-						<div style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px;">
-							{% for stg in p.stages %}
-							<div style="text-align: center;">
-								<div style="font-size: 22px; font-weight: 700; color: {% if stg.count > 0 %}{{ stg.color }}{% else %}#D1D5DB{% endif %};">{{ stg.count }}</div>
-								<div style="font-size: 10px; color: {% if stg.count > 0 %}#71717B{% else %}#D1D5DB{% endif %}; text-transform: uppercase; letter-spacing: 0.3px; font-weight: 600;">{{ stg.label }}</div>
-								<div style="height: 4px; border-radius: 2px; background: {% if stg.count > 0 %}{{ stg.color }}{% else %}#F3F4F6{% endif %}; margin-top: 4px; opacity: {% if stg.count > 0 %}0.8{% else %}0.4{% endif %};"></div>
+						{% for stg in p.stages %}
+						<div class="bar-row" style="margin-bottom: 6px;">
+							<div class="bar-label" style="width: 110px; font-size: 12px;">{{ stg.label }}</div>
+							<div class="bar-track">
+								<div class="progress-track" style="height: 8px;">
+									<div class="progress-fill" style="width: {{ ((stg.count / p.total * 100) if p.total else 0) }}%; background: {{ stg.color }}; border-radius: 4px;"></div>
+								</div>
 							</div>
-							{% endfor %}
+							<div class="bar-val" style="width: 36px; font-size: 13px; color: {{ stg.color }};">{{ stg.count }}</div>
 						</div>
+						{% endfor %}
 					</div>
 					{% endfor %}
 				</div>
