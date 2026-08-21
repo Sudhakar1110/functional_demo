@@ -366,7 +366,7 @@ function completeFollowup(name) {
 	portalCall("functional_demo.api.update_follow_up", {
 		follow_up: name,
 		status: "Completed",
-		outcome: "Demo Completed"
+		outcome: "Closed"
 	}).then(function() { window.location.reload(); });
 }
 

@@ -168,7 +168,7 @@ function result_dialog(frm) {
 	const dialog = new frappe.ui.Dialog({
 		title: __("Set Final Result"),
 		fields: [
-			{ fieldname: "result", label: __("Result"), fieldtype: "Select", reqd: 1, options: ["Converted:Demo Completed", "Not Interested", "Closed"] },
+			{ fieldname: "result", label: __("Result"), fieldtype: "Select", reqd: 1, options: ["Pending", "Converted:Demo Completed", "Not Interested", "Closed"] },
 		],
 		primary_action_label: __("Set Result"),
 		primary_action(values) {

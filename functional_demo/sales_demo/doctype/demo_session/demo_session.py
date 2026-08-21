@@ -621,13 +621,14 @@ class DemoSession(Document):
 		self.save(ignore_permissions=True)
 		self.add_comment_to_timeline()
 
-		# Always create a follow-up when a demo is completed so the sales
-		# team can track the next step in the Follow-up Tracker page.
-		self.create_follow_up(
-			self.follow_up_date or add_days(today(), 7),
-			self.next_action or "Follow up after demo completion",
-			self.sales_person,
-		)
+		# Create a follow-up only when the consultant checked the Follow-up
+		# Required box. The sales team tracks these in the Follow-up Tracker.
+		if self.follow_up_required:
+			self.create_follow_up(
+				self.follow_up_date or add_days(today(), 7),
+				self.next_action or "Follow up after demo completion",
+				self.sales_person,
+			)
 		self.notify_sales_completed()
 
 	def cancel_demo(self, reason=None):
@@ -720,23 +721,6 @@ class DemoSession(Document):
 		self.notify_sales_final_result(result)
 		if result in ("Converted", "Not Interested", "Closed"):
 			self._apply_request_final_result(result)
-		# When the final result is Demo Completed (Converted), create a
-		# follow-up so the demo appears in the sales Follow-up Tracker.
-		# The idempotency guard in create_follow_up prevents duplicates
-		# if complete_demo already created one.
-		if result == "Converted":
-			try:
-				self.create_follow_up(
-					add_days(today(), 7),
-					"Follow up after Demo Completed",
-					self.sales_person,
-				)
-			except Exception:
-				# Follow-up creation must never block the final result
-				frappe.log_error(
-					title=_("Could not create follow-up for {0}").format(self.name),
-					message=frappe.get_traceback(),
-				)
 
 	def _apply_request_final_result(self, result):
 		"""Move the Demo Request to the matching final state without letting the
