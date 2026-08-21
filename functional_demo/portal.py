@@ -56,8 +56,10 @@ def is_admin(user=None):
 
 def is_developer(user=None):
 	"""The feedback-only roles (standard 'Developer' / legacy 'Feedback
-	Viewer') may view the Dev Feedback page. Unlike other portal roles,
-	a Developer with System Manager still sees the developer sidebar."""
+	Viewer') may view the Dev Feedback page. Administrator is excluded."""
+	user = user or frappe.session.user
+	if user == "Administrator":
+		return False
 	return bool(user_roles(user) & set(DEVELOPER_ROLES))
 
 
@@ -304,7 +306,6 @@ def sidebar_items(active):
 	Feedback."""
 	if is_developer():
 		return [
-			{"label": _("Home"), "route": "/demo_portal", "icon": ICON_HOME, "active": active == "home"},
 			{"label": _("Developer Feedback"), "route": "/dev_feedback", "icon": ICON_FEEDBACK, "active": active == "dev_feedback"},
 		]
 
