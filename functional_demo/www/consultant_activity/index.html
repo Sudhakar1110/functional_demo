@@ -2,8 +2,28 @@
 {% block banner %}{% endblock %}
 {% block navbar %}{% endblock %}
 {% block footer %}{% endblock %}
-{% block style %}{% include "functional_demo/templates/includes/portal_style.html" %}{% endblock %}
-{% block script %}{% include "functional_demo/templates/includes/portal_script.html" %}{% endblock %}
+{% block style %}{% include "functional_demo/templates/includes/portal_style.html" %}
+<style>
+	.toggle-arrow { display: inline-block; }
+	.toggle-arrow.open { transform: rotate(180deg); }
+</style>
+{% endblock %}
+{% block script %}{% include "functional_demo/templates/includes/portal_script.html" %}
+<script>
+	function toggleConsultant(name) {
+		var body = document.getElementById('body-' + name);
+		var arrow = document.getElementById('arrow-' + name);
+		if (!body) return;
+		if (body.style.display === 'none' || body.style.display === '') {
+			body.style.display = 'block';
+			if (arrow) arrow.classList.add('open');
+		} else {
+			body.style.display = 'none';
+			if (arrow) arrow.classList.remove('open');
+		}
+	}
+</script>
+{% endblock %}
 {% block content %}
 <div class="portal-layout">
 	<header class="portal-topbar">
@@ -74,7 +94,7 @@
 					<div class="kpi-value">{{ total_completed }}</div>
 					<div class="kpi-note">Demos delivered</div>
 				</div>
-				<div class="kpi-card kpi-orange">
+				<div class="kpi-card kpi-amber">
 					<div class="kpi-label">Pending</div>
 					<div class="kpi-value">{{ total_pending }}</div>
 					<div class="kpi-note">Awaiting scheduling</div>
@@ -157,7 +177,7 @@
 					</div>
 					<div style="display: flex; align-items: center; gap: 12px;">
 						<span class="badge {{ c.status_class }}">{{ c.status_label }}</span>
-						<span class="toggle-arrow" id="arrow-{{ c.name }}" style="font-size: 18px; color: #9CA3AF; transition: transform 0.2s;">▼</span>
+						<span class="toggle-arrow" id="arrow-{{ c.name }}" style="font-size: 18px; color: #9CA3AF; transition: transform 0.2s;">&#9660;</span>
 					</div>
 				</div>
 				<div class="card-body" id="body-{{ c.name }}" style="display: none; padding: 0 24px 20px;">
@@ -277,7 +297,7 @@
 									<div style="font-size: 12px; color: #71717B;">{{ rc.completed_display }} · {{ rc.demo_type or 'Standard' }}</div>
 								</div>
 								<div style="text-align: right;">
-									<span class="badge {% if rc.final_result == 'Converted' %}b-scheduled{% elif rc.final_result == 'Not Interested' %}b-rejected{% else %}b-manager-review{% endif %}">{{ rc.final_result or 'Pending' }}</span>
+									<span class="badge {% if rc.final_result == 'Converted' %}b-completed{% elif rc.final_result == 'Not Interested' %}b-not-interested{% else %}b-scheduled{% endif %}">{{ rc.final_result or 'Pending' }}</span>
 									{% if rc.overall_feedback %}
 									<div style="font-size: 11px; color: #D97706; font-weight: 500; max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">⭐ {{ rc.overall_feedback }}</div>
 									{% endif %}
@@ -302,26 +322,4 @@
 	</div>
 	</div>
 </div>
-{% endblock %}
-
-{% block style %}
-{{ super() }}
-<style>
-	.toggle-arrow { display: inline-block; }
-	.toggle-arrow.open { transform: rotate(180deg); }
-</style>
-<script>
-	function toggleConsultant(name) {
-		var body = document.getElementById('body-' + name);
-		var arrow = document.getElementById('arrow-' + name);
-		if (!body) return;
-		if (body.style.display === 'none' || body.style.display === '') {
-			body.style.display = 'block';
-			if (arrow) arrow.classList.add('open');
-		} else {
-			body.style.display = 'none';
-			if (arrow) arrow.classList.remove('open');
-		}
-	}
-</script>
 {% endblock %}
