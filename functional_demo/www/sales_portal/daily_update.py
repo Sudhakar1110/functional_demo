@@ -134,7 +134,7 @@ def get_context(context):
         {"label": "Demo In Progress", "count": funnel.get("Demo In Progress", 0), "color": "#D96C0A"},
         {"label": "Completed", "count": funnel.get("Demo Completed", 0), "color": "#009A52"},
         {"label": "Follow-up Required", "count": funnel.get("Follow-up Required", 0), "color": "#A16207"},
-        {"label": "Converted", "count": funnel.get("Converted", 0), "color": "#009A52"},
+        {"label": "Demo Completed", "count": funnel.get("Converted", 0), "color": "#009A52"},
         {"label": "Not Interested", "count": funnel.get("Not Interested", 0), "color": "#E11D48"},
     ]
 
