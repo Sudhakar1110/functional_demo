@@ -12,7 +12,7 @@ MANAGER_ROLES = ("Sales Manager", "Functional Team Manager")
 # page (portal /feedback + desk /app/demo-feedback). The standard Frappe
 # 'Developer' role is used as the feedback-only role here, and the legacy custom
 # 'Feedback Viewer' role is kept as an equivalent alias for existing installs.
-DEVELOPER_ROLES = ("Feedback Viewer", "Developer")
+DEVELOPER_ROLES = ("Feedback Viewer",)
 
 
 # ---------------------------------------------------------------------------
@@ -307,6 +307,8 @@ def sidebar_items(active):
 	Feedback."""
 	if is_developer():
 		return [
+			{"label": _("Home"), "route": "/demo_portal", "icon": ICON_HOME, "active": active == "home"},
+			{"label": _("Developer Feedback"), "route": "/dev_feedback", "icon": ICON_FEEDBACK, "active": active == "dev_feedback"},
 			{"label": _("Feedback"), "route": "/feedback", "icon": ICON_FEEDBACK, "active": active == "feedback"},
 		]
 
@@ -353,6 +355,7 @@ def sidebar_items(active):
 	# Feedback is only visible to managers (Functional Team Manager / Sales Manager)
 	if is_manager():
 		items.append({"label": _("Feedback"), "route": "/feedback", "icon": ICON_FEEDBACK, "active": active == "feedback"})
+		items.append({"label": _("Session Feedback"), "route": "/session_feedback", "icon": ICON_FEEDBACK, "active": active == "session_feedback"})
 
 	# Settings (all logged-in users)
 	items.append({"label": _("Settings"), "route": "/portal_settings", "icon": ICON_MANAGER, "active": active == "settings"})

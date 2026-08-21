@@ -1,0 +1,214 @@
+{% extends "templates/web.html" %}
+{% block banner %}{% endblock %}
+{% block navbar %}{% endblock %}
+{% block footer %}{% endblock %}
+{% block style %}{% include "functional_demo/templates/includes/portal_style.html" %}
+<style>
+	.df-scroll { overflow-x: auto; }
+	.df-scroll table { min-width: 1100px; width: 100%; border-collapse: collapse; }
+	.df-scroll th { font-size: 11px; font-weight: 700; color: #71717B; text-transform: uppercase; letter-spacing: 0.04em; padding: 8px 10px; text-align: left; border-bottom: 2px solid #E5E7EB; white-space: nowrap; }
+	.df-scroll td { padding: 10px 10px; font-size: 13px; color: #05133C; border-bottom: 1px solid #F3F4F6; vertical-align: middle; }
+	.df-scroll tr:hover td { background: #F9FAFB; }
+	.df-badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 700; white-space: nowrap; }
+	.df-type-bug { background: #FEE2E2; color: #DC2626; }
+	.df-type-feature { background: #DBEAFE; color: #1D4ED8; }
+	.df-type-improvement { background: #FEF3C7; color: #D97706; }
+	.df-type-general { background: #F3F4F6; color: #6B7280; }
+	.df-priority-low { background: #F3F4F6; color: #6B7280; }
+	.df-priority-medium { background: #DBEAFE; color: #1D4ED8; }
+	.df-priority-high { background: #FEF3C7; color: #D97706; }
+	.df-priority-critical { background: #FEE2E2; color: #DC2626; }
+	.df-status-open { background: #FEF3C7; color: #D97706; }
+	.df-status-in-progress { background: #DBEAFE; color: #1D4ED8; }
+	.df-status-resolved { background: #DCFBEA; color: #009A52; }
+	.df-status-closed { background: #F3F4F6; color: #6B7280; }
+	.df-btn { padding: 5px 12px; border: none; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; }
+	.df-btn-respond { background: #114EFF; color: #fff; }
+	.df-btn-respond:hover { background: #0D3FCC; }
+	.df-desc { max-width: 280px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+</style>
+{% endblock %}
+{% block content %}
+<div class="portal-layout">
+	<header class="portal-topbar">
+		<button class="sidebar-toggle" id="sidebar-toggle" aria-label="Menu">&#9776;</button>
+		<a class="topbar-brand" href="/demo_portal">
+			<img class="brand-logo" src="/assets/functional_demo/images/brand_logo.jpg" alt="Brand Logo" />
+			<div class="brand-text">
+				<span class="brand-name">Demo Portal</span>
+				<span class="brand-sub">Sales &amp; Functional</span>
+			</div>
+		</a>
+		<div class="topbar-title">
+			<h1>{{ title }}</h1>
+			<p>{{ subtitle }}</p>
+		</div>
+		<div class="topbar-right">
+			<span class="portal-avatar">{{ full_name[:1] }}</span>
+			<span class="portal-user-name">{{ full_name }}</span>
+			<a class="btn-desk" href="/app">Open Desk</a>
+		</div>
+	</header>
+	<div class="portal-body">
+		<aside class="portal-sidebar" id="portal-sidebar">
+			<div class="sidebar-menu">
+			{% for item in sidebar_items %}
+			<a class="sidebar-item {% if item.active %}active{% endif %}" href="{{ item.route }}">
+				<span class="sidebar-icon">{{ item.icon | safe }}</span>{{ item.label }}
+			</a>
+			{% endfor %}
+		</div>
+	</aside>
+	<div class="sidebar-overlay"></div>
+	<div class="portal-main">
+		<div class="portal-content">
+
+			<!-- Greeting -->
+			<div class="dash-greet">
+				<div>
+					<span class="greet-eyebrow">● {{ today_pretty }}</span>
+					<h1>{{ greeting }}, {{ full_name }}</h1>
+					<p>Review and respond to session feedback from managers.</p>
+				</div>
+			</div>
+
+			<!-- KPI Cards -->
+			<div class="kpi-grid" style="margin-bottom: 24px;">
+				<div class="kpi-card">
+					<div class="kpi-label">Total Feedback</div>
+					<div class="kpi-value">{{ total }}</div>
+					<div class="kpi-note">All submissions</div>
+				</div>
+				<div class="kpi-card kpi-amber">
+					<div class="kpi-label">Open</div>
+					<div class="kpi-value">{{ open_count }}</div>
+					<div class="kpi-note">Needs response</div>
+				</div>
+				<div class="kpi-card kpi-blue">
+					<div class="kpi-label">In Progress</div>
+					<div class="kpi-value">{{ in_progress }}</div>
+					<div class="kpi-note">Being worked on</div>
+				</div>
+				<div class="kpi-card kpi-green">
+					<div class="kpi-label">Resolved</div>
+					<div class="kpi-value">{{ resolved }}</div>
+					<div class="kpi-note">Fixed / Done</div>
+				</div>
+				<div class="kpi-card kpi-red">
+					<div class="kpi-label">Bugs</div>
+					<div class="kpi-value">{{ bugs }}</div>
+					<div class="kpi-note">Bug reports</div>
+				</div>
+				<div class="kpi-card kpi-blue">
+					<div class="kpi-label">Feature Requests</div>
+					<div class="kpi-value">{{ features }}</div>
+					<div class="kpi-note">New features</div>
+				</div>
+			</div>
+
+			<!-- Feedback Table -->
+			<div class="portal-card" style="margin-bottom: 20px;">
+				<div class="card-head" style="padding: 14px 20px;">
+					<h2 style="font-size: 15px; font-weight: 700; color: #05133C; margin: 0;">Session Feedback ({{ total }})</h2>
+				</div>
+				<div class="card-body df-scroll">
+					<table>
+						<thead>
+							<tr>
+								<th>ID</th>
+								<th>Session</th>
+								<th>Customer</th>
+								<th>Type</th>
+								<th>Priority</th>
+								<th>Subject</th>
+								<th>Description</th>
+								<th>Submitted By</th>
+								<th>Status</th>
+								<th>Action</th>
+							</tr>
+						</thead>
+						<tbody>
+							{% for fb in feedback_list %}
+							<tr>
+								<td><strong>{{ fb.name }}</strong></td>
+								<td><a href="/functional_portal/session?name={{ fb.demo_session }}" style="color: #114EFF; font-weight: 600; text-decoration: none;">{{ fb.demo_session or "-" }}</a></td>
+								<td>{{ fb.customer_display }}</td>
+								<td><span class="df-badge df-type-{{ fb.feedback_type|lower|replace(' ', '-') }}">{{ fb.feedback_type }}</span></td>
+								<td><span class="df-badge df-priority-{{ fb.priority|lower }}">{{ fb.priority }}</span></td>
+								<td><strong>{{ fb.subject }}</strong></td>
+								<td><div class="df-desc" title="{{ fb.description }}">{{ fb.description }}</div></td>
+								<td>{{ fb.submitted_by }}</td>
+								<td><span class="df-badge df-status-{{ fb.status|lower|replace(' ', '-') }}">{{ fb.status }}</span></td>
+								<td>
+									{% if fb.status != "Closed" %}
+									<button class="df-btn df-btn-respond" onclick="respondToFeedback('{{ fb.name }}')">💬 Respond</button>
+									{% else %}
+									<span style="color: #9CA3AF; font-size: 12px;">Closed</span>
+									{% endif %}
+								</td>
+							</tr>
+							{% endfor %}
+							{% if not feedback_list %}
+							<tr>
+								<td colspan="10" style="text-align: center; padding: 40px; color: #9CA3AF;">No feedback submitted yet.</td>
+							</tr>
+							{% endif %}
+						</tbody>
+					</table>
+				</div>
+			</div>
+
+		</div>
+	</div>
+	</div>
+</div>
+{% endblock %}
+
+{% block script %}
+{% include "functional_demo/templates/includes/portal_script.html" %}
+<script>
+function respondToFeedback(name) {
+	frappe.call({
+		method: "frappe.client.get_value",
+		args: { doctype: "Session Feedback", filters: { name: name }, fieldname: ["subject", "description", "feedback_type", "priority", "status"] },
+		callback: function(r) {
+			if (!r.message) return;
+			var fb = r.message;
+			var d = new frappe.ui.Dialog({
+				title: "Respond to Feedback: " + name,
+				fields: [
+					{ fieldname: "info", label: "Subject", fieldtype: "Data", default: fb.subject, read_only: 1 },
+					{ fieldname: "type_info", label: "Type / Priority", fieldtype: "Data", default: fb.feedback_type + " / " + fb.priority, read_only: 1 },
+					{ fieldname: "desc_info", label: "Manager's Feedback", fieldtype: "Small Text", default: fb.description, read_only: 1 },
+					{ fieldname: "sb", fieldtype: "Section Break", label: "Your Response" },
+					{ fieldname: "developer_response", label: "Response", fieldtype: "Small Text", reqd: 1, description: "Your response to the manager's feedback" },
+					{ fieldname: "status", label: "Update Status To", fieldtype: "Select", options: "Open\nIn Progress\nResolved\nClosed", default: fb.status, reqd: 1 },
+				],
+				primary_action_label: "Submit Response",
+				primary_action(values) {
+					frappe.call({
+						method: "frappe.client.set_value",
+						args: {
+							doctype: "Session Feedback",
+							name: name,
+							fieldname: {
+								developer_response: values.developer_response,
+								responded_by: frappe.session.user,
+								responded_on: frappe.datetime.now_datetime(),
+								status: values.status,
+							}
+						},
+						callback: function() {
+							frappe.show_alert({ message: "Response submitted!", indicator: "green" });
+							d.hide();
+							window.location.reload();
+						},
+					});
+				},
+			});
+			d.show();
+		},
+	});
+}
+</script>
+{% endblock %}

@@ -1,0 +1,199 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "autoname": "SFB-.YYYY.-.#####",
+ "creation": "2026-08-21 10:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "section_session",
+  "demo_session",
+  "demo_request",
+  "customer",
+  "functional_consultant",
+  "sales_person",
+  "section_feedback",
+  "feedback_type",
+  "priority",
+  "subject",
+  "description",
+  "section_response",
+  "developer_response",
+  "responded_by",
+  "responded_on",
+  "status"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_session",
+   "fieldtype": "Section Break",
+   "label": "Session Details"
+  },
+  {
+   "fieldname": "demo_session",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Demo Session",
+   "options": "Demo Session",
+   "reqd": 1
+  },
+  {
+   "fieldname": "demo_request",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Demo Request",
+   "options": "Demo Request",
+   "read_only": 1
+  },
+  {
+   "fieldname": "customer",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Customer",
+   "read_only": 1
+  },
+  {
+   "fieldname": "functional_consultant",
+   "fieldtype": "Link",
+   "label": "Functional Consultant",
+   "options": "Functional Consultant",
+   "read_only": 1
+  },
+  {
+   "fieldname": "sales_person",
+   "fieldtype": "Link",
+   "label": "Sales Person",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_feedback",
+   "fieldtype": "Section Break",
+   "label": "Feedback to Development Team"
+  },
+  {
+   "default": "Bug",
+   "fieldname": "feedback_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Feedback Type",
+   "options": "Bug\nFeature Request\nImprovement\nGeneral"
+  },
+  {
+   "default": "Medium",
+   "fieldname": "priority",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Priority",
+   "options": "Low\nMedium\nHigh\nCritical"
+  },
+  {
+   "fieldname": "subject",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Subject",
+   "reqd": 1
+  },
+  {
+   "fieldname": "description",
+   "fieldtype": "Small Text",
+   "label": "Description",
+   "reqd": 1
+  },
+  {
+   "fieldname": "section_response",
+   "fieldtype": "Section Break",
+   "label": "Developer Response"
+  },
+  {
+   "fieldname": "developer_response",
+   "fieldtype": "Small Text",
+   "label": "Developer Response",
+   "read_only": 1
+  },
+  {
+   "fieldname": "responded_by",
+   "fieldtype": "Link",
+   "label": "Responded By",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "responded_on",
+   "fieldtype": "Datetime",
+   "label": "Responded On",
+   "read_only": 1
+  },
+  {
+   "default": "Open",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "options": "Open\nIn Progress\nResolved\nClosed"
+  }
+ ],
+ "links": [],
+ "modified": "2026-08-21 10:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Sales Demo",
+ "name": "Session Feedback",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Sales Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Functional Team Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Developer",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "quick_entry": 1,
+ "search_fields": "demo_session, customer, subject, feedback_type",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}
