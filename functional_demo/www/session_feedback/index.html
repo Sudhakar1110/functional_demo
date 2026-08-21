@@ -109,7 +109,7 @@
 								<td><a href="/functional_portal/session?name={{ s.name }}" style="color: #114EFF; font-weight: 600; text-decoration: none;">{{ s.name }}</a></td>
 								<td><strong>{{ s.customer_display }}</strong></td>
 								<td>{{ s.consultant_display }}</td>
-								<td>{{ s.completed_on[:10] if s.completed_on else "-" }}</td>
+								<td>{{ s.completed_on.strftime('%d %b %Y') if s.completed_on else "-" }}</td>
 								<td>{% if s.final_result %}<span class="sf-badge {% if s.final_result == 'Converted' %}feature{% elif s.final_result == 'Not Interested' %}bug{% else %}general{% endif %}">{{ s.final_result }}</span>{% else %}-{% endif %}</td>
 								<td>
 									{% if s.has_feedback %}
