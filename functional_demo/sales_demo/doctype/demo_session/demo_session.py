@@ -621,10 +621,13 @@ class DemoSession(Document):
 		self.save(ignore_permissions=True)
 		self.add_comment_to_timeline()
 
-		if self.follow_up_required:
-			self.create_follow_up(
-				self.follow_up_date or add_days(today(), 7), self.next_action, self.sales_person
-			)
+		# Always create a follow-up when a demo is completed so the sales
+		# team can track the next step in the Follow-up Tracker page.
+		self.create_follow_up(
+			self.follow_up_date or add_days(today(), 7),
+			self.next_action or "Follow up after demo completion",
+			self.sales_person,
+		)
 		self.notify_sales_completed()
 
 	def cancel_demo(self, reason=None):
@@ -659,6 +662,11 @@ class DemoSession(Document):
 		"""Create a Demo Follow Up + ToDo, and move the Demo Request to Follow-up Required."""
 		if not follow_up_date:
 			follow_up_date = add_days(today(), 7)
+
+		# Idempotency: don't create a duplicate if one already exists for this session
+		existing = frappe.db.get_value("Demo Follow Up", {"demo_session": self.name}, "name")
+		if existing:
+			return frappe.get_doc("Demo Follow Up", existing)
 
 		fu = frappe.new_doc("Demo Follow Up")
 		fu.demo_session = self.name
