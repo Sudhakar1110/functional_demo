@@ -119,7 +119,7 @@
 						</thead>
 						<tbody>
 							{% for s in stats.recent_sessions %}
-							<tr>
+							<tr data-status="{{ s.demo_status }}">
 								<td><a href="/functional_portal/session?name={{ s.name }}">{{ s.name }}</a></td>
 								<td>{{ s.customer or "-" }}</td>
 								<td>{{ s.interested_module or "-" }}</td>
