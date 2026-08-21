@@ -286,11 +286,13 @@ frappe.pages["demo-execution"].on_page_load = function (wrapper) {
 				{ fieldname: "follow_up_date", label: __("Follow-up Date"), fieldtype: "Date", depends_on: "follow_up_required", default: frappe.datetime.add_days(frappe.datetime.get_today(), 7) },
 				{ fieldname: "next_action", label: __("Next Action"), fieldtype: "Small Text", depends_on: "follow_up_required" },
 				{ fieldname: "consultant_remarks", label: __("Consultant Remarks"), fieldtype: "Small Text" },
+				{ fieldname: "sb_result", fieldtype: "Section Break", label: __("Final Result") },
+				{ fieldname: "final_result", label: __("Final Result"), fieldtype: "Select", options: ["Pending", "Converted:Demo Completed", "Not Interested", "Closed"], default: "Pending" },
 			],
 			primary_action_label: __("Complete Demo"),
 			primary_action(values) {
 				dialog.hide();
-				call("functional_demo.api.complete_demo_session", { demo_session: name, feedback: values }, __("Demo completed and feedback recorded."), () => load_session(name));
+				call("functional_demo.api.complete_demo_session", { demo_session: name, feedback: values, final_result: values.final_result }, __("Demo completed and feedback recorded."), () => load_session(name));
 			},
 		});
 		dialog.show();
