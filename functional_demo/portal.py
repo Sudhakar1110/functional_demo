@@ -56,11 +56,8 @@ def is_admin(user=None):
 
 def is_developer(user=None):
 	"""The feedback-only roles (standard 'Developer' / legacy 'Feedback
-	Viewer') may view the portal Feedback page and nothing else. Site admins
-	are never restricted by them - e.g. the Administrator account often
-	carries every role and must still see the whole portal."""
-	if is_admin(user):
-		return False
+	Viewer') may view the Dev Feedback page. Unlike other portal roles,
+	a Developer with System Manager still sees the developer sidebar."""
 	return bool(user_roles(user) & set(DEVELOPER_ROLES))
 
 
