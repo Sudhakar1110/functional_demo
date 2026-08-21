@@ -407,6 +407,14 @@ class DemoRequest(Document):
 
 			party = self.customer or self.lead or "-"
 			subject = _("Demo Request Assigned to You — {0}").format(party)
+			# In-app notification (shows in portal bell + desk bell)
+			create_notification(
+				user,
+				subject,
+				"Demo Request",
+				self.name,
+			)
+			# Email notification
 			send_branded_email(
 				recipients=[email],
 				subject=subject,
@@ -498,20 +506,48 @@ def run_sla_escalation_checks():
 			_log_sla_activity(row.name, row.get("sla_due_date"))
 		changed = True
 	if changed:
-		frappe.db.commit()
-
-
-def _escalate_to_managers(request_name, sla_due_date):
-	"""Notify every Sales / Functional manager about the breached request."""
+		frappe.db.commit()def _escalate_to_managers(request_name, sla_due_date):
+	"""Notify every Sales / Functional manager AND the sales person about the breached request."""
 	managers = {
 		r[0]
 		for r in frappe.db.sql(
 			"""select distinct u.name from `tabUser` u
-			join `tabHas Role` hr on hr.parent = u.name
-			where hr.role in ('Sales Manager', 'Functional Team Manager')
-				and u.enabled = 1 and u.name != 'Guest'"""
+		join `tabHas Role` hr on hr.parent = u.name
+		where hr.role in ('Sales Manager', 'Functional Team Manager')
+			and u.enabled = 1 and u.name != 'Guest'"""
 		)
 	}
+	# Also notify the sales person who owns the request
+	req = frappe.db.get_value("Demo Request", request_name, ["sales_person", "customer", "lead"], as_dict=True)
+	if req and req.sales_person:
+		managers.add(req.sales_person)
+		party = req.customer or req.lead or request_name
+		# Send email to the sales person
+		email = frappe.db.get_value("User", req.sales_person, "email")
+		if email:
+			try:
+				send_branded_email(
+					recipients=[email],
+					subject=_("SLA Breached — {0} for {1}").format(request_name, party),
+					heading=_("SLA Breached"),
+					intro=_("Demo Request {0} for {1} was due to be scheduled by {2} but has no demo yet.").format(
+						request_name, party, sla_due_date
+					),
+					rows=[
+						(_("Request"), request_name),
+						(_("Customer / Lead"), party),
+						(_("SLA Due Date"), str(sla_due_date)),
+					],
+					cta_text=_("Open Demo Request"),
+					cta_url=frappe.utils.get_url("/app/demo-request/{0}".format(request_name)),
+					reference_doctype="Demo Request",
+					reference_name=request_name,
+				)
+			except Exception:
+				frappe.log_error(
+					title=_("SLA breach email failed for {0}").format(request_name),
+					message=frappe.get_traceback(),
+				)
 	for user in managers:
 		create_notification(
 			user,
@@ -538,6 +574,42 @@ def _log_sla_activity(request_name, sla_due_date):
 		}
 	)
 	row.db_insert()
+
+
+def run_followup_overdue_checks():
+	"""Daily scheduled job: notify about follow-ups that are overdue."""
+	if not frappe.db.exists("DocType", "Demo Follow Up"):
+		return
+	today = frappe.utils.today()
+	overdue = frappe.get_all(
+		"Demo Follow Up",
+		filters=[
+			["status", "in", ["Open", "In Progress"]],
+			["follow_up_date", "<", today],
+		],
+		fields=["name", "demo_request", "customer", "sales_person", "assigned_to", "follow_up_date"],
+		limit_page_length=200,
+	) or []
+	for fu in overdue:
+		party = fu.customer or fu.demo_request or fu.name
+		# Notify assigned person
+		if fu.assigned_to:
+			create_notification(
+				fu.assigned_to,
+				_("Follow-up Overdue — {0} for {1} was due on {2}").format(fu.name, party, fu.follow_up_date),
+				"Demo Follow Up",
+				fu.name,
+			)
+		# Notify sales person if different from assigned
+		if fu.sales_person and fu.sales_person != fu.assigned_to:
+			create_notification(
+				fu.sales_person,
+				_("Follow-up Overdue — {0} for {1} was due on {2}").format(fu.name, party, fu.follow_up_date),
+				"Demo Follow Up",
+				fu.name,
+			)
+	if overdue:
+		frappe.db.commit()
 
 
 def get_primary_contact(party_type, party_name):

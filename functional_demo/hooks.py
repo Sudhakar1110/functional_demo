@@ -90,6 +90,7 @@ scheduler_events = {
 	"daily": [
 		"functional_demo.install.mark_overdue_follow_ups",
 		"functional_demo.sales_demo.doctype.demo_request.demo_request.run_sla_escalation_checks",
+		"functional_demo.sales_demo.doctype.demo_request.demo_request.run_followup_overdue_checks",
 		"functional_demo.sales_demo.doctype.demo_session.demo_session.send_demo_reminders",
 	],
 }
