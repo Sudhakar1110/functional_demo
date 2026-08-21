@@ -262,24 +262,52 @@ def get_context(context):
     context.specializations = specializations
     context.availabilities = ["Available", "Busy", "On Leave", "Unavailable"]
 
-    # ── Demo Schedule Pipeline Funnel ────────────────────────────────
-    all_sessions = frappe.get_all(
+    # ── Consultant-wise Demo Schedule Pipeline ────────────────────────
+    pipeline_statuses = ["Scheduled", "Rescheduled", "In Progress", "Completed", "Cancelled", "Closed"]
+    pipeline_colors = {
+        "Scheduled": "#114EFF",
+        "Rescheduled": "#7C3AED",
+        "In Progress": "#D96C0A",
+        "Completed": "#009A52",
+        "Cancelled": "#E11D48",
+        "Closed": "#9CA3AF",
+    }
+    # Count per consultant
+    consultant_sessions = frappe.get_all(
         "Demo Session",
-        fields=["name", "demo_status"],
+        fields=["functional_consultant", "demo_status"],
         limit_page_length=5000,
         ignore_permissions=True,
     ) or []
-    session_funnel = {}
-    for s in all_sessions:
+    counts_by_consultant = {}
+    for s in consultant_sessions:
+        cid = s.get("functional_consultant") or "Unassigned"
         st = s.get("demo_status") or "Scheduled"
-        session_funnel[st] = session_funnel.get(st, 0) + 1
-    context.pipeline_funnel = [
-        {"label": "Scheduled", "count": session_funnel.get("Scheduled", 0), "color": "#114EFF"},
-        {"label": "Rescheduled", "count": session_funnel.get("Rescheduled", 0), "color": "#7C3AED"},
-        {"label": "In Progress", "count": session_funnel.get("In Progress", 0), "color": "#D96C0A"},
-        {"label": "Completed", "count": session_funnel.get("Completed", 0), "color": "#009A52"},
-        {"label": "Cancelled", "count": session_funnel.get("Cancelled", 0), "color": "#E11D48"},
-        {"label": "Closed", "count": session_funnel.get("Closed", 0), "color": "#9CA3AF"},
-    ]
+        if cid not in counts_by_consultant:
+            counts_by_consultant[cid] = {}
+        counts_by_consultant[cid][st] = counts_by_consultant[cid].get(st, 0) + 1
+
+    # Build pipeline list per consultant
+    pipeline_data = []
+    for c in consultant_details:
+        cid = c["name"]
+        sc = counts_by_consultant.get(cid, {})
+        stages = []
+        for st in pipeline_statuses:
+            cnt = sc.get(st, 0)
+            stages.append({
+                "label": st,
+                "count": cnt,
+                "color": pipeline_colors.get(st, "#9CA3AF"),
+                "bar_class": "bar-high" if cnt > 0 else "bar-zero",
+            })
+        total = sum(stg["count"] for stg in stages)
+        pipeline_data.append({
+            "consultant_name": c["consultant_name"],
+            "consultant_initial": c["consultant_name"][:1],
+            "stages": stages,
+            "total": total,
+        })
+    context.pipeline_data = pipeline_data
 
     return context
