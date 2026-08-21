@@ -20,10 +20,13 @@ def get_context(context):
 
 	today = frappe.utils.today()
 
-	# Get all demo requests with status "Assigned"
+	# Get all demo requests that need attention: "Manager Review" (awaiting
+	# consultant assignment) and "Assigned" (consultant assigned, awaiting
+	# scheduling). This ensures requests from the sales team reach the
+	# Functional Team Manager here as well as on the Manager Dashboard.
 	assigned_requests = frappe.get_all(
 		"Demo Request",
-		filters={"status": "Assigned"},
+		filters={"status": ["in", ["Manager Review", "Assigned"]]},
 		fields=[
 			"name", "customer", "lead", "sales_person", "interested_module",
 			"priority", "preferred_demo_date", "functional_consultant", "creation",
@@ -70,23 +73,26 @@ def get_context(context):
 			r["session_status"] = None
 			r["session_date"] = None
 
-	# Consultants list for reference
-	consultants = frappe.get_all(
+	# Consultants list for reference and assign dropdown
+	consultants_list = frappe.get_all(
 		"Functional Consultant",
-		fields=["name", "consultant_name"],
+		fields=["name", "consultant_name", "specialization", "availability"],
 		order_by="consultant_name asc",
 		ignore_permissions=True,
 	) or []
-	context.consultant_map = {c.name: c.consultant_name for c in consultants}
+	context.consultant_map = {c.name: c.consultant_name for c in consultants_list}
+	context.consultants = [c for c in consultants_list if (c.get("status") or "") != "Inactive"]
 
 	# Summary counts
 	total_assigned = len(assigned_requests)
 	with_session = sum(1 for r in assigned_requests if r.get("session_name"))
 	without_session = total_assigned - with_session
+	pending_review = sum(1 for r in assigned_requests if r.get("status") == "Manager Review")
 
 	context.assigned_requests = assigned_requests
 	context.total_assigned = total_assigned
 	context.with_session = with_session
 	context.without_session = without_session
+	context.pending_review = pending_review
 
 	return context

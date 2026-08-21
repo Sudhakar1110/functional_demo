@@ -3,7 +3,6 @@
 {% block navbar %}{% endblock %}
 {% block footer %}{% endblock %}
 {% block style %}{% include "functional_demo/templates/includes/portal_style.html" %}{% endblock %}
-{% block script %}{% include "functional_demo/templates/includes/portal_script.html" %}{% endblock %}
 {% block content %}
 <div class="portal-layout">
 	<header class="portal-topbar">
@@ -42,48 +41,50 @@
 			<div class="dash-greet">
 				<div>
 					<span class="greet-eyebrow">● {{ today_pretty }}</span>
-					<h1>{{ greeting }}, {{ full_name }}</h1>
-					<p>Demo requests that have been assigned to functional consultants and are awaiting scheduling.</p>
+					<h1>{{ greeting }}, {{ full_name }}</h1>						<p>Review and assign functional consultants to incoming demo requests from the sales team.</p>
 				</div>
-			</div>
-
-			<!-- Summary KPIs -->
-			<div class="kpi-grid" style="margin-bottom: 24px;">
-				<div class="kpi-card">
-					<div class="kpi-label">Total Assigned</div>
-					<div class="kpi-value">{{ total_assigned }}</div>
-					<div class="kpi-note">Awaiting scheduling</div>
+			</div>				<!-- Summary KPIs -->
+				<div class="kpi-grid" style="margin-bottom: 24px;">
+					<div class="kpi-card">
+						<div class="kpi-label">Total Requests</div>
+						<div class="kpi-value">{{ total_assigned }}</div>
+						<div class="kpi-note">Needs attention</div>
+					</div>
+					<div class="kpi-card kpi-amber">
+						<div class="kpi-label">Needs Assignment</div>
+						<div class="kpi-value">{{ pending_review }}</div>
+						<div class="kpi-note">Manager Review</div>
+					</div>
+					<div class="kpi-card kpi-blue">
+						<div class="kpi-label">Assigned</div>
+						<div class="kpi-value">{{ without_session }}</div>
+						<div class="kpi-note">Awaiting scheduling</div>
+					</div>
+					<div class="kpi-card kpi-teal">
+						<div class="kpi-label">Session Created</div>
+						<div class="kpi-value">{{ with_session }}</div>
+						<div class="kpi-note">Demo session exists</div>
+					</div>
 				</div>
-				<div class="kpi-card kpi-blue">
-					<div class="kpi-label">Session Created</div>
-					<div class="kpi-value">{{ with_session }}</div>
-					<div class="kpi-note">Demo session exists</div>
-				</div>
-				<div class="kpi-card kpi-teal">
-					<div class="kpi-label">Pending Schedule</div>
-					<div class="kpi-value">{{ without_session }}</div>
-					<div class="kpi-note">No session yet</div>
-				</div>
-			</div>
 
 			<!-- Assigned Demo Requests Table -->
 			<div class="portal-card" style="margin-bottom: 24px;">
-				<div class="card-head"><h2>Assigned Demo Requests ({{ total_assigned }})</h2></div>
+				<div class="card-head"><h2>Demo Requests - Pending Action ({{ total_assigned }})</h2></div>
 				{% if assigned_requests %}
 				<div class="card-body flush">
 					<table class="table-portal">
-						<thead>
-							<tr>
-								<th>Request</th>
-								<th>Customer</th>
-								<th>Template</th>
-								<th>Consultant</th>
-								<th>Sales Person</th>
-								<th>Priority</th>
-								<th>Demo Date</th>
-								<th>Session</th>
-								<th>Status</th>
-							</tr>
+						<thead>								<tr>
+									<th>Request</th>
+									<th>Customer</th>
+									<th>Template</th>
+									<th>Consultant</th>
+									<th>Sales Person</th>
+									<th>Priority</th>
+									<th>Demo Date</th>
+									<th>Session</th>
+									<th>Status</th>
+									<th>Action</th>
+								</tr>
 						</thead>
 						<tbody>
 							{% for r in assigned_requests %}
@@ -111,9 +112,26 @@
 									{% if r.session_status %}
 										<span class="badge b-{{ r.session_status|lower|replace(' ', '-') }}">{{ r.session_status }}</span>
 									{% elif r.status %}
-										<span class="badge b-assigned">{{ r.status }}</span>
+										<span class="badge b-{{ r.status|lower|replace(' ', '-') }}">{{ r.status }}</span>
 									{% else %}
 										<span class="badge b-assigned">Assigned</span>
+									{% endif %}
+								</td>
+								<td>
+									{% if r.status == "Manager Review" %}
+										<select class="manager-assign-select" data-request="{{ r.name }}" style="font-size: 12px; padding: 4px 8px; border: 1px solid #E5E7EB; border-radius: 6px;">
+											<option value="">— Select —</option>
+											{% for c in consultants %}
+											<option value="{{ c.name }}">{{ c.consultant_name }} · {{ c.specialization or 'Generalist' }}</option>
+											{% endfor %}
+										</select>
+										<button class="btn-portal sm manager-assign-btn" data-request="{{ r.name }}" style="margin-left: 6px;">Assign</button>
+									{% elif r.status == "Assigned" and r.functional_consultant and not r.session_name %}
+										<button class="btn-portal sm manager-schedule-btn" data-request="{{ r.name }}" data-consultant="{{ r.consultant_name }}">Schedule</button>
+									{% elif r.session_name %}
+										<a href="/functional_portal/session?name={{ r.session_name }}" style="color: #114EFF; font-size: 12px; font-weight: 500;">View Session</a>
+									{% else %}
+										<span class="muted">—</span>
 									{% endif %}
 								</td>
 							</tr>
@@ -124,8 +142,8 @@
 				{% else %}
 				<div class="empty-state">
 					<div class="empty-icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg></div>
-					<h3>No assigned demos</h3>
-					<p>When you assign a functional consultant to a demo request, it will appear here.</p>
+					<h3>No pending demo requests</h3>
+					<p>Demo requests from the sales team will appear here for review and assignment.</p>
 				</div>
 				{% endif %}
 			</div>
@@ -134,4 +152,103 @@
 	</div>
 	</div>
 </div>
+
+<!-- Schedule Demo Modal -->
+<div class="portal-modal" id="schedule-modal">
+	<div class="pm-card">
+		<div class="pm-title">Schedule Demo</div>
+		<p class="pm-msg" style="margin: 0 0 12px;">Schedule a demo for <strong id="sched-request-name"></strong> with consultant <strong id="sched-consultant-name"></strong>.</p>
+		<input type="hidden" id="sched-request">
+		<div class="form-row">
+			<div><label>Date <span class="req">*</span></label><input type="date" id="sched-date"></div>
+			<div><label>Start Time</label><input type="time" id="sched-start"></div>
+		</div>
+		<div class="form-row">
+			<div><label>End Time</label><input type="time" id="sched-end"></div>
+			<div><label>Meeting Link</label><input type="text" id="sched-link" placeholder="https://meet.google.com/..."></div>
+		</div>
+		<div style="display: flex; gap: 10px; justify-content: flex-end;">
+			<button class="btn-portal secondary pm-btn" id="sched-cancel">Cancel</button>
+			<button class="btn-portal pm-btn" id="sched-go">Schedule Demo</button>
+		</div>
+	</div>
+</div>
+{% endblock %}
+
+{% block script %}
+{% include "functional_demo/templates/includes/portal_script.html" %}
+<script>
+(function () {
+	"use strict";
+
+	/* Assign consultant from Manager Review requests */
+	document.querySelectorAll(".manager-assign-btn").forEach(function (btn) {
+		btn.addEventListener("click", function () {
+			var requestName = btn.getAttribute("data-request");
+			var select = document.querySelector('.manager-assign-select[data-request="' + requestName + '"]');
+			if (!select) { portalAlert("Select a consultant first.", "err"); return; }
+			var consultant = select.value;
+			if (!consultant) { portalAlert("Please select a consultant.", "err"); return; }
+			var consultantName = select.options[select.selectedIndex].text;
+			btn.disabled = true;
+			btn.textContent = "Assigning...";
+			portalCall("functional_demo.api.assign_consultant", {
+				demo_request: requestName,
+				consultant: consultant,
+			}).then(function () {
+				document.getElementById("sched-request").value = requestName;
+				document.getElementById("sched-request-name").textContent = requestName;
+				document.getElementById("sched-consultant-name").textContent = consultantName;
+				var modal = document.getElementById("schedule-modal");
+				if (modal) modal.classList.add("show");
+			}).catch(function () {
+				btn.disabled = false;
+				btn.textContent = "Assign";
+			});
+		});
+	});
+
+	/* Schedule demo for already-assigned requests */
+	document.querySelectorAll(".manager-schedule-btn").forEach(function (btn) {
+		btn.addEventListener("click", function () {
+			var requestName = btn.getAttribute("data-request");
+			var consultantName = btn.getAttribute("data-consultant");
+			document.getElementById("sched-request").value = requestName;
+			document.getElementById("sched-request-name").textContent = requestName;
+			document.getElementById("sched-consultant-name").textContent = consultantName || "-";
+			var modal = document.getElementById("schedule-modal");
+			if (modal) modal.classList.add("show");
+		});
+	});
+
+	var schedCancel = document.getElementById("sched-cancel");
+	if (schedCancel) schedCancel.addEventListener("click", function () {
+		var modal = document.getElementById("schedule-modal");
+		if (modal) modal.classList.remove("show");
+	});
+
+	var schedGo = document.getElementById("sched-go");
+	if (schedGo) schedGo.addEventListener("click", function () {
+		var requestName = document.getElementById("sched-request").value;
+		var date = document.getElementById("sched-date").value;
+		if (!requestName) { portalAlert("No demo request selected.", "err"); return; }
+		if (!date) { portalAlert("Please pick a date.", "err"); return; }
+		schedGo.disabled = true;
+		schedGo.textContent = "Scheduling...";
+		portalCall("functional_demo.api.schedule_demo", {
+			demo_request: requestName,
+			scheduled_date: date,
+			start_time: document.getElementById("sched-start").value,
+			end_time: document.getElementById("sched-end").value,
+			meeting_link: document.getElementById("sched-link").value,
+		}).then(function () {
+			portalAlert("Demo scheduled for " + date + ". Consultant has been notified.", "ok");
+			setTimeout(function () { window.location.href = "/assigned_demo"; }, 1200);
+		}).catch(function () {
+			schedGo.disabled = false;
+			schedGo.textContent = "Schedule Demo";
+		});
+	});
+})();
+</script>
 {% endblock %}
