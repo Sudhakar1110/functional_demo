@@ -120,9 +120,8 @@
 								<th>Action</th>
 							</tr>
 						</thead>
-						<tbody>
-							{% for r in all_requests %}
-							<tr data-status="{{ r.status }}">
+						<tbody>								{% for r in all_requests %}
+							<tr data-status="{{ r.status }}" data-pref-date="{{ r.preferred_demo_date_raw }}" data-pref-time="{{ r.preferred_demo_time_raw }}">
 								<td><a href="/sales_portal/demo_request?name={{ r.name }}">{{ r.name }}</a></td>
 								<td>{{ r.customer or "-" }}</td>
 								<td>{{ r.interested_module or "-" }}</td>
@@ -405,6 +404,14 @@
 			document.getElementById("sched-consultant-name").textContent = consultantName;
 			document.getElementById("sched-consultant").value = consultant;
 			document.getElementById("sched-is-assign-flow").value = "1";
+			/* Pre-fill date & time from the sales team's preferred values */
+			var row = btn.closest("tr");
+			if (row) {
+				var prefDate = row.getAttribute("data-pref-date") || "";
+				var prefTime = row.getAttribute("data-pref-time") || "";
+				if (prefDate) document.getElementById("sched-date").value = prefDate;
+				if (prefTime) document.getElementById("sched-start").value = prefTime;
+			}
 			var modal = document.getElementById("schedule-modal");
 			if (modal) modal.classList.add("show");
 		});

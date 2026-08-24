@@ -53,7 +53,7 @@ def get_context(context):
 		fields=[
 			"name", "customer", "lead", "interested_module", "priority",
 			"sales_person", "functional_consultant", "status", "workflow_state",
-			"preferred_demo_date", "creation",
+			"preferred_demo_date", "preferred_demo_time", "creation",
 		],
 		order_by="creation desc",
 		limit_page_length=100,
@@ -68,6 +68,9 @@ def get_context(context):
 			) or r["functional_consultant"]
 		else:
 			r["consultant_name"] = "-"
+		# Pass raw date/time values for the schedule modal pre-fill
+		r["preferred_demo_date_raw"] = str(r.get("preferred_demo_date") or "")
+		r["preferred_demo_time_raw"] = str(r.get("preferred_demo_time") or "")
 	context.all_requests = all_requests
 	# Consultants for the assign dropdown
 	consultants = frappe.get_all(

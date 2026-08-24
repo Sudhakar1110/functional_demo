@@ -89,9 +89,8 @@
 									<th>Action</th>
 								</tr>
 						</thead>
-						<tbody>
-							{% for r in assigned_requests %}
-							<tr data-status="{{ r.status }}" data-session="{{ 'yes' if r.session_name else 'no' }}">
+						<tbody>								{% for r in assigned_requests %}
+							<tr data-status="{{ r.status }}" data-session="{{ 'yes' if r.session_name else 'no' }}" data-pref-date="{{ r.preferred_demo_date_raw }}" data-pref-time="{{ r.preferred_demo_time_raw }}">
 								<td><a href="/sales_portal/demo_request?name={{ r.name }}">{{ r.name }}</a></td>
 								<td>{{ r.customer or r.lead or "-" }}</td>
 								<td>{{ r.interested_module or "-" }}</td>
@@ -208,17 +207,13 @@ function kpiFilter(status, el) {
 				document.getElementById("sched-request-name").textContent = requestName;
 				document.getElementById("sched-consultant-name").textContent = consultantName;
 				document.getElementById("sched-consultant").value = consultant;
-				/* Pre-fill the date from the request's preferred date if available */
+				/* Pre-fill date & time from the sales team's preferred values */
 				var row = btn.closest("tr");
 				if (row) {
-					var dateCell = row.querySelector("td:nth-child(7)");
-					if (dateCell && dateCell.textContent.trim() && dateCell.textContent.trim() !== "-") {
-						var dateText = dateCell.textContent.trim();
-						var dateMatch = dateText.match(/(\d{4})-(\d{2})-(\d{2})/);
-						if (dateMatch) {
-							document.getElementById("sched-date").value = dateMatch[0];
-						}
-					}
+					var prefDate = row.getAttribute("data-pref-date") || "";
+					var prefTime = row.getAttribute("data-pref-time") || "";
+					if (prefDate) document.getElementById("sched-date").value = prefDate;
+					if (prefTime) document.getElementById("sched-start").value = prefTime;
 				}
 				/* Mark this as an assign-then-schedule flow */
 				document.getElementById("sched-is-assign-flow").value = "1";
