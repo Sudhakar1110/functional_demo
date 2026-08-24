@@ -17,18 +17,18 @@ def get_context(context):
 	)
 
 	today = frappe.utils.today()
+	# Show ALL Converted demo requests - including those without trial dates
+	# so the sales team can set trial periods for them
 	trials = frappe.get_all(
 		"Demo Request",
 		filters=[
 			["status", "=", "Converted"],
-			["trial_start_date", "is", "set"],
-			["trial_end_date", "is", "set"],
 		],
 		fields=[
 			"name", "customer", "lead", "contact_person", "sales_person",
 			"interested_module", "trial_start_date", "trial_end_date",
 		],
-		order_by="trial_end_date asc",
+		order_by="trial_end_date asc, creation desc",
 		limit_page_length=1000,
 	) or []
 

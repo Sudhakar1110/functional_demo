@@ -68,7 +68,7 @@
 			<div class="portal-card">
 				<div class="card-head">
 					<h2>All Trial Periods ({{ trials|length }})</h2>
-					<a class="btn-portal secondary sm" href="/sales_portal/demo_requests?status=Converted">View Demo Completed &rarr;</a>
+					<span class="muted" style="margin-left: auto;">{{ active }} active, {{ ending_soon }} ending soon, {{ expired }} expired</span>
 				</div>
 				{% if trials %}
 				<div class="card-body flush">
@@ -94,7 +94,9 @@
 								<td>{{ t.trial_start_date or "-" }}</td>
 								<td>{{ t.trial_end_date or "-" }}</td>
 								<td>
-									{% if t.days_remaining is not none and t.days_remaining < 0 %}
+									{% if not t.trial_start_date or not t.trial_end_date %}
+									<span class="badge b-draft">Not Set</span>
+									{% elif t.days_remaining is not none and t.days_remaining < 0 %}
 									<span class="badge b-closed">Ended {{ -t.days_remaining }}d ago</span>
 									{% elif t.days_remaining == 0 %}
 									<span class="badge b-sla-breached">Ends today</span>
@@ -103,9 +105,12 @@
 									{% else %}
 									<span class="chip">{{ t.days_remaining }}d left</span>
 									{% endif %}
-								</td>									<td style="white-space: nowrap;">
-										<button class="btn-portal secondary sm btn-remind" data-name="{{ t.name }}">Send Reminder</button>
-									<a class="btn-portal secondary sm" href="/sales_portal/demo_request?name={{ t.name }}">Open</a>
+								</td>
+								<td style="white-space: nowrap;">
+									{% if t.trial_start_date and t.trial_end_date %}
+									<button class="btn-portal secondary sm btn-remind" data-name="{{ t.name }}">Send Reminder</button>
+									{% endif %}
+									<a class="btn-portal secondary sm" href="/sales_portal/demo_request?name={{ t.name }}">{% if t.trial_start_date and t.trial_end_date %}Open{% else %}Set Trial Period{% endif %}</a>
 								</td>
 							</tr>
 							{% endfor %}
