@@ -156,9 +156,9 @@
 
 <!-- Schedule Demo Modal -->
 <div class="portal-modal" id="schedule-modal">
-	<div class="pm-card">
+	<div class="pm-card pm-schedule">
 		<div class="pm-title">Schedule Demo</div>
-		<p class="pm-msg" style="margin: 0 0 12px;">Confirm the date and time, then schedule a demo for <strong id="sched-request-name"></strong> with consultant <strong id="sched-consultant-name"></strong>.</p>
+		<p class="pm-msg">Confirm the date and time, then schedule a demo for <strong id="sched-request-name"></strong> with consultant <strong id="sched-consultant-name"></strong>.</p>
 		<input type="hidden" id="sched-request">
 		<input type="hidden" id="sched-consultant" value="">
 		<input type="hidden" id="sched-is-assign-flow" value="">
@@ -170,9 +170,9 @@
 			<div><label>End Time</label><input type="time" id="sched-end"></div>
 			<div><label>Meeting Link</label><input type="text" id="sched-link" placeholder="https://meet.google.com/..."></div>
 		</div>
-		<div style="display: flex; gap: 10px; justify-content: flex-end;">
-			<button class="btn-portal secondary pm-btn" id="sched-cancel">Cancel</button>
-			<button class="btn-portal pm-btn" id="sched-go">Schedule Demo</button>
+		<div class="sched-actions">
+			<button class="btn-portal secondary" id="sched-cancel">Cancel</button>
+			<button class="btn-portal" id="sched-go">Schedule Demo</button>
 		</div>
 	</div>
 </div>

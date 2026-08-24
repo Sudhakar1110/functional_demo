@@ -135,16 +135,16 @@
 			</div>
 
 			<div class="portal-modal" id="bulk-reschedule-modal">
-				<div class="pm-card">
+				<div class="pm-card pm-schedule">
 					<div class="pm-title">Bulk Reschedule</div>
-					<p class="pm-msg" style="margin: 0 0 12px;">Move the <span id="bulk-resched-count">0</span> selected request(s) to a new preferred date. Any open demo sessions are updated too.</p>
-					<div class="form-row" style="margin-bottom: 14px;">
+					<p class="pm-msg">Move the <span id="bulk-resched-count">0</span> selected request(s) to a new preferred date. Any open demo sessions are updated too.</p>
+					<div class="form-row">
 						<div><label>New Date <span class="req">*</span></label><input type="date" id="bulk-date"></div>
 						<div><label>Start Time</label><input type="time" id="bulk-time"></div>
 					</div>
-					<div style="display: flex; gap: 10px; justify-content: flex-end;">
-						<button class="btn-portal secondary pm-btn" id="bulk-reschedule-cancel">Cancel</button>
-						<button class="btn-portal pm-btn" id="bulk-reschedule-go">Reschedule</button>
+					<div class="sched-actions">
+						<button class="btn-portal secondary" id="bulk-reschedule-cancel">Cancel</button>
+						<button class="btn-portal" id="bulk-reschedule-go">Reschedule</button>
 					</div>
 				</div>
 			</div>

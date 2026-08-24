@@ -947,6 +947,60 @@ details.portal-card[open] > summary.card-head::after {
 	display: inline-flex;
 }
 
+/* Schedule modal: wider card with left-aligned form fields */
+.pm-card.pm-schedule {
+	max-width: 520px;
+	text-align: left;
+	padding: 28px 32px;
+}
+.pm-card.pm-schedule .pm-title {
+	text-align: center;
+}
+.pm-card.pm-schedule .pm-msg {
+	text-align: center;
+}
+.pm-card.pm-schedule .form-row {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 14px;
+	margin-bottom: 14px;
+}
+.pm-card.pm-schedule .form-row > div {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+.pm-card.pm-schedule label {
+	font-size: 12px;
+	font-weight: 600;
+	color: #71717B;
+}
+.pm-card.pm-schedule input[type="date"],
+.pm-card.pm-schedule input[type="time"],
+.pm-card.pm-schedule input[type="text"] {
+	padding: 9px 12px;
+	border: 1px solid #E5E7EB;
+	border-radius: 8px;
+	font-size: 13px;
+	color: #05133C;
+	background: #F9FAFB;
+	width: 100%;
+	box-sizing: border-box;
+}
+.pm-card.pm-schedule input:focus {
+	outline: none;
+	border-color: #114EFF;
+	box-shadow: 0 0 0 3px rgba(17, 78, 255, 0.12);
+}
+.pm-card.pm-schedule .sched-actions {
+	display: flex;
+	gap: 10px;
+	justify-content: flex-end;
+	margin-top: 20px;
+	padding-top: 16px;
+	border-top: 1px solid #F3F4F6;
+}
+
 /* ==========================================================================
    Template preview sections
    ========================================================================== */
