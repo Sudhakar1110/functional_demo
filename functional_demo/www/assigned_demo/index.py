@@ -34,7 +34,9 @@ def get_context(context):
 		],
 		order_by="preferred_demo_date asc, creation desc",
 		limit_page_length=500,
-	) or []	for r in assigned_requests:
+	) or []
+
+	for r in assigned_requests:
 	r["created_display"] = (
 		frappe.utils.format_date(r.get("creation"), "medium")
 		if r.get("creation")
