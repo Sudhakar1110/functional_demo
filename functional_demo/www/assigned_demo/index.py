@@ -37,19 +37,19 @@ def get_context(context):
 	) or []
 
 	for r in assigned_requests:
-	r["created_display"] = (
-		frappe.utils.format_date(r.get("creation"), "medium")
-		if r.get("creation")
-		else "-"
-	)
-	r["demo_date_display"] = (
-		frappe.utils.format_date(r.get("preferred_demo_date"), "medium")
-		if r.get("preferred_demo_date")
-		else "-"
-	)
-	# Pass raw date value for the schedule modal pre-fill
-	r["preferred_demo_date_raw"] = str(r.get("preferred_demo_date") or "")
-	r["preferred_demo_time_raw"] = str(r.get("preferred_demo_time") or "")
+		r["created_display"] = (
+			frappe.utils.format_date(r.get("creation"), "medium")
+			if r.get("creation")
+			else "-"
+		)
+		r["demo_date_display"] = (
+			frappe.utils.format_date(r.get("preferred_demo_date"), "medium")
+			if r.get("preferred_demo_date")
+			else "-"
+		)
+		# Pass raw date value for the schedule modal pre-fill
+		r["preferred_demo_date_raw"] = str(r.get("preferred_demo_date") or "")
+		r["preferred_demo_time_raw"] = str(r.get("preferred_demo_time") or "")
 		if r.get("functional_consultant"):
 			r["consultant_name"] = frappe.db.get_value(
 				"Functional Consultant", r["functional_consultant"], "consultant_name"
