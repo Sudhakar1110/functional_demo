@@ -815,26 +815,38 @@ class DemoSession(Document):
 
 def can_execute_session_action(session, user=None):
 	"""True when the user may run consultant actions (start / complete / final
-	result) on a Demo Session. Functional roles and site admins only - sales
-	users create, schedule and follow up, they do not execute demos."""
+	result) on a Demo Session. Only the assigned functional consultant and
+	site admins may execute - managers and other consultants see it read-only."""
 	user = user or frappe.session.user
 	if user == "Administrator":
 		return True
-	roles = frappe.get_roles(user)
-	return bool(set(roles) & {"System Manager", "Functional Consultant", "Functional Team Manager"})
+	# Only the assigned consultant may execute demo actions
+	if session.functional_consultant:
+		consultant_user = frappe.db.get_value(
+			"Functional Consultant", session.functional_consultant, "user"
+		)
+		if consultant_user and user == consultant_user:
+			return True
+	return False
 
 
 def can_cancel_session(session, user=None):
-	"""True when the user may cancel a Demo Session: functional roles and
-	Sales Managers always; a plain Sales User only while the session is still
-	Scheduled (mirrors the request workflow, which lets Sales User cancel
-	before the demo starts)."""
+	"""True when the user may cancel a Demo Session: only the assigned
+	consultant, Sales Managers, and site admins. A plain Sales User may
+	only cancel while the session is still Scheduled."""
 	user = user or frappe.session.user
 	if user == "Administrator":
 		return True
 	roles = frappe.get_roles(user)
-	if set(roles) & {"System Manager", "Functional Consultant", "Functional Team Manager", "Sales Manager"}:
+	if "Sales Manager" in roles:
 		return True
+	# Only the assigned consultant may cancel
+	if session.functional_consultant:
+		consultant_user = frappe.db.get_value(
+			"Functional Consultant", session.functional_consultant, "user"
+		)
+		if consultant_user and user == consultant_user:
+			return True
 	return "Sales User" in roles and session.demo_status == "Scheduled"
 
 

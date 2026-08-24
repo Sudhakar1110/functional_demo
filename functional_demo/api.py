@@ -940,6 +940,14 @@ def get_demo_execution_data(demo_session=None):
 	)
 
 	can_write = frappe.has_permission("Demo Session", "write", doc=ds)
+	# Restrict write access: only the assigned functional consultant may
+	# edit the session. Managers and other consultants see it read-only.
+	if can_write and ds.functional_consultant:
+		consultant_user = frappe.db.get_value(
+			"Functional Consultant", ds.functional_consultant, "user"
+		)
+		if consultant_user and frappe.session.user != consultant_user:
+			can_write = False
 
 	return {
 		"session": {
