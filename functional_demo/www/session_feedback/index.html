@@ -135,14 +135,14 @@
 								<td>{% if s.final_result %}<span class="sf-badge {% if s.final_result == 'Converted' %}feature{% elif s.final_result == 'Not Interested' %}bug{% else %}general{% endif %}">{{ s.final_result }}</span>{% else %}-{% endif %}</td>
 								<td>
 									{% if s.has_feedback %}
-									<span class="sf-done">✅ {{ s.feedback_list|length }} sent</span>
+									<span class="sf-done">{{ s.feedback_list|length }} sent</span>
 									{% else %}
 									<span class="sf-pending">⏳ Pending</span>
 									{% endif %}
 								</td>
 								<td>
 									{% if s.has_feedback %}
-									<button class="sf-btn sf-btn-done" disabled>✅ Sent</button>
+									<button class="sf-btn sf-btn-done" disabled>Sent</button>
 									{% else %}
 									<button class="sf-btn sf-btn-primary sf-open-btn"
 										data-session="{{ s.name }}"

@@ -187,14 +187,14 @@
 						</div>
 						{% if c.active_session %}
 						<div style="background: #F0FDF4; border-radius: 10px; padding: 12px 16px; margin-bottom: 10px; border: 1px solid #DCFBEA;">
-							<div style="font-size: 13px; font-weight: 600; color: #009A52; margin-bottom: 4px;">🔴 Currently conducting demo</div>
+							<div style="font-size: 13px; font-weight: 600; color: #009A52; margin-bottom: 4px;">Currently conducting demo</div>
 							<div style="font-size: 14px; color: #05133C;">{{ c.active_session.customer or 'Customer' }} · <a href="/functional_portal/session?name={{ c.active_session.name }}">{{ c.active_session.name }}</a></div>
 							<div style="font-size: 12px; color: #71717B;">Started {{ c.active_session.start_time or '' }}</div>
 						</div>
 						{% endif %}
 						{% if c.todays_sessions %}
 						<div style="margin-bottom: 8px;">
-							<div style="font-size: 13px; font-weight: 600; color: #71717B; margin-bottom: 6px;">📅 Today's Schedule</div>
+							<div style="font-size: 13px; font-weight: 600; color: #71717B; margin-bottom: 6px;">Today's Schedule</div>
 							{% for s in c.todays_sessions %}
 							<div style="display: flex; gap: 10px; align-items: center; padding: 6px 10px; background: #F9FAFB; border-radius: 6px; margin-bottom: 4px; font-size: 13px;">
 								<span style="color: #71717B; min-width: 55px;">{{ s.start_time or '-' }}</span>
@@ -217,7 +217,7 @@
 						</div>
 						{% endif %}
 						<div style="display: flex; gap: 16px; margin-top: 8px; font-size: 12px; color: #9CA3AF;">
-							<span>✅ {{ c.completed_count }} completed</span>
+							<span>{{ c.completed_count }} completed</span>
 							{% if c.pending_count %}<span>📋 {{ c.pending_count }} pending assignment</span>{% endif %}
 						</div>
 					</div>

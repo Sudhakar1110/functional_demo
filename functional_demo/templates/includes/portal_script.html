@@ -131,8 +131,16 @@
 				serverMsgs = JSON.parse(data._server_messages || "[]");
 			} catch (e) { serverMsgs = []; }
 			var plain = function (html) {
+				/* Strip HTML tags to get clean text. Also try to parse JSON
+				   messages (Frappe sometimes wraps server messages as JSON) */
+				if (!html) return "";
+				var raw = String(html);
+				try {
+					var obj = JSON.parse(raw);
+					if (obj && obj.message) raw = String(obj.message);
+				} catch (e) { /* not JSON - use as-is */ }
 				var d = document.createElement("div");
-				d.innerHTML = html || "";
+				d.innerHTML = raw;
 				return d.textContent || d.innerText || "";
 			};
 			/* Frappe puts the real traceback in data.exc on unhandled exceptions.
@@ -172,7 +180,7 @@
 				   object (a return value) on odd responses, so only use strings. */
 				var errMsg =
 					realError() ||
-					(typeof data.message === "string" ? data.message : "") ||
+					plain(typeof data.message === "string" ? data.message : "") ||
 					(serverMsgs.length ? plain(serverMsgs[0]) : "") ||
 					rawHint() ||
 					"Something went wrong. Please try again.";

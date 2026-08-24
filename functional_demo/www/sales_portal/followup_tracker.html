@@ -145,8 +145,8 @@
 					</div>
 					<div style="display: flex; align-items: center; gap: 8px;">
 						<span class="ft-overdue-badge">{{ fu.days_overdue }}d overdue</span>
-						<button class="ft-action-btn ft-btn-done" onclick="completeFollowup('{{ fu.name }}')">✅ Done</button>
-						<button class="ft-action-btn ft-btn-reschedule" onclick="rescheduleFollowup('{{ fu.name }}')">📅 Reschedule</button>
+						<button class="ft-action-btn ft-btn-done" onclick="completeFollowup('{{ fu.name }}')">Done</button>
+						<button class="ft-action-btn ft-btn-reschedule" onclick="rescheduleFollowup('{{ fu.name }}')">Reschedule</button>
 					</div>
 				</div>
 				{% endfor %}
@@ -156,7 +156,7 @@
 			<!-- Today's Action List -->
 			{% if today_list %}
 			<div class="ft-today-card">
-				<h3>📅 Today — {{ today_date_display }} ({{ total_today }} follow-up{{ "s" if total_today != 1 }})</h3>
+				<h3>Today — {{ today_date_display }} ({{ total_today }} follow-up{{ "s" if total_today != 1 }})</h3>
 				{% for fu in today_list %}
 				<div class="ft-today-row">
 					<div class="ft-overdue-info">
@@ -165,8 +165,8 @@
 					</div>
 					<div style="display: flex; align-items: center; gap: 8px;">
 						<span class="ft-badge b-open">{{ fu.status }}</span>
-						<button class="ft-action-btn ft-btn-done" onclick="completeFollowup('{{ fu.name }}')">✅ Done</button>
-						<button class="ft-action-btn ft-btn-reschedule" onclick="rescheduleFollowup('{{ fu.name }}')">📅 Reschedule</button>
+						<button class="ft-action-btn ft-btn-done" onclick="completeFollowup('{{ fu.name }}')">Done</button>
+						<button class="ft-action-btn ft-btn-reschedule" onclick="rescheduleFollowup('{{ fu.name }}')">Reschedule</button>
 					</div>
 				</div>
 				{% endfor %}
@@ -177,7 +177,7 @@
 			{% if upcoming_list %}
 			<div class="portal-card" style="margin-bottom: 20px;">
 				<div class="card-head" style="padding: 14px 20px;">
-					<h2 style="font-size: 15px; font-weight: 700; color: #05133C; margin: 0;">📅 Upcoming Follow-ups ({{ total_upcoming }})</h2>
+					<h2 style="font-size: 15px; font-weight: 700; color: #05133C; margin: 0;">Upcoming Follow-ups ({{ total_upcoming }})</h2>
 				</div>
 				<div class="card-body ft-table-scroll">
 					<table>
@@ -200,8 +200,8 @@
 								<td>{{ fu.consultant_display }}</td>
 								<td><span class="ft-badge b-open">{{ fu.status }}</span></td>
 								<td>
-									<button class="ft-action-btn ft-btn-done" onclick="completeFollowup('{{ fu.name }}')">✅ Done</button>
-									<button class="ft-action-btn ft-btn-reschedule" onclick="rescheduleFollowup('{{ fu.name }}')">📅 Reschedule</button>
+									<button class="ft-action-btn ft-btn-done" onclick="completeFollowup('{{ fu.name }}')">Done</button>
+									<button class="ft-action-btn ft-btn-reschedule" onclick="rescheduleFollowup('{{ fu.name }}')">Reschedule</button>
 								</td>
 							</tr>
 							{% endfor %}
@@ -270,8 +270,8 @@
 								</td>
 								<td>{{ fu.outcome or "-" }}</td>
 								<td style="white-space: nowrap;">
-									<button class="ft-action-btn ft-btn-done" onclick="completeFollowup('{{ fu.name }}')">✅ Done</button>
-									<button class="ft-action-btn ft-btn-reschedule" onclick="rescheduleFollowup('{{ fu.name }}')">📅</button>
+									<button class="ft-action-btn ft-btn-done" onclick="completeFollowup('{{ fu.name }}')">Done</button>
+									<button class="ft-action-btn ft-btn-reschedule" onclick="rescheduleFollowup('{{ fu.name }}')">Reschedule</button>
 									{% if fu.demo_session %}
 									<a href="/functional_portal/session?name={{ fu.demo_session }}" style="color: #114EFF; font-size: 11px; font-weight: 600; text-decoration: none; margin-left: 4px;">👁</a>
 									{% endif %}
@@ -287,7 +287,7 @@
 			{% if completed_list %}
 			<div class="portal-card" style="margin-bottom: 20px;">
 				<div class="card-head" style="padding: 14px 20px;">
-					<h2 style="font-size: 15px; font-weight: 700; color: #05133C; margin: 0;">✅ Recently Completed ({{ completed_list|length }})</h2>
+					<h2 style="font-size: 15px; font-weight: 700; color: #05133C; margin: 0;">Recently Completed ({{ completed_list|length }})</h2>
 				</div>
 				<div class="card-body ft-table-scroll">
 					<table>

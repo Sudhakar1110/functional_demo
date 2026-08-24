@@ -86,9 +86,9 @@
 								class="settings-toggle {% if mail_notifications_enabled %}toggle-on{% else %}toggle-off{% endif %}"
 							>
 								{% if mail_notifications_enabled %}
-								✅ ON
+								ON
 								{% else %}
-								🔴 OFF
+								OFF
 								{% endif %}
 							</button>
 						</div>
@@ -115,9 +115,9 @@
 								class="settings-toggle {% if auto_reload_enabled %}toggle-on{% else %}toggle-off{% endif %}"
 							>
 								{% if auto_reload_enabled %}
-								✅ ON
+								ON
 								{% else %}
-								🔴 OFF
+								OFF
 								{% endif %}
 							</button>
 						</div>
@@ -130,7 +130,7 @@
 							<div style="flex: 1; min-width: 200px;">
 								<div style="display: flex; align-items: center; gap: 6px; margin-bottom: 6px;">
 									<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;color:#F97316;flex-shrink:0;"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
-								<span style="font-weight: 700; color: #05133C; font-size: 16px;">🔒 Hide Results (Admin)</span>
+								<span style="font-weight: 700; color: #05133C; font-size: 16px;">Hide Results (Admin)</span>
 							</div>
 							<div style="color: #71717B; font-size: 13px;" id="results-status-text">
 								{% if results_hidden %}
@@ -146,9 +146,9 @@
 							class="settings-toggle {% if results_hidden %}toggle-off{% else %}toggle-on{% endif %}"
 						>
 							{% if results_hidden %}
-							🔴 HIDDEN
+							HIDDEN
 							{% else %}
-							✅ VISIBLE
+							VISIBLE
 							{% endif %}
 						</button>
 					</div>
@@ -158,7 +158,7 @@
 				<!-- Info Box -->
 					<div style="margin-top: 20px; padding: 16px 20px; background: #EFF6FF; border-radius: 10px; border: 1px solid #BFDBFE;">
 						<div style="display: flex; align-items: flex-start; gap: 10px;">
-							<span style="font-size: 18px;">💡</span>
+							<span style="font-size: 18px; font-weight: 700;">Info:</span>
 							<div style="color: #1E40AF; font-size: 13px; line-height: 1.6;">
 								<strong>Email Notifications:</strong> When ON, you receive emails for scheduled demos, completions, reminders, follow-ups, and trial periods. When OFF, emails are stopped but in-app notifications still work.<br>
 								<strong>Auto Reload:</strong> When ON, the page automatically reloads after you toggle any setting so changes take effect immediately.{% if is_admin %}<br>
@@ -228,11 +228,11 @@ function setAutoReload(val) {
 	if (!btn) return;
 	if (getAutoReload()) {
 		btn.className = "settings-toggle toggle-on";
-		btn.textContent = "✅ ON";
+		btn.textContent = "ON";
 		if (statusText) statusText.innerHTML = '<strong style="color: #10B981;">ON</strong> — Page reloads automatically after every toggle change.';
 	} else {
 		btn.className = "settings-toggle toggle-off";
-		btn.textContent = "🔴 OFF";
+		btn.textContent = "OFF";
 		if (statusText) statusText.innerHTML = '<strong style="color: #EF4444;">OFF</strong> — Manual reload required after changes.';
 	}
 })();
@@ -246,12 +246,12 @@ document.getElementById("auto-reload-btn").addEventListener("click", function ()
 	setAutoReload(newVal);
 	if (newVal) {
 		btn.className = "settings-toggle toggle-on";
-		btn.textContent = "✅ ON";
+		btn.textContent = "ON";
 		statusText.innerHTML = '<strong style="color: #10B981;">ON</strong> — Page reloads automatically after every toggle change.';
 		portalAlert("Auto reload enabled.", "ok");
 	} else {
 		btn.className = "settings-toggle toggle-off";
-		btn.textContent = "🔴 OFF";
+		btn.textContent = "OFF";
 		statusText.innerHTML = '<strong style="color: #EF4444;">OFF</strong> — Manual reload required after changes.';
 		portalAlert("Auto reload disabled.", "ok");
 	}
@@ -267,12 +267,12 @@ document.getElementById("mail-toggle-btn").addEventListener("click", function ()
 					btn.classList.remove("loading");
 					if (enabled) {
 						btn.className = "settings-toggle toggle-on";
-						btn.textContent = "✅ ON";
+						btn.textContent = "ON";
 						statusText.innerHTML = 'Your email notifications are <strong style="color: #10B981;">ON</strong> — you will receive emails for demo events.';
 						portalAlert("Email notifications enabled successfully.", "ok");
 					} else {
 						btn.className = "settings-toggle toggle-off";
-						btn.textContent = "🔴 OFF";
+						btn.textContent = "OFF";
 						statusText.innerHTML = 'Your email notifications are <strong style="color: #EF4444;">OFF</strong> — emails are stopped.';
 						portalAlert("Email notifications disabled. In-app notifications still work.", "ok");
 					}
@@ -300,12 +300,12 @@ if (resultsToggleBtn) {
 				btn.classList.remove("loading");
 				if (result && result.hidden) {
 					btn.className = "settings-toggle toggle-off";
-					btn.textContent = "🔴 HIDDEN";
+					btn.textContent = "HIDDEN";
 					statusText.innerHTML = 'Results are <strong style="color: #EF4444;">HIDDEN</strong> for all users. Only admins can see them.';
 					portalAlert("Results are now hidden for all users.", "ok");
 				} else {
 					btn.className = "settings-toggle toggle-on";
-					btn.textContent = "✅ VISIBLE";
+					btn.textContent = "VISIBLE";
 					statusText.innerHTML = 'Results are <strong style="color: #10B981;">VISIBLE</strong> to all users.';
 					portalAlert("Results are now visible to all users.", "ok");
 				}
