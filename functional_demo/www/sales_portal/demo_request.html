@@ -363,6 +363,27 @@
 	</div>
 	</div>
 </div>
+
+<!-- Schedule Demo Modal (assign-then-schedule flow) -->
+<div class="portal-modal" id="schedule-modal">
+	<div class="pm-card">
+		<div class="pm-title">Schedule Demo</div>
+		<p class="pm-msg" style="margin: 0 0 12px;">Confirm the date and time, then schedule a demo for <strong id="sched-request-name"></strong> with consultant <strong id="sched-consultant-name"></strong>.</p>
+		<input type="hidden" id="sched-assign-consultant" value="">
+		<div class="form-row">
+			<div><label>Date <span class="req">*</span></label><input type="date" id="sched-date"></div>
+			<div><label>Start Time</label><input type="time" id="sched-start"></div>
+		</div>
+		<div class="form-row">
+			<div><label>End Time</label><input type="time" id="sched-end"></div>
+			<div><label>Meeting Link</label><input type="text" id="sched-link" placeholder="https://meet.google.com/..."></div>
+		</div>
+		<div style="display: flex; gap: 10px; justify-content: flex-end;">
+			<button class="btn-portal secondary pm-btn" id="sched-cancel">Cancel</button>
+			<button class="btn-portal pm-btn" id="sched-go">Schedule Demo</button>
+		</div>
+	</div>
+</div>
 {% endblock %}
 
 {% block script %}
@@ -496,10 +517,20 @@
 	document.getElementById("btn-assign").addEventListener("click", function () {
 		var consultant = document.getElementById("assign-consultant").value;
 		if (!consultant) { portalAlert("Please select a consultant.", "err"); return; }
-		var btn = this; btn.disabled = true;
-		portalCall("functional_demo.api.assign_consultant", { demo_request: DOC_NAME, consultant: consultant })
-			.then(function () { window.location.reload(); })
-			.catch(function () { btn.disabled = false; });
+		/* Store the selected consultant and open the schedule modal first
+		   so the manager confirms/enters date & time BEFORE assignment */
+		document.getElementById("sched-assign-consultant").value = consultant;
+		var sel = document.getElementById("assign-consultant");
+		var consultantName = sel.options[sel.selectedIndex] ? sel.options[sel.selectedIndex].text : consultant;
+		document.getElementById("sched-request-name").textContent = DOC_NAME;
+		document.getElementById("sched-consultant-name").textContent = consultantName;
+		/* Pre-fill date from the request's preferred date */
+		var prefDate = '{{ doc.preferred_demo_date or "" }}';
+		if (prefDate) document.getElementById("sched-date").value = prefDate;
+		var prefTime = '{{ doc.preferred_demo_time or "" }}';
+		if (prefTime) document.getElementById("sched-start").value = prefTime;
+		var modal = document.getElementById("schedule-modal");
+		if (modal) modal.classList.add("show");
 	});
 	{% endif %}
 
@@ -618,6 +649,46 @@
 	});
 	{% endif %}
 	{% endif %}
+
+	/* Schedule modal for assign-then-schedule flow */
+	var schedCancel = document.getElementById("sched-cancel");
+	if (schedCancel) schedCancel.addEventListener("click", function () {
+		var modal = document.getElementById("schedule-modal");
+		if (modal) modal.classList.remove("show");
+		document.getElementById("sched-date").value = "";
+		document.getElementById("sched-start").value = "";
+		document.getElementById("sched-end").value = "";
+		document.getElementById("sched-link").value = "";
+	});
+
+	var schedGo = document.getElementById("sched-go");
+	if (schedGo) schedGo.addEventListener("click", function () {
+		var date = document.getElementById("sched-date").value;
+		if (!date) { portalAlert("Please pick a date.", "err"); return; }
+		var consultant = document.getElementById("sched-assign-consultant").value;
+		if (!consultant) { portalAlert("No consultant selected.", "err"); return; }
+		schedGo.disabled = true;
+		schedGo.textContent = "Assigning & Scheduling...";
+		/* First assign the consultant, then schedule the demo */
+		portalCall("functional_demo.api.assign_consultant", {
+			demo_request: DOC_NAME,
+			consultant: consultant,
+		}).then(function () {
+			return portalCall("functional_demo.api.schedule_demo", {
+				demo_request: DOC_NAME,
+				scheduled_date: date,
+				start_time: document.getElementById("sched-start").value,
+				end_time: document.getElementById("sched-end").value,
+				meeting_link: document.getElementById("sched-link").value,
+			});
+		}).then(function () {
+			portalAlert("Consultant assigned and demo scheduled for " + date + ".", "ok");
+			setTimeout(function () { window.location.reload(); }, 1200);
+		}).catch(function () {
+			schedGo.disabled = false;
+			schedGo.textContent = "Schedule Demo";
+		});
+	});
 })();
 </script>
 {% endblock %}

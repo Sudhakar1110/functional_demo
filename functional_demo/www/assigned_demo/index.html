@@ -159,8 +159,10 @@
 <div class="portal-modal" id="schedule-modal">
 	<div class="pm-card">
 		<div class="pm-title">Schedule Demo</div>
-		<p class="pm-msg" style="margin: 0 0 12px;">Schedule a demo for <strong id="sched-request-name"></strong> with consultant <strong id="sched-consultant-name"></strong>.</p>
+		<p class="pm-msg" style="margin: 0 0 12px;">Confirm the date and time, then schedule a demo for <strong id="sched-request-name"></strong> with consultant <strong id="sched-consultant-name"></strong>.</p>
 		<input type="hidden" id="sched-request">
+		<input type="hidden" id="sched-consultant" value="">
+		<input type="hidden" id="sched-is-assign-flow" value="">
 		<div class="form-row">
 			<div><label>Date <span class="req">*</span></label><input type="date" id="sched-date"></div>
 			<div><label>Start Time</label><input type="time" id="sched-start"></div>
@@ -190,34 +192,40 @@ function kpiFilter(status, el) {
 	});
 }
 (function () {
-	"use strict";
-
-	/* Assign consultant from Manager Review requests */
-	document.querySelectorAll(".manager-assign-btn").forEach(function (btn) {
-		btn.addEventListener("click", function () {
-			var requestName = btn.getAttribute("data-request");
-			var select = document.querySelector('.manager-assign-select[data-request="' + requestName + '"]');
-			if (!select) { portalAlert("Select a consultant first.", "err"); return; }
-			var consultant = select.value;
-			if (!consultant) { portalAlert("Please select a consultant.", "err"); return; }
-			var consultantName = select.options[select.selectedIndex].text;
-			btn.disabled = true;
-			btn.textContent = "Assigning...";
-			portalCall("functional_demo.api.assign_consultant", {
-				demo_request: requestName,
-				consultant: consultant,
-			}).then(function () {
+	"use strict";				/* Assign consultant from Manager Review requests - shows schedule modal first */
+		document.querySelectorAll(".manager-assign-btn").forEach(function (btn) {
+			btn.addEventListener("click", function () {
+				var requestName = btn.getAttribute("data-request");
+				var select = document.querySelector('.manager-assign-select[data-request="' + requestName + '"]');
+				if (!select) { portalAlert("Select a consultant first.", "err"); return; }
+				var consultant = select.value;
+				if (!consultant) { portalAlert("Please select a consultant.", "err"); return; }
+				var consultantName = select.options[select.selectedIndex].text;
+				/* Show the schedule modal first so the manager confirms/enters date & time
+				   BEFORE the consultant is assigned. The actual assign + schedule will
+				   happen when the manager clicks "Schedule Demo" in the modal. */
 				document.getElementById("sched-request").value = requestName;
 				document.getElementById("sched-request-name").textContent = requestName;
 				document.getElementById("sched-consultant-name").textContent = consultantName;
+				document.getElementById("sched-consultant").value = consultant;
+				/* Pre-fill the date from the request's preferred date if available */
+				var row = btn.closest("tr");
+				if (row) {
+					var dateCell = row.querySelector("td:nth-child(7)");
+					if (dateCell && dateCell.textContent.trim() && dateCell.textContent.trim() !== "-") {
+						var dateText = dateCell.textContent.trim();
+						var dateMatch = dateText.match(/(\d{4})-(\d{2})-(\d{2})/);
+						if (dateMatch) {
+							document.getElementById("sched-date").value = dateMatch[0];
+						}
+					}
+				}
+				/* Mark this as an assign-then-schedule flow */
+				document.getElementById("sched-is-assign-flow").value = "1";
 				var modal = document.getElementById("schedule-modal");
 				if (modal) modal.classList.add("show");
-			}).catch(function () {
-				btn.disabled = false;
-				btn.textContent = "Assign";
 			});
 		});
-	});
 
 	/* Schedule demo for already-assigned requests */
 	document.querySelectorAll(".manager-schedule-btn").forEach(function (btn) {
@@ -236,6 +244,13 @@ function kpiFilter(status, el) {
 	if (schedCancel) schedCancel.addEventListener("click", function () {
 		var modal = document.getElementById("schedule-modal");
 		if (modal) modal.classList.remove("show");
+		/* Reset hidden fields so stale values don't leak into next open */
+		document.getElementById("sched-consultant").value = "";
+		document.getElementById("sched-is-assign-flow").value = "";
+		document.getElementById("sched-date").value = "";
+		document.getElementById("sched-start").value = "";
+		document.getElementById("sched-end").value = "";
+		document.getElementById("sched-link").value = "";
 	});
 
 	var schedGo = document.getElementById("sched-go");
@@ -246,19 +261,39 @@ function kpiFilter(status, el) {
 		if (!date) { portalAlert("Please pick a date.", "err"); return; }
 		schedGo.disabled = true;
 		schedGo.textContent = "Scheduling...";
-		portalCall("functional_demo.api.schedule_demo", {
-			demo_request: requestName,
-			scheduled_date: date,
-			start_time: document.getElementById("sched-start").value,
-			end_time: document.getElementById("sched-end").value,
-			meeting_link: document.getElementById("sched-link").value,
-		}).then(function () {
-			portalAlert("Demo scheduled for " + date + ". Consultant has been notified.", "ok");
-			setTimeout(function () { window.location.href = "/assigned_demo"; }, 1200);
-		}).catch(function () {
-			schedGo.disabled = false;
-			schedGo.textContent = "Schedule Demo";
-		});
+		var isAssignFlow = document.getElementById("sched-is-assign-flow").value === "1";
+		var consultantVal = document.getElementById("sched-consultant").value;
+		/* In the assign-then-schedule flow, first assign the consultant,
+		   then schedule the demo. This ensures the manager confirms the
+			   date & time BEFORE the consultant is actually assigned. */
+		var doSchedule = function () {
+			portalCall("functional_demo.api.schedule_demo", {
+				demo_request: requestName,
+				scheduled_date: date,
+				start_time: document.getElementById("sched-start").value,
+				end_time: document.getElementById("sched-end").value,
+				meeting_link: document.getElementById("sched-link").value,
+			}).then(function () {
+				portalAlert("Consultant assigned and demo scheduled for " + date + ".", "ok");
+				setTimeout(function () { window.location.href = "/assigned_demo"; }, 1200);
+			}).catch(function () {
+				schedGo.disabled = false;
+				schedGo.textContent = "Schedule Demo";
+			});
+		};
+		if (isAssignFlow && consultantVal) {
+			portalCall("functional_demo.api.assign_consultant", {
+				demo_request: requestName,
+				consultant: consultantVal,
+			}).then(function () {
+				doSchedule();
+			}).catch(function () {
+				schedGo.disabled = false;
+				schedGo.textContent = "Schedule Demo";
+			});
+		} else {
+			doSchedule();
+		}
 	});
 })();
 </script>
