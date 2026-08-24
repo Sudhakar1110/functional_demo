@@ -209,34 +209,10 @@
 				</div>
 				<div class="card-body">
 					<div style="display: flex; gap: 10px; flex-wrap: wrap;">
-						<button class="btn-portal" id="btn-toggle-schedule"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg> Schedule Demo</button>
 						{% if doc.status in ["Demo Completed", "Follow-up Required"] and not has_follow_up %}
 						<button class="btn-portal warning" id="btn-toggle-followup"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg> Create Follow-up</button>
 						<button class="btn-portal success" id="btn-toggle-result"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg> Set Result</button>
 						{% endif %}
-					</div>
-
-					<div id="form-schedule" style="display: none;" class="portal-form">
-						<div class="divider"></div>
-						<div class="form-row">
-							<div><label>Functional Consultant</label><input type="text" value="{{ consultant_names.get(doc.functional_consultant) or doc.functional_consultant }}" disabled></div>
-							<div><label>Scheduled Date <span class="req">*</span></label><input type="date" id="sch-date" value="{{ doc.preferred_demo_date or '' }}"></div>
-						</div>
-						<div class="form-row">
-							<div><label>Interested Template</label>
-								<select id="sch-template">
-									{% for m in modules %}<option value="{{ m }}" {% if m and m == (doc.interested_module or '') %}selected{% endif %}>{{ m or "— Select —" }}</option>{% endfor %}
-								</select>
-							</div>
-						</div>
-						<div class="form-row">
-							<div><label>Start Time</label><input type="time" id="sch-start" value="{{ doc.preferred_demo_time or '' }}"></div>
-							<div><label>End Time</label><input type="time" id="sch-end"></div>
-							<div><label>Meeting Link</label><input type="text" id="sch-link" placeholder="https://meet.google.com/..."></div>
-						</div>
-						<div class="form-actions">
-							<button class="btn-portal" id="btn-schedule">Schedule Demo</button>
-						</div>
 					</div>
 
 					<div id="form-followup" style="display: none;" class="portal-form">
@@ -534,33 +510,7 @@
 	});
 	{% endif %}
 
-	{% if doc.functional_consultant and doc.status in ["Assigned", "Scheduled", "Demo In Progress", "Demo Completed", "Follow-up Required"] %}
-	var btnScheduleToggle = document.getElementById("btn-toggle-schedule");
-	var btnSchedule = document.getElementById("btn-schedule");
-	if (btnScheduleToggle) btnScheduleToggle.addEventListener("click", function () { toggle("form-schedule"); });
-	if (btnSchedule) btnSchedule.addEventListener("click", function () {
-		var reqName = requestName();
-		if (!reqName) { portalAlert("The page is stale - please refresh it (Ctrl+Shift+R) and try again.", "err"); return; }
-		var date = document.getElementById("sch-date").value;
-		if (!date) { portalAlert("Please pick a scheduled date.", "err"); return; }
-		var btn = this; btn.disabled = true;
-		portalCall("functional_demo.api.schedule_demo", {
-			demo_request: reqName,
-			scheduled_date: date,
-			start_time: document.getElementById("sch-start").value,
-			end_time: document.getElementById("sch-end").value,
-			meeting_link: document.getElementById("sch-link").value,
-			interested_module: document.getElementById("sch-template").value,
-		}).then(function (res) {
-			/* Show the confirmation first, then reload so the new status is
-			   visible - an immediate reload wiped the success toast and made
-			   scheduling look like a silent page refresh. */
-			var sessionName = res && res.demo_session ? " (Session " + res.demo_session + ")" : "";
-			portalAlert("Demo scheduled for " + date + sessionName + ".", "ok");
-			setTimeout(function () { window.location.reload(); }, 1400);
-		}).catch(function () { btn.disabled = false; });
-	});
-	{% endif %}
+
 
 	{% if doc.status in ["Requested", "Assigned", "Scheduled", "Demo In Progress"] %}
 	if (document.getElementById("btn-toggle-cancel-request")) {
