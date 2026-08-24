@@ -12,10 +12,10 @@ def get_context(context):
 	to Functional Consultants by the Functional Team Manager."""
 	portal_context(
 		context,
-		_(("Assign Demo")),
+		_("Assign Demo"),
 		["Functional Team Manager"],
 		active="assigned_demo",
-		subtitle=_(("Review and assign demo requests to functional consultants")),
+		subtitle=_("Review and assign demo requests to functional consultants"),
 	)
 
 	today = frappe.utils.today()
@@ -47,7 +47,7 @@ def get_context(context):
 			if r.get("preferred_demo_date")
 			else "-"
 		)
-		# Pass raw date value for the schedule modal pre-fill
+		# Pass raw date/time values for the schedule modal pre-fill
 		r["preferred_demo_date_raw"] = str(r.get("preferred_demo_date") or "")
 		r["preferred_demo_time_raw"] = str(r.get("preferred_demo_time") or "")
 		if r.get("functional_consultant"):
