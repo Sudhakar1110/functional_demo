@@ -30,7 +30,7 @@ def get_context(context):
 		filters={"status": ["in", ["Manager Review", "Assigned"]]},
 		fields=[
 			"name", "customer", "lead", "sales_person", "interested_module",
-			"priority", "preferred_demo_date", "functional_consultant", "creation",
+			"priority", "preferred_demo_date", "preferred_demo_time", "functional_consultant", "creation",
 		],
 		order_by="preferred_demo_date asc, creation desc",
 		limit_page_length=500,
