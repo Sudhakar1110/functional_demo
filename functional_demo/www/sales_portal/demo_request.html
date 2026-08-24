@@ -505,7 +505,7 @@
 		var prefDate = '{{ doc.preferred_demo_date or "" }}';
 		if (prefDate) document.getElementById("sched-date").value = prefDate;
 		var prefTime = '{{ doc.preferred_demo_time or "" }}';
-		if (prefTime) document.getElementById("sched-start").value = prefTime;
+		if (prefTime) document.getElementById("sched-start").value = prefTime.substring(0, 5);
 		var modal = document.getElementById("schedule-modal");
 		if (modal) modal.classList.add("show");
 	});

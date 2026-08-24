@@ -70,7 +70,7 @@ def get_context(context):
 			r["consultant_name"] = "-"
 		# Pass raw date/time values for the schedule modal pre-fill
 		r["preferred_demo_date_raw"] = str(r.get("preferred_demo_date") or "")
-		r["preferred_demo_time_raw"] = str(r.get("preferred_demo_time") or "")
+		r["preferred_demo_time_raw"] = str(r.get("preferred_demo_time") or "")[:5]
 	context.all_requests = all_requests
 	# Consultants for the assign dropdown
 	consultants = frappe.get_all(

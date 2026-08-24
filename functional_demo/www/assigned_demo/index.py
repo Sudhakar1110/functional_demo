@@ -49,7 +49,7 @@ def get_context(context):
 		)
 		# Pass raw date/time values for the schedule modal pre-fill
 		r["preferred_demo_date_raw"] = str(r.get("preferred_demo_date") or "")
-		r["preferred_demo_time_raw"] = str(r.get("preferred_demo_time") or "")
+		r["preferred_demo_time_raw"] = str(r.get("preferred_demo_time") or "")[:5]
 		if r.get("functional_consultant"):
 			r["consultant_name"] = frappe.db.get_value(
 				"Functional Consultant", r["functional_consultant"], "consultant_name"
