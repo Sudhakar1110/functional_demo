@@ -299,38 +299,64 @@
 				<div class="card-head"><h2>Follow-up History ({{ follow_up_history|length }} updates)</h2></div>
 				<div class="card-body">
 					{% for entry in follow_up_history %}
-					<div style="padding: 14px 0; border-left: 3px solid {% if entry.type == 'created' %}#10B981{% else %}#3B82F6{% endif %}; padding-left: 16px; margin-bottom: 12px; background: {% if entry.type == 'created' %}#F0FDF4{% else %}#EFF6FF{% endif %}; border-radius: 0 8px 8px 0;">
-						<div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+					<div style="padding: 16px 18px; border-left: 4px solid {% if entry.type == 'created' %}#10B981{% else %}#3B82F6{% endif %}; margin-bottom: 14px; background: {% if entry.type == 'created' %}#F0FDF4{% else %}#EFF6FF{% endif %}; border-radius: 0 10px 10px 0;">
+						<!-- Header -->
+						<div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
 							<div>
 								<div style="font-size: 12px; font-weight: 700; color: {% if entry.type == 'created' %}#009A52{% else %}#114EFF{% endif %}; margin-bottom: 4px;">
 									{% if entry.type == 'created' %}✓ Follow-up Created{% else %}✎ Updated{% endif %}
 							</div>
-								<div style="font-weight: 700; font-size: 14px; color: #05133C;">{{ entry.subject }}</div>
+								<div style="font-weight: 700; font-size: 15px; color: #05133C;">{{ entry.subject }}</div>
 							</div>
-							<div style="text-align: right;">
-								{% if entry.status %}<span class="badge {% if entry.status == 'Open' %}b-open{% elif entry.status == 'In Progress' %}b-in-progress{% elif entry.status == 'Completed' %}b-completed{% elif entry.status == 'Overdue' %}b-overdue{% endif %}" style="padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 700;">{{ entry.status }}</span>{% endif %}
-								{% if entry.outcome %}<span class="badge b-completed" style="padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; margin-left: 4px;">{{ entry.outcome }}</span>{% endif %}
+							<div style="text-align: right; flex-shrink: 0;">
+								{% if entry.status %}<span class="badge {% if entry.status == 'Open' %}b-open{% elif entry.status == 'In Progress' %}b-in-progress{% elif entry.status == 'Completed' %}b-completed{% elif entry.status == 'Overdue' %}b-overdue{% endif %}" style="padding: 4px 12px; border-radius: 999px; font-size: 11px; font-weight: 700;">{{ entry.status }}</span>{% endif %}
+								{% if entry.outcome %}<span class="badge b-completed" style="padding: 4px 12px; border-radius: 999px; font-size: 11px; font-weight: 700; margin-left: 4px;">{{ entry.outcome }}</span>{% endif %}
 							</div>
 						</div>
-						<div style="font-size: 13px; color: #374151; margin-bottom: 8px;">
+
+						<!-- Changes -->
+						<div style="font-size: 13px; color: #374151; margin-bottom: 10px; padding: 8px 12px; background: rgba(255,255,255,0.6); border-radius: 6px;">
 							{{ entry.details }}
 						</div>
-						{% if entry.follow_up_date %}
-						<div style="font-size: 12px; color: #71717B; margin-bottom: 4px;">
-							<strong>Due:</strong> {{ entry.follow_up_date }} · <strong>Assigned:</strong> {{ entry.assigned_to }}
+
+						<!-- Details Grid -->
+						<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px;">
+							{% if entry.follow_up_date %}
+							<div style="font-size: 12px; color: #71717B;">
+								<strong>Due:</strong> {{ entry.follow_up_date }}
+							</div>
+							{% endif %}
+							{% if entry.assigned_to %}
+							<div style="font-size: 12px; color: #71717B;">
+								<strong>Assigned:</strong> {{ entry.assigned_to }}
+							</div>
+							{% endif %}
+						</div>
+
+						<!-- Description / Remarks -->
+						{% if entry.description %}
+						<div style="margin-bottom: 8px; padding: 10px 12px; background: rgba(255,255,255,0.7); border-radius: 6px; border-left: 3px solid #F59E0B;">
+							<div style="font-size: 11px; font-weight: 600; color: #92400E; text-transform: uppercase; margin-bottom: 4px;">Description</div>
+							<div style="font-size: 13px; color: #05133C; line-height: 1.5;">{{ entry.description }}</div>
 						</div>
 						{% endif %}
+
 						{% if entry.next_action %}
-						<div style="font-size: 12px; color: #71717B; margin-bottom: 4px;">
-							<strong>Next Action:</strong> {{ entry.next_action }}
+						<div style="margin-bottom: 8px; padding: 10px 12px; background: rgba(255,255,255,0.7); border-radius: 6px; border-left: 3px solid #8B5CF6;">
+							<div style="font-size: 11px; font-weight: 600; color: #6D28D9; text-transform: uppercase; margin-bottom: 4px;">Next Action</div>
+							<div style="font-size: 13px; color: #05133C; line-height: 1.5;">{{ entry.next_action }}</div>
 						</div>
 						{% endif %}
+
 						{% if entry.remarks %}
-						<div style="font-size: 12px; color: #71717B; margin-bottom: 4px;">
-							<strong>Remarks:</strong> {{ entry.remarks }}
+						<div style="margin-bottom: 8px; padding: 10px 12px; background: rgba(255,255,255,0.7); border-radius: 6px; border-left: 3px solid #10B981;">
+							<div style="font-size: 11px; font-weight: 600; color: #065F46; text-transform: uppercase; margin-bottom: 4px;">Remarks</div>
+							<div style="font-size: 13px; color: #05133C; line-height: 1.5;">{{ entry.remarks }}</div>
 						</div>
 						{% endif %}
-						<div style="font-size: 11px; color: #9CA3AF; margin-top: 6px;">
+
+						<!-- Footer -->
+						<div style="font-size: 11px; color: #9CA3AF; margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(0,0,0,0.05);">
 							{{ entry.date }} · by {{ entry.user }}
 						</div>
 					</div>
