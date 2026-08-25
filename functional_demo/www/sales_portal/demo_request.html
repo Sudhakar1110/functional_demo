@@ -57,14 +57,11 @@
 						</div>
 						<div>
 							<label>Contact Person</label>
-							<input type="text" id="customer" name="customer" list="customers-list" placeholder="Enter contact person name..." value="{{ prefill.customer }}" autocomplete="off">
-							<datalist id="customers-list">
-								{% for c in customers %}<option value="{{ c.name }}">{{ c.customer_name }}</option>{% endfor %}
-							</datalist>
+							<input type="text" id="customer" name="customer" placeholder="Enter contact person name..." value="{{ prefill.customer }}" autocomplete="off">
 						</div>
 					</div>
 					<div class="form-row">
-						<div><label>Lead Contact Number</label><input type="text" id="contact_number" name="contact_number" value="{{ prefill.contact_number }}"></div>
+						<div><label>Lead Contact Number</label><input type="text" id="contact_number" name="contact_number" value="{{ prefill.contact_number }}" autocomplete="off"></div>
 						<div><label>Lead Email</label><input type="email" id="email" name="email" value="{{ prefill.email }}"></div>
 					</div>
 					<div class="form-row">
