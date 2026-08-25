@@ -122,7 +122,7 @@
 						</thead>
 						<tbody>								{% for r in all_requests %}
 							<tr data-status="{{ r.status }}" data-pref-date="{{ r.preferred_demo_date_raw }}" data-pref-time="{{ r.preferred_demo_time_raw }}">
-								<td><span style="color: #374151; font-weight: 600;">{{ r.name }}</span></td>
+								<td><a href="/sales_portal/demo_request?name={{ r.name }}">{{ r.name }}</a></td>
 								<td>{{ r.customer or "-" }}</td>
 								<td>{{ r.interested_module or "-" }}</td>
 								<td>{% if r.priority %}<span class="chip {{ r.priority|lower }}">{{ r.priority }}</span>{% else %}-{% endif %}</td>
