@@ -663,6 +663,81 @@ class DemoSession(Document):
 		)
 		create_calendar_event(self)
 		self.notify_sales_scheduled()
+		self.notify_managers_rescheduled()
+
+	def notify_managers_rescheduled(self):
+		"""Notify all Functional Team Managers (in-app + email) when a demo
+		is rescheduled, so the manager is always aware of schedule changes."""
+		try:
+			managers = frappe.get_all(
+				"User",
+				filters=[
+					["Has Role", "role", "=", "Functional Team Manager"],
+					["User", "enabled", "=", 1],
+				],
+				fields=["name"],
+			)
+			if not managers:
+				return
+			party = self.customer or self.lead or self.demo_request
+			date_label = (
+				frappe.utils.format_date(self.scheduled_date, "medium")
+				if self.scheduled_date
+				else "-"
+			)
+			consultant_name = (
+				frappe.db.get_value("Functional Consultant", self.functional_consultant, "consultant_name")
+				if self.functional_consultant
+				else "-"
+			)
+			session_url = frappe.utils.get_url("/app/demo-session/{0}".format(self.name))
+			rows = [
+				(_("Customer"), party or "-"),
+				(_("New Date"), date_label),
+				(_("Time"), "{0} - {1}".format(self.start_time or "-", self.end_time or "-")),
+				(_("Consultant"), consultant_name),
+				(_("Meeting Link"), self.meeting_link or "-"),
+				(_("Reschedule #"), str(self.reschedule_count or 1)),
+				(_("Demo Session"), self.name),
+			]
+			for m in managers:
+				# in-app notification
+				create_notification(
+					m.name,
+					_("Demo Rescheduled — {0} to {1} (Session {2})").format(
+						party, date_label, self.name
+					),
+					"Demo Session",
+					self.name,
+				)
+				# email
+				try:
+					email = frappe.db.get_value("User", m.name, "email")
+					if not email:
+						continue
+					send_branded_email(
+						recipients=[email],
+						subject=_("Demo Rescheduled: {0} to {1}").format(party, date_label),
+						heading=_("Demo Rescheduled"),
+						intro=_(
+							"Demo Session {0} for {1} has been rescheduled to {2}."
+						).format(self.name, party, date_label),
+						rows=rows,
+						cta_text=_("Open Demo Session"),
+						cta_url=session_url,
+						reference_doctype="Demo Session",
+						reference_name=self.name,
+					)
+				except Exception:
+					frappe.log_error(
+						title=_("Reschedule manager email failed for {0}").format(m.name),
+						message=frappe.get_traceback(),
+					)
+		except Exception:
+			frappe.log_error(
+				title=_("Manager reschedule notification failed for {0}").format(self.name),
+				message=frappe.get_traceback(),
+			)
 
 	def create_follow_up(self, follow_up_date, next_action=None, assigned_to=None):
 		"""Create a Demo Follow Up + ToDo, and move the Demo Request to Follow-up Required."""
