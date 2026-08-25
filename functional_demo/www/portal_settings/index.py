@@ -13,7 +13,7 @@ def get_context(context):
 	portal_context(
 		context,
 		_("Portal Settings"),
-		["Sales User", "Sales Manager", "Functional Consultant", "Functional Team Manager"],
+		["Sales User", "Sales Manager", "Functional Consultant", "Functional Team Manager", "Developer"],
 		active="settings",
 		subtitle=_("Manage your portal settings"),
 	)

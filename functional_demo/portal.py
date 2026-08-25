@@ -307,6 +307,7 @@ def sidebar_items(active):
 	if is_developer():
 		return [
 			{"label": _("Developer Feedback"), "route": "/dev_feedback", "icon": ICON_FEEDBACK, "active": active == "dev_feedback"},
+			{"label": _("Settings"), "route": "/portal_settings", "icon": ICON_MANAGER, "active": active == "settings"},
 		]
 
 	items = [{"label": _("Home"), "route": "/demo_portal", "icon": ICON_HOME, "active": active == "home"}]

@@ -132,7 +132,7 @@
 			<!-- Feedback Table -->
 			<div class="portal-card" style="margin-bottom: 20px;">
 				<div class="card-head" style="padding: 14px 20px;">
-					<div style="display: flex; justify-content: space-between; align-items: center;"><h2 style="font-size: 15px; font-weight: 700; color: #05133C; margin: 0;">Session Feedback ({{ total }})</h2><button class="df-reset-btn" onclick="dfResetFilter()">Show All</button></div>
+					<div style="display: flex; justify-content: space-between; align-items: center;"><h2 style="font-size: 15px; font-weight: 700; color: #05133C; margin: 0;">Session Feedback ({{ total }})</h2><div style="display: flex; gap: 8px; align-items: center;"><button class="df-submit-btn" style="font-size: 12px; padding: 6px 16px; border-radius: 6px; cursor: pointer;" onclick="dfOpenSendFeedback()">+ Send Feedback to Dev Team</button><button class="df-reset-btn" onclick="dfResetFilter()">Show All</button></div></div>
 				</div>
 				<div class="card-body df-scroll">
 					<table id="df-table">
@@ -188,6 +188,63 @@
 
 		</div>
 	</div>
+	</div>
+</div>
+
+<!-- Send Feedback Modal -->
+<div class="df-modal-overlay" id="df-send-modal">
+	<div class="df-modal">
+		<div class="df-modal-head">
+			<h2>Send Feedback to Dev Team</h2>
+			<button class="df-modal-close" id="df-send-close">&times;</button>
+		</div>
+		<div class="df-modal-body">
+			<div class="df-form-row">
+				<label>Demo Session</label>
+				<select id="df-send-session" style="width: 100%; padding: 8px 12px; border: 1px solid #E5E7EB; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
+					<option value="">-- Select Session --</option>
+					{% for s in sessions %}
+					<option value="{{ s.name }}" data-customer="{{ s.customer_display }}">{{ s.name }} - {{ s.customer_display }}</option>
+					{% endfor %}
+				</select>
+			</div>
+			<div class="df-form-row">
+				<label>Customer</label>
+				<input type="text" id="df-send-customer" readonly style="background: #F9FAFB;">
+			</div>
+			<div class="df-form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+				<div>
+					<label>Feedback Type</label>
+					<select id="df-send-type">
+						<option value="Bug">Bug</option>
+						<option value="Feature Request">Feature Request</option>
+						<option value="Improvement">Improvement</option>
+						<option value="General">General</option>
+					</select>
+				</div>
+				<div>
+					<label>Priority</label>
+					<select id="df-send-priority">
+						<option value="Low">Low</option>
+						<option value="Medium" selected>Medium</option>
+						<option value="High">High</option>
+						<option value="Critical">Critical</option>
+					</select>
+				</div>
+			</div>
+			<div class="df-form-row">
+				<label>Subject</label>
+				<input type="text" id="df-send-subject" placeholder="Brief summary of the feedback">
+			</div>
+			<div class="df-form-row">
+				<label>Description</label>
+				<textarea id="df-send-description" placeholder="Detailed feedback for the development team..."></textarea>
+			</div>
+		</div>
+		<div class="df-modal-foot">
+			<button class="df-cancel-btn" id="df-send-cancel-btn">Cancel</button>
+			<button class="df-submit-btn" id="df-send-submit">Send Feedback</button>
+		</div>
 	</div>
 </div>
 
@@ -308,7 +365,7 @@
 	cancelBtn.addEventListener("click", closeModal);
 	overlay.addEventListener("click", function(e) { if (e.target === overlay) closeModal(); });
 
-	// Submit
+	// Submit response
 	submitBtn.addEventListener("click", function() {
 		var name = document.getElementById("df-name").value;
 		var response = document.getElementById("df-response").value.trim();
@@ -335,6 +392,66 @@
 			showToast("Error: " + (err.message || "Failed"), "error");
 			submitBtn.disabled = false;
 			submitBtn.textContent = "Submit Response";
+		});
+	});
+
+	// --- Send Feedback to Dev Team ---
+	var sendOverlay = document.getElementById("df-send-modal");
+	var sendCloseBtn = document.getElementById("df-send-close");
+	var sendCancelBtn = document.getElementById("df-send-cancel-btn");
+	var sendSubmitBtn = document.getElementById("df-send-submit");
+	var sessionSelect = document.getElementById("df-send-session");
+	var customerInput = document.getElementById("df-send-customer");
+
+	sessionSelect.addEventListener("change", function() {
+		var opt = sessionSelect.options[sessionSelect.selectedIndex];
+		customerInput.value = opt.getAttribute("data-customer") || "";
+	});
+
+	window.dfOpenSendFeedback = function() {
+		document.getElementById("df-send-session").value = "";
+		document.getElementById("df-send-customer").value = "";
+		document.getElementById("df-send-subject").value = "";
+		document.getElementById("df-send-description").value = "";
+		sendOverlay.classList.add("active");
+	};
+
+	function closeSendModal() { sendOverlay.classList.remove("active"); }
+	sendCloseBtn.addEventListener("click", closeSendModal);
+	sendCancelBtn.addEventListener("click", closeSendModal);
+	sendOverlay.addEventListener("click", function(e) { if (e.target === sendOverlay) closeSendModal(); });
+
+	sendSubmitBtn.addEventListener("click", function() {
+		var session = document.getElementById("df-send-session").value;
+		var fbType = document.getElementById("df-send-type").value;
+		var priority = document.getElementById("df-send-priority").value;
+		var subject = document.getElementById("df-send-subject").value.trim();
+		var description = document.getElementById("df-send-description").value.trim();
+
+		if (!session) { showToast("Please select a session.", "error"); return; }
+		if (!subject) { showToast("Please enter a subject.", "error"); return; }
+		if (!description) { showToast("Please enter a description.", "error"); return; }
+
+		sendSubmitBtn.disabled = true;
+		sendSubmitBtn.textContent = "Sending...";
+
+		portalCall("frappe.client.insert", {
+			doc: JSON.stringify({
+				doctype: "Session Feedback",
+				demo_session: session,
+				feedback_type: fbType,
+				priority: priority,
+				subject: subject,
+				description: description,
+			})
+		}).then(function() {
+			showToast("Feedback sent to development team!", "success");
+			closeSendModal();
+			setTimeout(function() { window.location.reload(); }, 1000);
+		}).catch(function(err) {
+			showToast("Error: " + (err.message || "Failed to send"), "error");
+			sendSubmitBtn.disabled = false;
+			sendSubmitBtn.textContent = "Send Feedback";
 		});
 	});
 })();
