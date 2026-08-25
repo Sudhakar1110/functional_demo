@@ -47,5 +47,41 @@ def get_context(context):
 	context.has_follow_up = bool(
 		frappe.db.exists("Demo Follow Up", {"demo_session": session_name}) if session_name else False
 	)
+
+	# Fetch follow-up history for this session
+	follow_ups = []
+	if session_name:
+		follow_ups = frappe.get_all(
+			"Demo Follow Up",
+			filters={"demo_session": session_name},
+			fields=[
+				"name", "follow_up_date", "status", "outcome",
+				"next_action", "remarks", "assigned_to", "subject",
+				"creation", "modified",
+			],n			order_by="creation desc",
+			ignore_permissions=True,
+		) or []
+		for fu in follow_ups:
+			fu["due_display"] = (
+				frappe.utils.format_date(fu.get("follow_up_date"), "medium")
+				if fu.get("follow_up_date") else "-"
+			)
+			fu["created_display"] = (
+				frappe.utils.format_datetime(fu.get("creation"), "dd MMM yyyy, hh:mm a")
+				if fu.get("creation") else "-"
+			)
+			fu["modified_display"] = (
+				frappe.utils.format_datetime(fu.get("modified"), "dd MMM yyyy, hh:mm a")
+				if fu.get("modified") else "-"
+			)
+			if fu.get("assigned_to"):
+				fu["assigned_display"] = (
+					frappe.db.get_value("User", fu["assigned_to"], "full_name")
+					or fu["assigned_to"]
+				)
+			else:
+				fu["assigned_display"] = "-"
+
+	context.follow_ups = follow_ups
 	context.data = data
 	return context

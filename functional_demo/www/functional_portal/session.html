@@ -291,8 +291,46 @@
 						</tbody>
 					</table>
 				</div>
+			</div>			{% endif %}
+
+			<!-- Follow-up History -->
+			{% if follow_ups %}
+			<div class="portal-card" style="margin-bottom: 22px;">
+				<div class="card-head"><h2>Follow-up History ({{ follow_ups|length }})</h2></div>
+				<div class="card-body">
+					{% for fu in follow_ups %}
+					<div style="padding: 16px 0; {% if not loop.last %}border-bottom: 1px solid #F3F4F6;{% endif %}">
+						<div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+							<div>
+								<div style="font-weight: 700; font-size: 15px; color: #05133C; margin-bottom: 4px;">{{ fu.subject or fu.name }}</div>
+								<div style="font-size: 12px; color: #71717B;">Due: {{ fu.due_display }} · Assigned to: {{ fu.assigned_display }}</div>
+							</div>
+							<div style="display: flex; gap: 8px; align-items: center;">
+								<span class="badge {% if fu.status == 'Open' %}b-open{% elif fu.status == 'In Progress' %}b-in-progress{% elif fu.status == 'Completed' %}b-completed{% elif fu.status == 'Overdue' %}b-overdue{% endif %}" style="padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 700;">{{ fu.status }}</span>
+								{% if fu.outcome %}<span class="badge b-completed" style="padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 700;">{{ fu.outcome }}</span>{% endif %}
+							</div>
+						</div>
+						{% if fu.next_action %}
+						<div style="margin-bottom: 6px;">
+							<span style="font-size: 12px; font-weight: 600; color: #71717B;">Next Action:</span>
+							<span style="font-size: 13px; color: #05133C;">{{ fu.next_action }}</span>
+						</div>
+						{% endif %}
+						{% if fu.remarks %}
+						<div style="margin-bottom: 6px;">
+							<span style="font-size: 12px; font-weight: 600; color: #71717B;">Remarks:</span>
+							<span style="font-size: 13px; color: #05133C;">{{ fu.remarks }}</span>
+						</div>
+						{% endif %}
+						<div style="font-size: 11px; color: #9CA3AF; margin-top: 4px;">
+							Created: {{ fu.created_display }}{% if fu.modified_display != fu.created_display %} · Updated: {{ fu.modified_display }}{% endif %}
+						</div>
+					</div>
+					{% endfor %}
+				</div>
 			</div>
-		{% endif %}
+			{% endif %}
+
 		</div>
 	</div>
 	</div>
