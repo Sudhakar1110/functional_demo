@@ -282,8 +282,7 @@
 		var subject = document.getElementById("sf-subject").value.trim();
 		var description = document.getElementById("sf-description").value.trim();
 
-		if (!subject) { showToast("Please enter a subject.", "error"); return; }
-		if (!description) { showToast("Please enter a description.", "error"); return; }
+		// All fields are optional — send with whatever the manager provides
 
 		submitBtn.disabled = true;
 		submitBtn.textContent = "Sending...";

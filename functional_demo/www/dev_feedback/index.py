@@ -67,55 +67,6 @@ def get_context(context):
         fb["responded_by_display"] = user_names.get(fb.responded_by) or fb.responded_by or "-"
         fb["creation_display"] = frappe.utils.format_datetime(fb.creation, "dd MMM yyyy, hh:mm a") if fb.creation else "-"
 
-    # Completed sessions for sending feedback
-    sessions = frappe.get_all(
-        "Demo Session",
-        filters={"demo_status": ["in", ["Completed", "Closed"]]},
-        fields=[
-            "name", "demo_request", "customer", "lead",
-            "functional_consultant", "sales_person",
-            "scheduled_date", "completed_on", "demo_status",
-            "overall_feedback", "final_result", "interested_module",
-        ],
-        order_by="completed_on desc",
-        ignore_permissions=True,
-        limit_page_length=500,
-    ) or []
-
-    # Resolve session display names in bulk
-    session_customer_ids = {s.get("customer") for s in sessions if s.get("customer")}
-    session_customer_names = {}
-    if session_customer_ids:
-        for c in frappe.get_all("Customer", filters={"name": ["in", list(session_customer_ids)]},
-                                fields=["name", "customer_name"], ignore_permissions=True):
-            session_customer_names[c.name] = c.customer_name
-
-    session_consultant_ids = {s.get("functional_consultant") for s in sessions if s.get("functional_consultant")}
-    session_consultant_names = {}
-    if session_consultant_ids:
-        for c in frappe.get_all("Functional Consultant",
-                                filters={"name": ["in", list(session_consultant_ids)]},
-                                fields=["name", "consultant_name"], ignore_permissions=True):
-            session_consultant_names[c.name] = c.consultant_name
-
-    # Check which sessions already have feedback
-    session_names = [s.name for s in sessions]
-    existing_feedback_map = {}
-    if session_names:
-        for fb in frappe.get_all(
-            "Session Feedback",
-            filters={"demo_session": ["in", session_names]},
-            fields=["demo_session", "name", "subject", "status", "feedback_type", "priority"],
-            ignore_permissions=True,
-        ):
-            existing_feedback_map.setdefault(fb.demo_session, []).append(fb)
-
-    for s in sessions:
-        s["customer_display"] = session_customer_names.get(s.customer) or s.customer or s.lead or "-"
-        s["consultant_display"] = session_consultant_names.get(s.functional_consultant) or s.functional_consultant or "-"
-        s["has_feedback"] = bool(existing_feedback_map.get(s.name))
-        s["feedback_list"] = existing_feedback_map.get(s.name, [])
-
     # Stats
     total = len(feedback_list)
     open_count = len([fb for fb in feedback_list if fb.status == "Open"])
@@ -127,7 +78,6 @@ def get_context(context):
 
     context.update({
         "feedback_list": feedback_list,
-        "sessions": sessions,
         "total": total,
         "open_count": open_count,
         "in_progress": in_progress,
