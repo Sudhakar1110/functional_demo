@@ -151,6 +151,7 @@
 										data-time="{{ s.start_time or '-' }}{% if s.end_time %} - {{ s.end_time }}{% endif %}"
 										data-status="{{ s.demo_status }}"
 										data-consultant-name="{{ s.consultant_name }}"
+										onclick="openSessionModal('{{ s.name }}')"
 										onmouseenter="showTooltip(event, this)" onmouseleave="hideTooltip()">
 										{{ s.start_time or '' }} {{ s.customer or 'Session' }}
 									</div>
@@ -185,6 +186,14 @@
 		<button class="cal-modal-close" onclick="closeDayModal()">&times;</button>
 		<h3 id="day-modal-title">Sessions</h3>
 		<div id="day-modal-body"></div>
+	</div>
+</div>
+
+<!-- Session Detail Modal -->
+<div class="cal-modal-overlay" id="session-modal">
+	<div class="cal-modal" style="position: relative; max-width: 520px;">
+		<button class="cal-modal-close" onclick="closeSessionModal()">&times;</button>
+		<div id="session-modal-body"></div>
 	</div>
 </div>
 
@@ -289,14 +298,77 @@ var ALL_SESSIONS = [
 		document.getElementById("day-modal").classList.remove("show");
 	};
 
-	/* Close modal on overlay click */
+	/* Session detail modal */
+	window.openSessionModal = function (sessionName) {
+		var s = null;
+		for (var i = 0; i < ALL_SESSIONS.length; i++) {
+			if (ALL_SESSIONS[i].name === sessionName) { s = ALL_SESSIONS[i]; break; }
+		}
+		if (!s) return;
+		var statusColors = {
+			"Scheduled": "#3B82F6", "Rescheduled": "#8B5CF6",
+			"In Progress": "#F59E0B", "Completed": "#10B981",
+			"Closed": "#6B7280", "Cancelled": "#EF4444"
+		};
+		var statusColor = statusColors[s.status] || "#3B82F6";
+		var html = '';
+		html += '<div style="margin-bottom: 20px;">';
+		html += '<div style="font-size: 20px; font-weight: 700; color: #05133C; margin-bottom: 6px;">' + (s.customer || 'Demo Session') + '</div>';
+		html += '<span class="badge" style="background:' + statusColor + '; color: #fff; padding: 4px 12px; border-radius: 6px; font-size: 12px; font-weight: 600;">' + s.status + '</span>';
+		html += '</div>';
+		/* Details grid */
+		html += '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px;">';
+		/* Session */
+		html += '<div style="background: #F9FAFB; border-radius: 8px; padding: 12px;">';
+		html += '<div style="font-size: 11px; color: #9CA3AF; text-transform: uppercase; font-weight: 600; margin-bottom: 4px;">Session</div>';
+		html += '<div style="font-size: 14px; font-weight: 600; color: #05133C;">' + s.name + '</div>';
+		html += '</div>';
+		/* Date */
+		html += '<div style="background: #F9FAFB; border-radius: 8px; padding: 12px;">';
+		html += '<div style="font-size: 11px; color: #9CA3AF; text-transform: uppercase; font-weight: 600; margin-bottom: 4px;">Date</div>';
+		html += '<div style="font-size: 14px; font-weight: 600; color: #05133C;">' + s.date + '</div>';
+		html += '</div>';
+		/* Time */
+		html += '<div style="background: #F9FAFB; border-radius: 8px; padding: 12px;">';
+		html += '<div style="font-size: 11px; color: #9CA3AF; text-transform: uppercase; font-weight: 600; margin-bottom: 4px;">Time</div>';
+		html += '<div style="font-size: 14px; font-weight: 600; color: #05133C;">' + s.time + '</div>';
+		html += '</div>';
+		/* Consultant */
+		html += '<div style="background: #F9FAFB; border-radius: 8px; padding: 12px;">';
+		html += '<div style="font-size: 11px; color: #9CA3AF; text-transform: uppercase; font-weight: 600; margin-bottom: 4px;">Consultant</div>';
+		html += '<div style="font-size: 14px; font-weight: 600; color: #05133C;">' + s.consultant_name + '</div>';
+		html += '</div>';
+		html += '</div>';
+		/* Action buttons */
+		html += '<div style="display: flex; gap: 10px; flex-wrap: wrap;">';
+		html += '<a href="/functional_portal/session?name=' + s.name + '" style="display: inline-block; padding: 10px 20px; background: #3B82F6; color: #fff; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 13px;">Open Session</a>';
+		if (s.link) {
+		html += '<a href="' + s.link + '" target="_blank" style="display: inline-block; padding: 10px 20px; background: #10B981; color: #fff; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 13px;">Join Meeting</a>';
+		}
+		html += '<button onclick="closeSessionModal()" style="display: inline-block; padding: 10px 20px; background: #F3F4F6; color: #374151; border: 1px solid #E5E7EB; border-radius: 8px; font-weight: 600; font-size: 13px; cursor: pointer;">Close</button>';
+		html += '</div>';
+		document.getElementById("session-modal-body").innerHTML = html;
+		document.getElementById("session-modal").classList.add("show");
+	};
+
+	window.closeSessionModal = function () {
+		document.getElementById("session-modal").classList.remove("show");
+	};
+
+	/* Close modals on overlay click */
 	document.getElementById("day-modal").addEventListener("click", function (e) {
 		if (e.target === this) window.closeDayModal();
 	});
+	document.getElementById("session-modal").addEventListener("click", function (e) {
+		if (e.target === this) window.closeSessionModal();
+	});
 
-	/* Close modal on Escape */
+	/* Close modals on Escape */
 	document.addEventListener("keydown", function (e) {
-		if (e.key === "Escape") window.closeDayModal();
+		if (e.key === "Escape") {
+			window.closeDayModal();
+			window.closeSessionModal();
+		}
 	});
 })();
 </script>
