@@ -95,20 +95,14 @@
 									{% for m in modules %}<option value="{{ m }}">{{ m or "— Select —" }}</option>{% endfor %}
 								</select>
 							</div>
-						</div>
-						<div class="form-row">
-							<div><label>Priority</label>
-								<select id="priority" name="priority">
-									<option value="Auto" selected>Auto (sales value / leads tier)</option>
-									{% for p in priorities %}<option value="{{ p }}">{{ p }}</option>{% endfor %}
-								</select>
+						</div>							<div class="form-row">
+								<div><label>Priority</label>
+									<select id="priority" name="priority">
+										<option value="Auto" selected>Auto (sales value / leads tier)</option>
+										{% for p in priorities %}<option value="{{ p }}">{{ p }}</option>{% endfor %}
+									</select>
+								</div>
 							</div>
-							<div><label>Demo Type</label>
-								<select id="demo_type" name="demo_type">
-									{% for t in demo_types %}<option value="{{ t }}">{{ t }}</option>{% endfor %}
-								</select>
-							</div>
-						</div>
 						<div class="form-row">
 							<div><label>Preferred Demo Date</label><input type="date" id="preferred_demo_date" name="preferred_demo_date"></div>
 							<div><label>Preferred Demo Time</label><input type="time" id="preferred_demo_time" name="preferred_demo_time"></div>
@@ -412,7 +406,6 @@
 			email: document.getElementById("email").value,
 			interested_module: document.getElementById("interested_module").value,
 			priority: document.getElementById("priority").value,
-			demo_type: document.getElementById("demo_type").value,
 			preferred_demo_date: document.getElementById("preferred_demo_date").value,
 			preferred_demo_time: document.getElementById("preferred_demo_time").value,
 			customer_requirements: document.getElementById("customer_requirements").value,

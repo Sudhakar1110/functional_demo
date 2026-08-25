@@ -323,15 +323,20 @@ def sidebar_items(active):
 			items.append({"label": _("Results"), "route": "/sales_portal/results", "icon": ICON_RESULTS, "active": active == "results"})
 		items += [
 			{"label": _("Follow-ups"), "route": "/functional_portal/follow_ups", "icon": ICON_FOLLOWUPS, "active": active == "follow_ups"},
+		]
+
+	# Manager-only items: Trial Dashboard, End of Day, Follow-up Tracker, Functional Home
+	if is_manager():
+		items += [
 			{"label": _("Trial Dashboard"), "route": "/sales_portal/trials", "icon": ICON_TRIALS, "active": active == "trials"},
 			{"label": _("End of Day"), "route": "/sales_portal/daily_update", "icon": ICON_DAILY_UPDATE, "active": active == "daily_update"},
 			{"label": _("Follow-up Tracker"), "route": "/sales_portal/followup_tracker", "icon": ICON_FOLLOWUP_TRACKER, "active": active == "followup_tracker"},
+			{"label": _("Functional Home"), "route": "/functional_portal", "icon": ICON_FUNCTIONAL, "active": active == "functional"},
 		]
 
-	# Functional sections are shared - the sales team sees them too
+	# Functional sections are shared - the sales team sees My Sessions
 	if is_sales() or is_functional() or is_manager():
 		items += [
-			{"label": _("Functional Home"), "route": "/functional_portal", "icon": ICON_FUNCTIONAL, "active": active == "functional"},
 			{"label": _("My Sessions"), "route": "/functional_portal/my_sessions", "icon": ICON_SESSIONS, "active": active == "sessions"},
 		]
 
