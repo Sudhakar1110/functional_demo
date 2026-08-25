@@ -91,6 +91,29 @@ def get_context(context):
 			else:
 				fu["owner_display"] = "-"
 
+			# Fetch discussion notes for this follow-up
+			fu["discussion_notes_list"] = []
+			try:
+				notes = frappe.get_all(
+					"Follow Up Note",
+					filters={"parent": fu.name, "parenttype": "Demo Follow Up"},
+					fields=["name", "note", "note_by", "note_date"],
+					order_by="note_date asc",
+					ignore_permissions=True,
+				) or []
+				for note in notes:
+					note["note_by_display"] = (
+						frappe.db.get_value("User", note["note_by"], "full_name")
+						or note.get("note_by") or "-"
+					)
+					note["note_date_display"] = (
+						frappe.utils.format_datetime(note.get("note_date"), "dd MMM yyyy, hh:mm a")
+						if note.get("note_date") else "-"
+					)
+					fu["discussion_notes_list"].append(note)
+			except Exception:
+				pass
+
 			# Fetch version history for this follow-up
 			versions = frappe.get_all(
 				"Version",
@@ -118,6 +141,7 @@ def get_context(context):
 				"remarks": fu.get("remarks"),
 				"description": fu.get("description"),
 				"assigned_to": fu.assigned_display,
+				"discussion_notes": fu.get("discussion_notes_list", []),
 				"sort_key": fu.get("creation") or "",
 			})
 
@@ -156,6 +180,7 @@ def get_context(context):
 					"remarks": fu.get("remarks"),
 					"description": fu.get("description"),
 					"assigned_to": fu.assigned_display,
+					"discussion_notes": fu.get("discussion_notes_list", []),
 					"sort_key": v.get("creation") or "",
 				})
 
