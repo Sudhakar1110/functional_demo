@@ -43,6 +43,12 @@ indicators — while the backend follows proper Frappe v15 / ERPNext v15 standar
 - **Role-based access** (row-level permission filters + doc-level checks) with a
   role-aware **web portal**: Sales sees all content, the Functional team sees
   functional-only sections, and the **Developer** role sees feedback only.
+- **Session Feedback** — Sales Manager and Functional Team Manager can send
+  feedback to the development team about completed sessions (feedback type,
+  priority, subject, description — all fields optional). Developers view and
+  respond to this feedback on the Developer Feedback page.
+- **Portal Settings** — all users (including Developer role) can manage email
+  notification preferences and auto-reload behavior.
 - **Workspaces** — dedicated **Sales Demo Workspace** and **Functional Demo
   Workspace** with shortcuts, cards, number cards and charts.
 - **12 reports** with filters (demo requests, sessions, consultant-wise,
@@ -235,8 +241,9 @@ and emails continue to work as described above.
 - **Functional Team Manager**: all consultants, all sessions, templates, workload,
   reassignments.
 - **Developer** (standard Frappe role) / **Feedback Viewer** (legacy alias):
-  feedback-only access - sees only the Demo Feedback page, both in the portal
-  (`/feedback`) and in the desk (`/app/demo-feedback`).
+  feedback-only access - sees the Developer Feedback page (`/dev_feedback`)
+  where they can view and respond to session feedback from managers, plus
+  access to Portal Settings.
 - **System Manager**: full access.
 
 Row-level filters (`permission_query_conditions`) and doc-level checks
@@ -313,7 +320,7 @@ functional_demo/
 │   │   ├── dashboard_chart/  # charts
 │   │   └── number_card/ # number cards
 │   ├── templates/       # shared portal style + script includes
-│   ├── www/             # role-based portal pages (sales / functional / manager / feedback)
+│   ├── www/             # role-based portal pages (sales / functional / manager / feedback / dev_feedback / session_feedback / portal_settings)
 │   ├── public/          # client scripts + css (form & list customizations)
 │   └── modules.txt, patches.txt
 ├── pyproject.toml       # pip packaging (bench installs the app editable)
