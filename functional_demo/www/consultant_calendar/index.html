@@ -4,7 +4,6 @@
 {% block footer %}{% endblock %}
 {% block style %}{% include "functional_demo/templates/includes/portal_style.html" %}
 <style>
-/* Calendar */
 .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 0; border: 1px solid #E5E7EB; border-radius: 12px; overflow: hidden; background: #fff; }
 .cal-head { background: #F8FAFC; padding: 10px 8px; text-align: center; font-size: 12px; font-weight: 700; color: #64748B; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #E5E7EB; }
 .cal-day { min-height: 110px; padding: 6px 8px; border-right: 1px solid #F1F5F9; border-bottom: 1px solid #F1F5F9; position: relative; transition: background 0.15s; }
@@ -18,37 +17,25 @@
 .cal-event:hover { transform: translateY(-1px); box-shadow: 0 2px 6px rgba(0,0,0,0.15); z-index: 2; position: relative; }
 .cal-more { font-size: 10px; color: #6B7280; cursor: pointer; font-weight: 600; margin-top: 2px; }
 .cal-more:hover { color: #3B82F6; }
-
-/* Month nav */
 .cal-nav { display: flex; align-items: center; gap: 16px; }
 .cal-nav-btn { width: 36px; height: 36px; border-radius: 8px; border: 1px solid #E5E7EB; background: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #374151; font-size: 18px; transition: all 0.15s; }
 .cal-nav-btn:hover { background: #F3F4F6; border-color: #D1D5DB; }
 .cal-month-label { font-size: 20px; font-weight: 700; color: #05133C; min-width: 200px; text-align: center; }
-
-/* Filter bar */
 .filter-bar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .filter-bar select { font-size: 13px; padding: 6px 12px; border: 1px solid #E5E7EB; border-radius: 8px; background: #fff; color: #374151; }
-
-/* Stats row */
 .cal-stats { display: flex; gap: 16px; flex-wrap: wrap; }
 .cal-stat { display: flex; align-items: center; gap: 6px; font-size: 13px; color: #6B728B; }
 .cal-stat-dot { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
-
-/* Legend */
 .cal-legend { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; }
 .cal-legend-item { display: flex; align-items: center; gap: 5px; font-size: 12px; color: #6B728B; }
-
-/* Tooltip */
 .cal-tooltip { display: none; position: fixed; background: #fff; border: 1px solid #E5E7EB; border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.12); padding: 14px 18px; z-index: 1000; max-width: 320px; pointer-events: none; }
 .cal-tooltip.show { display: block; }
 .cal-tooltip .tt-title { font-weight: 700; font-size: 14px; color: #05133C; margin-bottom: 6px; }
 .cal-tooltip .tt-row { font-size: 12px; color: #6B728B; margin-bottom: 3px; }
 .cal-tooltip .tt-row span { color: #374151; font-weight: 600; }
-
-/* Detail modal */
 .cal-modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 999; }
 .cal-modal-overlay.show { display: flex; align-items: center; justify-content: center; }
-.cal-modal { background: #fff; border-radius: 14px; box-shadow: 0 20px 60px rgba(0,0,0,0.2); width: 90%; max-width: 480px; max-height: 80vh; overflow-y: auto; padding: 24px; }
+.cal-modal { background: #fff; border-radius: 14px; box-shadow: 0 20px 60px rgba(0,0,0,0.2); width: 90%; max-width: 520px; max-height: 80vh; overflow-y: auto; padding: 24px; }
 .cal-modal h3 { margin: 0 0 16px; font-size: 18px; color: #05133C; }
 .cal-modal-close { position: absolute; top: 16px; right: 16px; background: none; border: none; font-size: 20px; cursor: pointer; color: #9CA3AF; }
 .cal-modal-item { padding: 12px 0; border-bottom: 1px solid #F3F4F6; }
@@ -57,6 +44,8 @@
 .cal-modal-item .mi-name { font-weight: 700; font-size: 14px; color: #05133C; }
 .cal-modal-item .mi-detail { font-size: 12px; color: #6B728B; margin-bottom: 2px; }
 .cal-modal-item .mi-detail span { color: #374151; font-weight: 500; }
+.toggle-arrow { display: inline-block; }
+.toggle-arrow.open { transform: rotate(180deg); }
 </style>
 {% endblock %}
 {% block content %}
@@ -94,17 +83,72 @@
 	<div class="portal-main">
 		<div class="portal-content">
 
-			<!-- Consultant Activity (Calendar + Team) -->
+			<!-- Greeting -->
+			<div class="dash-greet">
+				<div>
+					<span class="greet-eyebrow">● {{ today_pretty }}</span>
+					<h1>{{ greeting }}, {{ full_name }}</h1>
+					<p>Overview of all functional consultants and their current demo activity.</p>
+				</div>
+			</div>
+
+			<!-- Summary KPIs -->
+			<div class="kpi-grid" style="margin-bottom: 24px;">
+				<div class="kpi-card">
+					<div class="kpi-label">Total Consultants</div>
+					<div class="kpi-value">{{ total_consultants }}</div>
+					<div class="kpi-note">Active consultants</div>
+				</div>
+				<div class="kpi-card kpi-teal">
+					<div class="kpi-label">Live Demos</div>
+					<div class="kpi-value">{{ total_active }}</div>
+					<div class="kpi-note">Currently conducting</div>
+				</div>
+				<div class="kpi-card kpi-blue">
+					<div class="kpi-label">With Upcoming</div>
+					<div class="kpi-value">{{ total_scheduled }}</div>
+					<div class="kpi-note">Have scheduled demos</div>
+				</div>
+				<div class="kpi-card kpi-green">
+					<div class="kpi-label">Free</div>
+					<div class="kpi-value">{{ total_free }}</div>
+					<div class="kpi-note">No current assignments</div>
+				</div>
+				<div class="kpi-card kpi-green">
+					<div class="kpi-label">Total Completed</div>
+					<div class="kpi-value">{{ total_completed }}</div>
+					<div class="kpi-note">Demos delivered</div>
+				</div>
+				<div class="kpi-card kpi-amber">
+					<div class="kpi-label">Pending</div>
+					<div class="kpi-value">{{ total_pending }}</div>
+					<div class="kpi-note">Awaiting scheduling</div>
+				</div>
+				<div class="kpi-card kpi-red">
+					<div class="kpi-label">SLA Breached</div>
+					<div class="kpi-value">{{ total_sla_breached }}</div>
+					<div class="kpi-note">Overdue assignments</div>
+				</div>
+				<div class="kpi-card kpi-teal">
+					<div class="kpi-label">Rescheduled</div>
+					<div class="kpi-value">{{ total_rescheduled }}</div>
+					<div class="kpi-note">Rescheduled demos</div>
+				</div>
+				<div class="kpi-card kpi-blue">
+					<div class="kpi-label">Avg Demos</div>
+					<div class="kpi-value">{{ avg_demos }}</div>
+					<div class="kpi-note">Per consultant</div>
+				</div>
+			</div>
+
+			<!-- Calendar Card -->
 			<div class="portal-card" style="margin-bottom: 22px;">
 				<div class="card-head" style="flex-wrap: wrap; gap: 12px;">
-					<h2>Consultant Activity</h2>
-					<!-- Month Navigation -->
-					<div class="cal-nav" style="margin-left: 16px;">
-						<a class="cal-nav-btn" href="/consultant_calendar?month={{ prev_month }}&year={{ prev_year }}">&larr;</a>
+					<div class="cal-nav">
+						<a class="cal-nav-btn" href="/consultant_activity?month={{ prev_month }}&year={{ prev_year }}">&larr;</a>
 						<div class="cal-month-label">{{ month_name }} {{ year }}</div>
-						<a class="cal-nav-btn" href="/consultant_calendar?month={{ next_month }}&year={{ next_year }}">&rarr;</a>
+						<a class="cal-nav-btn" href="/consultant_activity?month={{ next_month }}&year={{ next_year }}">&rarr;</a>
 					</div>
-					<!-- Filter + Legend -->
 					<div class="filter-bar" style="margin-left: auto;">
 						<select id="cal-filter-consultant" onchange="filterCalendar()">
 							<option value="">All Consultants</option>
@@ -121,14 +165,12 @@
 					</div>
 				</div>
 				<div class="card-body" style="padding: 0;">
-					<!-- Stats Row -->
 					<div style="padding: 14px 20px; border-bottom: 1px solid #F1F5FF; display: flex; gap: 20px; flex-wrap: wrap;">
 						<div class="cal-stat"><div class="cal-stat-dot" style="background: #3B82F6;"></div>{{ total_sessions }} Total Sessions</div>
 						<div class="cal-stat"><div class="cal-stat-dot" style="background: #3B82F6;"></div>{{ scheduled_count }} Scheduled</div>
 						<div class="cal-stat"><div class="cal-stat-dot" style="background: #F59E0B;"></div>{{ in_progress_count }} In Progress</div>
 						<div class="cal-stat"><div class="cal-stat-dot" style="background: #10B981;"></div>{{ completed_count }} Completed</div>
 					</div>
-					<!-- Calendar Grid -->
 					<div class="cal-grid">
 						<div class="cal-head">Mon</div>
 						<div class="cal-head">Tue</div>
@@ -164,75 +206,193 @@
 								{% endif %}
 							{% endfor %}
 						{% endfor %}
-					</div>						<!-- Consultant Activity Cards -->
-					<div style="border-top: 1px solid #F1F5F9; padding: 20px;">
-						<div style="font-size: 15px; font-weight: 700; color: #05133C; margin-bottom: 16px;">Team Status</div>
-						{% if consultant_details %}
-					{% for c in consultant_details %}
-					<div style="padding: 16px 0; {% if not loop.last %}border-bottom: 1px solid #F3F4F6;{% endif %}">
-						<div style="display: flex; align-items: center; gap: 14px; margin-bottom: 10px;">
-							<div style="width: 44px; height: 44px; border-radius: 50%; background: {% if c.active_session %}#DCFBEA{% elif c.upcoming_sessions %}#E8EEFF{% else %}#F3F4F6{% endif %}; display: flex; align-items: center; justify-content: center; font-weight: 700; color: {% if c.active_session %}#009A52{% elif c.upcoming_sessions %}var(--bx-blue){% else %}#9CA3AF{% endif %}; font-size: 16px; flex-shrink: 0;">{{ c.consultant_name[:1] }}</div>
-							<div style="flex: 1; min-width: 0;">
-								<div style="font-weight: 700; color: #05133C; font-size: 15px;">{{ c.consultant_name }}</div>
-								<div style="font-size: 13px; color: #71717B;">{{ c.specialization or 'Generalist' }} · {{ c.availability or 'Available' }}</div>
-							</div>
-							<div style="text-align: right; flex-shrink: 0;">
-								{% if c.active_session %}
-								<span class="badge b-demo-in-progress">Live Demo</span>
-								{% elif c.upcoming_sessions %}
-								<span class="badge b-scheduled">{{ c.upcoming_sessions|length }} Scheduled</span>
-								{% elif c.pending_count %}
-								<span class="badge b-manager-review">{{ c.pending_count }} Pending</span>
-								{% else %}
-								<span class="badge b-draft">Free</span>
-								{% endif %}
-							</div>
-						</div>
-						{% if c.active_session %}
-						<div style="background: #F0FDF4; border-radius: 10px; padding: 12px 16px; margin-bottom: 10px; border: 1px solid #DCFBEA;">
-							<div style="font-size: 13px; font-weight: 600; color: #009A52; margin-bottom: 4px;">Currently conducting demo</div>
-							<div style="font-size: 14px; color: #05133C;">{{ c.active_session.customer or 'Customer' }} · <a href="/functional_portal/session?name={{ c.active_session.name }}">{{ c.active_session.name }}</a></div>
-							<div style="font-size: 12px; color: #71717B;">Started {{ c.active_session.start_time or '' }}</div>
-						</div>
-						{% endif %}
-						{% if c.todays_sessions %}
-						<div style="margin-bottom: 8px;">
-							<div style="font-size: 13px; font-weight: 600; color: #71717B; margin-bottom: 6px;">Today's Schedule</div>
-							{% for s in c.todays_sessions %}
-							<div style="display: flex; gap: 10px; align-items: center; padding: 6px 10px; background: #F9FAFB; border-radius: 6px; margin-bottom: 4px; font-size: 13px;">
-								<span style="color: #71717B; min-width: 55px;">{{ s.start_time or '-' }}</span>
-								<span style="color: #05133C; font-weight: 600; flex: 1;">{{ s.customer or '-' }}</span>
-								<span class="badge b-{{ s.demo_status|lower|replace(' ', '-') }}">{{ s.demo_status }}</span>
-							</div>
-							{% endfor %}
-						</div>
-						{% endif %}
-						{% if c.upcoming_sessions and not c.active_session %}
-						<div style="margin-bottom: 8px;">
-							<div style="font-size: 13px; font-weight: 600; color: #71717B; margin-bottom: 6px;">Upcoming Sessions</div>
-							{% for s in c.upcoming_sessions[:3] %}
-							<div style="display: flex; gap: 10px; align-items: center; padding: 6px 10px; background: #F9FAFB; border-radius: 6px; margin-bottom: 4px; font-size: 13px;">
-								<span style="color: #71717B; min-width: 80px;">{{ s.date_display }}</span>
-								<span style="color: #05133C; font-weight: 600; flex: 1;">{{ s.customer or '-' }}</span>
-								<span style="color: #71717B;">{{ s.start_time or '' }}</span>
-							</div>
-							{% endfor %}
-						</div>
-						{% endif %}
-						<div style="display: flex; gap: 16px; margin-top: 8px; font-size: 12px; color: #9CA3AF;">
-							<span>{{ c.completed_count }} completed</span>
-							{% if c.pending_count %}<span>{{ c.pending_count }} pending assignment</span>{% endif %}
-						</div>
-					</div>
-						{% endfor %}
-						{% else %}
-						<div style="text-align: center; padding: 20px; color: #9CA3AF;">
-							<p>No consultants found. Add consultants in ERPNext.</p>
-						</div>
-						{% endif %}
 					</div>
 				</div>
 			</div>
+
+			<!-- Pipeline Funnel -->
+			<div class="portal-card" style="margin-bottom: 24px;">
+				<div class="card-head"><h2>Demo Schedule Pipeline — By Consultant</h2></div>
+				{% if pipeline_data %}
+				<div class="card-body">
+					{% for p in pipeline_data %}
+					<div style="padding: 14px 0; {% if not loop.last %}border-bottom: 1px solid #F3F4F6;{% endif %}">
+						<div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+							<div style="width: 36px; height: 36px; border-radius: 50%; background: {% if p.total > 0 %}#E8EEFF{% else %}#F3F4F6{% endif %}; display: flex; align-items: center; justify-content: center; font-weight: 700; color: {% if p.total > 0 %}#114EFF{% else %}#9CA3AF{% endif %}; font-size: 14px; flex-shrink: 0;">{{ p.consultant_initial }}</div>
+							<div style="flex: 1; min-width: 0;">
+								<div style="font-weight: 700; font-size: 15px; color: #05133C;">{{ p.consultant_name }}</div>
+								<div style="font-size: 12px; color: #71717B;">{{ p.total }} total demo{{ 's' if p.total != 1 else '' }}</div>
+							</div>
+						</div>
+						{% for stg in p.stages %}
+						<div class="bar-row" style="margin-bottom: 6px;">
+							<div class="bar-label" style="width: 110px; font-size: 12px;">{{ stg.label }}</div>
+							<div class="bar-track">
+								<div class="progress-track" style="height: 8px;">
+									<div class="progress-fill" style="width: {{ ((stg.count / p.total * 100) if p.total else 0) }}%; background: {{ stg.color }}; border-radius: 4px;"></div>
+								</div>
+							</div>
+							<div class="bar-val" style="width: 36px; font-size: 13px; color: {{ stg.color }};">{{ stg.count }}</div>
+						</div>
+						{% endfor %}
+					</div>
+					{% endfor %}
+				</div>
+				{% else %}
+				<div class="empty-state"><p class="text-muted">No demo sessions yet.</p></div>
+				{% endif %}
+			</div>
+
+			<!-- Consultant Activity Cards -->
+			{% if consultant_details %}
+			{% for c in consultant_details %}
+			<div class="portal-card consultant-detail-card" style="margin-bottom: 16px;" id="card-{{ c.name }}">
+				<div class="card-head" style="display: flex; justify-content: space-between; align-items: center; cursor: pointer; padding: 16px 24px;" onclick="toggleConsultant('{{ c.name }}')">
+					<div style="display: flex; align-items: center; gap: 14px;">
+						<div style="width: 42px; height: 42px; border-radius: 50%; background: {% if c.active_session %}#DCFBEA{% elif c.upcoming_sessions %}#E8EEFF{% elif c.pending_count %}#FEF3C7{% else %}#F3F4F6{% endif %}; display: flex; align-items: center; justify-content: center; font-weight: 700; color: {% if c.active_session %}#009A52{% elif c.upcoming_sessions %}#114EFF{% elif c.pending_count %}#D97706{% else %}#9CA3AF{% endif %}; font-size: 16px;">{{ c.consultant_name[:1] }}</div>
+						<div>
+							<div style="font-weight: 700; font-size: 16px; color: #05133C;">{{ c.consultant_name }}</div>
+							<div style="font-size: 12px; color: #71717B;">{{ c.specialization }} · {{ c.experience_years }} yrs exp · {{ c.department or 'No dept' }}</div>
+						</div>
+					</div>
+					<div style="display: flex; align-items: center; gap: 12px;">
+						<span class="badge {{ c.status_class }}">{{ c.status_label }}</span>
+						<span class="toggle-arrow" id="arrow-{{ c.name }}" style="font-size: 18px; color: #9CA3AF; transition: transform 0.2s;">&#9660;</span>
+					</div>
+				</div>
+				<div class="card-body" id="body-{{ c.name }}" style="display: none; padding: 0 24px 20px;">
+					<!-- Profile Details -->
+					<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 20px; padding: 16px; background: #F9FAFB; border-radius: 8px;">
+						<div>
+							<div style="font-size: 11px; color: #9CA3AF; text-transform: uppercase; font-weight: 600;">User</div>
+							<div style="font-size: 13px; color: #05133C; font-weight: 500;">{{ c.user or '—' }}</div>
+						</div>
+						<div>
+							<div style="font-size: 11px; color: #9CA3AF; text-transform: uppercase; font-weight: 600;">Availability</div>
+							<div style="font-size: 13px; color: {% if c.availability == 'Available' %}#009A52{% elif c.availability == 'Busy' %}#D97706{% else %}#9CA3AF{% endif %}; font-weight: 500;">{{ c.availability }}</div>
+						</div>
+						<div>
+							<div style="font-size: 11px; color: #9CA3AF; text-transform: uppercase; font-weight: 600;">Hours</div>
+							<div style="font-size: 13px; color: #05133C; font-weight: 500;">{{ c.available_from or '—' }} – {{ c.available_to or '—' }}</div>
+						</div>
+						<div>
+							<div style="font-size: 11px; color: #9CA3AF; text-transform: uppercase; font-weight: 600;">Phone</div>
+							<div style="font-size: 13px; color: #05133C; font-weight: 500;">{{ c.phone or '—' }}</div>
+						</div>
+						<div>
+							<div style="font-size: 11px; color: #9CA3AF; text-transform: uppercase; font-weight: 600;">Email</div>
+							<div style="font-size: 13px; color: #05133C; font-weight: 500;">{{ c.email or '—' }}</div>
+						</div>
+						<div>
+							<div style="font-size: 11px; color: #9CA3AF; text-transform: uppercase; font-weight: 600;">Completed Demos</div>
+							<div style="font-size: 13px; color: #009A52; font-weight: 700;">{{ c.completed_count }}</div>
+						</div>
+						<div>
+							<div style="font-size: 11px; color: #9CA3AF; text-transform: uppercase; font-weight: 600;">Rescheduled</div>
+							<div style="font-size: 13px; color: #D97706; font-weight: 700;">{{ c.rescheduled_count }}</div>
+						</div>
+						<div>
+							<div style="font-size: 11px; color: #9CA3AF; text-transform: uppercase; font-weight: 600;">SLA Breached</div>
+							<div style="font-size: 13px; color: {% if c.sla_breached_count > 0 %}#DC2626{% else %}#009A52{% endif %}; font-weight: 700;">{{ c.sla_breached_count }}</div>
+						</div>
+					</div>
+
+					{% if c.active_session %}
+					<div style="margin-bottom: 20px;">
+						<h3 style="font-size: 14px; font-weight: 700; color: #05133C; margin-bottom: 10px;">Live Demo</h3>
+						<div style="padding: 14px 18px; background: #DCFBEA; border-left: 4px solid #009A52; border-radius: 8px;">
+							<div style="display: flex; justify-content: space-between; align-items: center;">
+								<div>
+									<a href="/functional_portal/session?name={{ c.active_session.name }}" style="font-weight: 700; color: #009A52; text-decoration: none; font-size: 15px;">{{ c.active_session.customer or '—' }}</a>
+									<div style="font-size: 12px; color: #71717B; margin-top: 2px;">Started {{ c.active_session.start_time or '' }} · {{ c.active_session.date_display }}</div>
+								</div>
+								<div style="text-align: right;">
+									<div style="font-size: 11px; color: #71717B;">Module</div>
+									<div style="font-size: 13px; font-weight: 600; color: #05133C;">{{ c.active_session.interested_module or '—' }}</div>
+								</div>
+							</div>
+							<div style="display: flex; gap: 16px; margin-top: 8px;">
+								<span style="font-size: 11px; color: #71717B;">Type: <strong style="color: #05133C;">{{ c.active_session.demo_type or 'Standard' }}</strong></span>
+								{% if c.active_session.meeting_link %}
+								<a href="{{ c.active_session.meeting_link }}" target="_blank" style="font-size: 11px; color: #114EFF; font-weight: 600;">Join Meeting →</a>
+								{% endif %}
+							</div>
+						</div>
+					</div>
+					{% endif %}
+
+					{% if c.upcoming_sessions %}
+					<div style="margin-bottom: 20px;">
+						<h3 style="font-size: 14px; font-weight: 700; color: #05133C; margin-bottom: 10px;">Upcoming Sessions ({{ c.upcoming_count }})</h3>
+						<div style="display: flex; flex-direction: column; gap: 8px;">
+							{% for s in c.upcoming_sessions %}
+							<div style="padding: 12px 16px; background: #E8EEFF; border-left: 4px solid #114EFF; border-radius: 8px; display: flex; justify-content: space-between; align-items: center;">
+								<div>
+									<a href="/functional_portal/session?name={{ s.name }}" style="font-weight: 600; color: #114EFF; text-decoration: none;">{{ s.customer or '—' }}</a>
+									<div style="font-size: 12px; color: #71717B;">{{ s.date_display }} at {{ s.start_time or '—' }}</div>
+								</div>
+								<div style="text-align: right;">
+									<span class="badge {% if s.demo_status == 'Rescheduled' %}b-rescheduled{% else %}b-scheduled{% endif %}">{{ s.demo_status }}</span>
+									<div style="font-size: 11px; color: #71717B;">{{ s.interested_module or '—' }}</div>
+								</div>
+							</div>
+							{% endfor %}
+						</div>
+					</div>
+					{% endif %}
+
+					{% if c.pending_requests %}
+					<div style="margin-bottom: 20px;">
+						<h3 style="font-size: 14px; font-weight: 700; color: #05133C; margin-bottom: 10px;">Pending Requests ({{ c.pending_count }})</h3>
+						<div style="display: flex; flex-direction: column; gap: 8px;">
+							{% for pr in c.pending_requests %}
+							<div style="padding: 12px 16px; background: #FEF3C7; border-left: 4px solid #D97706; border-radius: 8px; display: flex; justify-content: space-between; align-items: center;">
+								<div>
+									<a href="/sales_portal/demo_request?name={{ pr.name }}" style="font-weight: 600; color: #D97706; text-decoration: none;">{{ pr.name }}</a>
+									<div style="font-size: 13px; color: #05133C; font-weight: 500;">{{ pr.customer or '—' }} · {{ pr.interested_module or '—' }}</div>
+									<div style="font-size: 11px; color: #71717B; margin-top: 2px;">Preferred: {{ pr.date_display }} · Sales: {{ pr.sales_person or '—' }}</div>
+								</div>
+								<div style="text-align: right;">
+									<span class="badge {% if pr.priority == 'Critical' %}b-rejected{% elif pr.priority == 'High' %}b-rejected{% elif pr.priority == 'Medium' %}b-manager-review{% else %}b-draft{% endif %}">{{ pr.priority or 'Medium' }}</span>
+									<div style="font-size: 11px; color: {% if pr.sla_breached %}#DC2626{% else %}#71717B{% endif %}; font-weight: {% if pr.sla_breached %}700{% else %}400{% endif %};">{% if pr.sla_breached %}⚠ SLA Breached{% else %}{{ pr.days_pending or 0 }}d pending{% endif %}</div>
+								</div>
+							</div>
+							{% endfor %}
+						</div>
+					</div>
+					{% endif %}
+
+					{% if c.recent_completed %}
+					<div style="margin-bottom: 16px;">
+						<h3 style="font-size: 14px; font-weight: 700; color: #05133C; margin-bottom: 10px;">Recent Completed Demos</h3>
+						<div style="display: flex; flex-direction: column; gap: 8px;">
+							{% for rc in c.recent_completed %}
+							<div style="padding: 12px 16px; background: #F0FDF4; border-left: 4px solid #009A52; border-radius: 8px; display: flex; justify-content: space-between; align-items: center;">
+								<div>
+									<div style="font-weight: 600; color: #05133C;">{{ rc.customer or '—' }}</div>
+									<div style="font-size: 12px; color: #71717B;">{{ rc.completed_display }} · {{ rc.demo_type or 'Standard' }}</div>
+								</div>
+								<div style="text-align: right;">
+									<span class="badge {% if rc.final_result == 'Converted' %}b-completed{% elif rc.final_result == 'Not Interested' %}b-not-interested{% else %}b-scheduled{% endif %}">{{ display_status(rc.final_result) or 'Pending' }}</span>
+									{% if rc.overall_feedback %}
+									<div style="font-size: 11px; color: #D97706; font-weight: 500; max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">⭐ {{ rc.overall_feedback }}</div>
+									{% endif %}
+								</div>
+							</div>
+							{% endfor %}
+						</div>
+					</div>
+					{% endif %}
+				</div>
+			</div>
+			{% endfor %}
+			{% else %}
+			<div class="empty-state">
+				<div class="empty-icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+				<h3>No consultants found</h3>
+				<p>Add Functional Consultants in ERPNext to see their activity here.</p>
+			</div>
+			{% endif %}
 
 		</div>
 	</div>
@@ -264,7 +424,6 @@
 	</div>
 </div>
 
-<!-- Hidden data for JS -->
 <script>
 var ALL_SESSIONS = [
 	{% for s in sessions %}
@@ -290,7 +449,20 @@ var ALL_SESSIONS = [
 (function () {
 	"use strict";
 
-	/* Tooltip */
+	function toggleConsultant(name) {
+		var body = document.getElementById('body-' + name);
+		var arrow = document.getElementById('arrow-' + name);
+		if (!body) return;
+		if (body.style.display === 'none' || body.style.display === '') {
+			body.style.display = 'block';
+			if (arrow) arrow.classList.add('open');
+		} else {
+			body.style.display = 'none';
+			if (arrow) arrow.classList.remove('open');
+		}
+	}
+	window.toggleConsultant = toggleConsultant;
+
 	function showTooltip(e, el) {
 		var tt = document.getElementById("cal-tooltip");
 		tt.classList.add("show");
@@ -302,43 +474,28 @@ var ALL_SESSIONS = [
 		tt.style.left = Math.min(rect.left, window.innerWidth - 340) + "px";
 		tt.style.top = (rect.bottom + 8) + "px";
 	}
-
-	function hideTooltip() {
-		document.getElementById("cal-tooltip").classList.remove("show");
-	}
+	function hideTooltip() { document.getElementById("cal-tooltip").classList.remove("show"); }
 	window.showTooltip = showTooltip;
 	window.hideTooltip = hideTooltip;
 
-	/* Filter by consultant */
 	window.filterCalendar = function () {
 		var consultant = document.getElementById("cal-filter-consultant").value;
 		document.querySelectorAll(".cal-event").forEach(function (el) {
-			if (!consultant || el.getAttribute("data-consultant") === consultant) {
-				el.style.display = "";
-			} else {
-				el.style.display = "none";
-			}
+			el.style.display = (!consultant || el.getAttribute("data-consultant") === consultant) ? "" : "none";
 		});
-		/* Hide "more" links for filtered-out days */
 		document.querySelectorAll(".cal-day").forEach(function (day) {
-			var visible = day.querySelectorAll(".cal-event[style=''], .cal-event:not([style])");
 			var moreEl = day.querySelector(".cal-more");
 			if (moreEl) {
 				var totalCount = ALL_SESSIONS.filter(function (s) {
 					return s.date === day.getAttribute("data-date") && (!consultant || s.consultant === consultant);
 				}).length;
-				if (totalCount <= 3) {
-					moreEl.style.display = "none";
-				} else {
-					moreEl.style.display = "";
-					moreEl.textContent = "+" + (totalCount - 3) + " more";
-				}
+				moreEl.style.display = totalCount <= 3 ? "none" : "";
+				if (totalCount > 3) moreEl.textContent = "+" + (totalCount - 3) + " more";
 			}
 		});
 	};
 
-	/* Day detail modal */
-	window.openDayModal = function (dateStr, count) {
+	window.openDayModal = function (dateStr) {
 		var consultant = document.getElementById("cal-filter-consultant").value;
 		var daySessions = ALL_SESSIONS.filter(function (s) {
 			return s.date === dateStr && (!consultant || s.consultant === consultant);
@@ -352,91 +509,42 @@ var ALL_SESSIONS = [
 			html += '<div class="mi-detail">Consultant: <span>' + s.consultant_name + '</span></div>';
 			html += '<div class="mi-detail">Time: <span>' + s.time + '</span></div>';
 			html += '<div class="mi-detail">Session: <a href="/functional_portal/session?name=' + s.name + '" style="color: #3B82F6;">' + s.name + '</a></div>';
-			if (s.link) {
-				html += '<div class="mi-detail"><a href="' + s.link + '" target="_blank" style="color: #3B82F6;">Join Meeting</a></div>';
-			}
+			if (s.link) html += '<div class="mi-detail"><a href="' + s.link + '" target="_blank" style="color: #3B82F6;">Join Meeting</a></div>';
 			html += '</div>';
 		});
 		document.getElementById("day-modal-body").innerHTML = html;
 		document.getElementById("day-modal").classList.add("show");
 	};
+	window.closeDayModal = function () { document.getElementById("day-modal").classList.remove("show"); };
 
-	window.closeDayModal = function () {
-		document.getElementById("day-modal").classList.remove("show");
-	};
-
-	/* Session detail modal */
 	window.openSessionModal = function (sessionName) {
 		var s = null;
 		for (var i = 0; i < ALL_SESSIONS.length; i++) {
 			if (ALL_SESSIONS[i].name === sessionName) { s = ALL_SESSIONS[i]; break; }
 		}
 		if (!s) return;
-		var statusColors = {
-			"Scheduled": "#3B82F6", "Rescheduled": "#8B5CF6",
-			"In Progress": "#F59E0B", "Completed": "#10B981",
-			"Closed": "#6B7280", "Cancelled": "#EF4444"
-		};
-		var statusColor = statusColors[s.status] || "#3B82F6";
-		var html = '';
-		html += '<div style="margin-bottom: 20px;">';
-		html += '<div style="font-size: 20px; font-weight: 700; color: #05133C; margin-bottom: 6px;">' + (s.customer || 'Demo Session') + '</div>';
-		html += '<span class="badge" style="background:' + statusColor + '; color: #fff; padding: 4px 12px; border-radius: 6px; font-size: 12px; font-weight: 600;">' + s.status + '</span>';
-		html += '</div>';
-		/* Details grid */
-		html += '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px;">';
-		/* Session */
-		html += '<div style="background: #F9FAFB; border-radius: 8px; padding: 12px;">';
-		html += '<div style="font-size: 11px; color: #9CA3AF; text-transform: uppercase; font-weight: 600; margin-bottom: 4px;">Session</div>';
-		html += '<div style="font-size: 14px; font-weight: 600; color: #05133C;">' + s.name + '</div>';
-		html += '</div>';
-		/* Date */
-		html += '<div style="background: #F9FAFB; border-radius: 8px; padding: 12px;">';
-		html += '<div style="font-size: 11px; color: #9CA3AF; text-transform: uppercase; font-weight: 600; margin-bottom: 4px;">Date</div>';
-		html += '<div style="font-size: 14px; font-weight: 600; color: #05133C;">' + s.date + '</div>';
-		html += '</div>';
-		/* Time */
-		html += '<div style="background: #F9FAFB; border-radius: 8px; padding: 12px;">';
-		html += '<div style="font-size: 11px; color: #9CA3AF; text-transform: uppercase; font-weight: 600; margin-bottom: 4px;">Time</div>';
-		html += '<div style="font-size: 14px; font-weight: 600; color: #05133C;">' + s.time + '</div>';
-		html += '</div>';
-		/* Consultant */
-		html += '<div style="background: #F9FAFB; border-radius: 8px; padding: 12px;">';
-		html += '<div style="font-size: 11px; color: #9CA3AF; text-transform: uppercase; font-weight: 600; margin-bottom: 4px;">Consultant</div>';
-		html += '<div style="font-size: 14px; font-weight: 600; color: #05133C;">' + s.consultant_name + '</div>';
-		html += '</div>';
-		html += '</div>';
-		/* Action buttons */
-		html += '<div style="display: flex; gap: 10px; flex-wrap: wrap;">';
-		html += '<a href="/functional_portal/session?name=' + s.name + '" style="display: inline-block; padding: 10px 20px; background: #3B82F6; color: #fff; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 13px;">Open Session</a>';
-		if (s.link) {
-		html += '<a href="' + s.link + '" target="_blank" style="display: inline-block; padding: 10px 20px; background: #10B981; color: #fff; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 13px;">Join Meeting</a>';
-		}
-		html += '<button onclick="closeSessionModal()" style="display: inline-block; padding: 10px 20px; background: #F3F4F6; color: #374151; border: 1px solid #E5E7EB; border-radius: 8px; font-weight: 600; font-size: 13px; cursor: pointer;">Close</button>';
-		html += '</div>';
-		document.getElementById("session-modal-body").innerHTML = html;
+		var sc = {"Scheduled":"#3B82F6","Rescheduled":"#8B5CF6","In Progress":"#F59E0B","Completed":"#10B981","Closed":"#6B7280","Cancelled":"#EF4444"};
+		var c = sc[s.status] || "#3B82F6";
+		var h = '';
+		h += '<div style="margin-bottom:20px;"><div style="font-size:20px;font-weight:700;color:#05133C;margin-bottom:6px;">' + (s.customer||'Demo Session') + '</div>';
+		h += '<span style="background:'+c+';color:#fff;padding:4px 12px;border-radius:6px;font-size:12px;font-weight:600;">' + s.status + '</span></div>';
+		h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px;">';
+		h += '<div style="background:#F9FAFB;border-radius:8px;padding:12px;"><div style="font-size:11px;color:#9CA3AF;text-transform:uppercase;font-weight:600;margin-bottom:4px;">Session</div><div style="font-size:14px;font-weight:600;color:#05133C;">'+s.name+'</div></div>';
+		h += '<div style="background:#F9FAFB;border-radius:8px;padding:12px;"><div style="font-size:11px;color:#9CA3AF;text-transform:uppercase;font-weight:600;margin-bottom:4px;">Date</div><div style="font-size:14px;font-weight:600;color:#05133C;">'+s.date+'</div></div>';
+		h += '<div style="background:#F9FAFB;border-radius:8px;padding:12px;"><div style="font-size:11px;color:#9CA3AF;text-transform:uppercase;font-weight:600;margin-bottom:4px;">Time</div><div style="font-size:14px;font-weight:600;color:#05133C;">'+s.time+'</div></div>';
+		h += '<div style="background:#F9FAFB;border-radius:8px;padding:12px;"><div style="font-size:11px;color:#9CA3AF;text-transform:uppercase;font-weight:600;margin-bottom:4px;">Consultant</div><div style="font-size:14px;font-weight:600;color:#05133C;">'+s.consultant_name+'</div></div></div>';
+		h += '<div style="display:flex;gap:10px;flex-wrap:wrap;">';
+		h += '<a href="/functional_portal/session?name='+s.name+'" style="padding:10px 20px;background:#3B82F6;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;font-size:13px;">Open Session</a>';
+		if (s.link) h += '<a href="'+s.link+'" target="_blank" style="padding:10px 20px;background:#10B981;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;font-size:13px;">Join Meeting</a>';
+		h += '<button onclick="closeSessionModal()" style="padding:10px 20px;background:#F3F4F6;color:#374151;border:1px solid #E5E7EB;border-radius:8px;font-weight:600;font-size:13px;cursor:pointer;">Close</button></div>';
+		document.getElementById("session-modal-body").innerHTML = h;
 		document.getElementById("session-modal").classList.add("show");
 	};
+	window.closeSessionModal = function () { document.getElementById("session-modal").classList.remove("show"); };
 
-	window.closeSessionModal = function () {
-		document.getElementById("session-modal").classList.remove("show");
-	};
-
-	/* Close modals on overlay click */
-	document.getElementById("day-modal").addEventListener("click", function (e) {
-		if (e.target === this) window.closeDayModal();
-	});
-	document.getElementById("session-modal").addEventListener("click", function (e) {
-		if (e.target === this) window.closeSessionModal();
-	});
-
-	/* Close modals on Escape */
-	document.addEventListener("keydown", function (e) {
-		if (e.key === "Escape") {
-			window.closeDayModal();
-			window.closeSessionModal();
-		}
-	});
+	document.getElementById("day-modal").addEventListener("click", function (e) { if (e.target === this) window.closeDayModal(); });
+	document.getElementById("session-modal").addEventListener("click", function (e) { if (e.target === this) window.closeSessionModal(); });
+	document.addEventListener("keydown", function (e) { if (e.key === "Escape") { window.closeDayModal(); window.closeSessionModal(); } });
 })();
 </script>
 {% endblock %}
