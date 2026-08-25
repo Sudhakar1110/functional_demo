@@ -58,7 +58,8 @@ def get_context(context):
 				"name", "follow_up_date", "status", "outcome",
 				"next_action", "remarks", "assigned_to", "subject",
 				"creation", "modified",
-			],n			order_by="creation desc",
+			],
+			order_by="creation desc",
 			ignore_permissions=True,
 		) or []
 		for fu in follow_ups:
