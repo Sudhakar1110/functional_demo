@@ -227,6 +227,10 @@
 					<label>Search Customer</label>
 					<input type="text" id="ft-search-cust" placeholder="Search..." style="min-width: 180px;">
 				</div>
+				<div>
+					<label>Search Sales Person</label>
+					<input type="text" id="ft-search-sales" placeholder="Search..." style="min-width: 180px;">
+				</div>
 				<button class="ft-filter-btn" onclick="applyFilters()">Filter</button>
 				<a href="/sales_portal/followup_tracker" class="ft-filter-reset">Reset</a>
 				<button class="ft-filter-reset" style="margin-left: auto;" onclick="exportCSV()">📥 Export CSV</button>
@@ -254,7 +258,7 @@
 						</thead>
 						<tbody>
 							{% for fu in all_followups %}
-							<tr data-status="{{ fu.status }}" data-customer="{{ (fu.customer_display or '')|lower }}">
+							<tr data-status="{{ fu.status }}" data-customer="{{ (fu.customer_display or '')|lower }}" data-sales-person="{{ (fu.sales_person or '')|lower }}">
 								<td><strong>{{ fu.customer_display }}</strong></td>
 								<td>{{ fu.subject or "-" }}</td>
 								<td style="white-space: nowrap;">{{ fu.due_display }}</td>
@@ -394,13 +398,16 @@ function toggleHistory() {
 function applyFilters() {
 	var statusFilter = document.getElementById("ft-status-filter").value.toLowerCase();
 	var searchFilter = document.getElementById("ft-search-cust").value.toLowerCase();
+	var salesFilter = document.getElementById("ft-search-sales").value.toLowerCase();
 	var rows = document.querySelectorAll("#ft-all-table-body tbody tr");
 	rows.forEach(function(row) {
 		var rowStatus = (row.getAttribute("data-status") || "").toLowerCase();
 		var rowCustomer = (row.getAttribute("data-customer") || "");
+		var rowSales = (row.getAttribute("data-sales-person") || "");
 		var showStatus = !statusFilter || rowStatus === statusFilter || (statusFilter === "overdue" && rowStatus === "overdue");
 		var showSearch = !searchFilter || rowCustomer.indexOf(searchFilter) !== -1;
-		row.style.display = (showStatus && showSearch) ? "" : "none";
+		var showSales = !salesFilter || rowSales.indexOf(salesFilter) !== -1;
+		row.style.display = (showStatus && showSearch && showSales) ? "" : "none";
 	});
 }
 
