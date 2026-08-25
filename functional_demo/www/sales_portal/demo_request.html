@@ -49,15 +49,15 @@
 					<form class="portal-form" id="dr-form">
 					<div class="form-row">
 						<div>
-							<label>Company <span class="form-hint">(optional - pick from suggestions)</span></label>
+							<label>Company</label>
 							<input type="text" id="company" name="company" list="companies-list" placeholder="Type &amp; pick a company..." value="{{ prefill.company }}" autocomplete="off">
 							<datalist id="companies-list">
 								{% for c in companies %}<option value="{{ c.name }}">{{ c.name }}</option>{% endfor %}
 							</datalist>
 						</div>
 						<div>
-							<label>Leads <span class="form-hint">(optional - pick one, or type a new name to auto-create)</span></label>
-							<input type="text" id="customer" name="customer" list="customers-list" placeholder="Type &amp; pick a lead, or type a new one..." value="{{ prefill.customer }}" autocomplete="off">
+							<label>Contact Person</label>
+							<input type="text" id="customer" name="customer" list="customers-list" placeholder="Enter contact person name..." value="{{ prefill.customer }}" autocomplete="off">
 							<datalist id="customers-list">
 								{% for c in customers %}<option value="{{ c.name }}">{{ c.customer_name }}</option>{% endfor %}
 							</datalist>
@@ -246,11 +246,11 @@
 			{% endif %}
 
 			<div class="portal-card">
-				<div class="card-head"><h2>Leads &amp; Contact</h2></div>
+				<div class="card-head"><h2>Contact Person &amp; Details</h2></div>
 				<div class="card-body">
 					<div class="detail-grid">
 						<div class="detail-item"><div class="d-label">Company</div><div class="d-value">{{ doc.company or "-" }}</div></div>
-						<div class="detail-item"><div class="d-label">Leads</div><div class="d-value">{{ doc.customer or "-" }}</div></div>
+						<div class="detail-item"><div class="d-label">Contact Person</div><div class="d-value">{{ doc.customer or "-" }}</div></div>
 						<div class="detail-item"><div class="d-label">Lead Contact Number</div><div class="d-value">{{ doc.contact_number or "-" }}</div></div>
 						<div class="detail-item"><div class="d-label">Lead Email</div><div class="d-value">{{ doc.email or "-" }}</div></div>
 						<div class="detail-item"><div class="d-label">Sales Person</div><div class="d-value">{{ sales_person_name or doc.sales_person or "-" }}</div></div>
@@ -393,36 +393,10 @@
 	var preLead = "";
 
 
-	/* The Customer box only accepts real records: the value must be one
-	   of the datalist options (picked from the suggestions). A free-typed name
-	   can never match a record, so we check before submitting and explain the
-	   exact problem in the popup instead of a cryptic server error. */
-	function isKnown(listId, value) {
-		var dl = document.getElementById(listId);
-		if (!dl) return false;
-		var opts = dl.querySelectorAll("option");
-		for (var i = 0; i < opts.length; i++) {
-			if (opts[i].value === value) return true;
-		}
-		return false;
-	}
-
 	document.getElementById("dr-form").addEventListener("submit", function (e) {
 		e.preventDefault();
 		var customer = document.getElementById("customer").value.trim();
 		var consultant = document.getElementById("functional_consultant").value;
-
-		/* A Customer is optional - the workflow is consultant-first, so the request
-		   can be created with just a Functional Consultant (customer details can
-		   be filled in later). */
-		/* A free-typed customer name is fine: the server auto-creates the
-		   Customer record (it appears in the desk too). Just confirm first so
-		   a typo never creates a junk customer. */
-		if (customer && !isKnown("customers-list", customer)) {
-			if (!window.confirm("\"" + customer + "\" is not a saved customer yet. Create it automatically and continue?")) {
-				return;
-			}
-		}
 		if (!consultant) {
 			window.portalModal("Consultant Required", "Please select a Functional Consultant to run this demo. Pick one from the list above - a consultant is mandatory before the request can be created.", "err");
 			return;
