@@ -149,7 +149,52 @@ def get_context(context):
 				"sort_key": fu.get("creation") or "",
 			})
 
-			# Add each version update (notes shown only on the created entry)
+			# Match each discussion note to its closest version update
+			note_version_map = {}  # version_name -> [notes]
+			all_notes = fu.get("discussion_notes_list", [])
+			if all_notes and versions:
+				for note in all_notes:
+					note_date_str = str(note.get("note_date") or "")
+					best_version = None
+					best_diff = None
+					for v in versions:
+						v_date_str = str(v.get("creation") or "")
+						if not note_date_str or not v_date_str:
+							continue
+						# Calculate time difference in seconds
+						try:
+							note_dt = frappe.utils.get_datetime(note_date_str)
+							v_dt = frappe.utils.get_datetime(v_date_str)
+							diff = abs((note_dt - v_dt).total_seconds())
+						except Exception:
+							diff = 999999
+						if best_diff is None or diff < best_diff:
+							best_diff = diff
+							best_version = v.name
+					if best_version:
+						note_version_map.setdefault(best_version, []).append(note)
+				# If multiple notes map to same version, keep closest only
+				for vname, nlist in list(note_version_map.items()):
+					if len(nlist) > 1:
+						v_creation = str(next(
+							(vv.get("creation") or "") for vv in versions if vv.name == vname
+						), "")
+						best_note = None
+						best_diff = None
+						for n in nlist:
+							n_date = str(n.get("note_date") or "")
+							try:
+								n_dt = frappe.utils.get_datetime(n_date)
+								v_dt = frappe.utils.get_datetime(v_creation)
+								diff = abs((n_dt - v_dt).total_seconds())
+							except Exception:
+								diff = 999999
+							if best_diff is None or diff < best_diff:
+								best_diff = diff
+								best_note = n
+						note_version_map[vname] = [best_note] if best_note else []
+
+			# Add each version update
 			for v in versions:
 				# Get the diff from the version
 				try:
@@ -161,7 +206,7 @@ def get_context(context):
 							old_val = ch[1] if isinstance(ch, (list, tuple)) and len(ch) > 1 else ""
 							new_val = ch[2] if isinstance(ch, (list, tuple)) and len(ch) > 2 else ""
 							if field_label in ("follow_up_date", "status", "outcome", "next_action", "remarks", "assigned_to"):
-								changed.append("{0}: {1} → {2}".format(field_label, old_val or "-", new_val or "-"))
+								changed.append("{0}: {1} \u2192 {2}".format(field_label, old_val or "-", new_val or "-"))
 				except Exception:
 					changed = []
 
@@ -184,7 +229,7 @@ def get_context(context):
 					"remarks": fu.get("remarks"),
 					"description": fu.get("description"),
 					"assigned_to": fu.assigned_display,
-					"discussion_notes": [],
+					"discussion_notes": note_version_map.get(v.name, []),
 					"sort_key": v.get("creation") or "",
 				})
 
