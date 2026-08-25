@@ -150,7 +150,13 @@
 									<button class="sf-btn" style="background: #DBEAFE; color: #1D4ED8;" onclick="sfViewResponse(this)"
 										data-session="{{ s.name }}"
 										data-customer="{{ s.customer_display }}"
-										data-feedback-count="{{ s.feedback_list|length }}">👁 View Response</button>
+										data-response="{{ s.response_text }}"
+										data-response-by="{{ s.response_by }}"
+										data-response-on="{{ s.response_on }}"
+										data-response-subject="{{ s.response_subject }}"
+										data-response-type="{{ s.response_type }}"
+										data-response-priority="{{ s.response_priority }}"
+										data-response-status="{{ s.response_status }}">👁 View Response</button>
 									{% else %}
 									<button class="sf-btn sf-btn-done" disabled>Sent</button>
 									{% endif %}
@@ -221,6 +227,61 @@
 		<div class="sf-modal-foot">
 			<button class="sf-cancel-btn" id="sf-cancel-btn">Cancel</button>
 			<button class="sf-submit-btn" id="sf-submit">Send Feedback</button>
+		</div>
+	</div>
+</div>
+
+<!-- Response Detail Modal -->
+<div class="sf-modal-overlay" id="sf-response-modal">
+	<div class="sf-modal">
+		<div class="sf-modal-head">
+			<h2>Developer Response</h2>
+			<button class="sf-modal-close" id="sf-response-close">&times;</button>
+		</div>
+		<div class="sf-modal-body">
+			<div class="sf-form-row">
+				<label>Session</label>
+				<input type="text" id="resp-session" readonly style="background: #F9FAFB;">
+			</div>
+			<div class="sf-form-row">
+				<label>Customer</label>
+				<input type="text" id="resp-customer" readonly style="background: #F9FAFB;">
+			</div>
+			<div class="sf-form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+				<div>
+					<label>Feedback Type</label>
+					<input type="text" id="resp-type" readonly style="background: #F9FAFB;">
+				</div>
+				<div>
+					<label>Priority</label>
+					<input type="text" id="resp-priority" readonly style="background: #F9FAFB;">
+				</div>
+			</div>
+			<div class="sf-form-row">
+				<label>Subject</label>
+				<input type="text" id="resp-subject" readonly style="background: #F9FAFB;">
+			</div>
+			<div class="sf-form-row">
+				<label>Status</label>
+				<input type="text" id="resp-status" readonly style="background: #F9FAFB;">
+			</div>
+			<div class="sf-form-row">
+				<label>Developer Response</label>
+				<textarea id="resp-response" readonly style="background: #F0FDF4; border-color: #86EFAC;"></textarea>
+			</div>
+			<div class="sf-form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+				<div>
+					<label>Responded By</label>
+					<input type="text" id="resp-by" readonly style="background: #F9FAFB;">
+				</div>
+				<div>
+					<label>Responded On</label>
+					<input type="text" id="resp-on" readonly style="background: #F9FAFB;">
+				</div>
+			</div>
+		</div>
+		<div class="sf-modal-foot">
+			<button class="sf-cancel-btn" id="sf-response-cancel-btn">Close</button>
 		</div>
 	</div>
 </div>
@@ -318,12 +379,27 @@
 		});
 	});
 
-	// View developer response
+	// View developer response modal
+	var respOverlay = document.getElementById("sf-response-modal");
+	var respCloseBtn = document.getElementById("sf-response-close");
+	var respCancelBtn = document.getElementById("sf-response-cancel-btn");
+
+	function closeRespModal() { respOverlay.classList.remove("active"); }
+	respCloseBtn.addEventListener("click", closeRespModal);
+	respCancelBtn.addEventListener("click", closeRespModal);
+	respOverlay.addEventListener("click", function(e) { if (e.target === respOverlay) closeRespModal(); });
+
 	window.sfViewResponse = function(btn) {
-		var session = btn.getAttribute("data-session");
-		var customer = btn.getAttribute("data-customer");
-		var count = btn.getAttribute("data-feedback-count");
-		showToast("Developer responded to " + count + " feedback(s) for " + session + " (" + customer + ")", "success");
+		document.getElementById("resp-session").value = btn.getAttribute("data-session") || "-";
+		document.getElementById("resp-customer").value = btn.getAttribute("data-customer") || "-";
+		document.getElementById("resp-type").value = btn.getAttribute("data-response-type") || "-";
+		document.getElementById("resp-priority").value = btn.getAttribute("data-response-priority") || "-";
+		document.getElementById("resp-subject").value = btn.getAttribute("data-response-subject") || "-";
+		document.getElementById("resp-status").value = btn.getAttribute("data-response-status") || "-";
+		document.getElementById("resp-response").value = btn.getAttribute("data-response") || "No response yet";
+		document.getElementById("resp-by").value = btn.getAttribute("data-response-by") || "-";
+		document.getElementById("resp-on").value = btn.getAttribute("data-response-on") || "-";
+		respOverlay.classList.add("active");
 	};
 })();
 </script>

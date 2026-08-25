@@ -61,6 +61,18 @@ def get_context(context):
         ):
             existing_feedback.setdefault(fb.demo_session, []).append(fb)
 
+    # Resolve responded_by display names
+    responded_by_ids = set()
+    for fb_list in existing_feedback.values():
+        for fb in fb_list:
+            if fb.get("responded_by"):
+                responded_by_ids.add(fb["responded_by"])
+    responded_by_names = {}
+    if responded_by_ids:
+        for u in frappe.get_all("User", filters={"name": ["in", list(responded_by_ids)]},
+                                fields=["name", "full_name", "email"], ignore_permissions=True):
+            responded_by_names[u.name] = u.full_name or u.email or u.name
+
     for s in sessions:
         s["customer_display"] = customer_names.get(s.customer) or s.customer or s.lead or "-"
         s["consultant_display"] = consultant_names.get(s.functional_consultant) or s.functional_consultant or "-"
@@ -70,6 +82,18 @@ def get_context(context):
         s["has_response"] = any(
             fb.get("developer_response") for fb in s["feedback_list"]
         )
+        # Find the first responded feedback for display
+        responded_fb = next(
+            (fb for fb in s["feedback_list"] if fb.get("developer_response")), None
+        )
+        if responded_fb:
+            s["response_text"] = responded_fb.get("developer_response") or "-"
+            s["response_by"] = responded_by_names.get(responded_fb.get("responded_by")) or responded_fb.get("responded_by") or "-"
+            s["response_on"] = frappe.utils.format_datetime(responded_fb.get("responded_on"), "dd MMM yyyy, hh:mm a") if responded_fb.get("responded_on") else "-"
+            s["response_subject"] = responded_fb.get("subject") or "-"
+            s["response_type"] = responded_fb.get("feedback_type") or "-"
+            s["response_priority"] = responded_fb.get("priority") or "-"
+            s["response_status"] = responded_fb.get("status") or "-"
 
     # Stats
     total = len(sessions)
