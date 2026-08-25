@@ -48,14 +48,15 @@ def get_context(context):
                                 fields=["name", "consultant_name"], ignore_permissions=True):
             consultant_names[c.name] = c.consultant_name
 
-    # Check which sessions already have feedback
+    # Check which sessions already have feedback and developer response status
     session_names = [s.name for s in sessions]
     existing_feedback = {}
     if session_names:
         for fb in frappe.get_all(
             "Session Feedback",
             filters={"demo_session": ["in", session_names]},
-            fields=["demo_session", "name", "subject", "status", "feedback_type", "priority"],
+            fields=["demo_session", "name", "subject", "status", "feedback_type", "priority",
+                    "developer_response", "responded_by", "responded_on"],
             ignore_permissions=True,
         ):
             existing_feedback.setdefault(fb.demo_session, []).append(fb)
@@ -65,6 +66,10 @@ def get_context(context):
         s["consultant_display"] = consultant_names.get(s.functional_consultant) or s.functional_consultant or "-"
         s["has_feedback"] = bool(existing_feedback.get(s.name))
         s["feedback_list"] = existing_feedback.get(s.name, [])
+        # Check if any feedback for this session has a developer response
+        s["has_response"] = any(
+            fb.get("developer_response") for fb in s["feedback_list"]
+        )
 
     # Stats
     total = len(sessions)

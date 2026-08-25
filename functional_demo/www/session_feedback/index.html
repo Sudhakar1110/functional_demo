@@ -135,14 +135,25 @@
 								<td>{% if s.final_result %}<span class="sf-badge {% if s.final_result == 'Converted' %}feature{% elif s.final_result == 'Not Interested' %}bug{% else %}general{% endif %}">{{ s.final_result }}</span>{% else %}-{% endif %}</td>
 								<td>
 									{% if s.has_feedback %}
-									<span class="sf-done">{{ s.feedback_list|length }} sent</span>
+									{% if s.has_response %}
+									<span style="background: #DCFBEA; color: #009A52; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 700;">✅ Responded</span>
+									{% else %}
+									<span style="background: #FEF3C7; color: #D97706; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 700;">⏳ Awaiting Response</span>
+									{% endif %}
 									{% else %}
 									<span class="sf-pending">⏳ Pending</span>
 									{% endif %}
 								</td>
 								<td>
 									{% if s.has_feedback %}
+									{% if s.has_response %}
+									<button class="sf-btn" style="background: #DBEAFE; color: #1D4ED8;" onclick="sfViewResponse(this)"
+										data-session="{{ s.name }}"
+										data-customer="{{ s.customer_display }}"
+										data-feedback-count="{{ s.feedback_list|length }}">👁 View Response</button>
+									{% else %}
 									<button class="sf-btn sf-btn-done" disabled>Sent</button>
+									{% endif %}
 									{% else %}
 									<button class="sf-btn sf-btn-primary sf-open-btn"
 										data-session="{{ s.name }}"
@@ -306,6 +317,14 @@
 			submitBtn.textContent = "Send Feedback";
 		});
 	});
+
+	// View developer response
+	window.sfViewResponse = function(btn) {
+		var session = btn.getAttribute("data-session");
+		var customer = btn.getAttribute("data-customer");
+		var count = btn.getAttribute("data-feedback-count");
+		showToast("Developer responded to " + count + " feedback(s) for " + session + " (" + customer + ")", "success");
+	};
 })();
 </script>
 {% endblock %}
