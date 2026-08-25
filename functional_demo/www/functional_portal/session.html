@@ -333,6 +333,13 @@
 							{% endif %}
 						</div>
 
+						{% if entry.description %}
+						<div style="margin-bottom: 8px; padding: 10px 12px; background: rgba(255,255,255,0.7); border-radius: 6px; border-left: 3px solid #F59E0B;">
+							<div style="font-size: 11px; font-weight: 600; color: #92400E; text-transform: uppercase; margin-bottom: 4px;">Description</div>
+							<div style="font-size: 13px; color: #05133C; line-height: 1.5;">{{ entry.description }}</div>
+						</div>
+						{% endif %}
+
 						{% if entry.next_action %}
 						<div style="margin-bottom: 8px; padding: 10px 12px; background: rgba(255,255,255,0.7); border-radius: 6px; border-left: 3px solid #8B5CF6;">
 							<div style="font-size: 11px; font-weight: 600; color: #6D28D9; text-transform: uppercase; margin-bottom: 4px;">Next Action</div>

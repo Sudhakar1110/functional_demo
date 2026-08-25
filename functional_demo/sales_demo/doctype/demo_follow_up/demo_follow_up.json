@@ -14,6 +14,7 @@
   "functional_consultant",
   "assigned_to",
   "subject",
+  "description",
   "section_plan",
   "follow_up_date",
   "status",
@@ -78,6 +79,11 @@
    "fieldname": "subject",
    "fieldtype": "Data",
    "label": "Subject"
+  },
+  {
+   "fieldname": "description",
+   "fieldtype": "Small Text",
+   "label": "Description"
   },
   {
    "fieldname": "section_plan",

@@ -57,7 +57,7 @@ def get_context(context):
 			filters={"demo_session": session_name},
 			fields=[
 				"name", "follow_up_date", "status", "outcome",
-				"next_action", "remarks", "assigned_to",
+				"next_action", "remarks", "description", "assigned_to",
 				"subject", "creation", "modified", "owner",
 			],
 			order_by="creation desc",
@@ -116,6 +116,7 @@ def get_context(context):
 				"follow_up_date": fu.due_display,
 				"next_action": fu.get("next_action"),
 				"remarks": fu.get("remarks"),
+				"description": fu.get("description"),
 				"assigned_to": fu.assigned_display,
 				"sort_key": fu.get("creation") or "",
 			})
@@ -153,6 +154,7 @@ def get_context(context):
 					"follow_up_date": fu.due_display,
 					"next_action": fu.get("next_action"),
 					"remarks": fu.get("remarks"),
+					"description": fu.get("description"),
 					"assigned_to": fu.assigned_display,
 					"sort_key": v.get("creation") or "",
 				})
