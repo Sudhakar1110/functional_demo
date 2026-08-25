@@ -94,11 +94,12 @@
 	<div class="portal-main">
 		<div class="portal-content">
 
-			<!-- Calendar Card -->
+			<!-- Consultant Activity (Calendar + Team) -->
 			<div class="portal-card" style="margin-bottom: 22px;">
 				<div class="card-head" style="flex-wrap: wrap; gap: 12px;">
+					<h2>Consultant Activity</h2>
 					<!-- Month Navigation -->
-					<div class="cal-nav">
+					<div class="cal-nav" style="margin-left: 16px;">
 						<a class="cal-nav-btn" href="/consultant_calendar?month={{ prev_month }}&year={{ prev_year }}">&larr;</a>
 						<div class="cal-month-label">{{ month_name }} {{ year }}</div>
 						<a class="cal-nav-btn" href="/consultant_calendar?month={{ next_month }}&year={{ next_year }}">&rarr;</a>
@@ -163,15 +164,10 @@
 								{% endif %}
 							{% endfor %}
 						{% endfor %}
-					</div>
-				</div>
-			</div>
-
-			<!-- Consultant Activity -->
-			<div class="portal-card" style="margin-bottom: 22px;">
-				<div class="card-head"><h2>Consultant Activity</h2></div>
-				{% if consultant_details %}
-				<div class="card-body">
+					</div>						<!-- Consultant Activity Cards -->
+					<div style="border-top: 1px solid #F1F5F9; padding: 20px;">
+						<div style="font-size: 15px; font-weight: 700; color: #05133C; margin-bottom: 16px;">Team Status</div>
+						{% if consultant_details %}
 					{% for c in consultant_details %}
 					<div style="padding: 16px 0; {% if not loop.last %}border-bottom: 1px solid #F3F4F6;{% endif %}">
 						<div style="display: flex; align-items: center; gap: 14px; margin-bottom: 10px;">
@@ -228,15 +224,14 @@
 							{% if c.pending_count %}<span>{{ c.pending_count }} pending assignment</span>{% endif %}
 						</div>
 					</div>
-					{% endfor %}
+						{% endfor %}
+						{% else %}
+						<div style="text-align: center; padding: 20px; color: #9CA3AF;">
+							<p>No consultants found. Add consultants in ERPNext.</p>
+						</div>
+						{% endif %}
+					</div>
 				</div>
-				{% else %}
-				<div class="empty-state">
-					<div class="empty-icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
-					<h3>No consultants</h3>
-					<p>Add consultants in ERPNext to see their activity here.</p>
-				</div>
-				{% endif %}
 			</div>
 
 		</div>
