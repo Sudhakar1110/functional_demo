@@ -262,36 +262,38 @@
 				</div>
 				<div class="card-body" id="body-{{ c.name }}" style="display: none; padding: 0 24px 20px;">
 					<!-- Profile Details -->
-					<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 20px; padding: 16px; background: #F9FAFB; border-radius: 8px;">
-						<div>
+					<div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 20px; padding: 16px; background: #F9FAFB; border-radius: 8px;">
+						<div style="min-width: 0; overflow: hidden;">
 							<div style="font-size: 11px; color: #9CA3AF; text-transform: uppercase; font-weight: 600;">User</div>
-							<div style="font-size: 13px; color: #05133C; font-weight: 500;">{{ c.user or '—' }}</div>
+							<div style="font-size: 13px; color: #05133C; font-weight: 500; word-break: break-all; overflow-wrap: break-word;">{{ c.user or '—' }}</div>
 						</div>
-						<div>
+						<div style="min-width: 0;">
 							<div style="font-size: 11px; color: #9CA3AF; text-transform: uppercase; font-weight: 600;">Availability</div>
 							<div style="font-size: 13px; color: {% if c.availability == 'Available' %}#009A52{% elif c.availability == 'Busy' %}#D97706{% else %}#9CA3AF{% endif %}; font-weight: 500;">{{ c.availability }}</div>
 						</div>
-						<div>
+						<div style="min-width: 0;">
 							<div style="font-size: 11px; color: #9CA3AF; text-transform: uppercase; font-weight: 600;">Hours</div>
 							<div style="font-size: 13px; color: #05133C; font-weight: 500;">{{ c.available_from or '—' }} – {{ c.available_to or '—' }}</div>
 						</div>
-						<div>
+						<div style="min-width: 0;">
 							<div style="font-size: 11px; color: #9CA3AF; text-transform: uppercase; font-weight: 600;">Phone</div>
 							<div style="font-size: 13px; color: #05133C; font-weight: 500;">{{ c.phone or '—' }}</div>
 						</div>
-						<div>
+					</div>
+					<div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 20px; padding: 16px; background: #F9FAFB; border-radius: 8px;">
+						<div style="min-width: 0; overflow: hidden;">
 							<div style="font-size: 11px; color: #9CA3AF; text-transform: uppercase; font-weight: 600;">Email</div>
-							<div style="font-size: 13px; color: #05133C; font-weight: 500;">{{ c.email or '—' }}</div>
+							<div style="font-size: 13px; color: #05133C; font-weight: 500; word-break: break-all; overflow-wrap: break-word;">{{ c.email or '—' }}</div>
 						</div>
-						<div>
+						<div style="min-width: 0;">
 							<div style="font-size: 11px; color: #9CA3AF; text-transform: uppercase; font-weight: 600;">Completed Demos</div>
 							<div style="font-size: 13px; color: #009A52; font-weight: 700;">{{ c.completed_count }}</div>
 						</div>
-						<div>
+						<div style="min-width: 0;">
 							<div style="font-size: 11px; color: #9CA3AF; text-transform: uppercase; font-weight: 600;">Rescheduled</div>
 							<div style="font-size: 13px; color: #D97706; font-weight: 700;">{{ c.rescheduled_count }}</div>
 						</div>
-						<div>
+						<div style="min-width: 0;">
 							<div style="font-size: 11px; color: #9CA3AF; text-transform: uppercase; font-weight: 600;">SLA Breached</div>
 							<div style="font-size: 13px; color: {% if c.sla_breached_count > 0 %}#DC2626{% else %}#009A52{% endif %}; font-weight: 700;">{{ c.sla_breached_count }}</div>
 						</div>
