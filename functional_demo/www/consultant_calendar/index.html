@@ -1,0 +1,303 @@
+{% extends "templates/web.html" %}
+{% block banner %}{% endblock %}
+{% block navbar %}{% endblock %}
+{% block footer %}{% endblock %}
+{% block style %}{% include "functional_demo/templates/includes/portal_style.html" %}
+<style>
+/* Calendar */
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 0; border: 1px solid #E5E7EB; border-radius: 12px; overflow: hidden; background: #fff; }
+.cal-head { background: #F8FAFC; padding: 10px 8px; text-align: center; font-size: 12px; font-weight: 700; color: #64748B; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #E5E7EB; }
+.cal-day { min-height: 110px; padding: 6px 8px; border-right: 1px solid #F1F5F9; border-bottom: 1px solid #F1F5F9; position: relative; transition: background 0.15s; }
+.cal-day:hover { background: #F8FAFC; }
+.cal-day:nth-child(7n) { border-right: none; }
+.cal-day.empty { background: #FAFBFC; }
+.cal-day.today { background: #EFF6FF; }
+.cal-day-num { font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 4px; }
+.cal-day.today .cal-day-num { background: #3B82F6; color: #fff; width: 24px; height: 24px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; }
+.cal-event { font-size: 11px; padding: 3px 6px; border-radius: 4px; margin-bottom: 3px; cursor: pointer; color: #fff; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: transform 0.1s, box-shadow 0.1s; line-height: 1.4; }
+.cal-event:hover { transform: translateY(-1px); box-shadow: 0 2px 6px rgba(0,0,0,0.15); z-index: 2; position: relative; }
+.cal-more { font-size: 10px; color: #6B7280; cursor: pointer; font-weight: 600; margin-top: 2px; }
+.cal-more:hover { color: #3B82F6; }
+
+/* Month nav */
+.cal-nav { display: flex; align-items: center; gap: 16px; }
+.cal-nav-btn { width: 36px; height: 36px; border-radius: 8px; border: 1px solid #E5E7EB; background: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #374151; font-size: 18px; transition: all 0.15s; }
+.cal-nav-btn:hover { background: #F3F4F6; border-color: #D1D5DB; }
+.cal-month-label { font-size: 20px; font-weight: 700; color: #05133C; min-width: 200px; text-align: center; }
+
+/* Filter bar */
+.filter-bar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.filter-bar select { font-size: 13px; padding: 6px 12px; border: 1px solid #E5E7EB; border-radius: 8px; background: #fff; color: #374151; }
+
+/* Stats row */
+.cal-stats { display: flex; gap: 16px; flex-wrap: wrap; }
+.cal-stat { display: flex; align-items: center; gap: 6px; font-size: 13px; color: #6B728B; }
+.cal-stat-dot { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+
+/* Legend */
+.cal-legend { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; }
+.cal-legend-item { display: flex; align-items: center; gap: 5px; font-size: 12px; color: #6B728B; }
+
+/* Tooltip */
+.cal-tooltip { display: none; position: fixed; background: #fff; border: 1px solid #E5E7EB; border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.12); padding: 14px 18px; z-index: 1000; max-width: 320px; pointer-events: none; }
+.cal-tooltip.show { display: block; }
+.cal-tooltip .tt-title { font-weight: 700; font-size: 14px; color: #05133C; margin-bottom: 6px; }
+.cal-tooltip .tt-row { font-size: 12px; color: #6B728B; margin-bottom: 3px; }
+.cal-tooltip .tt-row span { color: #374151; font-weight: 600; }
+
+/* Detail modal */
+.cal-modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 999; }
+.cal-modal-overlay.show { display: flex; align-items: center; justify-content: center; }
+.cal-modal { background: #fff; border-radius: 14px; box-shadow: 0 20px 60px rgba(0,0,0,0.2); width: 90%; max-width: 480px; max-height: 80vh; overflow-y: auto; padding: 24px; }
+.cal-modal h3 { margin: 0 0 16px; font-size: 18px; color: #05133C; }
+.cal-modal-close { position: absolute; top: 16px; right: 16px; background: none; border: none; font-size: 20px; cursor: pointer; color: #9CA3AF; }
+.cal-modal-item { padding: 12px 0; border-bottom: 1px solid #F3F4F6; }
+.cal-modal-item:last-child { border-bottom: none; }
+.cal-modal-item .mi-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+.cal-modal-item .mi-name { font-weight: 700; font-size: 14px; color: #05133C; }
+.cal-modal-item .mi-detail { font-size: 12px; color: #6B728B; margin-bottom: 2px; }
+.cal-modal-item .mi-detail span { color: #374151; font-weight: 500; }
+</style>
+{% endblock %}
+{% block content %}
+<div class="portal-layout">
+	<header class="portal-topbar">
+		<button class="sidebar-toggle" id="sidebar-toggle" aria-label="Menu">&#9776;</button>
+		<a class="topbar-brand" href="/demo_portal">
+			<img class="brand-logo" src="/assets/functional_demo/images/brand_logo.jpg" alt="Brand Logo" />
+			<div class="brand-text">
+				<span class="brand-name">Demo Portal</span>
+				<span class="brand-sub">Sales &amp; Functional</span>
+			</div>
+		</a>
+		<div class="topbar-title">
+			<h1>{{ title }}</h1>
+			<p>{{ subtitle }}</p>
+		</div>
+		<div class="topbar-right">
+			<span class="portal-avatar">{{ full_name[:1] }}</span>
+			<span class="portal-user-name">{{ full_name }}</span>
+			<a class="btn-desk" href="/app">Open Desk</a>
+		</div>
+	</header>
+	<div class="portal-body">
+		<aside class="portal-sidebar" id="portal-sidebar">
+			<div class="sidebar-menu">
+			{% for item in sidebar_items %}
+			<a class="sidebar-item {% if item.active %}active{% endif %}" href="{{ item.route }}">
+				<span class="sidebar-icon">{{ item.icon | safe }}</span>{{ item.label }}
+			</a>
+			{% endfor %}
+		</div>
+	</aside>
+	<div class="sidebar-overlay"></div>
+	<div class="portal-main">
+		<div class="portal-content">
+
+			<!-- Calendar Card -->
+			<div class="portal-card" style="margin-bottom: 22px;">
+				<div class="card-head" style="flex-wrap: wrap; gap: 12px;">
+					<!-- Month Navigation -->
+					<div class="cal-nav">
+						<a class="cal-nav-btn" href="/consultant_calendar?month={{ prev_month }}&year={{ prev_year }}">&larr;</a>
+						<div class="cal-month-label">{{ month_name }} {{ year }}</div>
+						<a class="cal-nav-btn" href="/consultant_calendar?month={{ next_month }}&year={{ next_year }}">&rarr;</a>
+					</div>
+					<!-- Filter + Legend -->
+					<div class="filter-bar" style="margin-left: auto;">
+						<select id="cal-filter-consultant" onchange="filterCalendar()">
+							<option value="">All Consultants</option>
+							{% for c in consultants %}
+							<option value="{{ c.name }}">{{ c.consultant_name }}</option>
+							{% endfor %}
+						</select>
+						<div class="cal-legend">
+							<div class="cal-legend-item"><div class="cal-stat-dot" style="background: #3B82F6;"></div>Scheduled</div>
+							<div class="cal-legend-item"><div class="cal-stat-dot" style="background: #8B5CF6;"></div>Rescheduled</div>
+							<div class="cal-legend-item"><div class="cal-stat-dot" style="background: #F59E0B;"></div>In Progress</div>
+							<div class="cal-legend-item"><div class="cal-stat-dot" style="background: #10B981;"></div>Completed</div>
+						</div>
+					</div>
+				</div>
+				<div class="card-body" style="padding: 0;">
+					<!-- Stats Row -->
+					<div style="padding: 14px 20px; border-bottom: 1px solid #F1F5FF; display: flex; gap: 20px; flex-wrap: wrap;">
+						<div class="cal-stat"><div class="cal-stat-dot" style="background: #3B82F6;"></div>{{ total_sessions }} Total Sessions</div>
+						<div class="cal-stat"><div class="cal-stat-dot" style="background: #3B82F6;"></div>{{ scheduled_count }} Scheduled</div>
+						<div class="cal-stat"><div class="cal-stat-dot" style="background: #F59E0B;"></div>{{ in_progress_count }} In Progress</div>
+						<div class="cal-stat"><div class="cal-stat-dot" style="background: #10B981;"></div>{{ completed_count }} Completed</div>
+					</div>
+					<!-- Calendar Grid -->
+					<div class="cal-grid">
+						<div class="cal-head">Mon</div>
+						<div class="cal-head">Tue</div>
+						<div class="cal-head">Wed</div>
+						<div class="cal-head">Thu</div>
+						<div class="cal-head">Fri</div>
+						<div class="cal-head">Sat</div>
+						<div class="cal-head">Sun</div>
+						{% for week in calendar_weeks %}
+							{% for cell in week %}
+								{% if cell.day == 0 %}
+								<div class="cal-day empty"></div>
+								{% else %}
+								<div class="cal-day {% if cell.is_today %}today{% endif %}" data-date="{{ cell.date_str }}">
+									<div class="cal-day-num">{{ cell.day }}</div>
+									{% for s in cell.sessions[:3] %}
+									<div class="cal-event" style="background: {{ s.color }};"
+										data-consultant="{{ s.functional_consultant }}"
+										data-session="{{ s.name }}"
+										data-customer="{{ s.customer or '-' }}"
+										data-time="{{ s.start_time or '-' }}{% if s.end_time %} - {{ s.end_time }}{% endif %}"
+										data-status="{{ s.demo_status }}"
+										data-consultant-name="{{ s.consultant_name }}"
+										onmouseenter="showTooltip(event, this)" onmouseleave="hideTooltip()">
+										{{ s.start_time or '' }} {{ s.customer or 'Session' }}
+									</div>
+									{% endfor %}
+									{% if cell.sessions|length > 3 %}
+									<div class="cal-more" onclick="openDayModal('{{ cell.date_str }}', {{ cell.sessions|length }})">+{{ cell.sessions|length - 3 }} more</div>
+									{% endif %}
+								</div>
+								{% endif %}
+							{% endfor %}
+						{% endfor %}
+					</div>
+				</div>
+			</div>
+
+		</div>
+	</div>
+	</div>
+</div>
+
+<!-- Tooltip -->
+<div class="cal-tooltip" id="cal-tooltip">
+	<div class="tt-title" id="tt-title"></div>
+	<div class="tt-row">Consultant: <span id="tt-consultant"></span></div>
+	<div class="tt-row">Time: <span id="tt-time"></span></div>
+	<div class="tt-row">Status: <span id="tt-status"></span></div>
+</div>
+
+<!-- Day Detail Modal -->
+<div class="cal-modal-overlay" id="day-modal">
+	<div class="cal-modal" style="position: relative;">
+		<button class="cal-modal-close" onclick="closeDayModal()">&times;</button>
+		<h3 id="day-modal-title">Sessions</h3>
+		<div id="day-modal-body"></div>
+	</div>
+</div>
+
+<!-- Hidden data for JS -->
+<script>
+var ALL_SESSIONS = [
+	{% for s in sessions %}
+	{
+		"name": "{{ s.name }}",
+		"customer": "{{ s.customer or '-' }}",
+		"consultant": "{{ s.functional_consultant }}",
+		"consultant_name": "{{ s.consultant_name }}",
+		"date": "{{ s.date_str }}",
+		"time": "{{ s.start_time or '-' }}{% if s.end_time %} - {{ s.end_time }}{% endif %}",
+		"status": "{{ s.demo_status }}",
+		"color": "{{ s.color }}",
+		"link": "{{ s.meeting_link or '' }}"
+	}{% if not loop.last %},{% endif %}
+	{% endfor %}
+];
+</script>
+{% endblock %}
+
+{% block script %}
+{% include "functional_demo/templates/includes/portal_script.html" %}
+<script>
+(function () {
+	"use strict";
+
+	/* Tooltip */
+	function showTooltip(e, el) {
+		var tt = document.getElementById("cal-tooltip");
+		tt.classList.add("show");
+		document.getElementById("tt-title").textContent = el.getAttribute("data-customer") || "Session";
+		document.getElementById("tt-consultant").textContent = el.getAttribute("data-consultant-name") || "-";
+		document.getElementById("tt-time").textContent = el.getAttribute("data-time") || "-";
+		document.getElementById("tt-status").textContent = el.getAttribute("data-status") || "-";
+		var rect = el.getBoundingClientRect();
+		tt.style.left = Math.min(rect.left, window.innerWidth - 340) + "px";
+		tt.style.top = (rect.bottom + 8) + "px";
+	}
+
+	function hideTooltip() {
+		document.getElementById("cal-tooltip").classList.remove("show");
+	}
+	window.showTooltip = showTooltip;
+	window.hideTooltip = hideTooltip;
+
+	/* Filter by consultant */
+	window.filterCalendar = function () {
+		var consultant = document.getElementById("cal-filter-consultant").value;
+		document.querySelectorAll(".cal-event").forEach(function (el) {
+			if (!consultant || el.getAttribute("data-consultant") === consultant) {
+				el.style.display = "";
+			} else {
+				el.style.display = "none";
+			}
+		});
+		/* Hide "more" links for filtered-out days */
+		document.querySelectorAll(".cal-day").forEach(function (day) {
+			var visible = day.querySelectorAll(".cal-event[style=''], .cal-event:not([style])");
+			var moreEl = day.querySelector(".cal-more");
+			if (moreEl) {
+				var totalCount = ALL_SESSIONS.filter(function (s) {
+					return s.date === day.getAttribute("data-date") && (!consultant || s.consultant === consultant);
+				}).length;
+				if (totalCount <= 3) {
+					moreEl.style.display = "none";
+				} else {
+					moreEl.style.display = "";
+					moreEl.textContent = "+" + (totalCount - 3) + " more";
+				}
+			}
+		});
+	};
+
+	/* Day detail modal */
+	window.openDayModal = function (dateStr, count) {
+		var consultant = document.getElementById("cal-filter-consultant").value;
+		var daySessions = ALL_SESSIONS.filter(function (s) {
+			return s.date === dateStr && (!consultant || s.consultant === consultant);
+		});
+		document.getElementById("day-modal-title").textContent = "Sessions on " + dateStr + " (" + daySessions.length + ")";
+		var html = "";
+		daySessions.forEach(function (s) {
+			html += '<div class="cal-modal-item">';
+			html += '<div class="mi-head"><span class="mi-name">' + (s.customer || 'Session') + '</span>';
+			html += '<span class="badge" style="background:' + s.color + '; color: #fff; padding: 2px 8px; border-radius: 4px; font-size: 11px;">' + s.status + '</span></div>';
+			html += '<div class="mi-detail">Consultant: <span>' + s.consultant_name + '</span></div>';
+			html += '<div class="mi-detail">Time: <span>' + s.time + '</span></div>';
+			html += '<div class="mi-detail">Session: <a href="/functional_portal/session?name=' + s.name + '" style="color: #3B82F6;">' + s.name + '</a></div>';
+			if (s.link) {
+				html += '<div class="mi-detail"><a href="' + s.link + '" target="_blank" style="color: #3B82F6;">Join Meeting</a></div>';
+			}
+			html += '</div>';
+		});
+		document.getElementById("day-modal-body").innerHTML = html;
+		document.getElementById("day-modal").classList.add("show");
+	};
+
+	window.closeDayModal = function () {
+		document.getElementById("day-modal").classList.remove("show");
+	};
+
+	/* Close modal on overlay click */
+	document.getElementById("day-modal").addEventListener("click", function (e) {
+		if (e.target === this) window.closeDayModal();
+	});
+
+	/* Close modal on Escape */
+	document.addEventListener("keydown", function (e) {
+		if (e.key === "Escape") window.closeDayModal();
+	});
+})();
+</script>
+{% endblock %}

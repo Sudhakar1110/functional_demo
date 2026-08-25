@@ -355,6 +355,10 @@ def sidebar_items(active):
 		items.append({"label": _("Consultant Activity"), "route": "/consultant_activity", "icon": ICON_CONSULTANT_ACTIVITY, "active": active == "consultant_activity"})
 		items.append({"label": _("Assign Demo"), "route": "/assigned_demo", "icon": ICON_ASSIGNED, "active": active == "assigned_demo"})
 
+	# Consultant Calendar — visible to managers
+	if is_manager():
+		items.append({"label": _("Consultant Calendar"), "route": "/consultant_calendar", "icon": ICON_TRIALS, "active": active == "consultant_calendar"})
+
 	# Feedback is only visible to managers (Functional Team Manager / Sales Manager)
 	if is_manager():
 		items.append({"label": _("Feedback"), "route": "/feedback", "icon": ICON_FEEDBACK, "active": active == "feedback"})
