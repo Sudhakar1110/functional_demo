@@ -21,10 +21,6 @@ def get_context(context):
 		context.missing = True
 		return context
 
-	# get_demo_execution_data lets every portal role view session details
-	# read-only (Demo Feedback / Results list every session). An error here
-	# means the session is missing/invalid - show a friendly card instead of
-	# a raw error.
 	try:
 		data = get_demo_execution_data(name)
 	except Exception:
@@ -34,21 +30,17 @@ def get_context(context):
 		data["session"]["scheduled_date"] = frappe.utils.format_date(
 			data["session"]["scheduled_date"], "medium"
 		)
-	# Raw datetimes (e.g. 2026-08-17 11:05:42.016086) are hard to read on the
-	# page - show them as "17 Aug 2026, 11:05 AM" instead.
 	for key in ("started_on", "completed_on"):
 		if data.get("session") and data["session"].get(key):
 			data["session"][key] = frappe.utils.format_datetime(
 				data["session"][key], "dd MMM yyyy, hh:mm a"
 			)
-	# A follow-up already exists for this session - the Create Follow-up
-	# button must not show again (no duplicate follow-ups).
+
 	session_name = (data.get("session") or {}).get("name")
 	context.has_follow_up = bool(
 		frappe.db.exists("Demo Follow Up", {"demo_session": session_name}) if session_name else False
 	)
 
-	# Fetch follow-up history for this session with version tracking
 	follow_ups = []
 	follow_up_history = []
 	if session_name:
@@ -91,7 +83,7 @@ def get_context(context):
 			else:
 				fu["owner_display"] = "-"
 
-			# Fetch discussion notes for this follow-up (filter out empty/null)
+			# Fetch discussion notes (filter out empty/null)
 			fu["discussion_notes_list"] = []
 			try:
 				notes = frappe.get_all(
@@ -102,7 +94,6 @@ def get_context(context):
 					ignore_permissions=True,
 				) or []
 				for note in notes:
-					# Skip notes with empty or NULL content
 					note_text = (note.get("note") or "").strip()
 					if not note_text or note_text.upper() == "NULL":
 						continue
@@ -118,7 +109,7 @@ def get_context(context):
 			except Exception:
 				pass
 
-			# Fetch version history for this follow-up
+			# Fetch version history
 			versions = frappe.get_all(
 				"Version",
 				filters={
@@ -130,7 +121,7 @@ def get_context(context):
 				ignore_permissions=True,
 			) or []
 
-			# Add the initial creation as first entry
+			# Build the "Follow-up Created" entry with all notes
 			follow_up_history.append({
 				"type": "created",
 				"follow_up": fu.name,
@@ -149,54 +140,77 @@ def get_context(context):
 				"sort_key": fu.get("creation") or "",
 			})
 
-			# Match each discussion note to its closest version update
+			# --- Match each note to its closest version update ---
 			note_version_map = {}  # version_name -> [notes]
 			all_notes = fu.get("discussion_notes_list", [])
 			if all_notes and versions:
 				for note in all_notes:
-					note_date_str = str(note.get("note_date") or "")
-					best_version = None
+					note_date_val = note.get("note_date")
+					if not note_date_val:
+						continue
+					best_version_name = None
 					best_diff = None
 					for v in versions:
-						v_date_str = str(v.get("creation") or "")
-						if not note_date_str or not v_date_str:
+						v_creation_val = v.get("creation")
+						if not v_creation_val:
 							continue
-						# Calculate time difference in seconds
 						try:
-							note_dt = frappe.utils.get_datetime(note_date_str)
-							v_dt = frappe.utils.get_datetime(v_date_str)
+							if isinstance(note_date_val, str):
+								note_dt = frappe.utils.get_datetime(note_date_val)
+							else:
+								note_dt = note_date_val
+							if isinstance(v_creation_val, str):
+								v_dt = frappe.utils.get_datetime(v_creation_val)
+							else:
+								v_dt = v_creation_val
 							diff = abs((note_dt - v_dt).total_seconds())
 						except Exception:
-							diff = 999999
+							continue
 						if best_diff is None or diff < best_diff:
 							best_diff = diff
-							best_version = v.name
-					if best_version:
-						note_version_map.setdefault(best_version, []).append(note)
-				# If multiple notes map to same version, keep closest only
-				for vname, nlist in list(note_version_map.items()):
+							best_version_name = v.name
+					if best_version_name:
+						note_version_map.setdefault(best_version_name, []).append(note)
+
+				# If multiple notes mapped to same version, keep closest only
+				for vname in list(note_version_map.keys()):
+					nlist = note_version_map[vname]
 					if len(nlist) > 1:
-						v_creation = str(next(
-							(vv.get("creation") or "") for vv in versions if vv.name == vname
-						), "")
+						v_creation_val = None
+						for vv in versions:
+							if vv.name == vname:
+								v_creation_val = vv.get("creation")
+								break
+						if not v_creation_val:
+							continue
+						try:
+							if isinstance(v_creation_val, str):
+								v_dt = frappe.utils.get_datetime(v_creation_val)
+							else:
+								v_dt = v_creation_val
+						except Exception:
+							continue
 						best_note = None
-						best_diff = None
+						best_diff2 = None
 						for n in nlist:
-							n_date = str(n.get("note_date") or "")
+							nd = n.get("note_date")
+							if not nd:
+								continue
 							try:
-								n_dt = frappe.utils.get_datetime(n_date)
-								v_dt = frappe.utils.get_datetime(v_creation)
-								diff = abs((n_dt - v_dt).total_seconds())
+								if isinstance(nd, str):
+									n_dt = frappe.utils.get_datetime(nd)
+								else:
+									n_dt = nd
+								diff2 = abs((n_dt - v_dt).total_seconds())
 							except Exception:
-								diff = 999999
-							if best_diff is None or diff < best_diff:
-								best_diff = diff
+								continue
+							if best_diff2 is None or diff2 < best_diff2:
+								best_diff2 = diff2
 								best_note = n
 						note_version_map[vname] = [best_note] if best_note else []
 
-			# Add each version update
+			# Build each version update entry
 			for v in versions:
-				# Get the diff from the version
 				try:
 					version_doc = frappe.get_doc("Version", v.name)
 					changed = []
