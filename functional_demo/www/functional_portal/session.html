@@ -294,36 +294,44 @@
 			</div>			{% endif %}
 
 			<!-- Follow-up History -->
-			{% if follow_ups %}
+			{% if follow_up_history %}
 			<div class="portal-card" style="margin-bottom: 22px;">
-				<div class="card-head"><h2>Follow-up History ({{ follow_ups|length }})</h2></div>
+				<div class="card-head"><h2>Follow-up History ({{ follow_up_history|length }} updates)</h2></div>
 				<div class="card-body">
-					{% for fu in follow_ups %}
-					<div style="padding: 16px 0; {% if not loop.last %}border-bottom: 1px solid #F3F4F6;{% endif %}">
+					{% for entry in follow_up_history %}
+					<div style="padding: 14px 0; border-left: 3px solid {% if entry.type == 'created' %}#10B981{% else %}#3B82F6{% endif %}; padding-left: 16px; margin-bottom: 12px; background: {% if entry.type == 'created' %}#F0FDF4{% else %}#EFF6FF{% endif %}; border-radius: 0 8px 8px 0;">
 						<div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
 							<div>
-								<div style="font-weight: 700; font-size: 15px; color: #05133C; margin-bottom: 4px;">{{ fu.subject or fu.name }}</div>
-								<div style="font-size: 12px; color: #71717B;">Due: {{ fu.due_display }} · Assigned to: {{ fu.assigned_display }}</div>
+								<div style="font-size: 12px; font-weight: 700; color: {% if entry.type == 'created' %}#009A52{% else %}#114EFF{% endif %}; margin-bottom: 4px;">
+									{% if entry.type == 'created' %}✓ Follow-up Created{% else %}✎ Updated{% endif %}
 							</div>
-							<div style="display: flex; gap: 8px; align-items: center;">
-								<span class="badge {% if fu.status == 'Open' %}b-open{% elif fu.status == 'In Progress' %}b-in-progress{% elif fu.status == 'Completed' %}b-completed{% elif fu.status == 'Overdue' %}b-overdue{% endif %}" style="padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 700;">{{ fu.status }}</span>
-								{% if fu.outcome %}<span class="badge b-completed" style="padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 700;">{{ fu.outcome }}</span>{% endif %}
+								<div style="font-weight: 700; font-size: 14px; color: #05133C;">{{ entry.subject }}</div>
+							</div>
+							<div style="text-align: right;">
+								{% if entry.status %}<span class="badge {% if entry.status == 'Open' %}b-open{% elif entry.status == 'In Progress' %}b-in-progress{% elif entry.status == 'Completed' %}b-completed{% elif entry.status == 'Overdue' %}b-overdue{% endif %}" style="padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 700;">{{ entry.status }}</span>{% endif %}
+								{% if entry.outcome %}<span class="badge b-completed" style="padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; margin-left: 4px;">{{ entry.outcome }}</span>{% endif %}
 							</div>
 						</div>
-						{% if fu.next_action %}
-						<div style="margin-bottom: 6px;">
-							<span style="font-size: 12px; font-weight: 600; color: #71717B;">Next Action:</span>
-							<span style="font-size: 13px; color: #05133C;">{{ fu.next_action }}</span>
+						<div style="font-size: 13px; color: #374151; margin-bottom: 8px;">
+							{{ entry.details }}
+						</div>
+						{% if entry.follow_up_date %}
+						<div style="font-size: 12px; color: #71717B; margin-bottom: 4px;">
+							<strong>Due:</strong> {{ entry.follow_up_date }} · <strong>Assigned:</strong> {{ entry.assigned_to }}
 						</div>
 						{% endif %}
-						{% if fu.remarks %}
-						<div style="margin-bottom: 6px;">
-							<span style="font-size: 12px; font-weight: 600; color: #71717B;">Remarks:</span>
-							<span style="font-size: 13px; color: #05133C;">{{ fu.remarks }}</span>
+						{% if entry.next_action %}
+						<div style="font-size: 12px; color: #71717B; margin-bottom: 4px;">
+							<strong>Next Action:</strong> {{ entry.next_action }}
 						</div>
 						{% endif %}
-						<div style="font-size: 11px; color: #9CA3AF; margin-top: 4px;">
-							Created: {{ fu.created_display }}{% if fu.modified_display != fu.created_display %} · Updated: {{ fu.modified_display }}{% endif %}
+						{% if entry.remarks %}
+						<div style="font-size: 12px; color: #71717B; margin-bottom: 4px;">
+							<strong>Remarks:</strong> {{ entry.remarks }}
+						</div>
+						{% endif %}
+						<div style="font-size: 11px; color: #9CA3AF; margin-top: 6px;">
+							{{ entry.date }} · by {{ entry.user }}
 						</div>
 					</div>
 					{% endfor %}

@@ -48,8 +48,9 @@ def get_context(context):
 		frappe.db.exists("Demo Follow Up", {"demo_session": session_name}) if session_name else False
 	)
 
-	# Fetch follow-up history for this session
+	# Fetch follow-up history for this session with version tracking
 	follow_ups = []
+	follow_up_history = []
 	if session_name:
 		follow_ups = frappe.get_all(
 			"Demo Follow Up",
@@ -57,7 +58,7 @@ def get_context(context):
 			fields=[
 				"name", "follow_up_date", "status", "outcome",
 				"next_action", "remarks", "assigned_to", "subject",
-				"creation", "modified",
+				"creation", "modified", "owner",
 			],
 			order_by="creation desc",
 			ignore_permissions=True,
@@ -82,7 +83,84 @@ def get_context(context):
 				)
 			else:
 				fu["assigned_display"] = "-"
+			if fu.get("owner"):
+				fu["owner_display"] = (
+					frappe.db.get_value("User", fu["owner"], "full_name")
+					or fu["owner"]
+				)
+			else:
+				fu["owner_display"] = "-"
+
+			# Fetch version history for this follow-up
+			versions = frappe.get_all(
+				"Version",
+				filters={
+					"ref_doctype": "Demo Follow Up",
+					"docname": fu.name,
+				},
+				fields=["name", "creation", "owner"],
+				order_by="creation asc",
+				ignore_permissions=True,
+			) or []
+
+			# Add the initial creation as first entry
+			follow_up_history.append({
+				"type": "created",
+				"follow_up": fu.name,
+				"subject": fu.get("subject") or fu.name,
+				"date": fu.created_display,
+				"user": fu.owner_display,
+				"details": "Follow-up created",
+				"status": fu.get("status"),
+				"outcome": fu.get("outcome"),
+				"follow_up_date": fu.due_display,
+				"next_action": fu.get("next_action"),
+				"remarks": fu.get("remarks"),
+				"assigned_to": fu.assigned_display,
+				"sort_key": fu.get("creation") or "",
+			})
+
+			# Add each version update
+			for v in versions:
+				# Get the diff from the version
+				try:
+					version_doc = frappe.get_doc("Version", v.name)
+					changed = []
+					if hasattr(version_doc, "changed") and version_doc.changed:
+						for ch in version_doc.changed:
+							field_label = ch[0] if isinstance(ch, (list, tuple)) else str(ch)
+							old_val = ch[1] if isinstance(ch, (list, tuple)) and len(ch) > 1 else ""
+							new_val = ch[2] if isinstance(ch, (list, tuple)) and len(ch) > 2 else ""
+							if field_label in ("follow_up_date", "status", "outcome", "next_action", "remarks", "assigned_to"):
+								changed.append("{0}: {1} → {2}".format(field_label, old_val or "-", new_val or "-"))
+				except Exception:
+					changed = []
+
+				v_date = frappe.utils.format_datetime(v.get("creation"), "dd MMM yyyy, hh:mm a") if v.get("creation") else "-"
+				v_user = "-"
+				if v.get("owner"):
+					v_user = frappe.db.get_value("User", v["owner"], "full_name") or v["owner"]
+
+				follow_up_history.append({
+					"type": "updated",
+					"follow_up": fu.name,
+					"subject": fu.get("subject") or fu.name,
+					"date": v_date,
+					"user": v_user,
+					"details": ", ".join(changed) if changed else "Status updated",
+					"status": fu.get("status"),
+					"outcome": fu.get("outcome"),
+					"follow_up_date": fu.due_display,
+					"next_action": fu.get("next_action"),
+					"remarks": fu.get("remarks"),
+					"assigned_to": fu.assigned_display,
+					"sort_key": v.get("creation") or "",
+				})
+
+	# Sort history by date (newest first)
+	follow_up_history.sort(key=lambda x: x.get("sort_key", ""), reverse=True)
 
 	context.follow_ups = follow_ups
+	context.follow_up_history = follow_up_history
 	context.data = data
 	return context
