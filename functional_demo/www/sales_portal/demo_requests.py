@@ -17,7 +17,7 @@ def get_context(context):
 	portal_context(
 		context,
 		_("Demo Requests"),
-		["Sales User", "Sales Manager"],
+		["Sales User", "Sales Manager", "Functional Team Manager"],
 		active="requests",
 		subtitle=_("All demo requests you can see"),
 	)
