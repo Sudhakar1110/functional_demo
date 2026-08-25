@@ -91,7 +91,7 @@ def get_context(context):
 			else:
 				fu["owner_display"] = "-"
 
-			# Fetch discussion notes for this follow-up
+			# Fetch discussion notes for this follow-up (filter out empty/null)
 			fu["discussion_notes_list"] = []
 			try:
 				notes = frappe.get_all(
@@ -102,6 +102,10 @@ def get_context(context):
 					ignore_permissions=True,
 				) or []
 				for note in notes:
+					# Skip notes with empty or NULL content
+					note_text = (note.get("note") or "").strip()
+					if not note_text or note_text.upper() == "NULL":
+						continue
 					note["note_by_display"] = (
 						frappe.db.get_value("User", note["note_by"], "full_name")
 						or note.get("note_by") or "-"
@@ -145,6 +149,9 @@ def get_context(context):
 				"sort_key": fu.get("creation") or "",
 			})
 
+			# Track which notes existed at creation time
+			note_count_at_creation = len(fu.get("discussion_notes_list", []))
+
 			# Add each version update
 			for v in versions:
 				# Get the diff from the version
@@ -166,6 +173,20 @@ def get_context(context):
 				if v.get("owner"):
 					v_user = frappe.db.get_value("User", v["owner"], "full_name") or v["owner"]
 
+				# Detect new notes added since this version
+				new_notes = []
+				all_notes = fu.get("discussion_notes_list", [])
+				if len(all_notes) > note_count_at_creation:
+					new_notes = all_notes[note_count_at_creation:]
+				# Also check: if this version was created after the newest note,
+				# show that newest note as the one associated with this update
+				if not new_notes and all_notes:
+					for note in reversed(all_notes):
+						note_creation = note.get("note_date")
+						if note_creation and v.get("creation") and str(note_creation) <= str(v["creation"]):
+							new_notes = [note]
+							break
+
 				follow_up_history.append({
 					"type": "updated",
 					"follow_up": fu.name,
@@ -180,7 +201,7 @@ def get_context(context):
 					"remarks": fu.get("remarks"),
 					"description": fu.get("description"),
 					"assigned_to": fu.assigned_display,
-					"discussion_notes": fu.get("discussion_notes_list", []),
+					"discussion_notes": new_notes,
 					"sort_key": v.get("creation") or "",
 				})
 
