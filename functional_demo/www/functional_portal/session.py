@@ -58,12 +58,12 @@ def get_context(context):
 				reschedule_history.append({
 					"reschedule_number": row.get("reschedule_number") or "-",
 					"old_date": frappe.utils.format_date(row.get("old_date"), "medium") if row.get("old_date") else "-",
-					"old_time": "{0} – {1}".format(
+					"old_time": "{0} \u2013 {1}".format(
 						str(row.get("old_start_time") or "-")[:5],
 						str(row.get("old_end_time") or "-")[:5]
 					) if row.get("old_start_time") else "-",
 					"new_date": frappe.utils.format_date(row.get("new_date"), "medium") if row.get("new_date") else "-",
-					"new_time": "{0} – {1}".format(
+					"new_time": "{0} \u2013 {1}".format(
 						str(row.get("new_start_time") or "-")[:5],
 						str(row.get("new_end_time") or "-")[:5]
 					) if row.get("new_start_time") else "-",
@@ -77,67 +77,97 @@ def get_context(context):
 			pass
 
 	# Fallback: for sessions that were rescheduled before the history tracking
-	# was added, create a synthetic entry from the session's data
+	# was added, reconstruct ALL reschedule history from Version changelog.
+	# Frappe tracks all document changes in the Version doctype when
+	# track_changes=1 (which is enabled for Demo Session).
 	if not reschedule_history and session_name:
-		session_doc = frappe.get_all(
+		sess_data = frappe.get_all(
 			"Demo Session",
 			filters={"name": session_name},
 			fields=["reschedule_count", "modified", "modified_by",
 				"scheduled_date", "start_time", "end_time",
-				"demo_request"],
+				"demo_request", "creation", "created_by"],
 			ignore_permissions=True,
 		)
-		if session_doc:
-			sd = session_doc[0]
+		if sess_data:
+			sd = sess_data[0]
 			count = sd.get("reschedule_count") or 0
 			if count > 0:
-				# Try to find the original schedule from Demo Request Activity
-				old_date_display = "-"
-				old_time_display = "-"
-				dr_name = sd.get("demo_request") or (data.get("request") or {}).get("name")
-				if dr_name:
-					activities = frappe.get_all(
-						"Demo Request Activity",
-						filters={
-							"parent": dr_name,
-							"activity_type": "Demo Scheduled",
-						},
-						fields=["creation", "remarks"],
-						order_by="creation asc",
-						ignore_permissions=True,
-					) or []
-					if activities:
-						first_act = activities[0]
-						if first_act.get("creation"):
-							old_date_display = frappe.utils.format_date(
-								first_act["creation"], "medium"
-							)
-						old_time_display = "Original schedule"
+				# Get all Version entries for this Demo Session to find
+				# every scheduled_date / start_time / end_time change
+				versions = frappe.get_all(
+					"Version",
+					filters={
+						"ref_doctype": "Demo Session",
+						"docname": session_name,
+					},
+					fields=["name", "creation", "owner", "changed"],
+					order_by="creation asc",
+					ignore_permissions=True,
+				) or []
 
-				rescheduled_by_name = "-"
-				if sd.get("modified_by"):
-					rescheduled_by_name = (
-							frappe.db.get_value("User", sd["modified_by"], "full_name")
-							or sd["modified_by"]
+				# Collect all scheduled_date changes with their start/end times
+				schedule_changes = []
+				for v in versions:
+					try:
+						version_doc = frappe.get_doc("Version", v.name)
+						changed_fields = {}
+						if hasattr(version_doc, "changed") and version_doc.changed:
+							for ch in version_doc.changed:
+								field_name = ch[0] if isinstance(ch, (list, tuple)) else str(ch)
+								old_val = ch[1] if isinstance(ch, (list, tuple)) and len(ch) > 1 else ""
+								new_val = ch[2] if isinstance(ch, (list, tuple)) and len(ch) > 2 else ""
+								if field_name in ("scheduled_date", "start_time", "end_time"):
+									changed_fields[field_name] = (old_val, new_val)
+						if changed_fields.get("scheduled_date"):
+							schedule_changes.append({
+								"version_name": v.name,
+								"creation": v.get("creation"),
+								"owner": v.get("owner"),
+								"old_date": changed_fields["scheduled_date"][0],
+								"new_date": changed_fields["scheduled_date"][1],
+								"old_start": changed_fields.get("start_time", ("", ""))[0],
+								"new_start": changed_fields.get("start_time", ("", ""))[1],
+								"old_end": changed_fields.get("end_time", ("", ""))[0],
+								"new_end": changed_fields.get("end_time", ("", ""))[1],
+							})
+					except Exception:
+						continue
+
+				# Build history entries from the version changes
+				schedule_changes.sort(key=lambda x: x.get("creation") or "")
+
+				for idx, chg in enumerate(schedule_changes):
+					rescheduled_by_name = "-"
+					if chg.get("owner"):
+						rescheduled_by_name = (
+							frappe.db.get_value("User", chg["owner"], "full_name")
+							or chg["owner"]
 						)
-
-				reschedule_history.append({
-					"reschedule_number": count,
-					"old_date": old_date_display,
-					"old_time": old_time_display,
-					"new_date": frappe.utils.format_date(
-						sd.get("scheduled_date"), "medium"
-					) if sd.get("scheduled_date") else "-",
-					"new_time": "{0} – {1}".format(
-						str(sd.get("start_time") or "-")[:5],
-						str(sd.get("end_time") or "-")[:5]
-					) if sd.get("start_time") else "-",
-					"rescheduled_by": rescheduled_by_name,
-					"rescheduled_on": (
-						frappe.utils.format_datetime(sd.get("modified"), "dd MMM yyyy, hh:mm a")
-						if sd.get("modified") else "-"
-					),
-				})
+					reschedule_history.append({
+						"reschedule_number": idx + 1,
+						"old_date": (
+							frappe.utils.format_date(chg["old_date"], "medium")
+							if chg.get("old_date") else "-"
+						),
+						"old_time": "{0} \u2013 {1}".format(
+							str(chg.get("old_start") or "-")[:5],
+							str(chg.get("old_end") or "-")[:5]
+						) if chg.get("old_start") else "-",
+						"new_date": (
+							frappe.utils.format_date(chg["new_date"], "medium")
+							if chg.get("new_date") else "-"
+						),
+						"new_time": "{0} \u2013 {1}".format(
+							str(chg.get("new_start") or "-")[:5],
+							str(chg.get("new_end") or "-")[:5]
+						) if chg.get("new_start") else "-",
+						"rescheduled_by": rescheduled_by_name,
+						"rescheduled_on": (
+							frappe.utils.format_datetime(chg.get("creation"), "dd MMM yyyy, hh:mm a")
+							if chg.get("creation") else "-"
+						),
+					})
 
 	context.reschedule_history = reschedule_history
 
