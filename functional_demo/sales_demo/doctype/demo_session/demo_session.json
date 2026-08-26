@@ -55,6 +55,8 @@
   "started_on",
   "completed_on",
   "reschedule_count",
+  "reschedule_history_section",
+  "reschedule_history",
   "last_reminder_date",
   "last_hour_reminder"
  ],
@@ -385,6 +387,18 @@
    "fieldname": "reschedule_count",
    "fieldtype": "Int",
    "label": "Reschedule Count",
+   "read_only": 1
+  },
+  {
+   "fieldname": "reschedule_history_section",
+   "fieldtype": "Section Break",
+   "label": "Reschedule History"
+  },
+  {
+   "fieldname": "reschedule_history",
+   "fieldtype": "Table",
+   "label": "Reschedule History",
+   "options": "Demo Reschedule History",
    "read_only": 1
   },
   {

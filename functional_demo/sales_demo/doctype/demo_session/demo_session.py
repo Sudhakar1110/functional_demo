@@ -649,11 +649,27 @@ class DemoSession(Document):
 	def reschedule_demo(self, scheduled_date, start_time=None, end_time=None, meeting_link=None):
 		if not scheduled_date:
 			frappe.throw(_("Please select a new date."))
+		# capture the current schedule before overwriting
+		old_date = self.scheduled_date
+		old_start = self.start_time
+		old_end = self.end_time
 		self.scheduled_date = scheduled_date
 		self.start_time = start_time
 		self.end_time = end_time
 		self.meeting_link = meeting_link or self.meeting_link
 		self.reschedule_count = int(self.reschedule_count or 0) + 1
+		# record the reschedule in the child table
+		self.append("reschedule_history", {
+			"reschedule_number": self.reschedule_count,
+			"old_date": old_date,
+			"old_start_time": old_start,
+			"old_end_time": old_end,
+			"new_date": scheduled_date,
+			"new_start_time": start_time,
+			"new_end_time": end_time,
+			"rescheduled_by": frappe.session.user,
+			"rescheduled_on": frappe.utils.now_datetime(),
+		})
 		# mark the session as Rescheduled so it is clearly distinguishable from
 		# a first-time schedule (it is still an active, startable session)
 		self.demo_status = "Rescheduled"

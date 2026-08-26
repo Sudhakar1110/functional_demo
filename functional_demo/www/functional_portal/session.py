@@ -36,6 +36,47 @@ def get_context(context):
 				data["session"][key], "dd MMM yyyy, hh:mm a"
 			)
 
+	# Build reschedule history for display
+	reschedule_history = []
+	session_name = (data.get("session") or {}).get("name")
+	if session_name:
+		try:
+			reschedule_rows = frappe.get_all(
+				"Demo Reschedule History",
+				filters={"parent": session_name, "parenttype": "Demo Session"},
+				fields=["*"],
+				order_by="reschedule_number asc",
+				ignore_permissions=True,
+			) or []
+			for row in reschedule_rows:
+				rescheduled_by_name = "-"
+				if row.get("rescheduled_by"):
+					rescheduled_by_name = (
+						frappe.db.get_value("User", row["rescheduled_by"], "full_name")
+						or row["rescheduled_by"]
+					)
+				reschedule_history.append({
+					"reschedule_number": row.get("reschedule_number") or "-",
+					"old_date": frappe.utils.format_date(row.get("old_date"), "medium") if row.get("old_date") else "-",
+					"old_time": "{0} – {1}".format(
+						str(row.get("old_start_time") or "-")[:5],
+						str(row.get("old_end_time") or "-")[:5]
+					) if row.get("old_start_time") else "-",
+					"new_date": frappe.utils.format_date(row.get("new_date"), "medium") if row.get("new_date") else "-",
+					"new_time": "{0} – {1}".format(
+						str(row.get("new_start_time") or "-")[:5],
+						str(row.get("new_end_time") or "-")[:5]
+					) if row.get("new_start_time") else "-",
+					"rescheduled_by": rescheduled_by_name,
+					"rescheduled_on": (
+						frappe.utils.format_datetime(row.get("rescheduled_on"), "dd MMM yyyy, hh:mm a")
+						if row.get("rescheduled_on") else "-"
+					),
+				})
+		except Exception:
+			pass
+	context.reschedule_history = reschedule_history
+
 	session_name = (data.get("session") or {}).get("name")
 	context.has_follow_up = bool(
 		frappe.db.exists("Demo Follow Up", {"demo_session": session_name}) if session_name else False
