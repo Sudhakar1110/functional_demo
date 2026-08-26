@@ -62,6 +62,44 @@ class TestDemoSession(FrappeTestCase):
 		self.request.reload()
 		self.assertEqual(self.request.status, "Demo Completed")
 
+	def test_reschedule_records_history(self):
+		"""Rescheduling a session must create a history entry."""
+		session = make_session(self.request, template=self.template)
+		original_date = session.scheduled_date
+		original_start = session.start_time
+		change_status(self.request, "Scheduled", ignore_permissions=True)
+
+		new_date = add_days(today(), 10)
+		session.reschedule_demo(new_date, "11:00:00", "12:00:00")
+
+		session.reload()
+		self.assertEqual(session.demo_status, "Rescheduled")
+		self.assertEqual(session.reschedule_count, 1)
+		self.assertEqual(session.scheduled_date, new_date)
+		self.assertEqual(session.start_time, "11:00:00")
+		self.assertEqual(session.end_time, "12:00:00")
+
+		# Verify history child table was populated
+		self.assertEqual(len(session.reschedule_history), 1)
+		history = session.reschedule_history[0]
+		self.assertEqual(history.reschedule_number, 1)
+		self.assertEqual(history.old_date, original_date)
+		self.assertEqual(history.new_date, new_date)
+		self.assertEqual(history.new_start_time, "11:00:00")
+		self.assertEqual(history.new_end_time, "12:00:00")
+		self.assertEqual(history.rescheduled_by, frappe.session.user)
+
+		# Second reschedule
+		newer_date = add_days(today(), 20)
+		session.reschedule_demo(newer_date, "14:00:00", "15:00:00")
+		session.reload()
+		self.assertEqual(session.reschedule_count, 2)
+		self.assertEqual(len(session.reschedule_history), 2)
+		second = session.reschedule_history[1]
+		self.assertEqual(second.reschedule_number, 2)
+		self.assertEqual(second.old_date, new_date)
+		self.assertEqual(second.new_date, newer_date)
+
 	def test_full_demo_lifecycle(self):
 		session = make_session(self.request, template=self.template)
 		change_status(self.request, "Scheduled", ignore_permissions=True)
