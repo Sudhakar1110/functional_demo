@@ -43,6 +43,20 @@ def is_manager(user=None):
 	return bool(user_roles(user) & set(MANAGER_ROLES))
 
 
+def is_sales_manager(user=None):
+	"""True when the user carries the Sales Manager role (not Functional Team
+	Manager). Used to show sales-only sidebar items like Trial Dashboard,
+	End of Day, and Follow-up Tracker."""
+	user = user or frappe.session.user
+	return "Sales Manager" in user_roles(user)
+
+
+def is_functional_manager(user=None):
+	"""True when the user carries the Functional Team Manager role."""
+	user = user or frappe.session.user
+	return "Functional Team Manager" in user_roles(user)
+
+
 def is_admin(user=None):
 	"""Site admins (Administrator / System Manager) are never restricted by
 	the feedback-only rule. Note: only the Administrator account itself sees
@@ -325,12 +339,17 @@ def sidebar_items(active):
 			{"label": _("Follow-ups"), "route": "/functional_portal/follow_ups", "icon": ICON_FOLLOWUPS, "active": active == "follow_ups"},
 		]
 
-	# Manager-only items: Trial Dashboard, End of Day, Follow-up Tracker, Functional Home
-	if is_manager():
+	# Sales Manager-only items: Trial Dashboard, End of Day, Follow-up Tracker
+	if is_sales_manager():
 		items += [
 			{"label": _("Trial Dashboard"), "route": "/sales_portal/trials", "icon": ICON_TRIALS, "active": active == "trials"},
 			{"label": _("End of Day"), "route": "/sales_portal/daily_update", "icon": ICON_DAILY_UPDATE, "active": active == "daily_update"},
 			{"label": _("Follow-up Tracker"), "route": "/sales_portal/followup_tracker", "icon": ICON_FOLLOWUP_TRACKER, "active": active == "followup_tracker"},
+		]
+
+	# Functional Home for all managers
+	if is_manager():
+		items += [
 			{"label": _("Functional Home"), "route": "/functional_portal", "icon": ICON_FUNCTIONAL, "active": active == "functional"},
 		]
 
