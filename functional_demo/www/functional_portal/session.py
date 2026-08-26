@@ -80,7 +80,8 @@ def get_context(context):
 	# was added, reconstruct ALL reschedule history from Version changelog.
 	# Frappe tracks all document changes in the Version doctype when
 	# track_changes=1 (which is enabled for Demo Session).
-	if not reschedule_history and session_name:			sess_data = frappe.get_all(
+	if not reschedule_history and session_name:
+		sess_data = frappe.get_all(
 				"Demo Session",
 				filters={"name": session_name},
 				fields=["reschedule_count", "modified", "modified_by",
