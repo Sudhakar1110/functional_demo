@@ -360,30 +360,37 @@ def _load_version_history(session_name, data):
 		if count <= 0:
 			return result
 
-		# Get all Version entries for this Demo Session
-		versions = frappe.get_all(
-			"Version",
-			filters={
-				"ref_doctype": "Demo Session",
-				"docname": session_name,
-			},
-			fields=["name", "creation", "owner"],
-			order_by="creation asc",
+		# Get all Version entries for this Demo Session using raw SQL
+		# to reliably read the 'changed' JSON column
+		version_rows = frappe.db.sql(
+			"""
+			SELECT name, creation, owner, changed
+			FROM `tabVersion`
+			WHERE ref_doctype = 'Demo Session'
+				AND docname = %(name)s
+			ORDER BY creation ASC
+			""",
+			{"name": session_name},
+			as_dict=True,
 			ignore_permissions=True,
 		) or []
 
 		schedule_changes = []
-		for v in versions:
+		for v in version_rows:
 			try:
-				version_doc = frappe.get_doc("Version", v.name)
+				import json as _json
+				changed = v.get("changed")
+				if isinstance(changed, str):
+					changed = _json.loads(changed)
+				if not changed:
+					continue
 				changed_fields = {}
-				if hasattr(version_doc, "changed") and version_doc.changed:
-					for ch in version_doc.changed:
-						field_name = ch[0] if isinstance(ch, (list, tuple)) else str(ch)
-						old_val = ch[1] if isinstance(ch, (list, tuple)) and len(ch) > 1 else ""
-						new_val = ch[2] if isinstance(ch, (list, tuple)) and len(ch) > 2 else ""
-						if field_name in ("scheduled_date", "start_time", "end_time"):
-							changed_fields[field_name] = (old_val, new_val)
+				for ch in changed:
+					field_name = ch[0] if isinstance(ch, (list, tuple)) else str(ch)
+					old_val = ch[1] if isinstance(ch, (list, tuple)) and len(ch) > 1 else ""
+					new_val = ch[2] if isinstance(ch, (list, tuple)) and len(ch) > 2 else ""
+					if field_name in ("scheduled_date", "start_time", "end_time"):
+						changed_fields[field_name] = (old_val, new_val)
 				if changed_fields.get("scheduled_date"):
 					schedule_changes.append({
 						"creation": v.get("creation"),
