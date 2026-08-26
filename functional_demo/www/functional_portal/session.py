@@ -361,7 +361,9 @@ def _load_version_history(session_name, data):
 			return result
 
 		# Get all Version entries for this Demo Session using raw SQL
-		# to reliably read the 'changed' JSON column
+		# to reliably read the 'changed' JSON column.
+		# NOTE: frappe.db.sql() does not accept ignore_permissions;
+		# it raises a TypeError which was being silently caught.
 		version_rows = frappe.db.sql(
 			"""
 			SELECT name, creation, owner, changed
@@ -372,7 +374,6 @@ def _load_version_history(session_name, data):
 			""",
 			{"name": session_name},
 			as_dict=True,
-			ignore_permissions=True,
 		) or []
 
 		schedule_changes = []
