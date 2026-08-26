@@ -75,6 +75,70 @@ def get_context(context):
 				})
 		except Exception:
 			pass
+
+	# Fallback: for sessions that were rescheduled before the history tracking
+	# was added, create a synthetic entry from the session's data
+	if not reschedule_history and session_name:
+		session_doc = frappe.get_all(
+			"Demo Session",
+			filters={"name": session_name},
+			fields=["reschedule_count", "modified", "modified_by",
+				"scheduled_date", "start_time", "end_time",
+				"demo_request"],
+			ignore_permissions=True,
+		)
+		if session_doc:
+			sd = session_doc[0]
+			count = sd.get("reschedule_count") or 0
+			if count > 0:
+				# Try to find the original schedule from Demo Request Activity
+				old_date_display = "-"
+				old_time_display = "-"
+				dr_name = sd.get("demo_request") or (data.get("request") or {}).get("name")
+				if dr_name:
+					activities = frappe.get_all(
+						"Demo Request Activity",
+						filters={
+							"parent": dr_name,
+							"activity_type": "Demo Scheduled",
+						},
+						fields=["creation", "remarks"],
+						order_by="creation asc",
+						ignore_permissions=True,
+					) or []
+					if activities:
+						first_act = activities[0]
+						if first_act.get("creation"):
+							old_date_display = frappe.utils.format_date(
+								first_act["creation"], "medium"
+							)
+						old_time_display = "Original schedule"
+
+				rescheduled_by_name = "-"
+				if sd.get("modified_by"):
+					rescheduled_by_name = (
+							frappe.db.get_value("User", sd["modified_by"], "full_name")
+							or sd["modified_by"]
+						)
+
+				reschedule_history.append({
+					"reschedule_number": count,
+					"old_date": old_date_display,
+					"old_time": old_time_display,
+					"new_date": frappe.utils.format_date(
+						sd.get("scheduled_date"), "medium"
+					) if sd.get("scheduled_date") else "-",
+					"new_time": "{0} – {1}".format(
+						str(sd.get("start_time") or "-")[:5],
+						str(sd.get("end_time") or "-")[:5]
+					) if sd.get("start_time") else "-",
+					"rescheduled_by": rescheduled_by_name,
+					"rescheduled_on": (
+						frappe.utils.format_datetime(sd.get("modified"), "dd MMM yyyy, hh:mm a")
+						if sd.get("modified") else "-"
+					),
+				})
+
 	context.reschedule_history = reschedule_history
 
 	session_name = (data.get("session") or {}).get("name")

@@ -68,6 +68,7 @@
 						<h2>{{ s.name }}</h2>
 						<div style="margin-top: 8px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
 							<span class="badge b-{{ s.demo_status|lower|replace(' ', '-') }}">{{ s.demo_status }}</span>
+							{% if s.reschedule_count and s.reschedule_count > 0 %}<span class="badge b-rescheduled" style="background: #F5F3FF; color: #7C3AED; border: 1px solid #DDD6FE;">Rescheduled {{ s.reschedule_count }}x</span>{% endif %}
 							{% if r.status %}<span class="badge b-{{ r.status|lower|replace(' ', '-') }}">Request: {{ display_status(r.status) }}</span>{% endif %}
 							{% if s.final_result %}<span class="badge b-{{ s.final_result|lower|replace(' ', '-') }}">Result: {{ display_status(s.final_result) }}</span>{% endif %}
 						</div>
@@ -214,6 +215,54 @@
 				{% endif %}
 			</div>
 
+			<!-- Reschedule History -->
+			{% if reschedule_history %}
+			<div class="portal-card" style="margin-bottom: 22px;">
+				<div class="card-head" style="background: #F5F3FF; border-bottom: 2px solid #DDD6FE;">
+					<h2 style="color: #7C3AED;">🔄 Reschedule History ({{ reschedule_history|length }} reschedule{{ 's' if reschedule_history|length != 1 else '' }})</h2>
+				</div>
+				<div class="card-body">
+					{% for entry in reschedule_history %}
+					<div style="padding: 16px 18px; border-left: 4px solid #8B5CF6; margin-bottom: 14px; background: #F5F3FF; border-radius: 0 10px 10px 0;">
+						<!-- Header -->
+						<div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
+							<div>
+								<div style="font-size: 12px; font-weight: 700; color: #7C3AED; margin-bottom: 4px;">
+									🔄 Reschedule #{{ entry.reschedule_number }}
+								</div>
+							</div>
+							<div style="text-align: right; flex-shrink: 0;">
+								<span class="badge b-rescheduled" style="padding: 4px 12px; border-radius: 999px; font-size: 11px; font-weight: 700;">Rescheduled</span>
+							</div>
+						</div>
+
+						<!-- Changes -->
+						<div style="display: grid; grid-template-columns: 1fr auto 1fr; gap: 12px; align-items: center; margin-bottom: 10px; padding: 12px 14px; background: rgba(255,255,255,0.6); border-radius: 6px;">
+							<div>
+								<div style="font-size: 11px; font-weight: 600; color: #6B7280; text-transform: uppercase; margin-bottom: 4px;">Previous Schedule</div>
+								<div style="font-size: 14px; font-weight: 600; color: #374151;">{{ entry.old_date }}</div>
+								<div style="font-size: 13px; color: #6B7280;">{{ entry.old_time }}</div>
+							</div>
+							<div style="text-align: center;">
+								<svg viewBox="0 0 24 24" fill="none" stroke="#8B5CF6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="24" height="24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+							</div>
+							<div>
+								<div style="font-size: 11px; font-weight: 600; color: #6B7280; text-transform: uppercase; margin-bottom: 4px;">New Schedule</div>
+								<div style="font-size: 14px; font-weight: 600; color: #059669;">{{ entry.new_date }}</div>
+								<div style="font-size: 13px; color: #6B7280;">{{ entry.new_time }}</div>
+							</div>
+						</div>
+
+						<!-- Footer -->
+						<div style="font-size: 11px; color: #9CA3AF; margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(0,0,0,0.05);">
+							{{ entry.rescheduled_on }} · by {{ entry.rescheduled_by }}
+						</div>
+					</div>
+					{% endfor %}
+				</div>
+			</div>
+			{% endif %}
+
 			<div class="portal-card">
 				<div class="card-head"><h2>Lead Information</h2></div>
 				<div class="card-body flush">
@@ -292,52 +341,6 @@
 					</table>
 				</div>
 			</div>			{% endif %}
-
-		<!-- Reschedule History -->
-		{% if reschedule_history %}
-		<div class="portal-card" style="margin-bottom: 22px;">
-			<div class="card-head"><h2>Reschedule History ({{ reschedule_history|length }} reschedule{{ 's' if reschedule_history|length != 1 else '' }})</h2></div>
-			<div class="card-body">
-				{% for entry in reschedule_history %}
-				<div style="padding: 16px 18px; border-left: 4px solid #8B5CF6; margin-bottom: 14px; background: #F5F3FF; border-radius: 0 10px 10px 0;">
-					<!-- Header -->
-					<div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
-						<div>
-							<div style="font-size: 12px; font-weight: 700; color: #7C3AED; margin-bottom: 4px;">
-								🔄 Reschedule #{{ entry.reschedule_number }}
-							</div>
-						</div>
-						<div style="text-align: right; flex-shrink: 0;">
-							<span class="badge b-rescheduled" style="padding: 4px 12px; border-radius: 999px; font-size: 11px; font-weight: 700;">Rescheduled</span>
-						</div>
-					</div>
-
-					<!-- Changes -->
-					<div style="display: grid; grid-template-columns: 1fr auto 1fr; gap: 12px; align-items: center; margin-bottom: 10px; padding: 12px 14px; background: rgba(255,255,255,0.6); border-radius: 6px;">
-						<div>
-							<div style="font-size: 11px; font-weight: 600; color: #6B7280; text-transform: uppercase; margin-bottom: 4px;">Previous Schedule</div>
-							<div style="font-size: 14px; font-weight: 600; color: #374151;">{{ entry.old_date }}</div>
-							<div style="font-size: 13px; color: #6B7280;">{{ entry.old_time }}</div>
-						</div>
-						<div style="text-align: center;">
-							<svg viewBox="0 0 24 24" fill="none" stroke="#8B5CF6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="24" height="24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-						</div>
-						<div>
-							<div style="font-size: 11px; font-weight: 600; color: #6B7280; text-transform: uppercase; margin-bottom: 4px;">New Schedule</div>
-							<div style="font-size: 14px; font-weight: 600; color: #059669;">{{ entry.new_date }}</div>
-							<div style="font-size: 13px; color: #6B7280;">{{ entry.new_time }}</div>
-						</div>
-					</div>
-
-					<!-- Footer -->
-					<div style="font-size: 11px; color: #9CA3AF; margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(0,0,0,0.05);">
-						{{ entry.rescheduled_on }} · by {{ entry.rescheduled_by }}
-					</div>
-				</div>
-				{% endfor %}
-			</div>
-		</div>
-		{% endif %}
 
 		<!-- Follow-up History -->
 		{% if follow_up_history %}

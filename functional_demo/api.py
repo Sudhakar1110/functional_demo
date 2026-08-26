@@ -969,6 +969,7 @@ def get_demo_execution_data(demo_session=None):
 			"final_result": ds.final_result,
 			"started_on": ds.started_on,
 			"completed_on": ds.completed_on,
+			"reschedule_count": ds.reschedule_count or 0,
 		},
 		"request": {
 			"name": ds.demo_request,
