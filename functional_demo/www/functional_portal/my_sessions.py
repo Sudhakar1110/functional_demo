@@ -4,7 +4,9 @@
 import frappe
 from frappe import _
 
-from functional_demo.portal import consultant_of_user, list_note, portal_context
+from functional_demo.portal import (
+	consultant_of_user, is_functional_manager, list_note, portal_context,
+)
 
 SESSION_STATUSES = [
 	"Scheduled", "In Progress", "Completed", "Rescheduled",
@@ -13,17 +15,25 @@ SESSION_STATUSES = [
 
 
 def get_context(context):
+	is_mgr = is_functional_manager()
+	subtitle = (
+		_("All demo sessions across consultants")
+		if is_mgr
+		else _("Sessions and demos assigned to you")
+	)
 	portal_context(
 		context,
 		_("My Demo Sessions"),
 		["Sales User", "Sales Manager", "Functional Consultant", "Functional Team Manager"],
 		active="sessions",
-		subtitle=_("Sessions and demos assigned to you"),
+		subtitle=subtitle,
 	)
 	consultant = consultant_of_user()
 	status = frappe.form_dict.get("status") or ""
 	filters = {}
-	if consultant:
+	# Functional Team Managers see ALL sessions (not just their own) so they
+	# can track demos they assigned to consultants, including rescheduled ones.
+	if consultant and not is_functional_manager():
 		filters["functional_consultant"] = consultant
 	if status:
 		filters["demo_status"] = status
@@ -51,25 +61,27 @@ def get_context(context):
 	# Also fetch Demo Requests assigned to this consultant that do NOT have
 	# an active session yet (i.e. they are in "Assigned" state waiting to
 	# be scheduled).  This lets the consultant see new assignments immediately.
+	# Functional Team Managers see ALL pending requests across all consultants.
 	assigned_requests = []
-	if consultant and not status:
+	if not status:
+		request_filters = {"status": "Assigned"}
+		if consultant and not is_functional_manager():
+			request_filters["functional_consultant"] = consultant
 		# Find demo request names that already have an active session
+		session_filters = {"demo_status": ["in", ["Scheduled", "In Progress", "Rescheduled"]]}
+		if consultant and not is_functional_manager():
+			session_filters["functional_consultant"] = consultant
 		active_session_requests = frappe.get_all(
 			"Demo Session",
-			filters={
-				"functional_consultant": consultant,
-				"demo_status": ["in", ["Scheduled", "In Progress", "Rescheduled"]],
-			},
+			filters=session_filters,
 			fields=["demo_request"],
 			pluck="demo_request",
 		) or []
+		if active_session_requests:
+			request_filters["name"] = ["not in", active_session_requests]
 		assigned_requests = frappe.get_all(
 			"Demo Request",
-			filters={
-				"functional_consultant": consultant,
-				"status": "Assigned",
-				"name": ["not in", active_session_requests],
-			},
+			filters=request_filters,
 			fields=[
 				"name", "customer", "lead", "sales_person", "interested_module",
 				"preferred_demo_date", "preferred_demo_time", "status", "creation",
@@ -93,6 +105,13 @@ def get_context(context):
 	context.status = status
 	context.status_options = SESSION_STATUSES
 	context.consultant = consultant
+	# For managers showing all sessions, use the total DB count (unfiltered)
+	# so the note reflects the true total rather than the filtered subset.
+	total_count = (
+		frappe.db.count("Demo Session")
+		if is_mgr
+		else frappe.db.count("Demo Session", filters)
+	)
 	context.list_note = list_note(
-		len(context.sessions), frappe.db.count("Demo Session", filters), _("demo sessions")
+		len(context.sessions), total_count, _("demo sessions")
 	)
