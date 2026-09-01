@@ -680,6 +680,77 @@ class DemoSession(Document):
 		create_calendar_event(self)
 		self.notify_sales_scheduled()
 		self.notify_managers_rescheduled()
+		# Auto-create a follow-up so the session appears on the Follow-ups
+		# page for the sales team to track.
+		fu = self.create_follow_up(
+			scheduled_date,
+			_("Follow up after demo reschedule to {0}").format(scheduled_date),
+			self.sales_person,
+		)
+		self.notify_sales_reschedule_follow_up(fu, scheduled_date)
+
+	def notify_sales_reschedule_follow_up(self, fu, new_date):
+		"""Notify the sales person that a follow-up was created because the
+		demo was rescheduled — distinct from the generic follow-up notification
+		so the sales team immediately understands why a follow-up appeared."""
+		try:
+			sales_person = self.sales_person or self.assigned_to
+			if not sales_person:
+				return
+			party = self.customer or self.lead or self.demo_request or self.name
+			date_label = (
+				frappe.utils.format_date(new_date, "medium")
+				if new_date
+				else "-"
+			)
+			subject = _("Follow-up Created — Demo Rescheduled to {0} ({1})").format(
+				date_label, party
+			)
+			# in-app notification (portal + desk bells)
+			create_notification(
+				sales_person,
+				subject,
+				"Demo Follow Up",
+				fu.name if fu else self.name,
+			)
+			# email
+			email = frappe.db.get_value("User", sales_person, "email")
+			if not email:
+				return
+			consultant_name = (
+				frappe.db.get_value(
+					"Functional Consultant", self.functional_consultant, "consultant_name"
+				)
+				if self.functional_consultant
+				else "-"
+			)
+			send_branded_email(
+				recipients=[email],
+				subject=subject,
+				heading=_("Follow-up Created — Reschedule"),
+				intro=_(
+					"Demo Session {0} for {1} was rescheduled to {2}. "
+					"A follow-up has been created so you can track the next steps."
+				).format(self.name, party, date_label),
+				rows=[
+					(_("New Date"), date_label),
+					(_("Time"), "{0} \u2013 {1}".format(self.start_time or "-", self.end_time or "-")),
+					(_("Consultant"), consultant_name),
+					(_("Follow-up"), fu.name if fu else "-"),
+					(_("Demo Session"), self.name),
+				],
+				cta_text=_("Open Follow-up"),
+				cta_url=frappe.utils.get_url("/app/demo-follow-up/{0}".format(fu.name)) if fu else "",
+				reference_doctype="Demo Follow Up",
+				reference_name=fu.name if fu else self.name,
+			)
+		except Exception:
+			frappe.log_error(
+				title=_("Reschedule follow-up notification to {0} failed for {1}").format(
+					self.sales_person or "-", self.name
+				),
+				message=frappe.get_traceback(),
+			)
 
 	def notify_managers_rescheduled(self):
 		"""Notify Functional Team Managers, Sales Managers, and the assigned

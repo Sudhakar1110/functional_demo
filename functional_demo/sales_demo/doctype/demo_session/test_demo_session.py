@@ -100,6 +100,29 @@ class TestDemoSession(FrappeTestCase):
 		self.assertEqual(second.old_date, new_date)
 		self.assertEqual(second.new_date, newer_date)
 
+	def test_reschedule_creates_follow_up(self):
+		"""Rescheduling a demo must auto-create a follow-up visible to sales."""
+		session = make_session(self.request, template=self.template)
+		change_status(self.request, "Scheduled", ignore_permissions=True)
+
+		new_date = add_days(today(), 10)
+		session.reschedule_demo(new_date, "11:00:00", "12:00:00")
+
+		# A follow-up must now exist for this session
+		fu = frappe.db.get_value(
+			"Demo Follow Up", {"demo_session": session.name}, "*", as_dict=True
+		)
+		self.assertTrue(fu, "Reschedule should create a Demo Follow Up")
+		self.assertEqual(fu.demo_request, self.request.name)
+		self.assertEqual(fu.follow_up_date, new_date)
+		self.assertIn("reschedule", (fu.next_action or "").lower())
+
+		# A second reschedule should NOT create a duplicate follow-up
+		newer_date = add_days(today(), 20)
+		session.reschedule_demo(newer_date, "14:00:00", "15:00:00")
+		count = frappe.db.count("Demo Follow Up", {"demo_session": session.name})
+		self.assertEqual(count, 1, "Follow-up should be idempotent on re-reschedule")
+
 	def test_full_demo_lifecycle(self):
 		session = make_session(self.request, template=self.template)
 		change_status(self.request, "Scheduled", ignore_permissions=True)
