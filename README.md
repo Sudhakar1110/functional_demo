@@ -32,6 +32,11 @@ indicators — while the backend follows proper Frappe v15 / ERPNext v15 standar
   sessions.
 - **Demo Session lifecycle** — schedule, start, complete, reschedule, cancel,
   feedback, follow-up and final result, all with one-click actions.
+- **Auto follow-up on reschedule** — when a consultant reschedules a demo, a
+  *Demo Follow Up* is automatically created so the session appears on the
+  Follow-ups page. The sales person receives a dedicated in-app notification
+  and email explaining the follow-up was created because of the reschedule.
+  Subsequent reschedules are idempotent (no duplicate follow-ups).
 - **Demo Execution screen** — a single, friendly page for the consultant showing
   customer info, demo info, the full template content and quick actions
   (`/app/demo-execution`).
@@ -57,7 +62,8 @@ indicators — while the backend follows proper Frappe v15 / ERPNext v15 standar
 - **Notifications + emails** — in-app bell notifications (portal + desk) and
   direct emails built into the workflow code: consultant assignment/reassignment,
   demo scheduled/rescheduled, started, completed, cancelled, final result,
-  follow-up created, plus a daily day-before-demo reminder and SLA escalation.
+  follow-up created, reschedule-specific follow-up notification, plus a daily
+  day-before-demo reminder and SLA escalation.
   (Legacy standard Notification doctypes are shipped disabled.)
 - **Audit trail** — track_changes versioning, activity history child table and
   timeline Communication entries.
