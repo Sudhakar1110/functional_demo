@@ -1718,7 +1718,22 @@ def assign_consultant(demo_request=None, consultant=None):
 	from functional_demo.sales_demo.doctype.demo_request.demo_request import change_status
 
 	if current_state in (None, "", "Draft", "Requested", "Manager Review"):
-		doc = change_status(doc, "Assigned", ignore_permissions=True)
+		try:
+			doc = change_status(doc, "Assigned", ignore_permissions=True)
+		except Exception:
+			# If workflow transition fails (e.g. missing workflow, role
+			# restrictions), fall back to setting the status directly so the
+			# consultant assignment is never blocked by workflow issues.
+			frappe.log_error(
+				title=_("assign_consultant: workflow transition failed for {0}").format(demo_request),
+				message=frappe.get_traceback(),
+			)
+			frappe.db.set_value(
+				"Demo Request", demo_request,
+				{"workflow_state": "Assigned", "status": "Assigned"},
+				update_modified=True,
+			)
+			doc.reload()
 
 	# Notify the sales person that their demo request has been assigned
 	# to a consultant - they need to know the request is being actioned.

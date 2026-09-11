@@ -91,9 +91,10 @@
 					</div>
 						<div class="form-row">
 							<div style="grid-column: 1 / -1;"><label>Interested Template</label>
-								<select id="interested_module" name="interested_module">
-									{% for m in modules %}<option value="{{ m }}">{{ m or "— Select —" }}</option>{% endfor %}
-								</select>
+								<input type="text" id="interested_module" name="interested_module" list="modules-list" placeholder="Select or type a template..." value="{{ prefill.interested_module or '' }}" autocomplete="off">
+								<datalist id="modules-list">
+									{% for m in modules %}{% if m %}<option value="{{ m }}">{% endif %}{% endfor %}
+								</datalist>
 							</div>
 						</div>							<div class="form-row">
 								<div><label>Priority</label>

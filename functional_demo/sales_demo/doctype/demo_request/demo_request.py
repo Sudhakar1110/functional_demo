@@ -107,14 +107,17 @@ class DemoRequest(Document):
 				frappe.throw(
 					_("Please assign a Functional Consultant before the demo moves forward."),
 					title=_("Consultant Required"),
-				)
-
-	def validate_schedule_conflict(self):
+				)    def validate_schedule_conflict(self):
 		"""Warn (and prevent) conflicting schedules for the same consultant on the
-		same date. The Demo Session validates actual overlaps."""
+	same date. The Demo Session validates actual overlaps.
+
+		Only enforced at Scheduled / Demo In Progress — assigning a consultant
+	tdoes not yet lock a date, so conflicts at Assigned state would block
+		legitimate assignments.
+		"""
 		if not (self.functional_consultant and self.preferred_demo_date and self.preferred_demo_time):
 			return
-		if self.workflow_state not in ("Assigned", "Scheduled", "Demo In Progress"):
+		if self.workflow_state not in ("Scheduled", "Demo In Progress"):
 			return
 		conflicts = frappe.db.sql(
 			"""
@@ -137,11 +140,14 @@ class DemoRequest(Document):
 					self.functional_consultant, self.preferred_demo_date, conflicts[0][0]
 				),
 				title=_("Schedule Conflict"),
-			)
-
-	def validate_follow_up_date(self):
+			)    def validate_follow_up_date(self):
+		"""Only block a follow-up date that was actively changed to a past value.
+		A leftover date from a previous save should never prevent other actions
+		such as assigning a consultant or changing the workflow state."""
 		if self.follow_up_date and self.follow_up_date < today():
-			frappe.throw(_("Follow-up Date cannot be in the past."))
+			before = self.get_doc_before_save()
+			if not before or before.follow_up_date != self.follow_up_date:
+				frappe.throw(_("Follow-up Date cannot be in the past."))
 
 	def validate_trial_dates(self):
 		"""Trial period (set once the lead is converted) must be a valid window:
