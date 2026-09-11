@@ -146,3 +146,35 @@
 	</div>
 </div>
 {% endblock %}
+
+{% block script %}
+{% include "functional_demo/templates/includes/portal_script.html" %}
+<script>
+(function () {
+	"use strict";
+	/* Check every 60 seconds for sessions starting within 5 minutes */
+	var _notified = {};
+	function checkUpcoming() {
+		portalCall("functional_demo.api.get_upcoming_sessions", {}).then(function (sessions) {
+			if (!sessions || !sessions.length) return;
+			sessions.forEach(function (s) {
+				if (_notified[s.name]) return;
+				_notified[s.name] = true;
+				var msg = "Demo starting in 5 minutes: " + (s.customer || "Customer") + " (" + s.name + ")";
+				if (s.meeting_link) msg += "\nJoin: " + s.meeting_link;
+				portalAlert(msg, "ok");
+				if (Notification && Notification.permission === "granted") {
+					new Notification("Demo Starting Soon", { body: msg, icon: "/assets/functional_demo/images/brand_logo.jpg" });
+				}
+			});
+		});
+	}
+	/* Request browser notification permission */
+	if (Notification && Notification.permission === "default") {
+		Notification.requestPermission();
+	}
+	checkUpcoming();
+	setInterval(checkUpcoming, 60000);
+})();
+</script>
+{% endblock %}

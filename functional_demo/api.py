@@ -1107,6 +1107,37 @@ def edit_demo_session(demo_session=None, scheduled_date=None, start_time=None, e
 
 
 @frappe.whitelist()
+def get_upcoming_sessions():
+	"""Return sessions starting within the next 5 minutes for the current user."""
+	now = frappe.utils.now_datetime()
+	in_5 = frappe.utils.add_to_date(now, minutes=5)
+	consultant = frappe.db.get_value(
+		"Functional Consultant", {"user": frappe.session.user}, "name"
+	)
+	if not consultant:
+		return []
+	sessions = frappe.get_all(
+		"Demo Session",
+		filters={
+			"functional_consultant": consultant,
+			"demo_status": ["in", ["Scheduled", "Rescheduled"]],
+			"scheduled_date": ["between", [frappe.utils.today(), frappe.utils.add_to_date(frappe.utils.today(), days=1)]],
+		},
+		fields=["name", "customer", "scheduled_date", "start_time", "meeting_link"],
+		order_by="scheduled_date asc",
+	) or []
+	upcoming = []
+	for s in sessions:
+		if s.scheduled_date and s.start_time:
+			session_dt = frappe.utils.get_datetime(
+				str(s.scheduled_date) + " " + str(s.start_time)[:5]
+			)
+			if now <= session_dt <= in_5:
+				upcoming.append(s)
+	return upcoming
+
+
+@frappe.whitelist()
 def create_follow_up_from_session(demo_session=None, follow_up_date=None, next_action=None, assigned_to=None):
 	"""Create a follow-up directly from a completed demo session."""
 	if not follow_up_date:

@@ -5,7 +5,7 @@ import frappe
 from frappe import _
 
 from functional_demo.portal import (
-	consultant_of_user, is_functional_manager, list_note, portal_context,
+	consultant_of_user, is_functional_manager, is_sales, list_note, portal_context,
 )
 
 SESSION_STATUSES = [
@@ -16,6 +16,8 @@ SESSION_STATUSES = [
 
 def get_context(context):
 	is_mgr = is_functional_manager()
+	is_sales_user = is_sales()
+	consultant = consultant_of_user()
 	subtitle = (
 		_("All demo sessions across consultants")
 		if is_mgr
@@ -28,13 +30,18 @@ def get_context(context):
 		active="sessions",
 		subtitle=subtitle,
 	)
-	consultant = consultant_of_user()
 	status = frappe.form_dict.get("status") or ""
 	filters = {}
 	# Functional Team Managers see ALL sessions (not just their own) so they
 	# can track demos they assigned to consultants, including rescheduled ones.
-	if consultant and not is_functional_manager():
+	if is_mgr:
+		pass  # no filter — see all
+	elif consultant:
+		# Functional Consultant: see only their assigned sessions
 		filters["functional_consultant"] = consultant
+	elif is_sales_user:
+		# Sales Person: see only sessions where they are the sales_person
+		filters["sales_person"] = frappe.session.user
 	if status:
 		filters["demo_status"] = status
 
@@ -66,12 +73,20 @@ def get_context(context):
 	assigned_requests = []
 	if not status:
 		request_filters = {"status": "Assigned"}
-		if consultant and not is_functional_manager():
+		if is_mgr:
+			pass  # managers see all
+		elif consultant:
 			request_filters["functional_consultant"] = consultant
+		elif is_sales_user:
+			request_filters["sales_person"] = frappe.session.user
 		# Find demo request names that already have an active session
 		session_filters = {"demo_status": ["in", ["Scheduled", "In Progress", "Rescheduled"]]}
-		if consultant and not is_functional_manager():
+		if is_mgr:
+			pass
+		elif consultant:
 			session_filters["functional_consultant"] = consultant
+		elif is_sales_user:
+			session_filters["sales_person"] = frappe.session.user
 		active_session_requests = frappe.get_all(
 			"Demo Session",
 			filters=session_filters,
@@ -107,6 +122,7 @@ def get_context(context):
 	context.status_options = SESSION_STATUSES
 	context.consultant = consultant
 	context.is_mgr = is_mgr
+	context.is_sales_user = is_sales_user
 	# Consultants list for the reassign dropdown (managers only)
 	context.consultants = []
 	if is_mgr:

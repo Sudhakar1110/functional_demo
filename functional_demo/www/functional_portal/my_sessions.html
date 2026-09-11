@@ -100,8 +100,8 @@
 								<td style="white-space: nowrap;">
 									{% if s.is_session and s.demo_status in ["Scheduled", "In Progress", "Rescheduled"] %}
 									<div style="display: flex; gap: 6px; align-items: center; flex-wrap: nowrap;">
-										<a class="btn-portal sm" href="/functional_portal/session?name={{ s.name }}">{% if is_sales %}Open{% else %}Conduct &rarr;{% endif %}</a>
-										{% if s.demo_status in ["Scheduled", "Rescheduled"] %}
+										<a class="btn-portal sm" href="/functional_portal/session?name={{ s.name }}">{% if is_sales_user %}Open{% else %}Conduct &rarr;{% endif %}</a>
+										{% if s.demo_status in ["Scheduled", "Rescheduled"] and (is_mgr or is_sales_user) %}
 										<button class="btn-portal secondary sm edit-session-btn" data-name="{{ s.name }}" data-date="{{ s.scheduled_date or '' }}" data-start="{{ s.start_time or '' }}" data-end="{{ s.end_time or '' }}" data-link="{{ s.meeting_link or '' }}" data-customer="{{ s.customer or '' }}" data-module="{{ s.interested_module or '' }}" data-consultant="{{ s.functional_consultant or '' }}">Edit</button>
 										{% endif %}
 									</div>
@@ -222,6 +222,29 @@
 			editSave.textContent = "Save Changes";
 		});
 	});
+
+	/* Check every 60 seconds for sessions starting within 5 minutes */
+	var _notified = {};
+	function checkUpcoming() {
+		portalCall("functional_demo.api.get_upcoming_sessions", {}).then(function (sessions) {
+			if (!sessions || !sessions.length) return;
+			sessions.forEach(function (s) {
+				if (_notified[s.name]) return;
+				_notified[s.name] = true;
+				var msg = "Demo starting in 5 minutes: " + (s.customer || "Customer") + " (" + s.name + ")";
+				if (s.meeting_link) msg += "\nJoin: " + s.meeting_link;
+				portalAlert(msg, "ok");
+				if (Notification && Notification.permission === "granted") {
+					new Notification("Demo Starting Soon", { body: msg, icon: "/assets/functional_demo/images/brand_logo.jpg" });
+				}
+			});
+		});
+	}
+	if (Notification && Notification.permission === "default") {
+		Notification.requestPermission();
+	}
+	checkUpcoming();
+	setInterval(checkUpcoming, 60000);
 })();
 </script>
 {% endblock %}
