@@ -689,6 +689,53 @@ class DemoSession(Document):
 		)
 		self.notify_sales_reschedule_follow_up(fu, scheduled_date)
 
+	def mark_no_response(self, remarks=None):
+		"""Mark the session as No Response — customer did not respond.
+		Records the remarks, logs the activity and creates a follow-up so
+		the sales team can track it."""
+		old_date = self.scheduled_date
+		old_start = self.start_time
+		old_end = self.end_time
+		self.reschedule_count = int(self.reschedule_count or 0) + 1
+		self.append("reschedule_history", {
+			"reschedule_number": self.reschedule_count,
+			"old_date": old_date,
+			"old_start_time": old_start,
+			"old_end_time": old_end,
+			"new_date": old_date,
+			"new_start_time": old_start,
+			"new_end_time": old_end,
+			"rescheduled_by": frappe.session.user,
+			"rescheduled_on": frappe.utils.now_datetime(),
+		})
+		self.consultant_remarks = remarks or self.consultant_remarks
+		self.demo_status = "Rescheduled"
+		self.save(ignore_permissions=True)
+		self.log_request_activity(
+			"No Response",
+			remarks=remarks or "Customer did not respond",
+		)
+		fu = self.create_follow_up(
+			old_date,
+			_("Follow up after No Response from customer"),
+			self.sales_person,
+		)
+		try:
+			sales_person = self.sales_person or self.assigned_to
+			if sales_person:
+				party = self.customer or self.lead or self.demo_request or self.name
+				subject = _("No Response — {0} ({1})").format(party, self.name)
+				create_notification(sales_person, subject, "Demo Follow Up", fu.name if fu else self.name)
+				email = frappe.db.get_value("User", sales_person, "email")
+				if email:
+					frappe.sendmail(
+						recipients=[email],
+						subject=subject,
+						message=_("The customer did not respond to the scheduled demo. Remarks: {0}").format(remarks or "-"),
+					)
+		except Exception:
+			frappe.log_error(title="No Response notification failed", message=frappe.get_traceback())
+
 	def notify_sales_reschedule_follow_up(self, fu, new_date):
 		"""Notify the sales person that a follow-up was created because the
 		demo was rescheduled — distinct from the generic follow-up notification

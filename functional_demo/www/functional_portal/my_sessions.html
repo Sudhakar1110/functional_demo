@@ -101,6 +101,9 @@
 									{% if s.is_session and s.demo_status in ["Scheduled", "In Progress", "Rescheduled"] %}
 									<div style="display: flex; gap: 6px; align-items: center; flex-wrap: nowrap;">
 										<a class="btn-portal sm" href="/functional_portal/session?name={{ s.name }}">{% if is_sales_user %}Open{% else %}Conduct &rarr;{% endif %}</a>
+										{% if s.demo_status in ["Scheduled", "Rescheduled"] %}
+										<button class="btn-portal secondary sm no-response-btn" data-name="{{ s.name }}">No Response</button>
+										{% endif %}
 										{% if s.demo_status in ["Scheduled", "Rescheduled"] and (is_mgr or is_sales_user) %}
 										<button class="btn-portal secondary sm edit-session-btn" data-name="{{ s.name }}" data-date="{{ s.scheduled_date or '' }}" data-start="{{ s.start_time or '' }}" data-end="{{ s.end_time or '' }}" data-link="{{ s.meeting_link or '' }}" data-customer="{{ s.customer or '' }}" data-module="{{ s.interested_module or '' }}" data-consultant="{{ s.functional_consultant or '' }}">Edit</button>
 										{% endif %}
@@ -162,6 +165,24 @@
 		</div>
 	</div>
 </div>
+
+<!-- No Response Modal -->
+<div class="portal-modal" id="no-response-modal">
+	<div class="pm-card pm-schedule" style="max-width: 520px;">
+		<div class="pm-title">No Response</div>
+		<p class="pm-mark">Customer did not respond for <strong id="nr-session-name"></strong></p>
+		<input type="hidden" id="nr-session-id">
+		<div class="form-row">
+			<div style="grid-column: 1 / -1;"><label>Remarks <span class="req">*</span></label>
+				<textarea id="nr-remarks" placeholder="Why did the customer not respond?" rows="3" style="width: 100%;"></textarea>
+			</div>
+		</div>
+		<div class="sched-actions">
+			<button class="btn-portal secondary" id="nr-cancel">Cancel</button>
+			<button class="btn-portal warning" id="nr-done">Done</button>
+		</div>
+	</div>
+</div>
 {% endblock %}
 
 {% block script %}
@@ -220,6 +241,43 @@
 		}).catch(function () {
 			editSave.disabled = false;
 			editSave.textContent = "Save Changes";
+		});
+	});
+
+	/* ---- no response ---- */
+	document.querySelectorAll(".no-response-btn").forEach(function (btn) {
+		btn.addEventListener("click", function () {
+			document.getElementById("nr-session-id").value = btn.getAttribute("data-name");
+			document.getElementById("nr-session-name").textContent = btn.getAttribute("data-name");
+			document.getElementById("nr-remarks").value = "";
+			var modal = document.getElementById("no-response-modal");
+			if (modal) modal.classList.add("show");
+		});
+	});
+
+	var nrCancel = document.getElementById("nr-cancel");
+	if (nrCancel) nrCancel.addEventListener("click", function () {
+		var modal = document.getElementById("no-response-modal");
+		if (modal) modal.classList.remove("show");
+	});
+
+	var nrDone = document.getElementById("nr-done");
+	if (nrDone) nrDone.addEventListener("click", function () {
+		var sessionName = document.getElementById("nr-session-id").value;
+		var remarks = document.getElementById("nr-remarks").value.trim();
+		if (!sessionName) { portalAlert("No session selected.", "err"); return; }
+		if (!remarks) { portalAlert("Please enter remarks.", "err"); return; }
+		nrDone.disabled = true;
+		nrDone.textContent = "Saving...";
+		portalCall("functional_demo.api.mark_no_response", {
+			demo_session: sessionName,
+			remarks: remarks,
+		}).then(function () {
+			portalAlert("No Response recorded successfully.", "ok");
+			setTimeout(function () { window.location.reload(); }, 1200);
+		}).catch(function () {
+			nrDone.disabled = false;
+			nrDone.textContent = "Done";
 		});
 	});
 

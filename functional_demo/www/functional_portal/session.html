@@ -106,6 +106,7 @@
 						{% if s.demo_status in ["Scheduled", "Rescheduled"] %}
 						{% if data.can_execute %}<button class="btn-portal success" id="btn-start"><svg class="ic" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><polygon points="6 3 20 12 6 21 6 3"/></svg> Start Demo</button>{% endif %}
 						<button class="btn-portal warning" id="btn-toggle-reschedule"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> Reschedule</button>
+						<button class="btn-portal secondary" id="btn-toggle-no-response"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="15" x2="9" y1="9" y2="15"/><line x1="9" x2="15" y1="9" y2="15"/></svg> No Response</button>
 						{% if data.can_cancel %}<button class="btn-portal danger" id="btn-toggle-cancel"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" x2="6" y1="6" y2="18"/><line x1="6" x2="18" y1="6" y2="18"/></svg> Cancel</button>{% endif %}
 						{% endif %}
 						{% if s.demo_status == "In Progress" %}
@@ -135,6 +136,13 @@
 						<label>Reason for cancelling</label>
 						<textarea id="cancel-reason" placeholder="Optional reason..."></textarea>
 						<div class="form-actions"><button class="btn-portal danger" id="btn-cancel">Cancel Demo</button></div>
+					</div>
+
+					<div id="form-no-response" style="display: none;" class="portal-form">
+						<div class="divider"></div>
+						<label>Remarks <span class="req">*</span></label>
+						<textarea id="nr-remarks" placeholder="Why did the customer not respond?"></textarea>
+						<div class="form-actions"><button class="btn-portal warning" id="btn-no-response">Done</button></div>
 					</div>
 
 					<div id="form-complete" class="portal-form" {% if s.demo_status != "In Progress" %}style="display: none;"{% endif %}>
@@ -482,6 +490,19 @@
 			portalCall("functional_demo.api.cancel_demo_session", {
 				demo_session: SESSION,
 				reason: val("cancel-reason") || "Cancelled from portal",
+			}).then(function () { window.location.reload(); }).catch(function () { btn.disabled = false; });
+		});
+	}
+
+	/* ---- no response ---- */
+	if (document.getElementById("btn-toggle-no-response")) {
+		document.getElementById("btn-toggle-no-response").addEventListener("click", function () { toggle("form-no-response"); });
+		document.getElementById("btn-no-response").addEventListener("click", function () {
+			if (!val("nr-remarks").trim()) { portalAlert("Please enter remarks.", "err"); return; }
+			var btn = this; btn.disabled = true;
+			portalCall("functional_demo.api.mark_no_response", {
+				demo_session: SESSION,
+				remarks: val("nr-remarks"),
 			}).then(function () { window.location.reload(); }).catch(function () { btn.disabled = false; });
 		});
 	}

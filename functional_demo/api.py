@@ -1077,6 +1077,16 @@ def reschedule_demo_session(demo_session=None, scheduled_date=None, start_time=N
 
 
 @frappe.whitelist()
+def mark_no_response(demo_session=None, remarks=None):
+	"""Mark a demo session as No Response — customer did not respond."""
+	if not remarks:
+		frappe.throw(_("Please enter remarks."))
+	ds = _get_session(demo_session)
+	ds.mark_no_response(remarks)
+	return {"demo_status": ds.demo_status}
+
+
+@frappe.whitelist()
 def edit_demo_session(demo_session=None, scheduled_date=None, start_time=None, end_time=None, meeting_link=None, customer=None, interested_module=None, functional_consultant=None):
 	"""Edit demo session details from the My Sessions portal."""
 	ds = _get_session(demo_session)
