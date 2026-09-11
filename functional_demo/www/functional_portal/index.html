@@ -3,8 +3,6 @@
 {% block navbar %}{% endblock %}
 {% block footer %}{% endblock %}
 {% block style %}{% include "functional_demo/templates/includes/portal_style.html" %}{% endblock %}
-{% block script %}
-{% include "functional_demo/templates/includes/portal_script.html" %}
 {% block content %}
 <div class="portal-layout">
 	<header class="portal-topbar">
@@ -42,12 +40,13 @@
 			{% if can_manage_consultants %}
 			<div class="portal-card">
 				<div class="card-head">
-					<h2>👥 Consultant Profiles <span class="muted" style="font-weight:500;">(Functional Team Manager)</span></h2>
+					<h2>Consultant Profiles <span class="muted" style="font-weight:500;">(Functional Team Manager)</span></h2>
 					<div style="display: flex; gap: 8px; flex-wrap: wrap;">
 						<a class="btn-portal sm" href="/functional_portal/consultants">View All</a>
 					</div>
 				</div>
-				<div class="card-body">						<p class="text-muted" style="margin-top:0;">Consultants are managed in the ERPNext desk. Create a user and assign the <strong>Functional Consultant</strong> role — a consultant profile is automatically created and they appear here.</p>
+				<div class="card-body">
+					<p class="text-muted" style="margin-top:0;">Consultants are managed in the ERPNext desk. Create a user and assign the <strong>Functional Consultant</strong> role — a consultant profile is automatically created and they appear here.</p>
 				</div>
 			</div>
 			{% endif %}
@@ -146,10 +145,11 @@
 </div>
 {% endblock %}
 
+{% block script %}
+{% include "functional_demo/templates/includes/portal_script.html" %}
 <script>
 (function () {
 	"use strict";
-	/* Check every 60 seconds for sessions starting within 5 minutes */
 	var _notified = {};
 	function checkUpcoming() {
 		portalCall("functional_demo.api.get_upcoming_sessions", {}).then(function (sessions) {
@@ -166,7 +166,6 @@
 			});
 		});
 	}
-	/* Request browser notification permission */
 	if (Notification && Notification.permission === "default") {
 		Notification.requestPermission();
 	}
