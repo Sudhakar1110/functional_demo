@@ -147,16 +147,18 @@
    "fieldtype": "Section Break",
    "label": "Demo Planning"
   },
-  {
-   "fieldname": "preferred_demo_date",
-   "fieldtype": "Date",
-   "label": "Preferred Demo Date"
-  },
-  {
-   "fieldname": "preferred_demo_time",
-   "fieldtype": "Time",
-   "label": "Preferred Demo Time"
-  },
+   {
+    "fieldname": "preferred_demo_date",
+    "fieldtype": "Date",
+    "in_list_view": 1,
+    "label": "Preferred Demo Date"
+   },
+   {
+    "fieldname": "preferred_demo_time",
+    "fieldtype": "Time",
+    "in_list_view": 1,
+    "label": "Preferred Demo Time"
+   },
   {
    "default": "Standard Demo",
    "fieldname": "demo_type",
