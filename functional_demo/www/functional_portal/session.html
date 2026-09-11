@@ -231,16 +231,20 @@
 				</div>
 				<div class="card-body">
 					{% for entry in reschedule_history %}
-					<div style="padding: 16px 18px; border-left: 4px solid #8B5CF6; margin-bottom: 14px; background: #F5F3FF; border-radius: 0 10px 10px 0;">
+					<div style="padding: 16px 18px; border-left: 4px solid {% if entry.remarks %}#EF4444{% else %}#8B5CF6{% endif %}; margin-bottom: 14px; background: {% if entry.remarks %}#FEF2F2{% else %}#F5F3FF{% endif %}; border-radius: 0 10px 10px 0;">
 						<!-- Header -->
 						<div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
 							<div>
-								<div style="font-size: 12px; font-weight: 700; color: #7C3AED; margin-bottom: 4px;">
-									🔄 Reschedule #{{ entry.reschedule_number }}
+								<div style="font-size: 12px; font-weight: 700; color: {% if entry.remarks %}#DC2626{% else %}#7C3AED{% endif %}; margin-bottom: 4px;">
+									{% if entry.remarks %}&#10060; No Response #{{ entry.reschedule_number }}{% else %}&#128260; Reschedule #{{ entry.reschedule_number }}{% endif %}
 								</div>
 							</div>
 							<div style="text-align: right; flex-shrink: 0;">
+								{% if entry.remarks %}
+								<span class="badge b-cancelled" style="padding: 4px 12px; border-radius: 999px; font-size: 11px; font-weight: 700;">No Response</span>
+								{% else %}
 								<span class="badge b-rescheduled" style="padding: 4px 12px; border-radius: 999px; font-size: 11px; font-weight: 700;">Rescheduled</span>
+								{% endif %}
 							</div>
 						</div>
 
@@ -252,7 +256,7 @@
 								<div style="font-size: 13px; color: #6B7280;">{{ entry.old_time }}</div>
 							</div>
 							<div style="text-align: center;">
-								<svg viewBox="0 0 24 24" fill="none" stroke="#8B5CF6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="24" height="24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+								<svg viewBox="0 0 24 24" fill="none" stroke="{% if entry.remarks %}#EF4444{% else %}#8B5CF6{% endif %}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="24" height="24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
 							</div>
 							<div>
 								<div style="font-size: 11px; font-weight: 600; color: #6B7280; text-transform: uppercase; margin-bottom: 4px;">New Schedule</div>
@@ -260,6 +264,13 @@
 								<div style="font-size: 13px; color: #6B7280;">{{ entry.new_time }}</div>
 							</div>
 						</div>
+
+						{% if entry.remarks %}
+						<div style="margin-bottom: 8px; padding: 10px 12px; background: rgba(255,255,255,0.7); border-radius: 6px; border-left: 3px solid #EF4444;">
+							<div style="font-size: 11px; font-weight: 600; color: #991B1B; text-transform: uppercase; margin-bottom: 4px;">Remarks</div>
+							<div style="font-size: 13px; color: #05133C; line-height: 1.5;">{{ entry.remarks }}</div>
+						</div>
+						{% endif %}
 
 						<!-- Footer -->
 						<div style="font-size: 11px; color: #9CA3AF; margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(0,0,0,0.05);">

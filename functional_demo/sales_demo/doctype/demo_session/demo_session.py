@@ -707,6 +707,7 @@ class DemoSession(Document):
 			"new_end_time": old_end,
 			"rescheduled_by": frappe.session.user,
 			"rescheduled_on": frappe.utils.now_datetime(),
+			"remarks": remarks or "No Response",
 		})
 		self.consultant_remarks = remarks or self.consultant_remarks
 		self.demo_status = "Rescheduled"

@@ -291,7 +291,7 @@ def _load_child_table_history(session_name):
 			fields=[
 				"reschedule_number", "old_date", "old_start_time", "old_end_time",
 				"new_date", "new_start_time", "new_end_time",
-				"rescheduled_by", "rescheduled_on",
+				"rescheduled_by", "rescheduled_on", "remarks",
 			],
 			order_by="reschedule_number asc",
 			ignore_permissions=True,
@@ -327,6 +327,7 @@ def _load_child_table_history(session_name):
 						row.get("rescheduled_on"), "dd MMM yyyy, hh:mm a"
 					) if row.get("rescheduled_on") else "-"
 				),
+				"remarks": row.get("remarks") or "",
 			})
 	except Exception:
 		pass
