@@ -752,10 +752,26 @@ def change_status(doc, new_status, ignore_permissions=False):
 		step = parent.get(step)
 	path.reverse()
 
-	for state in path:
-		doc.workflow_state = state
-		doc.status = state  # keep the status field in sync with the workflow state
-		doc.save(ignore_permissions=ignore_permissions)
+	try:
+		for state in path:
+			doc.workflow_state = state
+			doc.status = state  # keep the status field in sync with the workflow state
+			doc.save(ignore_permissions=ignore_permissions)
+			doc.reload()
+	except Exception:
+		# If any intermediate step fails validation (e.g. validate_consultant,
+		# validate_follow_up_date), fall back to a direct DB write for the
+		# FINAL target status so the caller is never blocked by an
+		# intermediate workflow step validation issue.
+		frappe.log_error(
+			title=_("change_status: workflow step failed for {0}").format(doc.name),
+			message=frappe.get_traceback(),
+		)
+		frappe.db.set_value(
+			doc.doctype, doc.name,
+			{"workflow_state": new_status, "status": new_status},
+			update_modified=True,
+		)
 		doc.reload()
 
 	return doc

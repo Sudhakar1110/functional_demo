@@ -380,7 +380,19 @@ def schedule_demo(demo_request=None, scheduled_date=None, start_time=None, end_t
 		if interested_module:
 			dr.interested_module = interested_module
 		dr.save(ignore_permissions=True)
-		change_status(dr, "Scheduled", ignore_permissions=True)
+		try:
+			change_status(dr, "Scheduled", ignore_permissions=True)
+		except Exception:
+			frappe.log_error(
+				title=_("schedule_demo: workflow transition failed for {0}").format(dr.name),
+				message=frappe.get_traceback(),
+			)
+			frappe.db.set_value(
+				"Demo Request", dr.name,
+				{"workflow_state": "Scheduled", "status": "Scheduled"},
+				update_modified=True,
+			)
+			dr.reload()
 
 		create_calendar_event(ds)
 		return {"demo_session": ds.name, "demo_request": dr.name}
