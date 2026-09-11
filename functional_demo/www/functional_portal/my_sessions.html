@@ -99,10 +99,12 @@
 								<td>{{ display_status(s.final_result) or "-" }}</td>
 								<td>
 									{% if s.is_session and s.demo_status in ["Scheduled", "In Progress", "Rescheduled"] %}
-									<a class="btn-portal sm" href="/functional_portal/session?name={{ s.name }}">{% if is_sales %}Open{% else %}Conduct Demo &rarr;{% endif %}</a>
-									{% if s.demo_status in ["Scheduled", "Rescheduled"] %}
-									<button class="btn-portal secondary sm edit-session-btn" data-name="{{ s.name }}" data-date="{{ s.scheduled_date or '' }}" data-start="{{ s.start_time or '' }}" data-end="{{ s.end_time or '' }}" data-link="{{ s.meeting_link or '' }}" style="margin-left: 4px;">Edit</button>
-									{% endif %}
+									<div style="display: flex; gap: 6px; align-items: center; flex-wrap: nowrap;">
+										<a class="btn-portal sm" href="/functional_portal/session?name={{ s.name }}">{% if is_sales %}Open{% else %}Conduct Demo &rarr;{% endif %}</a>
+										{% if s.demo_status in ["Scheduled", "Rescheduled"] %}
+										<button class="btn-portal secondary sm edit-session-btn" data-name="{{ s.name }}" data-date="{{ s.scheduled_date or '' }}" data-start="{{ s.start_time or '' }}" data-end="{{ s.end_time or '' }}" data-link="{{ s.meeting_link or '' }}" data-customer="{{ s.customer or '' }}" data-module="{{ s.interested_module or '' }}">Edit</button>
+										{% endif %}
+									</div>
 									{% elif not s.is_session %}
 									<span class="muted" style="font-size: 12px;">Waiting to be scheduled</span>
 									{% endif %}
@@ -127,10 +129,14 @@
 
 <!-- Edit Session Modal -->
 <div class="portal-modal" id="edit-session-modal">
-	<div class="pm-card pm-schedule">
+	<div class="pm-card pm-schedule" style="max-width: 520px;">
 		<div class="pm-title">Edit Session</div>
 		<p class="pm-msg">Update details for <strong id="edit-session-name"></strong></p>
 		<input type="hidden" id="edit-session-id">
+		<div class="form-row">
+			<div><label>Customer</label><input type="text" id="edit-session-customer"></div>
+			<div><label>Interested Template</label><input type="text" id="edit-session-module"></div>
+		</div>
 		<div class="form-row">
 			<div><label>Date <span class="req">*</span></label><input type="date" id="edit-session-date"></div>
 			<div><label>Start Time</label><input type="time" id="edit-session-start"></div>
@@ -157,6 +163,8 @@
 		btn.addEventListener("click", function () {
 			document.getElementById("edit-session-id").value = btn.getAttribute("data-name");
 			document.getElementById("edit-session-name").textContent = btn.getAttribute("data-name");
+			document.getElementById("edit-session-customer").value = btn.getAttribute("data-customer");
+			document.getElementById("edit-session-module").value = btn.getAttribute("data-module");
 			document.getElementById("edit-session-date").value = btn.getAttribute("data-date");
 			document.getElementById("edit-session-start").value = btn.getAttribute("data-start");
 			document.getElementById("edit-session-end").value = btn.getAttribute("data-end");
@@ -180,12 +188,14 @@
 		if (!date) { portalAlert("Please pick a date.", "err"); return; }
 		editSave.disabled = true;
 		editSave.textContent = "Saving...";
-		portalCall("functional_demo.api.reschedule_demo_session", {
+		portalCall("functional_demo.api.edit_demo_session", {
 			demo_session: sessionName,
 			scheduled_date: date,
 			start_time: document.getElementById("edit-session-start").value,
 			end_time: document.getElementById("edit-session-end").value,
 			meeting_link: document.getElementById("edit-session-link").value,
+			customer: document.getElementById("edit-session-customer").value,
+			interested_module: document.getElementById("edit-session-module").value,
 		}).then(function () {
 			portalAlert("Session updated successfully.", "ok");
 			setTimeout(function () { window.location.reload(); }, 1200);
