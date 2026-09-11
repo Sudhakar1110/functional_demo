@@ -46,6 +46,7 @@ def get_context(context):
 		fields=[
 			"name", "customer", "lead", "sales_person", "interested_module", "scheduled_date",
 			"start_time", "end_time", "demo_status", "final_result", "demo_request", "creation",
+			"functional_consultant",
 		],
 		order_by="creation desc",
 		limit_page_length=1000,
@@ -105,6 +106,16 @@ def get_context(context):
 	context.status = status
 	context.status_options = SESSION_STATUSES
 	context.consultant = consultant
+	context.is_mgr = is_mgr
+	# Consultants list for the reassign dropdown (managers only)
+	context.consultants = []
+	if is_mgr:
+		context.consultants = frappe.get_all(
+			"Functional Consultant",
+			fields=["name", "consultant_name"],
+			filters={"status": ["!=", "Inactive"]},
+			order_by="consultant_name asc",
+		) or []
 	# For managers showing all sessions, use the total DB count (unfiltered)
 	# so the note reflects the true total rather than the filtered subset.
 	total_count = (

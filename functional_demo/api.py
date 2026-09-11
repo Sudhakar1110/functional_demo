@@ -1077,7 +1077,7 @@ def reschedule_demo_session(demo_session=None, scheduled_date=None, start_time=N
 
 
 @frappe.whitelist()
-def edit_demo_session(demo_session=None, scheduled_date=None, start_time=None, end_time=None, meeting_link=None, customer=None, interested_module=None):
+def edit_demo_session(demo_session=None, scheduled_date=None, start_time=None, end_time=None, meeting_link=None, customer=None, interested_module=None, functional_consultant=None):
 	"""Edit demo session details from the My Sessions portal."""
 	ds = _get_session(demo_session)
 	if scheduled_date:
@@ -1092,6 +1092,15 @@ def edit_demo_session(demo_session=None, scheduled_date=None, start_time=None, e
 		ds.customer = customer
 	if interested_module is not None:
 		ds.interested_module = interested_module
+	if functional_consultant is not None and functional_consultant:
+		ds.functional_consultant = functional_consultant
+		ds.consultant_user = frappe.db.get_value(
+			"Functional Consultant", functional_consultant, "user"
+		)
+		# Also update the linked demo request's consultant
+		if ds.demo_request:
+			frappe.db.set_value("Demo Request", ds.demo_request, "functional_consultant", functional_consultant)
+			frappe.db.set_value("Demo Request", ds.demo_request, "consultant_user", ds.consultant_user)
 	ds.save(ignore_permissions=True)
 	frappe.db.commit()
 	return {"name": ds.name}

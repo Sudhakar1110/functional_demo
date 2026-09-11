@@ -102,7 +102,7 @@
 									<div style="display: flex; gap: 6px; align-items: center; flex-wrap: nowrap;">
 										<a class="btn-portal sm" href="/functional_portal/session?name={{ s.name }}">{% if is_sales %}Open{% else %}Conduct &rarr;{% endif %}</a>
 										{% if s.demo_status in ["Scheduled", "Rescheduled"] %}
-										<button class="btn-portal secondary sm edit-session-btn" data-name="{{ s.name }}" data-date="{{ s.scheduled_date or '' }}" data-start="{{ s.start_time or '' }}" data-end="{{ s.end_time or '' }}" data-link="{{ s.meeting_link or '' }}" data-customer="{{ s.customer or '' }}" data-module="{{ s.interested_module or '' }}">Edit</button>
+										<button class="btn-portal secondary sm edit-session-btn" data-name="{{ s.name }}" data-date="{{ s.scheduled_date or '' }}" data-start="{{ s.start_time or '' }}" data-end="{{ s.end_time or '' }}" data-link="{{ s.meeting_link or '' }}" data-customer="{{ s.customer or '' }}" data-module="{{ s.interested_module or '' }}" data-consultant="{{ s.functional_consultant or '' }}">Edit</button>
 										{% endif %}
 									</div>
 									{% elif not s.is_session %}
@@ -133,6 +133,17 @@
 		<div class="pm-title">Edit Session</div>
 		<p class="pm-msg">Update details for <strong id="edit-session-name"></strong></p>
 		<input type="hidden" id="edit-session-id">
+		{% if is_mgr and consultants %}
+		<div class="form-row">
+			<div style="grid-column: 1 / -1;"><label>Assigned Consultant</label>
+				<select id="edit-session-consultant">
+					{% for c in consultants %}
+					<option value="{{ c.name }}">{{ c.consultant_name }}</option>
+					{% endfor %}
+				</select>
+			</div>
+		</div>
+		{% endif %}
 		<div class="form-row">
 			<div><label>Customer</label><input type="text" id="edit-session-customer"></div>
 			<div><label>Interested Template</label><input type="text" id="edit-session-module"></div>
@@ -169,6 +180,12 @@
 			document.getElementById("edit-session-start").value = btn.getAttribute("data-start");
 			document.getElementById("edit-session-end").value = btn.getAttribute("data-end");
 			document.getElementById("edit-session-link").value = btn.getAttribute("data-link");
+			/* Set the consultant dropdown to the current consultant */
+			var consultantVal = btn.getAttribute("data-consultant");
+			var consultantSel = document.getElementById("edit-session-consultant");
+			if (consultantSel && consultantVal) {
+				consultantSel.value = consultantVal;
+			}
 			var modal = document.getElementById("edit-session-modal");
 			if (modal) modal.classList.add("show");
 		});
@@ -196,6 +213,7 @@
 			meeting_link: document.getElementById("edit-session-link").value,
 			customer: document.getElementById("edit-session-customer").value,
 			interested_module: document.getElementById("edit-session-module").value,
+			functional_consultant: document.getElementById("edit-session-consultant") ? document.getElementById("edit-session-consultant").value : "",
 		}).then(function () {
 			portalAlert("Session updated successfully.", "ok");
 			setTimeout(function () { window.location.reload(); }, 1200);
