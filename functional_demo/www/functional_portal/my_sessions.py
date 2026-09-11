@@ -10,7 +10,7 @@ from functional_demo.portal import (
 
 SESSION_STATUSES = [
 	"Scheduled", "In Progress", "Completed", "Rescheduled",
-	"Cancelled", "Closed",
+	"Cancelled", "Closed", "No Response",
 ]
 
 
@@ -80,7 +80,7 @@ def get_context(context):
 		elif is_sales_user:
 			request_filters["sales_person"] = frappe.session.user
 		# Find demo request names that already have an active session
-		session_filters = {"demo_status": ["in", ["Scheduled", "In Progress", "Rescheduled"]]}
+		session_filters = {"demo_status": ["in", ["Scheduled", "In Progress", "Rescheduled", "No Response"]]}
 		if is_mgr:
 			pass
 		elif consultant:

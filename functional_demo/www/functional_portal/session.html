@@ -103,7 +103,7 @@
 				{% if data.can_write %}
 				<div class="card-body">
 					<div style="display: flex; gap: 10px; flex-wrap: wrap;">
-						{% if s.demo_status in ["Scheduled", "Rescheduled"] %}
+						{% if s.demo_status in ["Scheduled", "Rescheduled", "No Response"] %}
 						{% if data.can_execute %}<button class="btn-portal success" id="btn-start"><svg class="ic" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><polygon points="6 3 20 12 6 21 6 3"/></svg> Start Demo</button>{% endif %}
 						<button class="btn-portal warning" id="btn-toggle-reschedule"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> Reschedule</button>
 						<button class="btn-portal secondary" id="btn-toggle-no-response"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="15" x2="9" y1="9" y2="15"/><line x1="9" x2="15" y1="9" y2="15"/></svg> No Response</button>

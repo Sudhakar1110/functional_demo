@@ -710,7 +710,7 @@ class DemoSession(Document):
 			"remarks": remarks or "No Response",
 		})
 		self.consultant_remarks = remarks or self.consultant_remarks
-		self.demo_status = "Rescheduled"
+		self.demo_status = "No Response"
 		self.save(ignore_permissions=True)
 		self.log_request_activity(
 			"No Response",

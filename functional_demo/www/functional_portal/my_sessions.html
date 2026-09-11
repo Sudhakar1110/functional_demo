@@ -95,11 +95,11 @@
 									<span class="badge b-assigned">{{ display_status(s.status) }}</span>
 									{% endif %}
 								</td>
-							<td style="white-space: nowrap;">
-									{% if s.is_session and s.demo_status in ["Scheduled", "In Progress", "Rescheduled"] %}
+								<td style="white-space: nowrap;">
+									{% if s.is_session and s.demo_status in ["Scheduled", "In Progress", "Rescheduled", "No Response"] %}
 									<div style="display: flex; gap: 6px; align-items: center; flex-wrap: nowrap;">
 										<a class="btn-portal sm" href="/functional_portal/session?name={{ s.name }}">{% if is_sales_user %}Open{% else %}Conduct &rarr;{% endif %}</a>
-										{% if s.demo_status in ["Scheduled", "Rescheduled"] and (is_mgr or is_sales_user) %}
+										{% if s.demo_status in ["Scheduled", "Rescheduled", "No Response"] and (is_mgr or is_sales_user) %}
 										<button class="btn-portal secondary sm edit-session-btn" data-name="{{ s.name }}" data-date="{{ s.scheduled_date or '' }}" data-start="{{ s.start_time or '' }}" data-end="{{ s.end_time or '' }}" data-link="{{ s.meeting_link or '' }}" data-customer="{{ s.customer or '' }}" data-module="{{ s.interested_module or '' }}" data-consultant="{{ s.functional_consultant or '' }}">Edit</button>
 										{% endif %}
 									</div>
