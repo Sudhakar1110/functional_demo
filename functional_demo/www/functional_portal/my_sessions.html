@@ -60,9 +60,8 @@
 								<th style="white-space: nowrap;">Assigned</th>
 								<th style="white-space: nowrap;">Date</th>
 								<th style="white-space: nowrap;">Time</th>
-								<th style="white-space: nowrap;">Status</th>
-								<th style="white-space: nowrap;">Result</th>
-								<th style="white-space: nowrap; text-align: center;">Action</th>
+							<th style="white-space: nowrap;">Status</th>
+							<th style="white-space: nowrap; text-align: center;">Action</th>
 							</tr>
 						</thead>
 						<tbody>
@@ -96,8 +95,7 @@
 									<span class="badge b-assigned">{{ display_status(s.status) }}</span>
 									{% endif %}
 								</td>
-								<td>{{ display_status(s.final_result) or "-" }}</td>
-								<td style="white-space: nowrap;">
+							<td style="white-space: nowrap;">
 									{% if s.is_session and s.demo_status in ["Scheduled", "In Progress", "Rescheduled"] %}
 									<div style="display: flex; gap: 6px; align-items: center; flex-wrap: nowrap;">
 										<a class="btn-portal sm" href="/functional_portal/session?name={{ s.name }}">{% if is_sales_user %}Open{% else %}Conduct &rarr;{% endif %}</a>
