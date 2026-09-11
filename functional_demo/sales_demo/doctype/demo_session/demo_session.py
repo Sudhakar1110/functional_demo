@@ -875,7 +875,14 @@ class DemoSession(Document):
 		request = frappe.get_doc("Demo Request", self.demo_request)
 		request.follow_up_date = follow_up_date
 		request.next_action = next_action
-		request.save(ignore_permissions=True)
+		try:
+			request.save(ignore_permissions=True)
+		except Exception:
+			frappe.db.set_value(
+				"Demo Request",
+				request.name,
+				{"follow_up_date": follow_up_date, "next_action": next_action},
+			)
 		from functional_demo.sales_demo.doctype.demo_request.demo_request import change_status
 
 		try:
