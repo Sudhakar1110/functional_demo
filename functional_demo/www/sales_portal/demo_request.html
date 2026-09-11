@@ -96,14 +96,16 @@
 									{% for m in modules %}{% if m %}<option value="{{ m }}">{% endif %}{% endfor %}
 								</datalist>
 							</div>
-						</div>							<div class="form-row">
-								<div><label>Priority</label>
-									<select id="priority" name="priority">
-										<option value="Auto" selected>Auto (sales value / leads tier)</option>
-										{% for p in priorities %}<option value="{{ p }}">{{ p }}</option>{% endfor %}
-									</select>
-								</div>
+						</div>
+						<div class="form-row">
+							<div><label>Preferred Language</label><input type="text" id="preferred_language" name="preferred_language" placeholder="e.g. English, Hindi, Kannada..." value="{{ prefill.preferred_language or '' }}" autocomplete="off"></div>
+							<div><label>Priority</label>
+								<select id="priority" name="priority">
+									<option value="Auto" selected>Auto (sales value / leads tier)</option>
+									{% for p in priorities %}<option value="{{ p }}">{{ p }}</option>{% endfor %}
+								</select>
 							</div>
+						</div>
 						<div class="form-row">
 							<div><label>Preferred Demo Date</label><input type="date" id="preferred_demo_date" name="preferred_demo_date"></div>
 							<div><label>Preferred Demo Time</label><input type="time" id="preferred_demo_time" name="preferred_demo_time"></div>
@@ -256,6 +258,7 @@
 				<div class="card-body">
 					<div class="detail-grid">
 						<div class="detail-item"><div class="d-label">Interested Template</div><div class="d-value">{{ doc.interested_module or "-" }}</div></div>
+						<div class="detail-item"><div class="d-label">Preferred Language</div><div class="d-value">{{ doc.preferred_language or "-" }}</div></div>
 						<div class="detail-item"><div class="d-label">Demo Type</div><div class="d-value">{{ doc.demo_type or "-" }}</div></div>
 						<div class="detail-item"><div class="d-label">Preferred Date</div><div class="d-value">{{ doc.preferred_demo_date or "-" }}</div></div>
 						<div class="detail-item"><div class="d-label">Preferred Time</div><div class="d-value">{{ doc.preferred_demo_time or "-" }}</div></div>
@@ -406,6 +409,7 @@
 			contact_number: document.getElementById("contact_number").value,
 			email: document.getElementById("email").value,
 			interested_module: document.getElementById("interested_module").value,
+			preferred_language: document.getElementById("preferred_language").value,
 			priority: document.getElementById("priority").value,
 			preferred_demo_date: document.getElementById("preferred_demo_date").value,
 			preferred_demo_time: document.getElementById("preferred_demo_time").value,

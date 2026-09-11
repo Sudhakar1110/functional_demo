@@ -1565,7 +1565,7 @@ def create_lead(lead_name=None, company_name=None, email=None, phone=None, statu
 
 
 @frappe.whitelist()
-def create_demo_request(customer=None, company=None, contact_person=None, contact_number=None, email=None, interested_module=None, customer_requirements=None, business_process_requirements=None, priority="Medium", preferred_demo_date=None, preferred_demo_time=None, demo_type=None, sales_remarks=None, functional_consultant=None):
+def create_demo_request(customer=None, company=None, contact_person=None, contact_number=None, email=None, interested_module=None, customer_requirements=None, business_process_requirements=None, priority="Medium", preferred_demo_date=None, preferred_demo_time=None, demo_type=None, sales_remarks=None, functional_consultant=None, preferred_language=None):
 	"""Create a Demo Request from the Sales Portal web form.
 
 	The sales_person is always auto-set to the logged-in user — no dropdown needed.
@@ -1628,6 +1628,7 @@ def create_demo_request(customer=None, company=None, contact_person=None, contac
 	doc.priority = suggested_priority("", customer) if priority in (None, "", "Auto") else priority
 	doc.preferred_demo_date = preferred_demo_date
 	doc.preferred_demo_time = preferred_demo_time
+	doc.preferred_language = preferred_language
 	doc.demo_type = demo_type
 	doc.sales_remarks = "\n".join([r for r in [sales_remarks] + extra_remarks if r]) or None
 	doc.functional_consultant = functional_consultant

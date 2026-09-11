@@ -14,10 +14,11 @@
   "contact_number",
   "email",
   "additional_leads",
-  "requirement_section",
-  "sales_person",
-  "interested_module",
-  "customer_requirements",
+   "requirement_section",
+   "sales_person",
+   "interested_module",
+   "preferred_language",
+   "customer_requirements",
   "business_process_requirements",
   "priority",
   "planning_section",
@@ -123,9 +124,14 @@
     "in_standard_filter": 1,
     "label": "Interested Template",
     "options": "Law Management\nHospitality\nMedical Store\nRetail & Supermarket\nManufacturing\nEducation\nHealthcare\nReal Estate\nLogistics & Transport\nAgriculture\nIT Services\nBanking & Finance\nFood & Beverage\nConstruction\nEnergy & Utilities\nOther"
-  },
-  {
-   "fieldname": "customer_requirements",
+   },
+   {
+    "fieldname": "preferred_language",
+    "fieldtype": "Data",
+    "label": "Preferred Language"
+   },
+   {
+    "fieldname": "customer_requirements",
    "fieldtype": "Text",
    "label": "Leads Requirements"
   },

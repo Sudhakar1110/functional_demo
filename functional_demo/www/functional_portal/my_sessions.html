@@ -100,6 +100,9 @@
 								<td>
 									{% if s.is_session and s.demo_status in ["Scheduled", "In Progress", "Rescheduled"] %}
 									<a class="btn-portal sm" href="/functional_portal/session?name={{ s.name }}">{% if is_sales %}Open{% else %}Conduct Demo &rarr;{% endif %}</a>
+									{% if s.demo_status in ["Scheduled", "Rescheduled"] %}
+									<button class="btn-portal secondary sm edit-session-btn" data-name="{{ s.name }}" data-date="{{ s.scheduled_date or '' }}" data-start="{{ s.start_time or '' }}" data-end="{{ s.end_time or '' }}" data-link="{{ s.meeting_link or '' }}" style="margin-left: 4px;">Edit</button>
+									{% endif %}
 									{% elif not s.is_session %}
 									<span class="muted" style="font-size: 12px;">Waiting to be scheduled</span>
 									{% endif %}
@@ -121,4 +124,76 @@
 	</div>
 	</div>
 </div>
+
+<!-- Edit Session Modal -->
+<div class="portal-modal" id="edit-session-modal">
+	<div class="pm-card pm-schedule">
+		<div class="pm-title">Edit Session</div>
+		<p class="pm-msg">Update details for <strong id="edit-session-name"></strong></p>
+		<input type="hidden" id="edit-session-id">
+		<div class="form-row">
+			<div><label>Date <span class="req">*</span></label><input type="date" id="edit-session-date"></div>
+			<div><label>Start Time</label><input type="time" id="edit-session-start"></div>
+		</div>
+		<div class="form-row">
+			<div><label>End Time</label><input type="time" id="edit-session-end"></div>
+			<div><label>Meeting Link</label><input type="text" id="edit-session-link" placeholder="https://meet.google.com/..."></div>
+		</div>
+		<div class="sched-actions">
+			<button class="btn-portal secondary" id="edit-session-cancel">Cancel</button>
+			<button class="btn-portal" id="edit-session-save">Save Changes</button>
+		</div>
+	</div>
+</div>
+{% endblock %}
+
+{% block script %}
+{% include "functional_demo/templates/includes/portal_script.html" %}
+<script>
+(function () {
+	"use strict";
+
+	document.querySelectorAll(".edit-session-btn").forEach(function (btn) {
+		btn.addEventListener("click", function () {
+			document.getElementById("edit-session-id").value = btn.getAttribute("data-name");
+			document.getElementById("edit-session-name").textContent = btn.getAttribute("data-name");
+			document.getElementById("edit-session-date").value = btn.getAttribute("data-date");
+			document.getElementById("edit-session-start").value = btn.getAttribute("data-start");
+			document.getElementById("edit-session-end").value = btn.getAttribute("data-end");
+			document.getElementById("edit-session-link").value = btn.getAttribute("data-link");
+			var modal = document.getElementById("edit-session-modal");
+			if (modal) modal.classList.add("show");
+		});
+	});
+
+	var editCancel = document.getElementById("edit-session-cancel");
+	if (editCancel) editCancel.addEventListener("click", function () {
+		var modal = document.getElementById("edit-session-modal");
+		if (modal) modal.classList.remove("show");
+	});
+
+	var editSave = document.getElementById("edit-session-save");
+	if (editSave) editSave.addEventListener("click", function () {
+		var sessionName = document.getElementById("edit-session-id").value;
+		var date = document.getElementById("edit-session-date").value;
+		if (!sessionName) { portalAlert("No session selected.", "err"); return; }
+		if (!date) { portalAlert("Please pick a date.", "err"); return; }
+		editSave.disabled = true;
+		editSave.textContent = "Saving...";
+		portalCall("functional_demo.api.reschedule_demo_session", {
+			demo_session: sessionName,
+			scheduled_date: date,
+			start_time: document.getElementById("edit-session-start").value,
+			end_time: document.getElementById("edit-session-end").value,
+			meeting_link: document.getElementById("edit-session-link").value,
+		}).then(function () {
+			portalAlert("Session updated successfully.", "ok");
+			setTimeout(function () { window.location.reload(); }, 1200);
+		}).catch(function () {
+			editSave.disabled = false;
+			editSave.textContent = "Save Changes";
+		});
+	});
+})();
+</script>
 {% endblock %}
