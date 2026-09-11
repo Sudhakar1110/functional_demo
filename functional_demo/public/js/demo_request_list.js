@@ -1,5 +1,5 @@
 frappe.listview_settings["Demo Request"] = {
-	add_fields: ["status", "priority", "customer", "sales_person", "functional_consultant"],
+	add_fields: ["status", "priority", "customer", "sales_person", "functional_consultant", "preferred_demo_date", "preferred_demo_time"],
 	get_indicator: function (doc) {
 		const map = {
 			Draft: [__("Draft"), "grey"],
