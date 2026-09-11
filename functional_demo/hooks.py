@@ -85,6 +85,7 @@ scheduler_events = {
 	# by a sent-flag so they still fire exactly once.
 	"all": [
 		"functional_demo.sales_demo.doctype.demo_session.demo_session.send_demo_hour_reminders",
+		"functional_demo.sales_demo.doctype.demo_session.demo_session.send_demo_5min_reminders",
 		"functional_demo.install.send_trial_period_reminders",
 	],
 	"daily": [
