@@ -385,6 +385,7 @@ def schedule_demo(demo_request=None, scheduled_date=None, start_time=None, end_t
 			# the Interested Template chosen at scheduling (falls back to the
 			# request's value) - feedback on this demo groups under this template
 			ds.interested_module = interested_module or dr.interested_module
+			ds.company = dr.company or ""
 			ds.scheduled_date = scheduled_date
 			ds.start_time = start_time
 			ds.end_time = end_time
@@ -1208,6 +1209,7 @@ def reschedule_from_followup(follow_up=None, new_date=None, new_time=None, funct
 	ds_new.functional_consultant = functional_consultant
 	ds_new.consultant_user = consultant_user
 	ds_new.interested_module = dr.interested_module
+	ds_new.company = dr.company or ""
 	ds_new.scheduled_date = new_date
 	ds_new.start_time = new_time
 	ds_new.insert(ignore_permissions=True)

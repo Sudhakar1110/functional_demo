@@ -35,6 +35,7 @@ def after_migrate():
 	create_workflow_states()
 	backfill_consultant_statuses()
 	backfill_session_consultants()
+	backfill_session_companies()
 	move_approved_requests_forward()
 	sync_sales_workspace()
 	import_module_docs()
@@ -75,6 +76,23 @@ def backfill_session_consultants():
 		set ds.functional_consultant = dr.functional_consultant
 		where ifnull(ds.functional_consultant, '') = ''
 			and ifnull(dr.functional_consultant, '') != ''"""
+	)
+	frappe.db.commit()
+
+
+def backfill_session_companies():
+	"""Copy company from Demo Request to Demo Session for sessions that
+	are missing it. Sessions created before the company field was added
+	will not have this value populated, causing '-' to display on the
+	session detail page."""
+	if not frappe.db.exists("DocType", "Demo Session"):
+		return
+	frappe.db.sql(
+		"""update `tabDemo Session` ds
+		join `tabDemo Request` dr on dr.name = ds.demo_request
+		set ds.company = dr.company
+		where ifnull(ds.company, '') = ''
+			and ifnull(dr.company, '') != ''"""
 	)
 	frappe.db.commit()
 
