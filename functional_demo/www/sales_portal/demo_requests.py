@@ -34,7 +34,7 @@ def get_context(context):
 			"preferred_demo_date", "functional_consultant", "sales_person",
 			"follow_up_date", "creation", "sla_due_date", "sla_breached",
 		],
-		order_by="creation desc",
+		order_by="preferred_demo_date desc, creation desc",
 		limit_page_length=1000,
 	) or []
 	for r in context.requests:
