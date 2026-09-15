@@ -965,6 +965,24 @@ def get_demo_execution_data(demo_session=None):
 		)
 
 	request_doc = frappe.get_doc("Demo Request", ds.demo_request) if ds.demo_request else None
+
+	# Backfill: if company is empty but sales_remarks has "Company: xxx",
+	# extract it, auto-create the Company record, and update both the
+	# Demo Request and Demo Session so the value persists.
+	if request_doc and not ds.company:
+		import re
+		remarks = request_doc.sales_remarks or ""
+		m = re.search(r"Company:\s*(.+)", remarks)
+		if m:
+			company_name = m.group(1).strip()
+			if company_name:
+				company_name = _ensure_company(company_name)
+				if company_name:
+					frappe.db.set_value("Demo Request", request_doc.name, "company", company_name)
+					frappe.db.set_value("Demo Session", ds.name, "company", company_name)
+					frappe.db.commit()
+					ds.company = company_name
+					request_doc.company = company_name
 	consultant = None
 	if ds.functional_consultant:
 		consultant = frappe.db.get_value(
