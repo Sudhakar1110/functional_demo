@@ -73,7 +73,7 @@ def get_context(context):
             "name", "demo_request", "demo_session", "customer",
             "sales_person", "functional_consultant", "subject",
             "follow_up_date", "status", "outcome", "next_action",
-            "remarks", "assigned_to", "creation",
+            "remarks", "assigned_to", "creation", "modified",
         ],
         order_by="follow_up_date asc",
         limit_page_length=2000,
@@ -122,6 +122,7 @@ def get_context(context):
         fu["assigned_display"] = user_names.get(fu.assigned_to) or fu.assigned_to or "-"
         fu["due_display"] = _fmt_date(fu.follow_up_date)
         fu["creation_display"] = _fmt_datetime(fu.creation)
+        fu["modified_display"] = _fmt_datetime(fu.modified)
         fu["is_overdue"] = False
         fu["is_today"] = False
         fu["days_overdue"] = 0
@@ -160,6 +161,7 @@ def get_context(context):
                 "outcome": fu.outcome or "",
                 "remarks": fu.remarks or "",
                 "consultant": fu["consultant_display"],
+                "last_updated": fu.get("modified_display") or "",
             })
 
     # ------------------------------------------------------------------

@@ -353,13 +353,14 @@
 						{% for cust_id, entries in customer_history.items() %}
 						<div style="margin-bottom: 16px;">
 							<div style="font-size: 14px; font-weight: 700; color: #05133C; margin-bottom: 8px;">👤 {{ entries[0].customer_display if entries[0].customer_display is defined else cust_id }} ({{ entries|length }} entries)</div>
-							{% for entry in entries|reverse %}
-							<div class="ft-history-row">
-								<strong>{{ entry.date }}</strong> · {{ entry.subject }} · <span class="ft-badge b-{{ entry.status|lower|replace(' ', '-') }}">{{ entry.status }}</span>
-								{% if entry.outcome %} · <span style="color: #009A52;">{{ entry.outcome }}</span>{% endif %}
-								{% if entry.remarks %}<br><span style="color: #71717B; font-style: italic;">{{ entry.remarks[:120] }}{% if entry.remarks|length > 120 %}...{% endif %}</span>{% endif %}
-							</div>
-							{% endfor %}
+						{% for entry in entries|reverse %}
+						<div class="ft-history-row">
+							<strong>{{ entry.date }}</strong> · {{ entry.subject }} · <span class="ft-badge b-{{ entry.status|lower|replace(' ', '-') }}">{{ entry.status }}</span>
+							{% if entry.outcome %} · <span style="color: #009A52;">{{ entry.outcome }}</span>{% endif %}
+							{% if entry.last_updated %} · <span style="color: #9CA3AF; font-size: 11px;">Updated: {{ entry.last_updated }}</span>{% endif %}
+							{% if entry.remarks %}<br><span style="color: #71717B; font-style: italic;">{{ entry.remarks[:120] }}{% if entry.remarks|length > 120 %}...{% endif %}</span>{% endif %}
+						</div>
+						{% endfor %}
 						</div>
 						{% endfor %}
 					</div>

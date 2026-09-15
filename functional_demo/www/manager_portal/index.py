@@ -72,6 +72,12 @@ def get_context(context):
 		r["preferred_demo_date_raw"] = str(r.get("preferred_demo_date") or "")
 		ptime = r.get("preferred_demo_time")
 		r["preferred_demo_time_raw"] = str(ptime)[:5] if ptime else ""
+		# Formatted display values for the table columns
+		r["preferred_demo_date_display"] = (
+			frappe.utils.format_date(r.get("preferred_demo_date"), "medium")
+			if r.get("preferred_demo_date") else "-"
+		)
+		r["preferred_demo_time_display"] = str(ptime)[:5] if ptime else "-"
 	context.all_requests = all_requests
 	# Consultants for the assign dropdown
 	consultants = frappe.get_all(
