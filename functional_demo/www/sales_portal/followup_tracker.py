@@ -149,17 +149,17 @@ def get_context(context):
     for fu in all_display:
         cust = fu.customer or ""
         if cust:
-		customer_history.setdefault(cust, []).append({
-			"name": fu.name,
-			"subject": fu.get("subject") or fu.due_display,
-			"date": fu.due_display,
-			"status": fu.status,
-			"outcome": fu.outcome or "",
-			"remarks": fu.remarks or "",
-			"consultant": fu["consultant_display"],
-			"customer_display": fu["customer_display"],
-			"last_updated": fu.get("modified_display") or "",
-		})
+            customer_history.setdefault(cust, []).append({
+                "name": fu.name,
+                "subject": fu.get("subject") or fu.due_display,
+                "date": fu.due_display,
+                "status": fu.status,
+                "outcome": fu.outcome or "",
+                "remarks": fu.remarks or "",
+                "consultant": fu["consultant_display"],
+                "customer_display": fu["customer_display"],
+                "last_updated": fu.get("modified_display") or "",
+            })
 
     # ------------------------------------------------------------------
     # KPIs
