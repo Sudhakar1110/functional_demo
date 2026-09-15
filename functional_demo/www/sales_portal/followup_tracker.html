@@ -296,7 +296,9 @@
 								{% if fu.status not in ('Completed', 'Closed') %}
 								<button class="ft-action-btn ft-btn-done" onclick="completeFollowup('{{ fu.name }}')">Done</button>
 								{% endif %}
+								{% if fu.outcome != 'Not Interested' %}
 								<button class="ft-action-btn ft-btn-reschedule" onclick="rescheduleFollowup('{{ fu.name }}')">Reschedule</button>
+								{% endif %}
 								{% if fu.demo_session %}
 								<a href="/functional_portal/session?name={{ fu.demo_session }}" style="color: #114EFF; font-size: 11px; font-weight: 600; text-decoration: none; margin-left: 4px;">👁</a>
 								{% endif %}
