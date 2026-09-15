@@ -271,6 +271,11 @@ def get_context(context):
 	context.follow_up_history = follow_up_history
 	context.data = data
 
+	# Check if any linked follow-up has outcome "Not Interested"
+	context.followup_not_interested = any(
+		(fu.get("outcome") or "") == "Not Interested" for fu in follow_ups
+	)
+
 	# Consultants list for the Reschedule form (sales users only)
 	consultants = frappe.get_all(
 		"Functional Consultant",
