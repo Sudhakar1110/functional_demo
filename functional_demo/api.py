@@ -1838,7 +1838,9 @@ def create_demo_request(customer=None, company=None, contact_person=None, contac
 	# Auto-set sales_person to the logged-in user
 	sales_person = frappe.session.user
 
-	# Validate required date and time
+	# Validate required fields
+	if not company:
+		frappe.throw(_("Company is required. Please enter a company name."), title=_("Company Required"))
 	if not preferred_demo_date:
 		frappe.throw(_("Preferred Demo Date is required. Please select a date."), title=_("Date Required"))
 	if not preferred_demo_time:

@@ -49,8 +49,8 @@
 					<form class="portal-form" id="dr-form">
 					<div class="form-row">
 						<div>
-							<label>Company</label>
-							<input type="text" id="company" name="company" placeholder="Enter company name..." value="{{ prefill.company }}" autocomplete="off">
+							<label>Company <span class="req">*</span></label>
+							<input type="text" id="company" name="company" placeholder="Enter company name..." value="{{ prefill.company }}" autocomplete="off" required>
 						</div>
 						<div>
 							<label>Contact Person</label>
@@ -387,6 +387,11 @@
 
 	document.getElementById("dr-form").addEventListener("submit", function (e) {
 		e.preventDefault();
+		var company = document.getElementById("company") ? document.getElementById("company").value.trim() : "";
+		if (!company) {
+			window.portalModal("Company Required", "Please enter the Company name. This is required to create a demo request.", "err");
+			return;
+		}
 		var customer = document.getElementById("customer").value.trim();
 		var consultant = document.getElementById("functional_consultant").value;
 		if (!consultant) {
