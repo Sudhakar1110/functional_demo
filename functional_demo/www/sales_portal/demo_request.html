@@ -50,10 +50,7 @@
 					<div class="form-row">
 						<div>
 							<label>Company</label>
-							<input type="text" id="company" name="company" list="companies-list" placeholder="Type &amp; pick a company..." value="{{ prefill.company }}" autocomplete="off">
-							<datalist id="companies-list">
-								{% for c in companies %}<option value="{{ c.name }}">{{ c.name }}</option>{% endfor %}
-							</datalist>
+							<input type="text" id="company" name="company" placeholder="Enter company name..." value="{{ prefill.company }}" autocomplete="off">
 						</div>
 						<div>
 							<label>Contact Person</label>
