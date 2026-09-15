@@ -36,6 +36,7 @@ def after_migrate():
 	backfill_consultant_statuses()
 	backfill_session_consultants()
 	backfill_session_companies()
+	backfill_request_companies()
 	move_approved_requests_forward()
 	sync_sales_workspace()
 	import_module_docs()
@@ -95,6 +96,40 @@ def backfill_session_companies():
 			and ifnull(dr.company, '') != ''"""
 	)
 	frappe.db.commit()
+
+
+def backfill_request_companies():
+	"""Populate the company field on Demo Requests that are missing it.
+
+	When the company field was first added, existing requests had no value.
+	This extracts the company name from Sales Remarks (format: 'Company: xxx')
+	and saves it to the company field so the desk form and portal display
+	it correctly."""
+	if not frappe.db.exists("DocType", "Demo Request"):
+		return
+	import re
+	rows = frappe.db.sql(
+		"""select name, sales_remarks from `tabDemo Request`
+		where ifnull(company, '') = ''
+			and ifnull(sales_remarks, '') != ''
+			and sales_remarks != 'NULL'""",
+		as_dict=True,
+	) or []
+	updated = 0
+	for row in rows:
+		m = re.search(r"Company:\s*(.+)", row.sales_remarks or "")
+		if m:
+			company_name = m.group(1).strip()
+			if company_name:
+				frappe.db.set_value("Demo Request", row.name, "company", company_name)
+				updated += 1
+	frappe.db.commit()
+	if updated:
+		frappe.logger().info(
+			"backfill_request_companies: updated {0} Demo Requests with company from Sales Remarks".format(
+				updated
+			)
+		)
 
 
 def fix_lead_naming():

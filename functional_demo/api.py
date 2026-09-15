@@ -1881,7 +1881,9 @@ def create_demo_request(customer=None, company=None, contact_person=None, contac
 		extra_remarks.append(_("Contact person: {0}").format(contact_person))
 		contact_person = ""
 	if company and not frappe.db.exists("Company", company):
-		company = _ensure_company(company)
+		ensured = _ensure_company(company)
+		if ensured:
+			company = ensured
 
 	doc = frappe.new_doc("Demo Request")
 	doc.customer = customer
@@ -1924,6 +1926,16 @@ def create_demo_request(customer=None, company=None, contact_person=None, contac
 			title=_("Portal: Demo Request could not be moved through workflow"),
 			message=frappe.get_traceback(),
 		)
+
+	# Belt & suspenders: ensure the company field survived the workflow
+	# transitions.  change_status calls doc.save() which can trigger
+	# validate/on_update hooks; if anything cleared the company field,
+	# re-apply it from our local variable.
+	if company:
+		doc = frappe.get_doc("Demo Request", doc.name)
+		if not doc.company:
+			doc.company = company
+			doc.save(ignore_permissions=True)
 
 	return {"name": doc.name, "note": auto_assigned_note or ""}
 
