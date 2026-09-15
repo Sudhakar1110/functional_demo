@@ -343,23 +343,6 @@
 			</div>
 
 			<div class="portal-card">
-				<div class="card-head"><h2>Demo Template{% if data.template and data.template.template_name %} &mdash; {{ data.template.template_name }}{% endif %}</h2></div>
-				<div class="card-body">
-					{% if data.template and data.template.sections %}
-						{% for sec in data.template.sections %}
-						<div style="margin-bottom: 14px; padding: 12px 14px; border-radius: 10px; background: #F8FAFC; border: 1px solid #E2E8F0;">
-							<strong>{{ sec.section }}</strong>
-							<div style="margin-top: 6px; line-height: 1.6; color: #334155;">{{ sec.content }}</div>
-						</div>
-						{% endfor %}
-						{% if data.template.snapshot_date %}<p class="muted" style="margin: 4px 0 0;">Template snapshot taken on {{ data.template.snapshot_date }}.</p>{% endif %}
-					{% else %}
-						<p class="text-muted" style="margin: 0;">No template selected for this session yet.</p>
-					{% endif %}
-				</div>
-			</div>
-
-			<div class="portal-card">
 				<div class="card-head"><h2>Feedback &amp; Result</h2></div>
 				<div class="card-body flush">
 					<table class="kv-table">
