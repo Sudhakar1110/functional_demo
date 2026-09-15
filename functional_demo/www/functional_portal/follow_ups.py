@@ -4,7 +4,7 @@
 import frappe
 from frappe import _
 
-from functional_demo.portal import list_note, portal_context
+from functional_demo.portal import list_note, portal_context, is_sales_manager
 
 STATUS_OPTIONS = ["Open", "In Progress", "Completed", "Overdue"]
 OUTCOME_OPTIONS = [
@@ -27,14 +27,17 @@ def get_context(context):
 	# filtering needed here.
 	# Follow-ups are listed by assignment date (newest first); the due date is
 	# shown alongside so nothing is lost.
-	# Filter: only show follow-ups where sales_person = current user.
+	# Sales Manager: see all follow-ups. Sales User: see only their own.
 	user = frappe.session.user
+	filters = {}
+	if not is_sales_manager():
+		filters["sales_person"] = user
 	context.follow_ups = frappe.get_all(
 		"Demo Follow Up",
-		filters={"sales_person": user},
+		filters=filters,
 		fields=[
 			"name", "demo_request", "demo_session", "customer", "follow_up_date", "creation",
-			"status", "outcome", "next_action", "remarks", "assigned_to",
+			"status", "outcome", "next_action", "remarks", "assigned_to", "sales_person",
 		],
 		order_by="creation desc",
 		limit_page_length=1000,

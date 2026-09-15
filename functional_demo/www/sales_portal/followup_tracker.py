@@ -5,7 +5,7 @@
 import frappe
 from frappe import _
 
-from functional_demo.portal import portal_context
+from functional_demo.portal import portal_context, is_sales_manager
 
 
 def _today():
@@ -60,11 +60,14 @@ def get_context(context):
     today_start, today_end = _day_range(today)
 
     # ------------------------------------------------------------------
-    # Follow-ups for the current sales user only (as sales_person)
+    # Follow-ups: Sales Manager sees all; Sales User sees only their own.
     # ------------------------------------------------------------------
+    filters = {}
+    if not is_sales_manager():
+        filters["sales_person"] = user
     all_followups = frappe.get_all(
         "Demo Follow Up",
-        filters={"sales_person": user},
+        filters=filters,
         fields=[
             "name", "demo_request", "demo_session", "customer",
             "sales_person", "functional_consultant", "subject",
