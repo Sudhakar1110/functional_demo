@@ -94,6 +94,30 @@ def _ensure_customer(customer_name, contact_person=None, contact_number=None, em
 	return cust.name, contact_name
 
 
+def _ensure_company(company_name):
+	"""Return an existing Company matching the name, or create it so the
+	portal can auto-create a company from a free-typed name."""
+	name = (company_name or "").strip()
+	if not name:
+		return ""
+	existing = frappe.db.get_value("Company", {"company_name": name}, "name")
+	if existing:
+		return existing
+	if frappe.db.exists("Company", name):
+		return name
+	try:
+		comp = frappe.new_doc("Company")
+		comp.company_name = name
+		comp.insert(ignore_permissions=True)
+		return comp.name
+	except Exception:
+		frappe.log_error(
+			title=_("Could not create Company {0}").format(name),
+			message=frappe.get_traceback(),
+		)
+		return ""
+
+
 # ---------------------------------------------------------------------------
 # Lookup helpers (auto-fetch customer / lead / consultant / template details)
 # ---------------------------------------------------------------------------
@@ -1835,8 +1859,7 @@ def create_demo_request(customer=None, company=None, contact_person=None, contac
 		extra_remarks.append(_("Contact person: {0}").format(contact_person))
 		contact_person = ""
 	if company and not frappe.db.exists("Company", company):
-		extra_remarks.append(_("Company: {0}").format(company))
-		company = ""
+		company = _ensure_company(company)
 
 	doc = frappe.new_doc("Demo Request")
 	doc.customer = customer

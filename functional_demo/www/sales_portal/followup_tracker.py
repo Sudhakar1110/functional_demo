@@ -60,15 +60,11 @@ def get_context(context):
     today_start, today_end = _day_range(today)
 
     # ------------------------------------------------------------------
-    # All follow-ups for current sales user
-    # ignore_permissions: the page is already role-gated by portal_context
-    # (Sales User / Sales Manager only). Row-level permission filters on
-    # Demo Follow Up can hide follow-ups that a consultant created (assigned
-    # to the sales person) when the sales_person field is empty on the
-    # session - so we bypass them here and rely on the page-level guard.
+    # Follow-ups for the current sales user only
     # ------------------------------------------------------------------
     all_followups = frappe.get_all(
         "Demo Follow Up",
+        filters={"sales_person": user},
         fields=[
             "name", "demo_request", "demo_session", "customer",
             "sales_person", "functional_consultant", "subject",
