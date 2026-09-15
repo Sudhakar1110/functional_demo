@@ -60,7 +60,7 @@ def get_context(context):
     today_start, today_end = _day_range(today)
 
     # ------------------------------------------------------------------
-    # Follow-ups for the current sales user only (as sales_person or assigned_to)
+    # Follow-ups for the current sales user only (as sales_person)
     # ------------------------------------------------------------------
     all_followups = frappe.get_all(
         "Demo Follow Up",
@@ -75,25 +75,6 @@ def get_context(context):
         limit_page_length=2000,
         ignore_permissions=True,
     ) or []
-
-    # Also fetch follow-ups assigned to this user (e.g. created by consultant)
-    assigned_followups = frappe.get_all(
-        "Demo Follow Up",
-        filters={"assigned_to": user, "sales_person": ["!=", user]},
-        fields=[
-            "name", "demo_request", "demo_session", "customer",
-            "sales_person", "functional_consultant", "subject",
-            "follow_up_date", "status", "outcome", "next_action",
-            "remarks", "assigned_to", "creation", "modified",
-        ],
-        order_by="follow_up_date asc",
-        limit_page_length=2000,
-        ignore_permissions=True,
-    ) or []
-    existing_names = {fu.name for fu in all_followups}
-    for fu in assigned_followups:
-        if fu.name not in existing_names:
-            all_followups.append(fu)
 
     # ------------------------------------------------------------------
     # Resolve display names in bulk

@@ -911,11 +911,14 @@ class DemoSession(Document):
 		fu.demo_session = self.name
 		fu.demo_request = self.demo_request
 		fu.customer = self.customer
-		fu.sales_person = self.sales_person
+		# Always resolve sales_person from the Demo Request (not the session)
+		# so the follow-up appears on the correct sales person's tracker.
+		_req_sp = frappe.db.get_value("Demo Request", self.demo_request, "sales_person") if self.demo_request else None
+		fu.sales_person = _req_sp or self.sales_person
 		fu.functional_consultant = self.functional_consultant
 		fu.follow_up_date = follow_up_date
 		fu.next_action = next_action
-		fu.assigned_to = assigned_to or self.sales_person or frappe.session.user
+		fu.assigned_to = assigned_to or fu.sales_person or frappe.session.user
 		# DemoFollowUp.after_insert -> assign_todo creates the ToDo for the assignee
 		fu.insert(ignore_permissions=True)
 

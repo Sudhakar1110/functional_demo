@@ -150,6 +150,15 @@ def fix_sales_person_on_follow_ups():
 		where ifnull(dr.sales_person, '') != ''
 			and fu.sales_person != dr.sales_person"""
 	)
+	# Case 3: follow-ups where sales_person is Administrator or Guest
+	frappe.db.sql(
+		"""update `tabDemo Follow Up` fu
+		join `tabDemo Request` dr on dr.name = fu.demo_request
+		set fu.sales_person = dr.sales_person
+		where fu.sales_person in ('Administrator', 'Guest')
+			and ifnull(dr.sales_person, '') != ''
+			and dr.sales_person not in ('Administrator', 'Guest')"""
+	)
 	frappe.db.commit()
 
 
