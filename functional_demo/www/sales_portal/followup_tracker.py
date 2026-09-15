@@ -182,6 +182,17 @@ def get_context(context):
     this_week = len([fu for fu in upcoming_list
                      if fu.get("follow_up_date") and str(fu.follow_up_date)[:10] <= week_end])
 
+    # ------------------------------------------------------------------
+    # Functional consultants for the Reschedule modal dropdown
+    # ------------------------------------------------------------------
+    consultants = frappe.get_all(
+        "Functional Consultant",
+        filters={"status": ["!=", "Inactive"]},
+        fields=["name", "consultant_name"],
+        order_by="consultant_name asc",
+        ignore_permissions=True,
+    ) or []
+
     context.update({
         "overdue_list": overdue_list,
         "today_list": today_list,
@@ -197,4 +208,5 @@ def get_context(context):
         "total_open": total_open,
         "this_week": this_week,
         "today_date_display": _fmt_date(today),
+        "consultants": consultants,
     })

@@ -48,6 +48,25 @@
 	.ft-empty { text-align: center; padding: 40px 20px; color: #9CA3AF; }
 	.ft-empty h3 { font-size: 16px; color: #71717B; margin: 10px 0 6px; }
 	.ft-empty p { font-size: 13px; }
+
+	/* Reschedule Modal */
+	.rsch-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 9999; justify-content: center; align-items: center; }
+	.rsch-overlay.active { display: flex; }
+	.rsch-modal { background: #fff; border-radius: 12px; width: 440px; max-width: 94vw; box-shadow: 0 20px 60px rgba(0,0,0,0.25); overflow: hidden; }
+	.rsch-modal-head { padding: 18px 24px; border-bottom: 1px solid #E5E7EB; display: flex; justify-content: space-between; align-items: center; }
+	.rsch-modal-head h3 { margin: 0; font-size: 16px; font-weight: 700; color: #05133C; }
+	.rsch-modal-close { background: none; border: none; font-size: 22px; color: #9CA3AF; cursor: pointer; line-height: 1; }
+	.rsch-modal-close:hover { color: #DC2626; }
+	.rsch-modal-body { padding: 20px 24px; }
+	.rsch-field { margin-bottom: 14px; }
+	.rsch-field label { display: block; font-size: 12px; font-weight: 600; color: #374151; margin-bottom: 4px; }
+	.rsch-field input, .rsch-field select { width: 100%; padding: 8px 12px; border: 1px solid #D1D5DB; border-radius: 6px; font-size: 13px; box-sizing: border-box; }
+	.rsch-field input:focus, .rsch-field select:focus { border-color: #114EFF; outline: none; box-shadow: 0 0 0 3px rgba(17,78,255,0.12); }
+	.rsch-modal-foot { padding: 14px 24px; border-top: 1px solid #E5E7EB; display: flex; justify-content: flex-end; gap: 10px; }
+	.rsch-btn-cancel { padding: 8px 18px; background: #F3F4F6; color: #374151; border: none; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; }
+	.rsch-btn-submit { padding: 8px 22px; background: #114EFF; color: #fff; border: none; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; }
+	.rsch-btn-submit:disabled { background: #93B4FF; cursor: not-allowed; }
+	.rsch-btn-submit:hover:not(:disabled) { background: #0B3FDB; }
 </style>
 {% endblock %}
 {% block content %}
@@ -273,13 +292,15 @@
 									<span class="ft-badge {% if fu.status == 'Open' %}b-open{% elif fu.status == 'In Progress' %}b-in-progress{% elif fu.status == 'Completed' %}b-completed{% elif fu.status == 'Overdue' %}b-overdue{% endif %}">{{ fu.status }}</span>
 								</td>
 								<td>{{ fu.outcome or "-" }}</td>
-								<td style="white-space: nowrap;">
-									<button class="ft-action-btn ft-btn-done" onclick="completeFollowup('{{ fu.name }}')">Done</button>
-									<button class="ft-action-btn ft-btn-reschedule" onclick="rescheduleFollowup('{{ fu.name }}')">Reschedule</button>
-									{% if fu.demo_session %}
-									<a href="/functional_portal/session?name={{ fu.demo_session }}" style="color: #114EFF; font-size: 11px; font-weight: 600; text-decoration: none; margin-left: 4px;">👁</a>
-									{% endif %}
-								</td>
+							<td style="white-space: nowrap;">
+								{% if fu.status not in ('Completed', 'Closed') %}
+								<button class="ft-action-btn ft-btn-done" onclick="completeFollowup('{{ fu.name }}')">Done</button>
+								<button class="ft-action-btn ft-btn-reschedule" onclick="rescheduleFollowup('{{ fu.name }}')">Reschedule</button>
+								{% endif %}
+								{% if fu.demo_session %}
+								<a href="/functional_portal/session?name={{ fu.demo_session }}" style="color: #114EFF; font-size: 11px; font-weight: 600; text-decoration: none; margin-left: 4px;">👁</a>
+								{% endif %}
+							</td>
 							</tr>
 							{% endfor %}
 						</tbody>
@@ -360,6 +381,39 @@
 	</div>
 	</div>
 </div>
+
+<!-- Reschedule Modal -->
+<div class="rsch-overlay" id="rsch-overlay">
+	<div class="rsch-modal">
+		<div class="rsch-modal-head">
+			<h3>Reschedule Demo</h3>
+			<button class="rsch-modal-close" onclick="closeRescheduleModal()">&times;</button>
+		</div>
+		<div class="rsch-modal-body">
+			<div class="rsch-field">
+				<label>New Date *</label>
+				<input type="date" id="rsch-date" required>
+			</div>
+			<div class="rsch-field">
+				<label>New Time</label>
+				<input type="time" id="rsch-time">
+			</div>
+			<div class="rsch-field">
+				<label>Functional Consultant *</label>
+				<select id="rsch-consultant" required>
+					<option value="">Select Consultant</option>
+					{% for c in consultants %}
+					<option value="{{ c.name }}">{{ c.consultant_name or c.name }}</option>
+					{% endfor %}
+				</select>
+			</div>
+		</div>
+		<div class="rsch-modal-foot">
+			<button class="rsch-btn-cancel" onclick="closeRescheduleModal()">Cancel</button>
+			<button class="rsch-btn-submit" id="rsch-submit" onclick="submitReschedule()">Reschedule</button>
+		</div>
+	</div>
+</div>
 {% endblock %}
 
 {% block script %}
@@ -374,13 +428,45 @@ function completeFollowup(name) {
 	}).then(function() { window.location.reload(); });
 }
 
+var _rschFollowup = null;
+
 function rescheduleFollowup(name) {
-	var newDate = prompt("Enter new follow-up date (YYYY-MM-DD):");
-	if (!newDate) return;
-	portalCall("functional_demo.api.update_follow_up", {
-		follow_up: name,
-		follow_up_date: newDate
-	}).then(function() { window.location.reload(); });
+	_rschFollowup = name;
+	document.getElementById("rsch-date").value = "";
+	document.getElementById("rsch-time").value = "";
+	document.getElementById("rsch-consultant").value = "";
+	document.getElementById("rsch-submit").disabled = false;
+	document.getElementById("rsch-overlay").classList.add("active");
+}
+
+function closeRescheduleModal() {
+	document.getElementById("rsch-overlay").classList.remove("active");
+	_rschFollowup = null;
+}
+
+function submitReschedule() {
+	var date = document.getElementById("rsch-date").value;
+	var time = document.getElementById("rsch-time").value;
+	var consultant = document.getElementById("rsch-consultant").value;
+	if (!date) { frappe.msgprint("Please select a new date."); return; }
+	if (!consultant) { frappe.msgprint("Please select a Functional Consultant."); return; }
+	if (!_rschFollowup) { frappe.msgprint("Follow-up reference lost. Please try again."); return; }
+	document.getElementById("rsch-submit").disabled = true;
+	portalCall("functional_demo.api.reschedule_from_followup", {
+		follow_up: _rschFollowup,
+		new_date: date,
+		new_time: time || "",
+		functional_consultant: consultant
+	}).then(function(r) {
+		if (r && r.demo_session) {
+			frappe.msgprint("Demo rescheduled! New session: " + r.demo_session);
+			setTimeout(function() { window.location.reload(); }, 1200);
+		} else {
+			window.location.reload();
+		}
+	}).catch(function() {
+		document.getElementById("rsch-submit").disabled = false;
+	});
 }
 
 function toggleHistory() {

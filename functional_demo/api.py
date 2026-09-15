@@ -1087,6 +1087,135 @@ def mark_no_response(demo_session=None, remarks=None):
 
 
 @frappe.whitelist()
+def reschedule_from_followup(follow_up=None, new_date=None, new_time=None, functional_consultant=None):
+	"""Reschedule a demo from the Sales Follow-up Tracker.
+
+	Marks the old session as Rescheduled, updates the Demo Request with the
+	new date/time/consultant, creates a new Demo Session, and notifies the
+	new consultant."""
+	if not follow_up:
+		frappe.throw(_("Follow-up is missing. Please refresh and try again."))
+	if not new_date:
+		frappe.throw(_("Please select a new date."))
+	if not functional_consultant:
+		frappe.throw(_("Please select a Functional Consultant."))
+
+	fu = frappe.get_doc("Demo Follow Up", follow_up)
+	frappe.has_permission("Demo Follow Up", "write", doc=fu, throw=True)
+
+	demo_session_name = fu.demo_session
+	demo_request_name = fu.demo_request
+
+	if not demo_request_name:
+		frappe.throw(_("This follow-up is not linked to a Demo Request."))
+
+	dr = frappe.get_doc("Demo Request", demo_request_name)
+
+	# Mark old session as Rescheduled (if it exists and is active)
+	if demo_session_name:
+		try:
+			ds_old = frappe.get_doc("Demo Session", demo_session_name)
+			if ds_old.demo_status in ("Scheduled", "Rescheduled", "In Progress", "No Response"):
+				ds_old.demo_status = "Rescheduled"
+				ds_old.reschedule_count = int(ds_old.reschedule_count or 0) + 1
+				ds_old.append("reschedule_history", {
+					"reschedule_number": ds_old.reschedule_count,
+					"old_date": ds_old.scheduled_date,
+					"old_start_time": ds_old.start_time,
+					"old_end_time": ds_old.end_time,
+					"new_date": new_date,
+					"new_start_time": new_time,
+					"rescheduled_by": frappe.session.user,
+					"rescheduled_on": frappe.utils.now_datetime(),
+					"remarks": "Rescheduled from follow-up by sales",
+				})
+				ds_old.save(ignore_permissions=True)
+		except Exception:
+			frappe.log_error(
+				title=_("reschedule_from_followup: failed to mark old session"),
+				message=frappe.get_traceback(),
+			)
+
+	# Resolve consultant user
+	consultant_user = frappe.db.get_value("Functional Consultant", functional_consultant, "user")
+
+	# Update the Demo Request with new date/time/consultant
+	dr.preferred_demo_date = new_date
+	dr.preferred_demo_time = new_time or dr.preferred_demo_time
+	dr.functional_consultant = functional_consultant
+	dr.consultant_user = consultant_user
+	dr.save(ignore_permissions=True)
+
+	# Create a new Demo Session from the same request
+	ds_new = frappe.new_doc("Demo Session")
+	ds_new.demo_request = dr.name
+	ds_new.functional_consultant = functional_consultant
+	ds_new.consultant_user = consultant_user
+	ds_new.interested_module = dr.interested_module
+	ds_new.scheduled_date = new_date
+	ds_new.start_time = new_time
+	ds_new.insert(ignore_permissions=True)
+
+	# Update request status to Scheduled
+	try:
+		change_status(dr, "Scheduled", ignore_permissions=True)
+	except Exception:
+		frappe.db.set_value(
+			"Demo Request", dr.name,
+			{"workflow_state": "Scheduled", "status": "Scheduled"},
+			update_modified=True,
+		)
+
+	# Mark follow-up as Completed
+	fu.status = "Completed"
+	fu.outcome = "Rescheduled"
+	fu.remarks = (fu.remarks or "") + "\nRescheduled to {0} with {1}".format(new_date, functional_consultant)
+	fu.save(ignore_permissions=True)
+
+	frappe.db.commit()
+
+	# Notify the new consultant
+	try:
+		consultant_name = frappe.db.get_value("Functional Consultant", functional_consultant, "consultant_name") or functional_consultant
+		sales_name = frappe.db.get_value("User", frappe.session.user, "full_name") or frappe.session.user
+		create_notification(
+			user=consultant_user,
+			title="Demo Rescheduled from Follow-up",
+			message="{0} has rescheduled a demo for {1} on {2}{3}. New session: {4}".format(
+				sales_name,
+				fu.customer_display if hasattr(fu, "customer_display") else (dr.customer_name or dr.customer or "customer"),
+				new_date,
+				" at " + new_time if new_time else "",
+				ds_new.name,
+			),
+			reference_doctype="Demo Session",
+			reference_name=ds_new.name,
+		)
+		# Send email to consultant
+		try:
+			cust_label = dr.customer_name or dr.customer or "Customer"
+			frappe.sendmail(
+				recipients=[consultant_user],
+				subject="Demo Rescheduled from Follow-up — {0}".format(ds_new.name),
+				message=_(
+					"Hello {0},\n\n"
+					"A demo has been rescheduled by {1}.\n\n"
+					"Customer: {2}\n"
+					"New Date: {3}\n"
+					"New Time: {4}\n"
+					"Session: {5}\n\n"
+					"Please check the portal for details."
+				).format(consultant_name, sales_name, cust_label, new_date, new_time or "Not specified", ds_new.name),
+			)
+		except Exception:
+			frappe.log_error(title="reschedule_from_followup: email failed", message=frappe.get_traceback())
+	except Exception:
+		frappe.log_error(title="reschedule_from_followup: notification failed", message=frappe.get_traceback())
+
+	return {"demo_session": ds_new.name, "demo_request": dr.name, "status": "Rescheduled"}
+
+
+@frappe.whitelist()
 def edit_demo_session(demo_session=None, scheduled_date=None, start_time=None, end_time=None, meeting_link=None, customer=None, interested_module=None, functional_consultant=None):
 	"""Edit demo session details from the My Sessions portal."""
 	ds = _get_session(demo_session)
