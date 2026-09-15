@@ -69,12 +69,11 @@
    "label": "Leads",
    "options": "Customer"
   },
-  {
-   "fieldname": "company",
-   "fieldtype": "Link",
-   "label": "Company",
-   "options": "Company"
-  },
+   {
+    "fieldname": "company",
+    "fieldtype": "Data",
+    "label": "Company"
+   },
   {
    "fieldname": "contact_person",
    "fieldtype": "Link",

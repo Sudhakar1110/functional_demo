@@ -1043,7 +1043,7 @@ def get_demo_execution_data(demo_session=None):
 			"contact_person": ds.contact_person,
 			"contact_number": ds.contact_number,
 			"email": ds.email,
-			"company": ds.company,
+			"company": ds.company or (request_doc.company if request_doc else ""),
 		},
 		"team": {
 			"sales_person": ds.sales_person,

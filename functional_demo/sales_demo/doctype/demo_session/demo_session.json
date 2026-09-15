@@ -113,15 +113,12 @@
    "options": "Lead",
    "read_only": 1
   },
-  {
-   "fetch_from": "demo_request.company",
-   "fetch_if_empty": 1,
-   "fieldname": "company",
-   "fieldtype": "Link",
-   "label": "Company",
-   "options": "Company",
-   "read_only": 1
-  },
+   {
+    "fieldname": "company",
+    "fieldtype": "Data",
+    "label": "Company",
+    "read_only": 1
+   },
   {
    "fetch_from": "demo_request.contact_person",
    "fetch_if_empty": 1,
