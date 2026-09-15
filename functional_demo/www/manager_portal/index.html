@@ -371,8 +371,8 @@
 		<input type="hidden" id="sched-consultant" value="">
 		<input type="hidden" id="sched-is-assign-flow" value="">
 		<div class="form-row">
-			<div><label>Date <span class="req">*</span></label><input type="date" id="sched-date"></div>
-			<div><label>Start Time</label><input type="time" id="sched-start"></div>
+			<div><label>Date <span class="req">*</span></label><input type="date" id="sched-date" required></div>
+			<div><label>Start Time <span class="req">*</span></label><input type="time" id="sched-start" required></div>
 		</div>
 		<div class="form-row">
 			<div><label>End Time</label><input type="time" id="sched-end"></div>
@@ -460,8 +460,10 @@
 	if (schedGo) schedGo.addEventListener("click", function () {
 		var requestName = document.getElementById("sched-request").value;
 		var date = document.getElementById("sched-date").value;
+		var startTime = document.getElementById("sched-start").value;
 		if (!requestName) { portalAlert("No demo request selected.", "err"); return; }
 		if (!date) { portalAlert("Please pick a date.", "err"); return; }
+		if (!startTime) { portalAlert("Please pick a start time.", "err"); return; }
 		schedGo.disabled = true;
 		schedGo.textContent = "Scheduling...";
 		var isAssignFlow = document.getElementById("sched-is-assign-flow").value === "1";

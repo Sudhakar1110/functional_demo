@@ -69,9 +69,17 @@ def get_context(context):
 		else:
 			r["consultant_name"] = "-"
 		# Pass raw date/time values for the schedule modal pre-fill
-		r["preferred_demo_date_raw"] = str(r.get("preferred_demo_date") or "")
+		# preferred_demo_date must be YYYY-MM-DD for <input type="date">
+		pdate = r.get("preferred_demo_date")
+		if pdate:
+			r["preferred_demo_date_raw"] = str(pdate)[:10]
+		else:
+			r["preferred_demo_date_raw"] = ""
 		ptime = r.get("preferred_demo_time")
-		r["preferred_demo_time_raw"] = str(ptime)[:5] if ptime else ""
+		if ptime:
+			r["preferred_demo_time_raw"] = str(ptime)[:5]
+		else:
+			r["preferred_demo_time_raw"] = ""
 		# Formatted display values for the table columns
 		r["preferred_demo_date_display"] = (
 			frappe.utils.format_date(r.get("preferred_demo_date"), "medium")

@@ -305,6 +305,10 @@ def schedule_demo(demo_request=None, scheduled_date=None, start_time=None, end_t
 	if not scheduled_date:
 		scheduled_date = dr.preferred_demo_date or frappe.utils.today()
 
+	# Use the request's preferred time if none provided
+	if not start_time and dr.preferred_demo_time:
+		start_time = dr.preferred_demo_time
+
 	if not dr.functional_consultant:
 		frappe.throw(
 			_("Please assign a Functional Consultant before scheduling the demo."),
@@ -1791,6 +1795,12 @@ def create_demo_request(customer=None, company=None, contact_person=None, contac
 
 	# Auto-set sales_person to the logged-in user
 	sales_person = frappe.session.user
+
+	# Validate required date and time
+	if not preferred_demo_date:
+		frappe.throw(_("Preferred Demo Date is required. Please select a date."), title=_("Date Required"))
+	if not preferred_demo_time:
+		frappe.throw(_("Preferred Demo Time is required. Please select a time."), title=_("Time Required"))
 
 	# A party (Customer/Lead) and contact details are OPTIONAL - the sales team
 	# can create a request with only a Functional Consultant and fill in the

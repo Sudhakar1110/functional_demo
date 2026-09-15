@@ -107,8 +107,8 @@
 							</div>
 						</div>
 						<div class="form-row">
-							<div><label>Preferred Demo Date</label><input type="date" id="preferred_demo_date" name="preferred_demo_date"></div>
-							<div><label>Preferred Demo Time</label><input type="time" id="preferred_demo_time" name="preferred_demo_time"></div>
+							<div><label>Preferred Demo Date <span class="req">*</span></label><input type="date" id="preferred_demo_date" name="preferred_demo_date" required></div>
+							<div><label>Preferred Demo Time <span class="req">*</span></label><input type="time" id="preferred_demo_time" name="preferred_demo_time" required></div>
 						</div>
 						<label>Leads Requirements</label>
 						<textarea id="customer_requirements" name="customer_requirements" placeholder="What does the lead need?"></textarea>
@@ -394,6 +394,16 @@
 		var consultant = document.getElementById("functional_consultant").value;
 		if (!consultant) {
 			window.portalModal("Consultant Required", "Please select a Functional Consultant to run this demo. Pick one from the list above - a consultant is mandatory before the request can be created.", "err");
+			return;
+		}
+		var prefDate = document.getElementById("preferred_demo_date").value;
+		var prefTime = document.getElementById("preferred_demo_time").value;
+		if (!prefDate) {
+			window.portalModal("Date Required", "Please select a Preferred Demo Date. This is required to schedule the demo.", "err");
+			return;
+		}
+		if (!prefTime) {
+			window.portalModal("Time Required", "Please select a Preferred Demo Time. This is required to schedule the demo.", "err");
 			return;
 		}
 		/* Company is optional - if the typed name is not a saved Company record
