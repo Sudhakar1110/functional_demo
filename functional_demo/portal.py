@@ -345,6 +345,7 @@ def sidebar_items(active):
 			{"label": _("Trial Dashboard"), "route": "/sales_portal/trials", "icon": ICON_TRIALS, "active": active == "trials"},
 			{"label": _("End of Day"), "route": "/sales_portal/daily_update", "icon": ICON_DAILY_UPDATE, "active": active == "daily_update"},
 			{"label": _("Follow-up Tracker"), "route": "/sales_portal/followup_tracker", "icon": ICON_FOLLOWUP_TRACKER, "active": active == "followup_tracker"},
+			{"label": _("Follow-ups Completed"), "route": "/functional_portal/completed_followups", "icon": ICON_FOLLOWUPS, "active": active == "completed_followups"},
 		]
 
 	# Functional Home for all managers
