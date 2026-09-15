@@ -128,6 +128,19 @@
 							<div><label>End Time</label><input type="time" id="rs-end" value="{{ s.end_time }}"></div>
 							<div><label>Meeting Link</label><input type="text" id="rs-link" value="{{ s.meeting_link }}"></div>
 						</div>
+						{% if is_sales %}
+						<div class="form-row">
+							<div><label>Functional Consultant</label>
+								<select id="rs-consultant">
+									<option value="">Keep Current</option>
+									{% for c in consultants %}
+									<option value="{{ c.name }}" {% if s.functional_consultant == c.name %}selected{% endif %}>{{ c.consultant_name or c.name }}</option>
+									{% endfor %}
+								</select>
+							</div>
+							<div></div>
+						</div>
+						{% endif %}
 						<div class="form-actions"><button class="btn-portal warning" id="btn-reschedule">Reschedule</button></div>
 					</div>
 
@@ -484,13 +497,19 @@
 		document.getElementById("btn-reschedule").addEventListener("click", function () {
 			if (!val("rs-date")) { portalAlert("Please pick a new date.", "err"); return; }
 			var btn = this; btn.disabled = true;
-			portalCall("functional_demo.api.reschedule_demo_session", {
+			var payload = {
 				demo_session: SESSION,
 				scheduled_date: val("rs-date"),
 				start_time: val("rs-start"),
 				end_time: val("rs-end"),
 				meeting_link: val("rs-link"),
-			}).then(function () { window.location.reload(); }).catch(function () { btn.disabled = false; });
+			};
+			var rsConsultant = document.getElementById("rs-consultant");
+			if (rsConsultant && rsConsultant.value) {
+				payload.functional_consultant = rsConsultant.value;
+			}
+			portalCall("functional_demo.api.reschedule_demo_session", payload)
+				.then(function () { window.location.reload(); }).catch(function () { btn.disabled = false; });
 		});
 	}
 

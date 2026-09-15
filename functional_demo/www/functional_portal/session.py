@@ -270,6 +270,17 @@ def get_context(context):
 	context.follow_ups = follow_ups
 	context.follow_up_history = follow_up_history
 	context.data = data
+
+	# Consultants list for the Reschedule form (sales users only)
+	consultants = frappe.get_all(
+		"Functional Consultant",
+		filters={"status": ["!=", "Inactive"]},
+		fields=["name", "consultant_name"],
+		order_by="consultant_name asc",
+		ignore_permissions=True,
+	) or []
+	context.consultants = consultants
+
 	return context
 
 

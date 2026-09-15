@@ -1059,11 +1059,21 @@ def cancel_demo_session(demo_session=None, reason=None):
 
 
 @frappe.whitelist()
-def reschedule_demo_session(demo_session=None, scheduled_date=None, start_time=None, end_time=None, meeting_link=None):
+def reschedule_demo_session(demo_session=None, scheduled_date=None, start_time=None, end_time=None, meeting_link=None, functional_consultant=None):
 	if not scheduled_date:
 		frappe.throw(_("Please select a new date."))
 	ds = _get_session(demo_session)
 	ds.reschedule_demo(scheduled_date, start_time, end_time, meeting_link)
+	# Update consultant if a new one is provided (sales reassignment)
+	if functional_consultant:
+		ds.functional_consultant = functional_consultant
+		ds.consultant_user = frappe.db.get_value("Functional Consultant", functional_consultant, "user")
+		ds.save(ignore_permissions=True)
+		# Also update the linked demo request
+		if ds.demo_request:
+			frappe.db.set_value("Demo Request", ds.demo_request, "functional_consultant", functional_consultant)
+			frappe.db.set_value("Demo Request", ds.demo_request, "consultant_user", ds.consultant_user)
+		frappe.db.commit()
 	party, consultant = _party_and_consultant(ds)
 	frappe.msgprint(
 		_("Demo {0} rescheduled to {1}{2}{3}.").format(
