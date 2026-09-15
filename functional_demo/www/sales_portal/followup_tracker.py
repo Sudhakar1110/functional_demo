@@ -76,20 +76,6 @@ def get_context(context):
         ignore_permissions=True,
     ) or []
 
-    # DEBUG: check distinct sales_person values across ALL follow-ups
-    _all_sp = frappe.get_all(
-        "Demo Follow Up",
-        fields=["sales_person"],
-        limit_page_length=5000,
-        ignore_permissions=True,
-    ) or []
-    _sp_counts = {}
-    for _row in _all_sp:
-        _sp = _row.get("sales_person") or "(empty)"
-        _sp_counts[_sp] = _sp_counts.get(_sp, 0) + 1
-    context._debug_sales_person_counts = _sp_counts
-    context._debug_user = user
-
     # ------------------------------------------------------------------
     # Resolve display names in bulk
     # ------------------------------------------------------------------

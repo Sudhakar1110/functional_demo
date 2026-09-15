@@ -27,14 +27,18 @@ def get_context(context):
 	# filtering needed here.
 	# Follow-ups are listed by assignment date (newest first); the due date is
 	# shown alongside so nothing is lost.
+	# Filter: only show follow-ups where sales_person = current user.
+	user = frappe.session.user
 	context.follow_ups = frappe.get_all(
 		"Demo Follow Up",
+		filters={"sales_person": user},
 		fields=[
 			"name", "demo_request", "demo_session", "customer", "follow_up_date", "creation",
 			"status", "outcome", "next_action", "remarks", "assigned_to",
 		],
 		order_by="creation desc",
 		limit_page_length=1000,
+		ignore_permissions=True,
 	) or []
 	for fu in context.follow_ups:
 		fu["assigned_display"] = (

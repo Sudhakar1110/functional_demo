@@ -113,17 +113,6 @@
 				</div>
 			</div>
 
-			<!-- DEBUG: sales_person distribution -->
-			<div style="background: #FEF3C7; border: 2px solid #F59E0B; border-radius: 10px; padding: 16px 20px; margin-bottom: 20px; font-size: 13px;">
-				<strong>DEBUG — Logged in as:</strong> {{ _debug_user }}<br>
-				<strong>sales_person distribution across ALL Demo Follow Ups:</strong>
-				<ul style="margin: 8px 0 0 18px;">
-				{% for sp, count in _debug_sales_person_counts.items() %}
-					<li><code>{{ sp }}</code> — {{ count }} follow-ups</li>
-				{% endfor %}
-				</ul>
-			</div>
-
 			<!-- KPI Cards -->
 			<div class="kpi-grid" style="margin-bottom: 24px;">
 				<div class="kpi-card" style="cursor:pointer;" onclick="kpiFilter('all', this)">
