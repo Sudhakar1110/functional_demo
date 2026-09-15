@@ -42,6 +42,7 @@ def after_migrate():
 	disable_legacy_notifications()
 	fix_lead_naming()
 	fix_sales_person_on_requests()
+	fix_sales_person_on_follow_ups()
 	create_lead_list_client_script()
 
 
@@ -121,6 +122,34 @@ def fix_sales_person_on_requests():
 			and ifnull(dr.owner, '') != ''
 			and dr.owner != 'Administrator'
 	""")
+	frappe.db.commit()
+
+
+def fix_sales_person_on_follow_ups():
+	"""Fix Demo Follow Up records where sales_person is missing or wrong.
+
+	Follow-ups created before the sales_person filter was enforced (or via
+	test data) may carry sales_person = 'Administrator' or NULL.  Sync
+	them from the linked Demo Request so each follow-up shows only to the
+	correct sales user on the Follow-up Tracker page."""
+	if not frappe.db.exists("DocType", "Demo Follow Up"):
+		return
+	# Case 1: follow-ups with NULL or empty sales_person
+	frappe.db.sql(
+		"""update `tabDemo Follow Up` fu
+		join `tabDemo Request` dr on dr.name = fu.demo_request
+		set fu.sales_person = dr.sales_person
+		where ifnull(fu.sales_person, '') = ''
+			and ifnull(dr.sales_person, '') != ''"""
+	)
+	# Case 2: follow-ups whose sales_person doesn't match the request's
+	frappe.db.sql(
+		"""update `tabDemo Follow Up` fu
+		join `tabDemo Request` dr on dr.name = fu.demo_request
+		set fu.sales_person = dr.sales_person
+		where ifnull(dr.sales_person, '') != ''
+			and fu.sales_person != dr.sales_person"""
+	)
 	frappe.db.commit()
 
 
