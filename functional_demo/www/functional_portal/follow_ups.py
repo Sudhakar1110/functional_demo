@@ -30,7 +30,7 @@ def get_context(context):
 	# shown alongside so nothing is lost.
 	# Sales Manager: see all follow-ups. Sales User: see only their own.
 	user = frappe.session.user
-	filters = {}
+	filters = {"status": ["!=", "Completed"]}
 	if not is_sales_manager():
 		filters["sales_person"] = user
 	context.follow_ups = frappe.get_all(
