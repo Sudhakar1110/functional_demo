@@ -9,7 +9,8 @@ from functional_demo.portal import list_note, portal_context, is_sales_manager
 STATUS_OPTIONS = ["Open", "In Progress", "Completed", "Overdue"]
 OUTCOME_OPTIONS = [
 	"Pending", "Additional Discussion", "Additional Demo Required",
-	"Converted", "Not Interested", "Closed",
+	"Demo Done", "Trial", "Quotation Send",
+	"Not Interested", "Closed",
 ]
 
 

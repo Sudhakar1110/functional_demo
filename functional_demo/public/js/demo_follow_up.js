@@ -25,7 +25,7 @@ function outcome_dialog(frm) {
 				label: __("Outcome"),
 				fieldtype: "Select",
 				reqd: 1,
-				options: ["Pending", "Additional Discussion", "Additional Demo Required", "Converted:Demo Completed", "Not Interested", "Closed"],
+				options: ["Pending", "Additional Discussion", "Additional Demo Required", "Demo Done", "Trial", "Quotation Send", "Not Interested", "Closed"],
 				default: frm.doc.outcome || "Pending",
 			},
 			{ fieldname: "remarks", label: __("Remarks"), fieldtype: "Small Text", default: frm.doc.remarks },

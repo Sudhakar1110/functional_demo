@@ -112,7 +112,7 @@
    "fieldname": "outcome",
    "fieldtype": "Select",
    "label": "Outcome",
-   "options": "Pending\nAdditional Discussion\nAdditional Demo Required\nConverted\nNot Interested\nClosed"
+   "options": "Pending\nAdditional Discussion\nAdditional Demo Required\nDemo Done\nTrial\nQuotation Send\nNot Interested\nClosed"
   },
   {
    "fieldname": "next_action",
