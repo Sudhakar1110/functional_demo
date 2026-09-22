@@ -4,7 +4,7 @@
 import frappe
 from frappe import _
 
-from functional_demo.portal import manager_stats, portal_context
+from functional_demo.portal import format_time_12h, manager_stats, portal_context
 
 
 def get_context(context):
@@ -85,7 +85,7 @@ def get_context(context):
 			frappe.utils.format_date(r.get("preferred_demo_date"), "medium")
 			if r.get("preferred_demo_date") else "-"
 		)
-		r["preferred_demo_time_display"] = str(ptime)[:5] if ptime else "-"
+		r["preferred_demo_time_display"] = format_time_12h(ptime) if ptime else "-"
 	context.all_requests = all_requests
 	# Consultants for the assign dropdown
 	consultants = frappe.get_all(

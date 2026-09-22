@@ -122,7 +122,7 @@
 								<td>{{ s.customer or "-" }}</td>
 								<td>{{ s.interested_module or "-" }}</td>
 								<td>{{ s.scheduled_date or "-" }}</td>
-								<td>{{ s.start_time or "-" }}</td>
+								<td>{{ format_time_12h(s.start_time) or "-" }}</td>
 								<td><span class="badge b-{{ s.demo_status|lower|replace(' ', '-') }}">{{ s.demo_status }}</span></td>
 								<td>{{ display_status(s.final_result) or "-" }}</td>
 								<td><a class="btn-portal sm" href="/functional_portal/session?name={{ s.name }}">Conduct &rarr;</a></td>

@@ -6,7 +6,7 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.utils import add_days, now_datetime, today
 
-from functional_demo.portal import create_notification, send_branded_email
+from functional_demo.portal import create_notification, format_time_12h, send_branded_email
 from functional_demo.sales_demo.doctype.functional_demo_template.functional_demo_template import (
 	get_template_snapshot,
 )
@@ -292,7 +292,7 @@ class DemoSession(Document):
 			session_url = frappe.utils.get_url("/app/demo-session/{0}".format(self.name))
 			rows = [
 				(_("Date"), date_label),
-				(_("Time"), "{0} - {1}".format(self.start_time or "-", self.end_time or "-")),
+				(_("Time"), "{0} - {1}".format(format_time_12h(self.start_time) or "-", format_time_12h(self.end_time) or "-")),
 				(_("Consultant"), consultant_name or "-"),
 				(_("Meeting Link"), self.meeting_link or "-"),
 				(_("Demo Session"), self.name),
@@ -782,7 +782,7 @@ class DemoSession(Document):
 				).format(self.name, party, date_label),
 				rows=[
 					(_("New Date"), date_label),
-					(_("Time"), "{0} \u2013 {1}".format(self.start_time or "-", self.end_time or "-")),
+					(_("Time"), "{0} \u2013 {1}".format(format_time_12h(self.start_time) or "-", format_time_12h(self.end_time) or "-")),
 					(_("Consultant"), consultant_name),
 					(_("Follow-up"), fu.name if fu else "-"),
 					(_("Demo Session"), self.name),
@@ -819,7 +819,7 @@ class DemoSession(Document):
 			rows = [
 				(_("Customer"), party or "-"),
 				(_("New Date"), date_label),
-				(_("Time"), "{0} - {1}".format(self.start_time or "-", self.end_time or "-")),
+				(_("Time"), "{0} - {1}".format(format_time_12h(self.start_time) or "-", format_time_12h(self.end_time) or "-")),
 				(_("Consultant"), consultant_name),
 				(_("Meeting Link"), self.meeting_link or "-"),
 				(_("Reschedule #"), str(self.reschedule_count or 1)),
@@ -1304,7 +1304,7 @@ def _send_hour_reminder(row, start):
 	and the consultant; returns how many notifications were created."""
 	party = row.customer or row.lead or row.demo_request or row.name
 	subject = _("Demo Starting Soon — {0} at {1} (Session {2})").format(
-		party, start.strftime("%H:%M"), row.name
+		party, format_time_12h(start), row.name
 	)
 	recipients = [row.sales_person]
 	consultant_user = (
@@ -1329,7 +1329,7 @@ def _send_hour_reminder(row, start):
 				heading=_("Demo Starting Soon"),
 				intro=_("Demo Session {0} for {1} starts in about an hour.").format(row.name, party),
 				rows=[
-					(_("Starts At"), start.strftime("%H:%M")),
+					(_("Starts At"), format_time_12h(start)),
 					(_("Time"), "{0} - {1}".format(row.start_time or "-", row.end_time or "-")),
 					(_("Meeting Link"), row.meeting_link or "-"),
 					(_("Demo Session"), row.name),
@@ -1397,7 +1397,7 @@ def _send_5min_reminder(row, start):
 	and the sales person; returns how many notifications were created."""
 	party = row.customer or row.lead or row.demo_request or row.name
 	subject = _("Demo Starting in 5 Minutes — {0} at {1} (Session {2})").format(
-		party, start.strftime("%H:%M"), row.name
+		party, format_time_12h(start), row.name
 	)
 	recipients = [row.sales_person]
 	consultant_user = (
@@ -1422,7 +1422,7 @@ def _send_5min_reminder(row, start):
 				heading=_("Demo Starting in 5 Minutes"),
 				intro=_("Demo Session {0} for {1} starts in about 5 minutes. Please be ready.").format(row.name, party),
 				rows=[
-					(_("Starts At"), start.strftime("%H:%M")),
+					(_("Starts At"), format_time_12h(start)),
 					(_("Time"), "{0} - {1}".format(row.start_time or "-", row.end_time or "-")),
 					(_("Meeting Link"), row.meeting_link or "-"),
 					(_("Demo Session"), row.name),

@@ -51,7 +51,7 @@ def get_context(context):
 		f["size_display"] = _size_display(f.get("file_size"))
 		f["uploaded_by_display"] = uploader_names.get(f.get("uploaded_by")) or f.get("uploaded_by") or "-"
 		f["uploaded_on_display"] = (
-			frappe.utils.format_datetime(f.get("uploaded_on"), "medium")
+			frappe.utils.format_datetime(f.get("uploaded_on"), "dd MMM yyyy, hh:mm a")
 			if f.get("uploaded_on")
 			else "-"
 		)

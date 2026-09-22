@@ -191,12 +191,12 @@
 										data-consultant="{{ s.functional_consultant }}"
 										data-session="{{ s.name }}"
 										data-customer="{{ s.customer or '-' }}"
-										data-time="{{ s.start_time or '-' }}{% if s.end_time %} - {{ s.end_time }}{% endif %}"
+										data-time="{{ format_time_12h(s.start_time) or '-' }}{% if s.end_time %} - {{ format_time_12h(s.end_time) }}{% endif %}"
 										data-status="{{ s.demo_status }}"
 										data-consultant-name="{{ s.consultant_name }}"
 										onclick="openSessionModal('{{ s.name }}')"
 										onmouseenter="showTooltip(event, this)" onmouseleave="hideTooltip()">
-										{{ s.start_time or '' }} {{ s.customer or 'Session' }}
+										{{ format_time_12h(s.start_time) or '' }} {{ s.customer or 'Session' }}
 									</div>
 									{% endfor %}
 									{% if cell.sessions|length > 3 %}
@@ -306,7 +306,7 @@
 							<div style="display: flex; justify-content: space-between; align-items: center;">
 								<div>
 									<a href="/functional_portal/session?name={{ c.active_session.name }}" style="font-weight: 700; color: #009A52; text-decoration: none; font-size: 15px;">{{ c.active_session.customer or '—' }}</a>
-									<div style="font-size: 12px; color: #71717B; margin-top: 2px;">Started {{ c.active_session.start_time or '' }} · {{ c.active_session.date_display }}</div>
+									<div style="font-size: 12px; color: #71717B; margin-top: 2px;">Started {{ format_time_12h(c.active_session.start_time) or '' }} · {{ c.active_session.date_display }}</div>
 								</div>
 								<div style="text-align: right;">
 									<div style="font-size: 11px; color: #71717B;">Module</div>
@@ -331,7 +331,7 @@
 							<div style="padding: 12px 16px; background: #E8EEFF; border-left: 4px solid #114EFF; border-radius: 8px; display: flex; justify-content: space-between; align-items: center;">
 								<div>
 									<a href="/functional_portal/session?name={{ s.name }}" style="font-weight: 600; color: #114EFF; text-decoration: none;">{{ s.customer or '—' }}</a>
-									<div style="font-size: 12px; color: #71717B;">{{ s.date_display }} at {{ s.start_time or '—' }}</div>
+									<div style="font-size: 12px; color: #71717B;">{{ s.date_display }} at {{ format_time_12h(s.start_time) or '—' }}</div>
 								</div>
 								<div style="text-align: right;">
 									<span class="badge {% if s.demo_status == 'Rescheduled' %}b-rescheduled{% else %}b-scheduled{% endif %}">{{ s.demo_status }}</span>
@@ -435,7 +435,7 @@ var ALL_SESSIONS = [
 		"consultant": "{{ s.functional_consultant }}",
 		"consultant_name": "{{ s.consultant_name }}",
 		"date": "{{ s.date_str }}",
-		"time": "{{ s.start_time or '-' }}{% if s.end_time %} - {{ s.end_time }}{% endif %}",
+		"time": "{{ format_time_12h(s.start_time) or '-' }}{% if s.end_time %} - {{ format_time_12h(s.end_time) }}{% endif %}",
 		"status": "{{ s.demo_status }}",
 		"color": "{{ s.color }}",
 		"link": "{{ s.meeting_link or '' }}"

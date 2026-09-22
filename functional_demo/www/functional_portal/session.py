@@ -5,7 +5,7 @@ import frappe
 from frappe import _
 
 from functional_demo.api import get_demo_execution_data
-from functional_demo.portal import portal_context
+from functional_demo.portal import format_time_12h, portal_context
 
 
 def get_context(context):
@@ -325,18 +325,18 @@ def _load_child_table_history(session_name):
 					frappe.utils.format_date(row.get("old_date"), "medium")
 					if row.get("old_date") else "-"
 				),
-				"old_time": "{0} \u2013 {1}".format(
-					str(row.get("old_start_time") or "-")[:5],
-					str(row.get("old_end_time") or "-")[:5]
-				) if row.get("old_start_time") else "-",
-				"new_date": (
-					frappe.utils.format_date(row.get("new_date"), "medium")
-					if row.get("new_date") else "-"
-				),
-				"new_time": "{0} \u2013 {1}".format(
-					str(row.get("new_start_time") or "-")[:5],
-					str(row.get("new_end_time") or "-")[:5]
-				) if row.get("new_start_time") else "-",
+			"old_time": "{0} \u2013 {1}".format(
+				format_time_12h(str(row.get("old_start_time") or "-")[:5]),
+				format_time_12h(str(row.get("old_end_time") or "-")[:5])
+			) if row.get("old_start_time") else "-",
+			"new_date": (
+				frappe.utils.format_date(row.get("new_date"), "medium")
+				if row.get("new_date") else "-"
+			),
+			"new_time": "{0} \u2013 {1}".format(
+				format_time_12h(str(row.get("new_start_time") or "-")[:5]),
+				format_time_12h(str(row.get("new_end_time") or "-")[:5])
+			) if row.get("new_start_time") else "-",
 				"rescheduled_by": rescheduled_by_name,
 				"rescheduled_on": (
 					frappe.utils.format_datetime(
@@ -438,18 +438,18 @@ def _load_version_history(session_name, data):
 					frappe.utils.format_date(chg["old_date"], "medium")
 					if chg.get("old_date") else "-"
 				),
-				"old_time": "{0} \u2013 {1}".format(
-					str(chg.get("old_start") or "-")[:5],
-					str(chg.get("old_end") or "-")[:5]
-				) if chg.get("old_start") else "-",
-				"new_date": (
-					frappe.utils.format_date(chg["new_date"], "medium")
-					if chg.get("new_date") else "-"
-				),
-				"new_time": "{0} \u2013 {1}".format(
-					str(chg.get("new_start") or "-")[:5],
-					str(chg.get("new_end") or "-")[:5]
-				) if chg.get("new_start") else "-",
+			"old_time": "{0} \u2013 {1}".format(
+				format_time_12h(str(chg.get("old_start") or "-")[:5]),
+				format_time_12h(str(chg.get("old_end") or "-")[:5])
+			) if chg.get("old_start") else "-",
+			"new_date": (
+				frappe.utils.format_date(chg["new_date"], "medium")
+				if chg.get("new_date") else "-"
+			),
+			"new_time": "{0} \u2013 {1}".format(
+				format_time_12h(str(chg.get("new_start") or "-")[:5]),
+				format_time_12h(str(chg.get("new_end") or "-")[:5])
+			) if chg.get("new_start") else "-",
 				"rescheduled_by": rescheduled_by_name,
 				"rescheduled_on": (
 					frappe.utils.format_datetime(

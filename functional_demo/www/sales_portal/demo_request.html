@@ -130,7 +130,7 @@
 							<span class="badge b-{{ doc.status|lower|replace(' ', '-') }}">{{ display_status(doc.status) }}</span>
 							{% if doc.priority %}<span class="chip {{ doc.priority|lower }}">{{ doc.priority }} priority</span>{% endif %}
 							{% if doc.sla_breached %}<span class="badge b-sla-breached">SLA Breached</span>{% elif doc.sla_due_date %}<span class="chip">SLA due {{ doc.sla_due_date }}</span>{% endif %}
-							<span class="muted">Created: {{ doc.creation.strftime('%d %b %Y, %H:%M') if doc.creation else '-' }}</span>
+							<span class="muted">Created: {{ doc.creation.strftime('%d %b %Y, %I:%M %p') if doc.creation else '-' }}</span>
 						</div>
 					</div>
 					<div style="display: flex; gap: 8px; flex-wrap: wrap;">
@@ -317,7 +317,7 @@
 						{% for a in activity %}
 						<li>
 							<div class="t-title">{{ a.activity_type }}</div>
-							<div class="t-meta">{{ a.user }} · {{ a.activity_date.strftime('%d %b %Y, %H:%M') if a.activity_date else '-' }}{% if a.status %} · {{ a.status }}{% endif %}</div>
+							<div class="t-meta">{{ a.user }} · {{ a.activity_date.strftime('%d %b %Y, %I:%M %p') if a.activity_date else '-' }}{% if a.status %} · {{ a.status }}{% endif %}</div>
 							{% if a.remarks %}<div class="t-remarks">{{ a.remarks }}</div>{% endif %}
 						</li>
 						{% endfor %}

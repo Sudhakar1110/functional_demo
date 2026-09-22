@@ -278,7 +278,7 @@
 								<td><a href="/functional_portal/session?name={{ s.name }}">{{ s.name }}</a></td>
 								<td><strong>{{ s.customer or "-" }}</strong></td>
 								<td>{{ s.functional_consultant or "-" }}</td>
-								<td>{{ s.start_time or "-" }}{% if s.end_time %} – {{ s.end_time }}{% endif %}</td>
+								<td>{{ format_time_12h(s.start_time) or "-" }}{% if s.end_time %} – {{ format_time_12h(s.end_time) }}{% endif %}</td>
 								<td>{{ s.interested_module or "-" }}</td>
 								<td>{{ s.demo_type or "Standard" }}</td>
 								<td>

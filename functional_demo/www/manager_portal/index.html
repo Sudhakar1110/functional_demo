@@ -193,7 +193,7 @@
 						<div style="background: #F0FDF4; border-radius: 10px; padding: 12px 16px; margin-bottom: 10px; border: 1px solid #DCFBEA;">
 							<div style="font-size: 13px; font-weight: 600; color: #009A52; margin-bottom: 4px;">Currently conducting demo</div>
 							<div style="font-size: 14px; color: #05133C;">{{ c.active_session.customer or 'Customer' }} · <a href="/functional_portal/session?name={{ c.active_session.name }}">{{ c.active_session.name }}</a></div>
-							<div style="font-size: 12px; color: #71717B;">Started {{ c.active_session.start_time or '' }}</div>
+							<div style="font-size: 12px; color: #71717B;">Started {{ format_time_12h(c.active_session.start_time) or '' }}</div>
 						</div>
 						{% endif %}
 						{% if c.todays_sessions %}
@@ -201,7 +201,7 @@
 							<div style="font-size: 13px; font-weight: 600; color: #71717B; margin-bottom: 6px;">Today's Schedule</div>
 							{% for s in c.todays_sessions %}
 							<div style="display: flex; gap: 10px; align-items: center; padding: 6px 10px; background: #F9FAFB; border-radius: 6px; margin-bottom: 4px; font-size: 13px;">
-								<span style="color: #71717B; min-width: 55px;">{{ s.start_time or '-' }}</span>
+								<span style="color: #71717B; min-width: 55px;">{{ format_time_12h(s.start_time) or '-' }}</span>
 								<span style="color: #05133C; font-weight: 600; flex: 1;">{{ s.customer or '-' }}</span>
 								<span class="badge b-{{ s.demo_status|lower|replace(' ', '-') }}">{{ s.demo_status }}</span>
 							</div>
@@ -215,7 +215,7 @@
 							<div style="display: flex; gap: 10px; align-items: center; padding: 6px 10px; background: #F9FAFB; border-radius: 6px; margin-bottom: 4px; font-size: 13px;">
 								<span style="color: #71717B; min-width: 80px;">{{ s.date_display }}</span>
 								<span style="color: #05133C; font-weight: 600; flex: 1;">{{ s.customer or '-' }}</span>
-								<span style="color: #71717B;">{{ s.start_time or '' }}</span>
+								<span style="color: #71717B;">{{ format_time_12h(s.start_time) or '' }}</span>
 							</div>
 							{% endfor %}
 						</div>
@@ -261,7 +261,7 @@
 								<td>{{ s.customer or "-" }}</td>
 								<td>{{ s.consultant_name }}</td>
 								<td>{{ s.date_display }}</td>
-								<td>{{ s.start_time or "-" }}</td>
+								<td>{{ format_time_12h(s.start_time) or "-" }}</td>
 								<td><span class="badge b-{{ s.demo_status|lower|replace(' ', '-') }}">{{ s.demo_status }}</span></td>
 								<td>{% if s.final_result %}<span class="badge b-{{ s.final_result|lower|replace(' ', '-') }}">{{ display_status(s.final_result) }}</span>{% else %}-{% endif %}</td>
 							</tr>

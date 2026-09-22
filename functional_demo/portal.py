@@ -2,8 +2,32 @@
 # License: GNU General Public License (v3). See LICENSE
 """Helpers shared by the Sales / Functional / Manager portal pages (www/)."""
 
+import re
+
 import frappe
 from frappe import _
+
+
+def format_time_12h(time_val):
+	"""Convert a 24-hour time value (HH:MM, HH:MM:SS, or datetime) to 12-hour AM/PM format.
+
+	Examples: 14:30 -> 2:30 PM, 09:15:00 -> 9:15 AM, 00:00 -> 12:00 AM
+	"""
+	if not time_val:
+		return ""
+	if hasattr(time_val, "strftime"):
+		s = time_val.strftime("%H:%M")
+	else:
+		s = str(time_val).strip()
+	m = re.match(r"^(\d{1,2}):(\d{2})(?::(\d{2}))?$", s)
+	if not m:
+		return s
+	h = int(m.group(1))
+	mi = m.group(2)
+	period = "AM" if h < 12 else "PM"
+	h12 = h % 12 or 12
+	return f"{h12}:{mi} {period}"
+
 
 SALES_ROLES = ("Sales User", "Sales Manager")
 FUNCTIONAL_ROLES = ("Functional Consultant", "Functional Team Manager")
@@ -848,7 +872,7 @@ def manager_stats(role=None):
 	) or []
 	for a in recent_activity:
 		a["activity_display"] = (
-			frappe.utils.format_datetime(a.get("activity_date"), "medium") if a.get("activity_date") else "-"
+			frappe.utils.format_datetime(a.get("activity_date"), "dd MMM yyyy, hh:mm a") if a.get("activity_date") else "-"
 		)
 
 	return {
