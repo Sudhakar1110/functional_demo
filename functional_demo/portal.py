@@ -682,6 +682,7 @@ def portal_context(context, title, required_roles, active, subtitle=""):
 	context.today_pretty = frappe.utils.now_datetime().strftime("%A, %d %B %Y")
 	context.sidebar_items = sidebar_items(active)
 	context.display_status = display_status
+	context.format_time_12h = format_time_12h
 	# Full-bleed dashboard layout: skip the standard website container
 	# (web.html renders <main class="container my-4"> unless full_width is set)
 	context.full_width = True

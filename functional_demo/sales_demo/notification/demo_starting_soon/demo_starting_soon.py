@@ -1,6 +1,7 @@
 import frappe
 
+from functional_demo.portal import format_time_12h
+
 
 def get_context(context):
-	# do your magic here
-	pass
+	context.format_time_12h = format_time_12h

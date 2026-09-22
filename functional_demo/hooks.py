@@ -39,12 +39,6 @@ app_include_css = [
 # the role-based portal menu for the website navbar.
 get_standard_portal_menu_items = "functional_demo.portal.get_standard_portal_menu_items"
 
-# Expose format_time_12h to all Jinja templates so portal pages can convert
-# 24-hour HH:MM / HH:MM:SS strings to 12-hour AM/PM display.
-jinja_methods = {
-	"format_time_12h": "functional_demo.portal.format_time_12h",
-}
-
 # Per-doctype form customizations
 doctype_js = {
 	"Demo Request": "public/js/demo_request.js",
