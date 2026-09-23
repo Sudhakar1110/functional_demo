@@ -14,6 +14,9 @@ from functional_demo.sales_demo.doctype.demo_request.demo_request import (
 from functional_demo.sales_demo.doctype.demo_session.demo_session import (
 	create_calendar_event,
 )
+from functional_demo.sales_demo.doctype.demo_follow_up.demo_follow_up import (
+	has_permission as demo_follow_up_has_permission,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -1162,7 +1165,11 @@ def reschedule_from_followup(follow_up=None, new_date=None, new_time=None, funct
 		frappe.throw(_("Please select a Functional Consultant."))
 
 	fu = frappe.get_doc("Demo Follow Up", follow_up)
-	frappe.has_permission("Demo Follow Up", "write", doc=fu, throw=True)
+	if not demo_follow_up_has_permission(fu, "write", frappe.session.user):
+		frappe.throw(
+			_("You can only reschedule follow-ups assigned to you or on your own demo requests."),
+			frappe.PermissionError,
+		)
 
 	demo_session_name = fu.demo_session
 	demo_request_name = fu.demo_request
@@ -2181,7 +2188,11 @@ def update_follow_up(follow_up=None, status=None, outcome=None, remarks=None, ne
 			title=_("Missing Follow-up"),
 		)
 	doc = frappe.get_doc("Demo Follow Up", follow_up)
-	frappe.has_permission("Demo Follow Up", "write", doc=doc, throw=True)
+	if not demo_follow_up_has_permission(doc, "write", frappe.session.user):
+		frappe.throw(
+			_("You can only update follow-ups assigned to you or on your own demo requests."),
+			frappe.PermissionError,
+		)
 
 	if status:
 		doc.status = status
@@ -2195,7 +2206,7 @@ def update_follow_up(follow_up=None, status=None, outcome=None, remarks=None, ne
 		doc.follow_up_date = follow_up_date
 	if discussion_note:
 		doc.add_discussion_note(discussion_note)
-	doc.save()
+	doc.save(ignore_permissions=True)
 
 	frappe.msgprint(_("Follow-up {0} updated.").format(follow_up))
 	return {"status": doc.status, "outcome": doc.outcome}
