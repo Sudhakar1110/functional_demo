@@ -39,21 +39,11 @@
 				{% if list_note %}<div class="muted" style="margin-bottom: 16px;">{{ list_note }}</div>{% endif %}
 				<div class="flex-between mb-16">
 				<h2 style="margin: 0; font-size: 20px; font-weight: 800; color: #05133C;">Demo Requests ({{ requests|length }})</h2>
-				<a class="btn-portal" href="/sales_portal/demo_request?new=1">+ New Demo Request</a>
-			</div>
-
-			{% if requests %}
-			<div class="portal-card" style="margin-bottom: 16px;">
-				<div class="card-body" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap; padding: 12px 16px;">
-					<span class="muted" id="bulk-count" style="font-weight: 800;">0 selected</span>
-				<button class="btn-portal secondary sm" id="btn-bulk-send-manager" disabled>Send to Manager</button>
-				<button class="btn-portal secondary sm" id="btn-bulk-assign" disabled>Bulk Assign Consultant</button>
-				<button class="btn-portal secondary sm" id="btn-bulk-reschedule" disabled>Bulk Reschedule</button>
-				<button class="btn-portal sm" id="btn-bulk-export">Export CSV</button>
-				<span class="muted" style="margin-left: auto;">Tick requests to send to manager, assign a consultant, or reschedule them.</span>
+				<div style="display: flex; gap: 10px;">
+					<button class="btn-portal secondary" id="btn-bulk-export">Export CSV</button>
+					<a class="btn-portal" href="/sales_portal/demo_request?new=1">+ New Demo Request</a>
 				</div>
 			</div>
-			{% endif %}
 
 			<div class="filter-chips">
 				<a class="filter-chip {% if not status %}active{% endif %}" href="/sales_portal/demo_requests">All</a>
@@ -68,7 +58,6 @@
 					<table class="table-portal">
 						<thead>
 							<tr>
-								<th style="width: 34px;"><input type="checkbox" id="check-all" title="Select all"></th>
 								<th>Request</th>
 								<th>Party</th>
 								<th>Company</th>
@@ -82,7 +71,6 @@
 						<tbody>
 							{% for r in requests %}
 							<tr>
-								<td><input type="checkbox" class="row-check" value="{{ r.name }}"></td>
 								<td><a href="/sales_portal/demo_request?name={{ r.name }}">{{ r.name }}</a></td>
 								<td>{{ r.customer or r.sales_person or "-" }}</td>
 								<td>{{ r.company or "-" }}</td>
@@ -105,49 +93,6 @@
 				</div>
 				{% endif %}
 			</div>
-
-			<div class="portal-modal" id="bulk-send-manager-modal">
-				<div class="pm-card">
-					<div class="pm-title">Send to Functional Team Manager</div>
-					<p class="pm-msg" style="margin: 0 0 12px;">Send the <span id="bulk-send-count">0</span> selected request(s) to the Functional Team Manager for consultant assignment. The requests will move to Manager Review status.</p>
-					<div style="display: flex; gap: 10px; justify-content: flex-end;">
-						<button class="btn-portal secondary pm-btn" id="bulk-send-cancel">Cancel</button>
-						<button class="btn-portal pm-btn" id="bulk-send-go">Send to Manager</button>
-					</div>
-				</div>
-			</div>
-
-			<div class="portal-modal" id="bulk-assign-modal">
-				<div class="pm-card">
-					<div class="pm-title">Bulk Assign Consultant</div>
-					<p class="pm-msg" style="margin: 0 0 12px;">Assign one consultant to the <span id="bulk-assign-count">0</span> selected request(s). The requests move straight to Assigned.</p>
-					<select id="bulk-consultant" style="width: 100%; margin-bottom: 14px;">
-						<option value="">— Select consultant —</option>
-						{% for c in consultants %}
-						<option value="{{ c.name }}">{{ c.consultant_name }}{% if c.modules %} · {{ c.modules|join(', ') }}{% else %} · {{ c.specialization or 'Generalist' }}{% endif %}</option>
-						{% endfor %}
-					</select>
-					<div style="display: flex; gap: 10px; justify-content: flex-end;">
-						<button class="btn-portal secondary pm-btn" id="bulk-assign-cancel">Cancel</button>
-						<button class="btn-portal pm-btn" id="bulk-assign-go">Assign</button>
-					</div>
-				</div>
-			</div>
-
-			<div class="portal-modal" id="bulk-reschedule-modal">
-				<div class="pm-card pm-schedule">
-					<div class="pm-title">Bulk Reschedule</div>
-					<p class="pm-msg">Move the <span id="bulk-resched-count">0</span> selected request(s) to a new preferred date. Any open demo sessions are updated too.</p>
-					<div class="form-row">
-						<div><label>New Date <span class="req">*</span></label><input type="date" id="bulk-date"></div>
-						<div><label>Start Time</label><input type="time" lang="en-US" id="bulk-time"></div>
-					</div>
-					<div class="sched-actions">
-						<button class="btn-portal secondary" id="bulk-reschedule-cancel">Cancel</button>
-						<button class="btn-portal" id="bulk-reschedule-go">Reschedule</button>
-					</div>
-				</div>
-			</div>
 		</div>
 	</div>
 	</div>
@@ -160,92 +105,6 @@
 (function () {
 	"use strict";
 	var CURRENT_STATUS = "{{ status }}";
-
-	function selectedNames() {
-		var out = [];
-		document.querySelectorAll(".row-check:checked").forEach(function (cb) { out.push(cb.value); });
-		return out;
-	}
-	function syncBulkBar() {
-		var n = selectedNames().length;
-		var count = document.getElementById("bulk-count");
-		if (count) count.textContent = n + " selected";
-		var assign = document.getElementById("btn-bulk-assign");
-		var resched = document.getElementById("btn-bulk-reschedule");
-		if (assign) assign.disabled = n === 0;
-		if (resched) resched.disabled = n === 0;
-	var sCount = document.getElementById("bulk-send-count");
-	if (sCount) sCount.textContent = n;
-	var aCount = document.getElementById("bulk-assign-count");
-	if (aCount) aCount.textContent = n;
-	var rCount = document.getElementById("bulk-resched-count");
-	if (rCount) rCount.textContent = n;
-	}
-	var checkAll = document.getElementById("check-all");
-	if (checkAll) checkAll.addEventListener("change", function () {
-		document.querySelectorAll(".row-check").forEach(function (cb) { cb.checked = checkAll.checked; });
-		syncBulkBar();
-	});
-	document.querySelectorAll(".row-check").forEach(function (cb) {
-		cb.addEventListener("change", syncBulkBar);
-	});
-	syncBulkBar();
-
-	function openModal(id) { var m = document.getElementById(id); if (m) m.classList.add("show"); }
-	function closeModal(id) { var m = document.getElementById(id); if (m) m.classList.remove("show"); }
-
-	var btnSendMgr = document.getElementById("btn-bulk-send-manager");
-	if (btnSendMgr) btnSendMgr.addEventListener("click", function () { openModal("bulk-send-manager-modal"); });
-	var cancelSend = document.getElementById("bulk-send-cancel");
-	if (cancelSend) cancelSend.addEventListener("click", function () { closeModal("bulk-send-manager-modal"); });
-	var goSend = document.getElementById("bulk-send-go");
-	if (goSend) goSend.addEventListener("click", function () {
-		var names = selectedNames();
-		if (!names.length) { portalAlert("No demo requests selected.", "err"); return; }
-		goSend.disabled = true;
-		portalCall("functional_demo.api.bulk_send_to_manager", {
-			requests: JSON.stringify(names),
-		}).then(function () { window.location.reload(); })
-			.catch(function () { goSend.disabled = false; closeModal("bulk-send-manager-modal"); });
-	});
-
-	var btnAssign = document.getElementById("btn-bulk-assign");
-	if (btnAssign) btnAssign.addEventListener("click", function () { openModal("bulk-assign-modal"); });
-	var btnResched = document.getElementById("btn-bulk-reschedule");
-	if (btnResched) btnResched.addEventListener("click", function () { openModal("bulk-reschedule-modal"); });
-	var cancelAssign = document.getElementById("bulk-assign-cancel");
-	if (cancelAssign) cancelAssign.addEventListener("click", function () { closeModal("bulk-assign-modal"); });
-	var cancelResched = document.getElementById("bulk-reschedule-cancel");
-	if (cancelResched) cancelResched.addEventListener("click", function () { closeModal("bulk-reschedule-modal"); });
-
-	var goAssign = document.getElementById("bulk-assign-go");
-	if (goAssign) goAssign.addEventListener("click", function () {
-		var consultant = document.getElementById("bulk-consultant").value;
-		var names = selectedNames();
-		if (!consultant) { portalAlert("Please select a consultant.", "err"); return; }
-		if (!names.length) { portalAlert("No demo requests selected.", "err"); return; }
-		goAssign.disabled = true;
-		portalCall("functional_demo.api.bulk_assign_consultant", {
-			requests: JSON.stringify(names),
-			consultant: consultant,
-		}).then(function () { window.location.reload(); })
-			.catch(function () { goAssign.disabled = false; closeModal("bulk-assign-modal"); });
-	});
-
-	var goResched = document.getElementById("bulk-reschedule-go");
-	if (goResched) goResched.addEventListener("click", function () {
-		var date = document.getElementById("bulk-date").value;
-		var names = selectedNames();
-		if (!date) { portalAlert("Please pick a new date.", "err"); return; }
-		if (!names.length) { portalAlert("No demo requests selected.", "err"); return; }
-		goResched.disabled = true;
-		portalCall("functional_demo.api.bulk_reschedule_demo", {
-			requests: JSON.stringify(names),
-			scheduled_date: date,
-			start_time: document.getElementById("bulk-time").value,
-		}).then(function () { window.location.reload(); })
-			.catch(function () { goResched.disabled = false; closeModal("bulk-reschedule-modal"); });
-	});
 
 	var btnExport = document.getElementById("btn-bulk-export");
 	if (btnExport) btnExport.addEventListener("click", function () {
