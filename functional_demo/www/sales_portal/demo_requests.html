@@ -71,6 +71,7 @@
 								<th style="width: 34px;"><input type="checkbox" id="check-all" title="Select all"></th>
 								<th>Request</th>
 								<th>Party</th>
+								<th>Location</th>
 								<th>Template</th>
 								<th>Priority</th>
 								<th>Consultant</th>
@@ -85,6 +86,7 @@
 								<td><input type="checkbox" class="row-check" value="{{ r.name }}"></td>
 								<td><a href="/sales_portal/demo_request?name={{ r.name }}">{{ r.name }}</a></td>
 								<td>{{ r.customer or r.sales_person or "-" }}</td>
+								<td>{% if r.lead_state %}{{ r.lead_state }}{% if r.lead_district %}, {{ r.lead_district }}{% endif %}{% else %}-{% endif %}</td>
 								<td>{{ r.interested_module or "-" }}</td>
 								<td>{% if r.priority %}<span class="chip {{ r.priority|lower }}">{{ r.priority }}</span>{% else %}-{% endif %}</td>
 								<td>{{ r.functional_consultant or "-" }}</td>

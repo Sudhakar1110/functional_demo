@@ -70,6 +70,21 @@
 						<div><label>Sales Person Name</label><input type="text" id="contact_person" name="contact_person" value="{{ prefill.contact_person }}"></div>
 					</div>
 					<div class="form-row">
+						<div>
+							<label>Lead State</label>
+							<select id="lead_state" name="lead_state">
+								<option value="">— Select state —</option>
+								{% for state in states_districts %}
+								<option value="{{ state }}">{{ state }}</option>
+								{% endfor %}
+							</select>
+						</div>
+						<div>
+							<label>Lead District</label>
+							<select id="lead_district" name="lead_district"><option value="">— Select district —</option></select>
+						</div>
+					</div>
+					<div class="form-row">
 						<div style="grid-column: 1 / -1;">
 							<label>Functional Consultant <span class="req">*</span> <span class="form-hint">(required)</span></label>
 							<select id="functional_consultant" name="functional_consultant">
@@ -244,6 +259,7 @@
 						<div class="detail-item"><div class="d-label">Contact Person</div><div class="d-value">{{ doc.customer or "-" }}</div></div>
 						<div class="detail-item"><div class="d-label">Lead Contact Number</div><div class="d-value">{{ doc.contact_number or "-" }}</div></div>
 						<div class="detail-item"><div class="d-label">Lead Email</div><div class="d-value">{{ doc.email or "-" }}</div></div>
+						<div class="detail-item"><div class="d-label">Lead Location</div><div class="d-value">{% if doc.lead_state %}{{ doc.lead_state }}{% if doc.lead_district %}, {{ doc.lead_district }}{% endif %}{% else %}-{% endif %}</div></div>
 						<div class="detail-item"><div class="d-label">Sales Person</div><div class="d-value">{{ sales_person_name or doc.sales_person or "-" }}</div></div>
 						<div class="detail-item"><div class="d-label">Consultant</div><div class="d-value">{{ consultant_display or doc.functional_consultant or "-" }}</div></div>
 					</div>
@@ -361,6 +377,20 @@
 (function () {
 	"use strict";
 	{% if create_mode %}
+	var STATES_DISTRICTS = {{ states_districts | tojson }};
+	function fillDistricts(stateValue) {
+		var select = document.getElementById("lead_district");
+		var districts = (stateValue && STATES_DISTRICTS[stateValue]) ? STATES_DISTRICTS[stateValue] : [];
+		select.innerHTML = '<option value="">— Select district —</option>';
+		districts.forEach(function (d) {
+			var opt = document.createElement("option");
+			opt.value = d; opt.textContent = d;
+			select.appendChild(opt);
+		});
+	}
+	var leadStateEl = document.getElementById("lead_state");
+	if (leadStateEl) leadStateEl.addEventListener("change", function () { fillDistricts(this.value); });
+
 	function fillContact(value) {
 		if (!value) return;
 		portalCall("functional_demo.api.get_customer_details", { customer: value })
@@ -420,6 +450,8 @@
 			contact_person: document.getElementById("contact_person").value,
 			contact_number: document.getElementById("contact_number").value,
 			email: document.getElementById("email").value,
+			lead_state: document.getElementById("lead_state").value,
+			lead_district: document.getElementById("lead_district").value,
 			interested_module: document.getElementById("interested_module").value,
 			preferred_language: document.getElementById("preferred_language").value,
 			priority: document.getElementById("priority").value,

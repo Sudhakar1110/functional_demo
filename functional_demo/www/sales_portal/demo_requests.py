@@ -33,6 +33,7 @@ def get_context(context):
 			"name", "customer", "lead", "status", "priority", "interested_module",
 			"preferred_demo_date", "functional_consultant", "sales_person",
 			"follow_up_date", "creation", "sla_due_date", "sla_breached",
+			"lead_state", "lead_district",
 		],
 		order_by="preferred_demo_date desc, creation desc",
 		limit_page_length=1000,

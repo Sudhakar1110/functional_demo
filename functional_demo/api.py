@@ -882,6 +882,7 @@ def export_demo_requests(status=None):
 			filters=filters,
 			fields=[
 				"name", "customer", "lead", "company", "contact_person", "email",
+				"lead_state", "lead_district",
 				"interested_module", "priority", "functional_consultant", "sales_person",
 				"preferred_demo_date", "preferred_demo_time", "demo_type", "status",
 				"sla_due_date", "sla_breached", "creation",
@@ -901,6 +902,7 @@ def export_demo_requests(status=None):
 	# User) - keep the labels distinct so the columns are not ambiguous.
 	writer.writerow(
 		["Request", "Customer", "Sales Person (Lead)", "Company", "Contact Person", "Email",
+		 "State", "District",
 		 "Interested Template", "Priority", "Functional Consultant", "Sales Person (User)",
 		 "Preferred Date", "Preferred Time", "Demo Type", "Status", "SLA Due Date",
 		 "SLA Breached", "Created"]
@@ -908,7 +910,9 @@ def export_demo_requests(status=None):
 	for r in rows:
 		writer.writerow(
 			[r.get("name"), r.get("customer"), r.get("lead"), r.get("company"),
-			 r.get("contact_person"), r.get("email"), r.get("interested_module"),
+			 r.get("contact_person"), r.get("email"),
+			 r.get("lead_state"), r.get("lead_district"),
+			 r.get("interested_module"),
 			 r.get("priority"), r.get("functional_consultant"), r.get("sales_person"),
 			 r.get("preferred_demo_date"), r.get("preferred_demo_time"), r.get("demo_type"),
 			 r.get("status"), r.get("sla_due_date"), "Yes" if r.get("sla_breached") else "",
@@ -1828,7 +1832,7 @@ def create_lead(lead_name=None, company_name=None, email=None, phone=None, statu
 
 
 @frappe.whitelist()
-def create_demo_request(customer=None, company=None, contact_person=None, contact_number=None, email=None, interested_module=None, customer_requirements=None, business_process_requirements=None, priority="Medium", preferred_demo_date=None, preferred_demo_time=None, demo_type=None, sales_remarks=None, functional_consultant=None, preferred_language=None):
+def create_demo_request(customer=None, company=None, contact_person=None, contact_number=None, email=None, interested_module=None, customer_requirements=None, business_process_requirements=None, priority="Medium", preferred_demo_date=None, preferred_demo_time=None, demo_type=None, sales_remarks=None, functional_consultant=None, preferred_language=None, lead_state=None, lead_district=None):
 	"""Create a Demo Request from the Sales Portal web form.
 
 	The sales_person is always auto-set to the logged-in user — no dropdown needed.
@@ -1892,6 +1896,8 @@ def create_demo_request(customer=None, company=None, contact_person=None, contac
 	doc.contact_person = contact_person
 	doc.contact_number = contact_number
 	doc.email = email
+	doc.lead_state = lead_state
+	doc.lead_district = lead_district
 	doc.interested_module = interested_module
 	doc.customer_requirements = customer_requirements
 	doc.business_process_requirements = business_process_requirements
