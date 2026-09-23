@@ -71,13 +71,12 @@
 								<th style="width: 34px;"><input type="checkbox" id="check-all" title="Select all"></th>
 								<th>Request</th>
 								<th>Party</th>
-								<th>Location</th>
+								<th>Company</th>
+								<th>State, District</th>
 								<th>Template</th>
-								<th>Priority</th>
-								<th>Consultant</th>
+								<th>Sales Person</th>
 								<th>Preferred Date</th>
 								<th>Status</th>
-								<th>SLA</th>
 							</tr>
 						</thead>
 						<tbody>
@@ -86,13 +85,12 @@
 								<td><input type="checkbox" class="row-check" value="{{ r.name }}"></td>
 								<td><a href="/sales_portal/demo_request?name={{ r.name }}">{{ r.name }}</a></td>
 								<td>{{ r.customer or r.sales_person or "-" }}</td>
+								<td>{{ r.company or "-" }}</td>
 								<td>{% if r.lead_state %}{{ r.lead_state }}{% if r.lead_district %}, {{ r.lead_district }}{% endif %}{% else %}-{% endif %}</td>
 								<td>{{ r.interested_module or "-" }}</td>
-								<td>{% if r.priority %}<span class="chip {{ r.priority|lower }}">{{ r.priority }}</span>{% else %}-{% endif %}</td>
-								<td>{{ r.functional_consultant or "-" }}</td>
+								<td>{{ r.sales_person_name or r.sales_person or "-" }}</td>
 								<td>{{ r.preferred_demo_date or "-" }}</td>
 								<td><span class="badge b-{{ r.status|lower|replace(' ', '-') }}">{{ display_status(r.status) }}</span></td>
-								<td>{% if r.sla_breached %}<span class="badge b-sla-breached">Breached</span>{% elif r.sla_due_date %}<span class="chip">{{ r.sla_due_date }}</span>{% else %}-{% endif %}</td>
 							</tr>
 							{% endfor %}
 						</tbody>

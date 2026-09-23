@@ -30,7 +30,7 @@ def get_context(context):
 		"Demo Request",
 		filters=filters,
 		fields=[
-			"name", "customer", "lead", "status", "priority", "interested_module",
+			"name", "customer", "lead", "company", "status", "priority", "interested_module",
 			"preferred_demo_date", "functional_consultant", "sales_person",
 			"follow_up_date", "creation", "sla_due_date", "sla_breached",
 			"lead_state", "lead_district",
@@ -38,8 +38,14 @@ def get_context(context):
 		order_by="preferred_demo_date desc, creation desc",
 		limit_page_length=1000,
 	) or []
+	user_names = {
+		u["name"]: (u["full_name"] or u["name"]) for u in frappe.get_all(
+			"User", fields=["name", "full_name"], ignore_permissions=True,
+		)
+	}
 	for r in context.requests:
 		r["created_display"] = frappe.utils.format_date(r.get("creation"), "medium") if r.get("creation") else "-"
+		r["sales_person_name"] = user_names.get(r.get("sales_person"), "") or ""
 	context.status = status
 	context.status_options = STATUS_OPTIONS
 	context.list_note = list_note(
