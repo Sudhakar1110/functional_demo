@@ -110,13 +110,7 @@
 							</div>
 						</div>
 						<div class="form-row">
-							<div><label>Preferred Language</label><input type="text" id="preferred_language" name="preferred_language" placeholder="e.g. English, Hindi, Kannada..." value="{{ prefill.preferred_language or '' }}" autocomplete="off"></div>
-							<div><label>Priority</label>
-								<select id="priority" name="priority">
-									<option value="Auto" selected>Auto (sales value / leads tier)</option>
-									{% for p in priorities %}<option value="{{ p }}">{{ p }}</option>{% endfor %}
-								</select>
-							</div>
+							<div style="grid-column: 1 / -1;"><label>Preferred Language</label><input type="text" id="preferred_language" name="preferred_language" placeholder="e.g. English, Hindi, Kannada..." value="{{ prefill.preferred_language or '' }}" autocomplete="off"></div>
 						</div>
 						<div class="form-row">
 							<div><label>Preferred Demo Date <span class="req">*</span></label><input type="date" id="preferred_demo_date" name="preferred_demo_date" required></div>
@@ -454,7 +448,6 @@
 			lead_district: document.getElementById("lead_district").value,
 			interested_module: document.getElementById("interested_module").value,
 			preferred_language: document.getElementById("preferred_language").value,
-			priority: document.getElementById("priority").value,
 			preferred_demo_date: document.getElementById("preferred_demo_date").value,
 			preferred_demo_time: document.getElementById("preferred_demo_time").value,
 			customer_requirements: document.getElementById("customer_requirements").value,
