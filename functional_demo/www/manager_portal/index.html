@@ -414,7 +414,7 @@
 				var prefDate = row.getAttribute("data-pref-date") || "";
 				var prefTime = row.getAttribute("data-pref-time") || "";
 				if (prefDate) document.getElementById("sched-date").value = prefDate;
-				if (prefTime) document.getElementById("sched-start").value = prefTime;
+				if (prefTime) window.setTimePickerValue("sched-start", prefTime);
 			}
 			var modal = document.getElementById("schedule-modal");
 			if (modal) modal.classList.add("show");
@@ -436,7 +436,7 @@
 				var prefDate = row.getAttribute("data-pref-date") || "";
 				var prefTime = row.getAttribute("data-pref-time") || "";
 				if (prefDate) document.getElementById("sched-date").value = prefDate;
-				if (prefTime) document.getElementById("sched-start").value = prefTime;
+				if (prefTime) window.setTimePickerValue("sched-start", prefTime);
 			}
 			var modal = document.getElementById("schedule-modal");
 			if (modal) modal.classList.add("show");
@@ -451,8 +451,8 @@
 		document.getElementById("sched-consultant").value = "";
 		document.getElementById("sched-is-assign-flow").value = "";
 		document.getElementById("sched-date").value = "";
-		document.getElementById("sched-start").value = "";
-		document.getElementById("sched-end").value = "";
+		window.setTimePickerValue("sched-start", "");
+		window.setTimePickerValue("sched-end", "");
 		document.getElementById("sched-link").value = "";
 	});
 

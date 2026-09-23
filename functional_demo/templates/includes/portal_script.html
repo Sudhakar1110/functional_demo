@@ -660,5 +660,112 @@
 			});
 		});
 	};
+
+	/* ---- 12-hour AM/PM time picker ----
+	   A native <input type="time"> renders in 24-hour on machines whose
+	   browser/OS locale uses 24-hour time (and "lang" only hints). To force a
+	   consistent 12-hour picker for EVERY user we replace each time input with
+	   Hour / Minute / AM-PM selects and keep the hidden input's value in 24h
+	   (HH:MM) so the existing JS/API payloads are unchanged.
+	*/
+	var _timePickersInited = false;
+
+	window.setTimePickerValue = function (id, value) {
+		var input = document.getElementById(id);
+		if (!input) return;
+		input.value = value || "";
+		var picker = input.closest(".portal-time-picker");
+		if (!picker) return;
+		renderTimePicker(picker, input.value);
+	};
+
+	function pad2(n) { return (n < 10 ? "0" : "") + n; }
+
+	function parseTimeValue(v) {
+		/* accept "HH:MM", "HH:MM:SS", "h:mm AM/PM" or empty -> null */
+		if (!v) return null;
+		v = String(v).trim();
+		var m = /^(\d{1,2}):(\d{2})/.exec(v);
+		if (m) {
+			var h = parseInt(m[1], 10), mi = parseInt(m[2], 10);
+			if (h > 23 || mi > 59) return null;
+			return { hour: h, minute: mi };
+		}
+		var m2 = /^(\d{1,2}):(\d{2})\s*(AM|PM)/i.exec(v);
+		if (m2) {
+			var h2 = parseInt(m2[1], 10) % 12, mi2 = parseInt(m2[2], 10);
+			if (/pm/i.test(m2[3])) h2 += 12;
+			return { hour: h2, minute: mi2 };
+		}
+		return null;
+	}
+
+	function renderTimePicker(picker, value) {
+		var t = parseTimeValue(value);
+		var hSel = picker.querySelector(".tp-h");
+		var mSel = picker.querySelector(".tp-m");
+		var pSel = picker.querySelector(".tp-p");
+		var hh = t ? t.hour : null, mm = t ? t.minute : null;
+		hSel.value = hh === null ? "" : String(hh % 12 === 0 ? 12 : hh % 12);
+		mSel.value = mm === null ? "" : pad2(mm);
+		pSel.value = hh === null ? "" : (hh < 12 ? "AM" : "PM");
+	}
+
+	function timePickerValue(hSel, mSel, pSel) {
+		var h = parseInt(hSel.value, 10), m = parseInt(mSel.value, 10);
+		if (isNaN(h) || isNaN(m) || !pSel.value) return "";
+		var h24 = h % 12;
+		if (pSel.value === "PM") h24 += 12;
+		return pad2(h24) + ":" + pad2(m);
+	}
+
+	function initTimePickers(scope) {
+		scope = scope || document;
+		scope.querySelectorAll('input[type="time"]').forEach(function (input) {
+			if (input.closest(".portal-time-picker")) return;
+			if (!input.id) return; /* need an id to keep programmatic sync simple */
+			var wrap = document.createElement("span");
+			wrap.className = "portal-time-picker";
+			var opts = {
+				h: [], m: [], p: [["", "AM"], ["", "PM"]],
+			};
+			for (var i = 1; i <= 12; i++) opts.h.push(String(i));
+			for (var j = 0; j < 60; j++) opts.m.push(pad2(j));
+			var hId = input.id + "-h", mId = input.id + "-m", pId = input.id + "-p";
+			var html =
+				'<select class="tp-h" id="' + hId + '" aria-label="Hour">' +
+				'<option value="">Hour</option>' +
+				opts.h.map(function (o) { return '<option value="' + o + '">' + o + '</option>'; }).join("") +
+				'</select>' +
+				'<select class="tp-m" id="' + mId + '" aria-label="Minute">' +
+				'<option value="">Min</option>' +
+				opts.m.map(function (o) { return '<option value="' + o + '">' + o + '</option>'; }).join("") +
+				'</select>' +
+				'<select class="tp-p" id="' + pId + '" aria-label="AM/PM">' +
+				'<option value="">Day</option>' +
+				'<option value="AM">AM</option>' +
+				'<option value="PM">PM</option>' +
+				'</select>';
+			wrap.innerHTML = html;
+			input.parentNode.insertBefore(wrap, input);
+			wrap.appendChild(input);
+
+			renderTimePicker(wrap, input.value);
+			wrap.querySelectorAll("select").forEach(function (sel) {
+				sel.addEventListener("change", function () {
+					input.value = timePickerValue(wrap.querySelector(".tp-h"), wrap.querySelector(".tp-m"), wrap.querySelector(".tp-p"));
+					input.dispatchEvent(new Event("change", { bubbles: true }));
+				});
+			});
+		});
+	}
+
+	function initAllTimePickers() {
+		if (_timePickersInited) return;
+		_timePickersInited = true;
+		initTimePickers(document);
+	}
+	document.addEventListener("DOMContentLoaded", initAllTimePickers);
+	if (document.readyState !== "loading") initAllTimePickers();
 })();
 </script>

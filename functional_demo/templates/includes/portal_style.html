@@ -988,6 +988,29 @@ details.portal-card[open] > summary.card-head::after {
 	width: 100%;
 	box-sizing: border-box;
 }
+/* 12-hour AM/PM time picker: hides the native browser time input (which
+   renders in 24-hour on some OS/browser locales) and shows Hour / Minute /
+   AM-PM selects that always display in 12-hour format for every user. */
+.portal-time-picker { display: flex; gap: 6px; align-items: center; width: 100%; }
+.portal-time-picker .tp-h { flex: 1 1 38%; min-width: 0; }
+.portal-time-picker .tp-m { flex: 1 1 34%; min-width: 0; }
+.portal-time-picker .tp-p { flex: 1 1 30%; min-width: 0; }
+.portal-time-picker select {
+	padding: 9px 8px;
+	border: 1px solid #D9DCE3;
+	border-radius: 6px;
+	font-size: 14px;
+	color: var(--bx-navy);
+	background: #fff;
+	outline: none;
+	height: 42px;
+	box-sizing: border-box;
+	font-family: "DM Sans", "Inter", "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
+}
+.portal-time-picker select:focus { border-color: var(--bx-blue); box-shadow: 0 0 0 3px rgba(17, 78, 255, 0.14); }
+.portal-time-picker input[type="time"] { display: none !important; }
+.pm-card.pm-schedule .portal-time-picker select { background: #F9FAFB; border-color: #E5E7EB; }
+.pm-card.pm-schedule .portal-time-picker input[type="time"] { display: none; }
 .pm-card.pm-schedule input:focus {
 	outline: none;
 	border-color: #114EFF;

@@ -175,8 +175,8 @@
 			document.getElementById("edit-session-customer").value = btn.getAttribute("data-customer");
 			document.getElementById("edit-session-module").value = btn.getAttribute("data-module");
 			document.getElementById("edit-session-date").value = btn.getAttribute("data-date");
-			document.getElementById("edit-session-start").value = btn.getAttribute("data-start");
-			document.getElementById("edit-session-end").value = btn.getAttribute("data-end");
+			window.setTimePickerValue("edit-session-start", btn.getAttribute("data-start"));
+			window.setTimePickerValue("edit-session-end", btn.getAttribute("data-end"));
 			document.getElementById("edit-session-link").value = btn.getAttribute("data-link");
 			/* Set the consultant dropdown to the current consultant */
 			var consultantVal = btn.getAttribute("data-consultant");

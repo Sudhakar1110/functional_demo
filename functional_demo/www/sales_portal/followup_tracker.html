@@ -436,7 +436,7 @@ var _rschFollowup = null;
 function rescheduleFollowup(name) {
 	_rschFollowup = name;
 	document.getElementById("rsch-date").value = "";
-	document.getElementById("rsch-time").value = "";
+	window.setTimePickerValue("rsch-time", "");
 	document.getElementById("rsch-consultant").value = "";
 	document.getElementById("rsch-submit").disabled = false;
 	document.getElementById("rsch-overlay").classList.add("active");
