@@ -104,25 +104,40 @@
 <script>
 (function () {
 	"use strict";
-	var CURRENT_STATUS = "{{ status }}";
 
+	/* Export runs entirely in the browser from the already-rendered table
+	   (same approach as followup_tracker's Export CSV). No server round trip
+	   means no CSRF/permission/column errors can pop the "check your input"
+	   modal, and it honours whatever status filter is currently applied. */
 	var btnExport = document.getElementById("btn-bulk-export");
 	if (btnExport) btnExport.addEventListener("click", function () {
-		btnExport.disabled = true;
-		portalCall("functional_demo.api.export_demo_requests", { status: CURRENT_STATUS })
-			.then(function (csv) {
-				btnExport.disabled = false;
-				if (!csv) { portalAlert("No data to export.", "err"); return; }
-				var blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-				var url = URL.createObjectURL(blob);
-				var a = document.createElement("a");
-				a.href = url;
-				a.download = "demo_requests.csv";
-				document.body.appendChild(a);
-				a.click();
-				setTimeout(function () { URL.revokeObjectURL(url); a.remove(); }, 500);
-			})
-			.catch(function () { btnExport.disabled = false; portalAlert("Export failed. Please try again.", "err"); });
+		var table = document.querySelector(".table-portal");
+		if (!table) { portalAlert("No data to export.", "err"); return; }
+
+		function esc(v) { return '"' + v.replace(/"/g, '""') + '"'; }
+
+		var rows = [];
+		var headers = [];
+		table.querySelectorAll("thead th").forEach(function (th) { headers.push(th.textContent.trim()); });
+		rows.push(headers.map(esc).join(","));
+
+		table.querySelectorAll("tbody tr").forEach(function (tr) {
+			if (tr.style.display === "none") return;
+			var cells = [];
+			tr.querySelectorAll("td").forEach(function (td) { cells.push(esc(td.textContent.trim())); });
+			rows.push(cells.join(","));
+		});
+
+		if (rows.length <= 1) { portalAlert("No data to export.", "err"); return; }
+
+		var blob = new Blob([rows.join("\n")], { type: "text/csv;charset=utf-8;" });
+		var url = URL.createObjectURL(blob);
+		var a = document.createElement("a");
+		a.href = url;
+		a.download = "demo_requests.csv";
+		document.body.appendChild(a);
+		a.click();
+		setTimeout(function () { URL.revokeObjectURL(url); a.remove(); }, 500);
 	});
 })();
 </script>
