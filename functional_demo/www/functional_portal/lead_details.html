@@ -106,7 +106,7 @@
 				<div class="card-body">
 					<div class="detail-grid">
 						<div class="detail-item"><div class="d-label">Preferred Demo Date</div><div class="d-value">{{ request.preferred_demo_date or "-" }}</div></div>
-						<div class="detail-item"><div class="d-label">Preferred Demo Time</div><div class="d-value">{{ request.preferred_demo_time or "-" }}</div></div>
+						<div class="detail-item"><div class="d-label">Preferred Demo Time</div><div class="d-value">{{ format_time_12h(request.preferred_demo_time) or "-" }}</div></div>
 						<div class="detail-item"><div class="d-label">Assigned Functional Consultant</div><div class="d-value">{{ request.functional_consultant or "-" }}</div></div>
 					</div>
 				</div>

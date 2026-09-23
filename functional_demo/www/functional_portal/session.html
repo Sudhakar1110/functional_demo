@@ -125,10 +125,10 @@
 						<div class="divider"></div>
 						<div class="form-row">
 							<div><label>New Date <span class="req">*</span></label><input type="date" id="rs-date" value="{{ s.scheduled_date }}"></div>
-							<div><label>Start Time</label><input type="time" id="rs-start" value="{{ s.start_time }}"></div>
+							<div><label>Start Time</label><input type="time" lang="en-US" id="rs-start" value="{{ s.start_time }}"></div>
 						</div>
 						<div class="form-row">
-							<div><label>End Time</label><input type="time" id="rs-end" value="{{ s.end_time }}"></div>
+							<div><label>End Time</label><input type="time" lang="en-US" id="rs-end" value="{{ s.end_time }}"></div>
 							<div><label>Meeting Link</label><input type="text" id="rs-link" value="{{ s.meeting_link }}"></div>
 						</div>
 						{% if is_sales %}

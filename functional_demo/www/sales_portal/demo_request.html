@@ -105,7 +105,7 @@
 						</div>
 						<div class="form-row">
 							<div><label>Preferred Demo Date <span class="req">*</span></label><input type="date" id="preferred_demo_date" name="preferred_demo_date" required></div>
-							<div><label>Preferred Demo Time <span class="req">*</span></label><input type="time" id="preferred_demo_time" name="preferred_demo_time" required></div>
+							<div><label>Preferred Demo Time <span class="req">*</span></label><input type="time" lang="en-US" id="preferred_demo_time" name="preferred_demo_time" required></div>
 						</div>
 						<label>Leads Requirements</label>
 						<textarea id="customer_requirements" name="customer_requirements" placeholder="What does the lead need?"></textarea>
@@ -258,7 +258,7 @@
 						<div class="detail-item"><div class="d-label">Preferred Language</div><div class="d-value">{{ doc.preferred_language or "-" }}</div></div>
 						<div class="detail-item"><div class="d-label">Demo Type</div><div class="d-value">{{ doc.demo_type or "-" }}</div></div>
 						<div class="detail-item"><div class="d-label">Preferred Date</div><div class="d-value">{{ doc.preferred_demo_date or "-" }}</div></div>
-						<div class="detail-item"><div class="d-label">Preferred Time</div><div class="d-value">{{ doc.preferred_demo_time or "-" }}</div></div>
+						<div class="detail-item"><div class="d-label">Preferred Time</div><div class="d-value">{{ format_time_12h(doc.preferred_demo_time) or "-" }}</div></div>
 					</div>
 					<div class="detail-grid" style="margin-top: 16px;">
 						<div class="detail-item"><div class="d-label">Leads Requirements</div><div class="d-value wrap">{{ doc.customer_requirements or "-" }}</div></div>
@@ -341,10 +341,10 @@
 		<input type="hidden" id="sched-assign-consultant" value="">
 		<div class="form-row">
 			<div><label>Date <span class="req">*</span></label><input type="date" id="sched-date"></div>
-			<div><label>Start Time</label><input type="time" id="sched-start"></div>
+							<div><label>Start Time</label><input type="time" lang="en-US" id="sched-start"></div>
 		</div>
 		<div class="form-row">
-			<div><label>End Time</label><input type="time" id="sched-end"></div>
+							<div><label>End Time</label><input type="time" lang="en-US" id="sched-end"></div>
 			<div><label>Meeting Link</label><input type="text" id="sched-link" placeholder="https://meet.google.com/..."></div>
 		</div>
 		<div class="sched-actions">

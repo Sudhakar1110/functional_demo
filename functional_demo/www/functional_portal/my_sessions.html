@@ -86,7 +86,7 @@
 								<td>{{ s.assigned_display }}</td>
 								<td>{{ s.scheduled_date or s.preferred_demo_date or "-" }}</td>
 								<td>
-									{% if s.is_session %}{% if s.start_time %}{{ format_time_12h(s.start_time) }}{% if s.end_time %} – {{ format_time_12h(s.end_time) }}{% endif %}{% else %}-{% endif %}{% else %}{{ s.preferred_demo_time or "-" }}{% endif %}
+									{% if s.is_session %}{% if s.start_time %}{{ format_time_12h(s.start_time) }}{% if s.end_time %} – {{ format_time_12h(s.end_time) }}{% endif %}{% else %}-{% endif %}{% else %}{{ format_time_12h(s.preferred_demo_time) or "-" }}{% endif %}
 								</td>
 								<td>
 									{% if s.is_session %}
@@ -148,10 +148,10 @@
 		</div>
 		<div class="form-row">
 			<div><label>Date <span class="req">*</span></label><input type="date" id="edit-session-date"></div>
-			<div><label>Start Time</label><input type="time" id="edit-session-start"></div>
+			<div><label>Start Time</label><input type="time" lang="en-US" id="edit-session-start"></div>
 		</div>
 		<div class="form-row">
-			<div><label>End Time</label><input type="time" id="edit-session-end"></div>
+			<div><label>End Time</label><input type="time" lang="en-US" id="edit-session-end"></div>
 			<div><label>Meeting Link</label><input type="text" id="edit-session-link" placeholder="https://meet.google.com/..."></div>
 		</div>
 		<div class="sched-actions">
