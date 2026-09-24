@@ -5,25 +5,26 @@
  "creation": "2026-09-24 10:00:00.000000",
  "doctype": "DocType",
  "engine": "InnoDB",
- "field_order": [
-  "section_details",
-  "lead_name",
-  "contact_person",
-  "contact_number",
-  "email",
-  "section_stage",
-  "stage",
-  "section_pipeline",
-  "demo_completed_date",
-  "interested_module",
-  "quotation_no",
-  "quotation_value",
-  "quotation_date",
-  "paid_amount",
-  "paid_date",
-  "section_remarks",
-  "remarks"
- ],
+"field_order": [
+   "section_details",
+   "lead_name",
+   "contact_person",
+   "contact_number",
+   "email",
+   "section_stage",
+   "stage",
+   "section_pipeline",
+   "demo_completed_date",
+   "interested_module",
+   "annual_plan",
+   "monthly_plan",
+   "quotation_value",
+   "quotation_date",
+   "paid_amount",
+   "paid_date",
+   "section_remarks",
+   "remarks"
+  ],
  "fields": [
   {
    "fieldname": "section_details",
@@ -79,21 +80,28 @@
    "fieldtype": "Date",
    "label": "Demo Completed Date"
   },
-  {
-   "fieldname": "interested_module",
-   "fieldtype": "Data",
-   "label": "Interested Module / Template"
-  },
-  {
-   "fieldname": "quotation_no",
-   "fieldtype": "Data",
-   "label": "Quotation No"
-  },
-  {
-   "fieldname": "quotation_value",
-   "fieldtype": "Currency",
-   "label": "Quotation Value"
-  },
+{
+    "fieldname": "interested_module",
+    "fieldtype": "Data",
+    "label": "Interested Module / Template"
+   },
+   {
+    "default": "0",
+    "fieldname": "annual_plan",
+    "fieldtype": "Check",
+    "label": "Annual Plan"
+   },
+   {
+    "default": "0",
+    "fieldname": "monthly_plan",
+    "fieldtype": "Check",
+    "label": "Monthly Plan"
+   },
+   {
+    "fieldname": "quotation_value",
+    "fieldtype": "Currency",
+    "label": "Quotation Value"
+   },
   {
    "fieldname": "quotation_date",
    "fieldtype": "Date",
@@ -121,7 +129,7 @@
   }
  ],
  "links": [],
- "modified": "2026-09-24 10:00:00.000000",
+ "modified": "2026-09-24 13:00:00.000000",
  "modified_by": "Administrator",
  "module": "Sales Demo",
  "name": "Manual Lead Tracker",

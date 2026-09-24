@@ -2241,7 +2241,8 @@ def save_manual_lead(
 	stage=None,
 	demo_completed_date=None,
 	interested_module=None,
-	quotation_no=None,
+	annual_plan=None,
+	monthly_plan=None,
 	quotation_value=None,
 	quotation_date=None,
 	paid_amount=None,
@@ -2266,7 +2267,8 @@ def save_manual_lead(
 	doc.stage = stage
 	doc.demo_completed_date = demo_completed_date or None
 	doc.interested_module = (interested_module or "").strip()
-	doc.quotation_no = (quotation_no or "").strip()
+	doc.annual_plan = 1 if str(annual_plan or "").lower() in ("1", "true", "on", "yes") else 0
+	doc.monthly_plan = 1 if str(monthly_plan or "").lower() in ("1", "true", "on", "yes") else 0
 	doc.quotation_value = quotation_value
 	doc.quotation_date = quotation_date or None
 	doc.paid_amount = paid_amount

@@ -37,41 +37,51 @@
 					.ml-toolbar .ml-spacer { flex: 1; }
 					.ml-count { font-size: 12px; color: #9CA3AF; }
 
+					.ml-table-wrap { border: 1px solid #EEF1F6; border-radius: 12px; overflow: hidden; }
 					.ml-table-scroll { overflow-x: auto; }
-					.ml-table-scroll table { min-width: 1200px; width: 100%; border-collapse: collapse; }
-					.ml-table-scroll th { font-size: 11px; font-weight: 700; color: #71717B; text-transform: uppercase; letter-spacing: 0.04em; padding: 8px 10px; text-align: left; border-bottom: 2px solid #E5E7EB; white-space: nowrap; }
-					.ml-table-scroll td { padding: 10px 10px; font-size: 13px; color: #05133C; border-bottom: 1px solid #F3F4F6; vertical-align: middle; }
-					.ml-table-scroll tr:hover td { background: #F9FAFB; }
+					.ml-table-scroll table { min-width: 1180px; width: 100%; border-collapse: collapse; }
+					.ml-table-scroll th { font-size: 11px; font-weight: 700; color: #8A93A6; text-transform: uppercase; letter-spacing: 0.04em; padding: 12px 12px; text-align: left; background: #F7F8FB; border-bottom: 1px solid #EEF1F6; white-space: nowrap; }
+					.ml-table-scroll td { padding: 12px; font-size: 13px; color: #05133C; border-bottom: 1px solid #F3F4F6; vertical-align: middle; }
+					.ml-table-scroll tbody tr:hover td { background: #F9FAFB; }
+					.ml-table-scroll tbody tr:last-child td { border-bottom: none; }
+					.ml-sub { font-size: 11px; color: #9CA3AF; font-weight: 400; }
 
 					.ml-badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 700; white-space: nowrap; }
 					.b-completed { background: #DCFBEA; color: #009A52; }
 					.b-quotation { background: #FEF3C7; color: #D97706; }
 					.b-paid { background: #DBEAFE; color: #1D4ED8; }
+					.b-plan-a { background: #DBEAFE; color: #1D4ED8; }
+					.b-plan-m { background: #FEF3C7; color: #D97706; }
 
 					.ml-action-btn { padding: 5px 12px; border: none; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; }
 					.ml-btn-edit { background: #E0EAFF; color: #114EFF; }
 					.ml-btn-edit:hover { background: #CBD9FF; }
 					.ml-btn-del { background: #FEE2E2; color: #DC2626; }
 					.ml-btn-del:hover { background: #FECACA; }
-					.ml-btn-export { padding: 7px 16px; background: #F3F4F6; color: #71717B; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; }
+					.ml-lead-link { color: #114EFF; cursor: pointer; }
+					.ml-lead-link:hover { text-decoration: underline; }
+					.ml-btn-export { padding: 7px 16px; background: #F3F4F6; color: #71717B; border: 1px solid #E5E7EB; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; }
 					.ml-btn-export:hover { background: #E5E7EB; }
-					.ml-empty { text-align: center; padding: 40px 20px; color: #9CA3AF; }
+					.ml-empty { text-align: center; padding: 48px 20px; color: #9CA3AF; }
 					.ml-empty h3 { font-size: 16px; color: #71717B; margin: 10px 0 6px; }
 					.ml-empty p { font-size: 13px; }
 
 					.ml-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 9999; justify-content: center; align-items: center; }
 					.ml-overlay.active { display: flex; }
-					.ml-modal { background: #fff; border-radius: 12px; width: 620px; max-width: 94vw; max-height: 92vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.25); }
-					.ml-modal-head { padding: 18px 24px; border-bottom: 1px solid #E5E7EB; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; background: #fff; }
+					.ml-modal { background: #fff; border-radius: 14px; width: 680px; max-width: 94vw; max-height: 92vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.25); }
+					.ml-modal-head { padding: 18px 24px; border-bottom: 1px solid #E5E7EB; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; background: #fff; z-index: 1; }
 					.ml-modal-head h3 { margin: 0; font-size: 16px; font-weight: 700; color: #05133C; }
 					.ml-modal-close { background: none; border: none; font-size: 22px; color: #9CA3AF; cursor: pointer; line-height: 1; }
 					.ml-modal-close:hover { color: #DC2626; }
-					.ml-modal-body { padding: 20px 24px; }
+					.ml-modal-body { padding: 20px 24px 8px; }
 					.ml-field { margin-bottom: 14px; }
-					.ml-field label { display: block; font-size: 12px; font-weight: 600; color: #374151; margin-bottom: 4px; }
-					.ml-field input, .ml-field select, .ml-field textarea { width: 100%; padding: 8px 12px; border: 1px solid #D1D5DB; border-radius: 6px; font-size: 13px; box-sizing: border-box; font-family: inherit; }
+					.ml-field label.ml-label { display: block; font-size: 12px; font-weight: 600; color: #374151; margin-bottom: 4px; }
+					.ml-field input:not([type="checkbox"]), .ml-field select, .ml-field textarea { width: 100%; padding: 8px 12px; border: 1px solid #D1D5DB; border-radius: 6px; font-size: 13px; box-sizing: border-box; font-family: inherit; }
 					.ml-field input:focus, .ml-field select:focus, .ml-field textarea:focus { border-color: #114EFF; outline: none; box-shadow: 0 0 0 3px rgba(17,78,255,0.12); }
 					.ml-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 16px; }
+					.ml-check { display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 500; color: #374151; cursor: pointer; padding: 8px 12px; border: 1px solid #D1D5DB; border-radius: 8px; }
+					.ml-check input { width: 16px; height: 16px; accent-color: #114EFF; cursor: pointer; }
+					.ml-plans { display: flex; gap: 12px; flex-wrap: wrap; }
 					.ml-modal-foot { padding: 14px 24px; border-top: 1px solid #E5E7EB; display: flex; justify-content: flex-end; gap: 10px; position: sticky; bottom: 0; background: #fff; }
 					.ml-btn-cancel { padding: 8px 18px; background: #F3F4F6; color: #374151; border: none; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; }
 					.ml-btn-submit { padding: 8px 22px; background: #114EFF; color: #fff; border: none; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; }
@@ -90,18 +100,18 @@
 				</div>
 
 				<div class="portal-card">
-					<div class="card-body ml-table-scroll">
+					<div class="card-body ml-table-wrap">
 						{% if leads %}
+						<div class="ml-table-scroll">
 						<table id="ml-table">
 							<thead>
 								<tr>
 									<th>Lead / Company</th>
-									<th>Contact</th>
 									<th>Phone</th>
 									<th>Email</th>
 									<th>Stage</th>
 									<th>Demo Date</th>
-									<th>Quotation</th>
+									<th>Plan</th>
 									<th>Quotation Value</th>
 									<th>Paid Amount</th>
 									<th>Paid Date</th>
@@ -119,25 +129,40 @@
 									data-stage="{{ lead.stage or '' }}"
 									data-demo-date="{{ lead.demo_completed_date or '' }}"
 									data-module="{{ lead.interested_module or '' }}"
-									data-quotation-no="{{ lead.quotation_no or '' }}"
+									data-annual-plan="{{ lead.annual_plan or 0 }}"
+									data-monthly-plan="{{ lead.monthly_plan or 0 }}"
 									data-quotation-value="{{ lead.quotation_value or '' }}"
 									data-quotation-date="{{ lead.quotation_date or '' }}"
 									data-paid-amount="{{ lead.paid_amount or '' }}"
 									data-paid-date="{{ lead.paid_date or '' }}"
-									data-remarks="{{ lead.remarks or '' }}">
-									<td><strong>{{ lead.lead_name or "-" }}</strong></td>
-									<td>{{ lead.contact_person or "-" }}</td>
+									data-remarks="{{ lead.remarks or '' }}"
+									onclick="if(event.target.closest('button'))return;openEditLead(this)">
+									<td>
+										<strong class="ml-lead-link" onclick="event.stopPropagation();openEditLead(this)">{{ lead.lead_name or "-" }}</strong>
+										<br><span class="ml-sub">{{ lead.contact_person or "" }}</span>
+									</td>
 									<td>{{ lead.contact_number or "-" }}</td>
 									<td>{{ lead.email or "-" }}</td>
 									<td>
 										<span class="ml-badge {% if lead.stage == 'Demo Completed' %}b-completed{% elif lead.stage == 'Quotation Send' %}b-quotation{% else %}b-paid{% endif %}">{{ lead.stage }}</span>
 									</td>
-									<td>{{ lead.demo_completed_date or "-" }}</td>
-									<td>{{ lead.quotation_no or "-" }}<br><span style="font-size:11px; color:#9CA3AF;">{{ lead.quotation_date or "" }}</span></td>
-									<td>{{ lead.quotation_value or "-" }}</td>
-									<td>{{ lead.paid_amount or "-" }}</td>
-									<td>{{ lead.paid_date or "-" }}</td>
-									<td style="font-size:12px; color:#71717B;">{{ lead.modified_display or "-" }}</td>
+									<td>{{ lead.demo_date_display }}</td>
+									<td>
+										{% if lead.plan_badges %}
+										{% for b in lead.plan_badges %}
+										<span class="ml-badge {% if b == 'Annual' %}b-plan-a{% else %}b-plan-m{% endif %}">{{ b }}</span>
+										{% endfor %}
+										{% else %}
+										<span class="ml-sub">-</span>
+										{% endif %}
+									</td>
+									<td>
+										<strong>{{ lead.quotation_value_display }}</strong>
+										<br><span class="ml-sub">{{ lead.quotation_date_display }}</span>
+									</td>
+									<td><strong>{{ lead.paid_amount_display }}</strong></td>
+									<td>{{ lead.paid_date_display }}</td>
+									<td class="ml-sub">{{ lead.modified_display }}</td>
 									<td style="white-space: nowrap;">
 										<button class="ml-action-btn ml-btn-edit" onclick="openEditLead(this)">Edit</button>
 										<button class="ml-action-btn ml-btn-del" onclick="deleteLead('{{ lead.name }}')">Delete</button>
@@ -146,6 +171,7 @@
 								{% endfor %}
 							</tbody>
 						</table>
+						</div>
 						{% else %}
 						<div class="ml-empty">
 							<div style="font-size: 48px;">&#128230;</div>
@@ -170,26 +196,26 @@
 		</div>
 		<div class="ml-modal-body">
 			<div class="ml-field">
-				<label>Lead / Company Name *</label>
+				<label class="ml-label">Lead / Company Name *</label>
 				<input type="text" id="ml-lead-name" placeholder="e.g. Fresh Farms Pvt Ltd">
 			</div>
 			<div class="ml-grid">
 				<div class="ml-field">
-					<label>Contact Person</label>
+					<label class="ml-label">Contact Person</label>
 					<input type="text" id="ml-contact-person">
 				</div>
 				<div class="ml-field">
-					<label>Contact Number</label>
+					<label class="ml-label">Contact Number</label>
 					<input type="text" id="ml-contact-number">
 				</div>
 			</div>
 			<div class="ml-field">
-				<label>Email</label>
+				<label class="ml-label">Email</label>
 				<input type="email" id="ml-email">
 			</div>
 			<div class="ml-grid">
 				<div class="ml-field">
-					<label>Stage</label>
+					<label class="ml-label">Stage</label>
 					<select id="ml-stage">
 						{% for s in stage_options %}
 						<option value="{{ s }}" {% if s == stage %}selected{% endif %}>{{ s }}</option>
@@ -197,40 +223,43 @@
 					</select>
 				</div>
 				<div class="ml-field">
-					<label>Demo Completed Date</label>
+					<label class="ml-label">Demo Completed Date</label>
 					<input type="date" id="ml-demo-date" lang="en">
 				</div>
 			</div>
 			<div class="ml-field">
-				<label>Interested Module / Template</label>
+				<label class="ml-label">Plan Type</label>
+				<div class="ml-plans">
+					<label class="ml-check"><input type="checkbox" id="ml-annual-plan"> Annual Plan</label>
+					<label class="ml-check"><input type="checkbox" id="ml-monthly-plan"> Monthly Plan</label>
+				</div>
+			</div>
+			<div class="ml-field">
+				<label class="ml-label">Interested Module / Template</label>
 				<input type="text" id="ml-module">
 			</div>
 			<div class="ml-grid">
 				<div class="ml-field">
-					<label>Quotation No</label>
-					<input type="text" id="ml-quotation-no">
+					<label class="ml-label">Quotation Value</label>
+					<input type="number" id="ml-quotation-value" step="0.01" min="0" placeholder="0.00">
 				</div>
 				<div class="ml-field">
-					<label>Quotation Date</label>
+					<label class="ml-label">Quotation Date</label>
 					<input type="date" id="ml-quotation-date" lang="en">
 				</div>
 			</div>
-			<div class="ml-field">
-				<label>Quotation Value</label>
-				<input type="number" id="ml-quotation-value" step="0.01" min="0" placeholder="0.00">
-			</div>
 			<div class="ml-grid">
 				<div class="ml-field">
-					<label>Paid Amount</label>
+					<label class="ml-label">Paid Amount</label>
 					<input type="number" id="ml-paid-amount" step="0.01" min="0" placeholder="0.00">
 				</div>
 				<div class="ml-field">
-					<label>Paid Date</label>
+					<label class="ml-label">Paid Date</label>
 					<input type="date" id="ml-paid-date" lang="en">
 				</div>
 			</div>
 			<div class="ml-field">
-				<label>Remarks</label>
+				<label class="ml-label">Remarks</label>
 				<textarea id="ml-remarks" rows="3"></textarea>
 			</div>
 		</div>
@@ -247,14 +276,17 @@ var _editLeadName = null;
 function openNewLead() {
 	_editLeadName = null;
 	["ml-lead-name", "ml-contact-person", "ml-contact-number", "ml-email", "ml-demo-date",
-	 "ml-module", "ml-quotation-no", "ml-quotation-value", "ml-quotation-date",
+	 "ml-module", "ml-quotation-value", "ml-quotation-date",
 	 "ml-paid-amount", "ml-paid-date", "ml-remarks"].forEach(function (id) {
 		var el = document.getElementById(id);
 		if (el) el.value = "";
 	});
 	document.getElementById("ml-stage").value = "{{ stage }}";
+	document.getElementById("ml-annual-plan").checked = false;
+	document.getElementById("ml-monthly-plan").checked = false;
 	document.getElementById("ml-modal-title").textContent = "Add Lead";
 	document.getElementById("ml-overlay").classList.add("active");
+	document.getElementById("ml-lead-name").focus();
 }
 
 function openEditLead(btn) {
@@ -268,7 +300,8 @@ function openEditLead(btn) {
 	document.getElementById("ml-stage").value = row.getAttribute("data-stage") || "{{ stage }}";
 	document.getElementById("ml-demo-date").value = row.getAttribute("data-demo-date") || "";
 	document.getElementById("ml-module").value = row.getAttribute("data-module") || "";
-	document.getElementById("ml-quotation-no").value = row.getAttribute("data-quotation-no") || "";
+	document.getElementById("ml-annual-plan").checked = row.getAttribute("data-annual-plan") === "1";
+	document.getElementById("ml-monthly-plan").checked = row.getAttribute("data-monthly-plan") === "1";
 	document.getElementById("ml-quotation-value").value = row.getAttribute("data-quotation-value") || "";
 	document.getElementById("ml-quotation-date").value = row.getAttribute("data-quotation-date") || "";
 	document.getElementById("ml-paid-amount").value = row.getAttribute("data-paid-amount") || "";
@@ -304,7 +337,8 @@ function saveLead() {
 		stage: leadField("ml-stage"),
 		demo_completed_date: leadField("ml-demo-date"),
 		interested_module: leadField("ml-module"),
-		quotation_no: leadField("ml-quotation-no"),
+		annual_plan: document.getElementById("ml-annual-plan").checked ? 1 : 0,
+		monthly_plan: document.getElementById("ml-monthly-plan").checked ? 1 : 0,
 		quotation_value: leadField("ml-quotation-value"),
 		quotation_date: leadField("ml-quotation-date"),
 		paid_amount: leadField("ml-paid-amount"),
