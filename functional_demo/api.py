@@ -2247,9 +2247,16 @@ def save_manual_lead(
 	quotation_date=None,
 	paid_amount=None,
 	paid_date=None,
+	expiry_date=None,
 	remarks=None,
 ):
-	"""Create or update a hand-maintained Manual Lead Tracker entry."""
+	"""Create or update a hand-maintained Manual Lead Tracker entry.
+
+	Only fields the page actually submits are overwritten (detected via
+	frappe.form_dict), so editing on a stage-specific page never wipes a
+	field that is hidden on that page (e.g. the demo date when editing on the
+	Quotation Send page keeps its earlier value).
+	"""
 	_manual_lead_guard()
 	if not stage or stage not in ("Demo Completed", "Quotation Send", "Paid"):
 		frappe.throw(_("Please select a valid stage."))
@@ -2265,15 +2272,24 @@ def save_manual_lead(
 	doc.contact_number = (contact_number or "").strip()
 	doc.email = (email or "").strip()
 	doc.stage = stage
-	doc.demo_completed_date = demo_completed_date or None
 	doc.interested_module = (interested_module or "").strip()
 	doc.annual_plan = 1 if str(annual_plan or "").lower() in ("1", "true", "on", "yes") else 0
 	doc.monthly_plan = 1 if str(monthly_plan or "").lower() in ("1", "true", "on", "yes") else 0
-	doc.quotation_value = quotation_value
-	doc.quotation_date = quotation_date or None
-	doc.paid_amount = paid_amount
-	doc.paid_date = paid_date or None
 	doc.remarks = (remarks or "").strip()
+	if "demo_completed_date" in frappe.form_dict:
+		doc.demo_completed_date = demo_completed_date or None
+	if "quotation_value" in frappe.form_dict:
+		doc.quotation_value = quotation_value
+	if "quotation_date" in frappe.form_dict:
+		doc.quotation_date = quotation_date or None
+	if "paid_amount" in frappe.form_dict:
+		doc.paid_amount = paid_amount
+	if "paid_date" in frappe.form_dict:
+		doc.paid_date = paid_date or None
+	if "expiry_date" in frappe.form_dict:
+		doc.expiry_date = expiry_date or None
+		# re-arm the one-day-before reminder whenever the expiry date changes
+		doc.expiry_reminder_sent = 0
 	doc.save(ignore_permissions=True)
 	return {"name": doc.name, "stage": doc.stage}
 

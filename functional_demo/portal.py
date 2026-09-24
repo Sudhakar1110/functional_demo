@@ -215,6 +215,91 @@ def toggle_mail_notifications():
 
 
 # ---------------------------------------------------------------------------
+# notification sound prefs (per-user)
+# ---------------------------------------------------------------------------
+
+# Table for storing per-user notification sound preferences (own sound URL +
+# volume). Created lazily on first access. Each user only hears their own
+# sound - the portal bell always plays THIS user's configured audio at their
+# volume, never another user's.
+_NOTIF_PREFS_TABLE = "tabUser Notification Prefs"
+
+
+def _ensure_notification_prefs_table():
+	"""Create the User Notification Prefs table if it does not exist."""
+	if frappe.db.sql("SHOW TABLES LIKE 'tabUser Notification Prefs'"):
+		return
+	try:
+		frappe.db.sql(
+			"""CREATE TABLE IF NOT EXISTS `tabUser Notification Prefs` (
+				`user` VARCHAR(140) NOT NULL PRIMARY KEY,
+				`sound_enabled` INT(1) NOT NULL DEFAULT 1,
+				`sound_url` VARCHAR(500) DEFAULT NULL,
+				`volume` INT(3) NOT NULL DEFAULT 70,
+				`modified` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+			) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"""
+		)
+		frappe.db.commit()
+	except Exception:
+		# table already exists or permissions issue - ignore
+		pass
+
+
+def _get_notification_prefs(user):
+	"""Return the notification sound prefs for a user."""
+	_ensure_notification_prefs_table()
+	result = frappe.db.sql(
+		"""SELECT sound_enabled, sound_url, volume
+		FROM `tabUser Notification Prefs` WHERE user = %s""",
+		(user,),
+	)
+	if result:
+		return {
+			"sound_enabled": bool(int(result[0][0])),
+			"sound_url": result[0][1] or "",
+			"volume": int(result[0][2] or 70),
+		}
+	return {"sound_enabled": True, "sound_url": "", "volume": 70}
+
+
+@frappe.whitelist()
+def get_notification_prefs():
+	"""Return the current user's notification sound preferences."""
+	user = frappe.session.user
+	if not user or user == "Guest":
+		frappe.throw(_("Please log in to change this setting."), frappe.PermissionError)
+	return _get_notification_prefs(user)
+
+
+@frappe.whitelist()
+def save_notification_prefs(sound_enabled=None, sound_url=None, volume=None):
+	"""Save the current user's notification sound preferences (their own sound
+	and volume - the sound is played only for this user)."""
+	user = frappe.session.user
+	if not user or user == "Guest":
+		frappe.throw(_("Please log in to change this setting."), frappe.PermissionError)
+	_ensure_notification_prefs_table()
+	enabled = 1 if str(sound_enabled or "").lower() in ("1", "true", "on", "yes") else 0
+	url = (sound_url or "").strip()[:500]
+	try:
+		vol = min(100, max(0, int(volume or 70)))
+	except (TypeError, ValueError):
+		vol = 70
+	try:
+		frappe.db.sql(
+			"""INSERT INTO `tabUser Notification Prefs`
+			(user, sound_enabled, sound_url, volume)
+			VALUES (%s, %s, %s, %s)
+			ON DUPLICATE KEY UPDATE sound_enabled = %s, sound_url = %s, volume = %s""",
+			(user, enabled, url, vol, enabled, url, vol),
+		)
+		frappe.db.commit()
+	except Exception:
+		pass
+	return _get_notification_prefs(user)
+
+
+# ---------------------------------------------------------------------------
 # results visibility toggle (site-wide, admin-only)
 # ---------------------------------------------------------------------------
 
@@ -473,6 +558,8 @@ def _push_target_url(document_type, document_name):
 		return "/functional_portal/session?name={0}".format(document_name)
 	if document_type == "Demo Follow Up":
 		return "/functional_portal/follow_ups"
+	if document_type == "Manual Lead Tracker" and document_name:
+		return "/sales_portal/paid_leads"
 	return "/demo_portal"
 
 

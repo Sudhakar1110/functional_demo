@@ -71,6 +71,7 @@ def manual_leads(stage):
 				"quotation_date",
 				"paid_amount",
 				"paid_date",
+				"expiry_date",
 				"remarks",
 				"creation",
 				"modified",
@@ -90,6 +91,7 @@ def manual_leads(stage):
 		row["demo_date_display"] = _date(row.get("demo_completed_date"))
 		row["quotation_date_display"] = _date(row.get("quotation_date"))
 		row["paid_date_display"] = _date(row.get("paid_date"))
+		row["expiry_date_display"] = _date(row.get("expiry_date"))
 		row["quotation_value_display"] = _money(row.get("quotation_value"))
 		row["paid_amount_display"] = _money(row.get("paid_amount"))
 		row["plan_badges"] = []

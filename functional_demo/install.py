@@ -694,3 +694,94 @@ def on_user_update(doc, method):
 			title=_("Auto-create Functional Consultant for {0}").format(doc.name),
 			message=frappe.get_traceback(),
 		)
+
+
+def send_paid_expiry_reminders():
+	"""Daily job - notify every Sales Manager one day before a Paid lead's
+	plan expires. Mirrors the trial-period reminder: matches exactly the day
+	before expiry_date and re-arms via expiry_reminder_sent when the date
+	changes, so a lead is alerted exactly once per expiry day."""
+	if not frappe.db.exists("DocType", "Manual Lead Tracker"):
+		return
+	reminder_day = frappe.utils.add_days(frappe.utils.today(), 1)
+	due = frappe.get_all(
+		"Manual Lead Tracker",
+		filters=[
+			["stage", "=", "Paid"],
+			["expiry_date", "=", reminder_day],
+			["expiry_reminder_sent", "=", 0],
+		],
+		fields=["name", "lead_name", "contact_person", "expiry_date", "paid_amount"],
+		limit_page_length=500,
+	) or []
+	if not due:
+		return
+	managers = _sales_manager_users()
+	if not managers:
+		return
+	for row in due:
+		_notify_paid_expiry_reminder(row, managers)
+	frappe.db.commit()
+
+
+def _sales_manager_users():
+	"""Enabled users carrying the Sales Manager role."""
+	names = frappe.get_all(
+		"Has Role",
+		filters={"role": "Sales Manager", "parenttype": "User"},
+		pluck="parent",
+	) or []
+	users = []
+	for name in names:
+		if name in ("Guest", "Administrator"):
+			continue
+		if frappe.db.get_value("User", name, "enabled"):
+			users.append(name)
+	return users
+
+
+def _notify_paid_expiry_reminder(row, managers):
+	"""In-app notification + email about one paid lead expiring tomorrow."""
+	from functional_demo.portal import (
+		create_notification,
+		is_mail_notifications_enabled,
+		send_branded_email,
+	)
+
+	party = row.get("lead_name") or row.get("contact_person") or row.get("name")
+	subject = _("Paid Lead Expires Tomorrow — {0}").format(party)
+	for user in managers:
+		create_notification(user, subject, "Manual Lead Tracker", row.get("name"))
+		if not is_mail_notifications_enabled(user):
+			continue
+		email = frappe.db.get_value("User", user, "email")
+		if email:
+			try:
+				send_branded_email(
+					recipients=[email],
+					subject=subject,
+					heading=_("Paid Lead Expiring Tomorrow"),
+					intro=_(
+						"The plan for {0} expires tomorrow ({1}). Follow up about renewal "
+						"before their access ends."
+					).format(party, row.get("expiry_date")),
+					rows=[
+						(_("Lead / Company"), party),
+						(_("Expiry Date"), row.get("expiry_date") or "-"),
+						(_("Paid Amount"), row.get("paid_amount") or "-"),
+					],
+					cta_text=_("Open Paid Leads"),
+					cta_url=frappe.utils.get_url("/sales_portal/paid_leads"),
+					reference_doctype="Manual Lead Tracker",
+					reference_name=row.get("name"),
+				)
+			except Exception:
+				frappe.log_error(
+					title=_("Expiry reminder email to {0} failed for {1}").format(
+						user, row.get("name")
+					),
+					message=frappe.get_traceback(),
+				)
+	# mark reminded (even if mails failed - the job matches only the day before
+	# the expiry date, so a retry would arrive a day late anyway)
+	frappe.db.set_value("Manual Lead Tracker", row.get("name"), "expiry_reminder_sent", 1)

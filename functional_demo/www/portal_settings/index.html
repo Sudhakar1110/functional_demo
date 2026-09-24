@@ -165,6 +165,61 @@
 				</div>
 			</div>
 
+			<!-- Notification Sound & Volume Card -->
+			<div class="portal-card" style="max-width: 720px;">
+				<div class="card-head">
+					<h2>
+						<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;vertical-align:middle;margin-right:6px;color:#14F1B1;"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
+						Notification Sound &amp; Volume
+					</h2>
+				</div>
+				<div class="card-body">
+					<p style="color: #71717B; font-size: 14px; margin-bottom: 0; line-height: 1.6;">
+						Add your own notification audio and set its volume. This is saved
+						<strong>per user</strong> — the sound plays only on your account,
+						so after you upload an audio, <strong>your</strong> notifications use
+						it while every other user keeps their own sound.
+					</p>
+
+					<!-- Sound toggle -->
+					<div style="margin-top: 24px; padding: 20px 24px; background: #F9FAFB; border-radius: 12px; border: 1px solid #E5E7EB;">
+						<div style="display: flex; align-items: center; justify-content: space-between; gap: 16px;">
+							<div>
+								<div style="font-weight: 700; color: #05133C; font-size: 16px; margin-bottom: 6px;">Notification Sound</div>
+								<div style="color: #71717B; font-size: 13px;" id="ns-status-text"></div>
+							</div>
+							<button type="button" id="ns-toggle-btn" class="settings-toggle toggle-on">ON</button>
+						</div>
+					</div>
+
+					<!-- Volume -->
+					<div style="margin-top: 16px; padding: 20px 24px; background: #F9FAFB; border-radius: 12px; border: 1px solid #E5E7EB;">
+						<div style="display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 10px;">
+							<div style="font-weight: 700; color: #05133C; font-size: 16px;">Volume</div>
+							<div style="font-weight: 700; color: #114EFF; font-size: 18px;" id="ns-volume-label">70%</div>
+						</div>
+						<input type="range" id="ns-volume" min="0" max="100" step="1" value="70" class="ns-range">
+						<div style="display: flex; justify-content: space-between; color: #9CA3AF; font-size: 11px; margin-top: 4px;"><span>Mute</span><span>Max</span></div>
+					</div>
+
+					<!-- Audio picker -->
+					<div style="margin-top: 16px; padding: 20px 24px; background: #F9FAFB; border-radius: 12px; border: 1px solid #E5E7EB;">
+						<div style="font-weight: 700; color: #05133C; font-size: 16px; margin-bottom: 6px;">Notification Audio</div>
+						<div style="color: #71717B; font-size: 13px; margin-bottom: 10px;">
+							Upload an <strong>.mp3 / .wav / .ogg</strong> audio, or paste a direct audio URL below.
+						</div>
+						<div style="display: flex; gap: 10px; flex-wrap: wrap;">
+							<button type="button" id="ns-upload-btn" class="btn-portal primary" style="padding: 9px 18px;">&#128229; Upload Sound</button>
+							<button type="button" id="ns-test-btn" class="btn-portal secondary" style="padding: 9px 18px;">&#9654; Test Sound</button>
+							<button type="button" id="ns-remove-btn" class="btn-portal secondary" style="padding: 9px 18px;">&#128465; Remove</button>
+							<input type="file" id="ns-file" accept="audio/*" style="display: none;">
+						</div>
+						<input type="text" id="ns-url" placeholder="or paste an audio URL here" style="margin-top: 12px; width: 100%; box-sizing: border-box; padding: 8px 12px; border: 1px solid #D1D5DB; border-radius: 6px; font-size: 13px;">
+						<audio id="ns-audio-preview" controls style="margin-top: 10px; width: 100%; display: none;"></audio>
+					</div>
+				</div>
+			</div>
+
 		</div>
 	</div>
 	</div>
@@ -205,6 +260,11 @@
 	.settings-toggle.loading {
 		opacity: 0.6;
 		pointer-events: none;
+	}
+	.ns-range {
+		width: 100%;
+		accent-color: #114EFF;
+		cursor: pointer;
 	}
 </style>
 
@@ -315,5 +375,145 @@ if (resultsToggleBtn) {
 			});
 	});
 }
+
+/* --- Notification Sound & Volume (per user) --- */
+var _ns = { sound_enabled: true, sound_url: "", volume: 70 };
+function nsEl(id) { return document.getElementById(id); }
+function nsSave(cb) {
+	portalCall("functional_demo.portal.save_notification_prefs", {
+		sound_enabled: _ns.sound_enabled,
+		sound_url: _ns.sound_url,
+		volume: _ns.volume
+	}).then(function (p) {
+		if (p) {
+			_ns.sound_enabled = p.sound_enabled !== false;
+			_ns.sound_url = p.sound_url || "";
+			_ns.volume = (p.volume != null) ? p.volume : 70;
+		}
+		nsRender();
+		portalAlert("Notification sound settings saved.", "ok");
+		if (cb) cb();
+	}).catch(function () {});
+}
+function nsRender() {
+	var t = nsEl("ns-toggle-btn");
+	if (t) {
+		t.className = "settings-toggle " + (_ns.sound_enabled ? "toggle-on" : "toggle-off");
+		t.textContent = _ns.sound_enabled ? "ON" : "OFF";
+	}
+	nsEl("ns-volume").value = _ns.volume;
+	nsEl("ns-volume-label").textContent = _ns.volume + "%";
+	var u = nsEl("ns-url");
+	var au = nsEl("ns-audio-preview");
+	u.value = _ns.sound_url;
+	if (_ns.sound_url) {
+		au.style.display = "";
+		au.src = _ns.sound_url;
+	} else {
+		au.style.display = "none";
+		au.removeAttribute("src");
+	}
+	var st = nsEl("ns-status-text");
+	st.innerHTML = _ns.sound_enabled
+		? 'Your notification sound is <strong style="color: #10B981;">ON</strong> - it plays only for your account.'
+		: 'Your notification sound is <strong style="color: #EF4444;">OFF</strong> - new notifications stay silent.';
+}
+function nsToggle() {
+	_ns.sound_enabled = !_ns.sound_enabled;
+	nsRender();
+	nsSave();
+}
+function nsVolume() {
+	_ns.volume = parseInt(nsEl("ns-volume").value, 10) || 70;
+	nsEl("ns-volume-label").textContent = _ns.volume + "%";
+	clearTimeout(nsVolume._t);
+	nsVolume._t = setTimeout(function () { nsSave(); }, 400);
+}
+function nsUrlSave() {
+	_ns.sound_url = (nsEl("ns-url").value || "").trim();
+	nsRender();
+	nsSave();
+}
+function nsUpload(file) {
+	if (!file) return;
+	window.portalUpload(file).then(function (url) {
+		_ns.sound_url = url;
+		nsEl("ns-url").value = url;
+		nsRender();
+		nsSave(function () { portalAlert("Notification sound uploaded - it will play only for you.", "ok"); });
+	}).catch(function (e) {
+		portalAlert((e && e.message) || "Upload failed. Try pasting a direct audio URL instead.", "err");
+	});
+}
+function nsTestChime(vol) {
+	try {
+		var Ctx = window.AudioContext || window.webkitAudioContext;
+		if (!Ctx) return;
+		var ctx = new Ctx();
+		var master = ctx.createGain();
+		master.gain.value = 1.3 * (vol || 1);
+		master.connect(ctx.destination);
+		var tones = [{ freq: 659.25, start: 0, dur: 0.6 }, { freq: 987.77, start: 0.18, dur: 0.75 }];
+		for (var i = 0; i < tones.length; i++) {
+			var t = tones[i];
+			var start = ctx.currentTime + t.start;
+			[{ type: "triangle", g: 1.0 }, { type: "sine", g: 0.5 }].forEach(function (layer) {
+				var o = ctx.createOscillator();
+				var g = ctx.createGain();
+				o.connect(g);
+				g.connect(master);
+				o.type = layer.type;
+				o.frequency.value = layer.type === "sine" ? t.freq * 2 : t.freq;
+				g.gain.setValueAtTime(0.0001, start);
+				g.gain.exponentialRampToValueAtTime(layer.g, start + 0.02);
+				g.gain.exponentialRampToValueAtTime(0.0001, start + t.dur);
+				o.start(start);
+				o.stop(start + t.dur + 0.05);
+			});
+		}
+	} catch (e) {}
+}
+function nsTest() {
+	var au = nsEl("ns-audio-preview");
+	if (_ns.sound_url) {
+		try {
+			au.volume = (_ns.volume || 70) / 100;
+			var pr = au.play();
+			if (pr && pr.catch) pr.catch(function () { nsTestChime((_ns.volume || 70) / 100); });
+		} catch (e) { nsTestChime((_ns.volume || 70) / 100); }
+		return;
+	}
+	nsTestChime((_ns.volume || 70) / 100);
+	portalAlert("No custom audio set - playing the default chime at your volume.", "ok");
+}
+function nsRemove() {
+	_ns.sound_url = "";
+	nsEl("ns-url").value = "";
+	nsRender();
+	nsSave();
+}
+(function () {
+	nsEl("ns-toggle-btn").addEventListener("click", nsToggle);
+	nsEl("ns-volume").addEventListener("input", nsVolume);
+	nsEl("ns-url").addEventListener("change", nsUrlSave);
+	nsEl("ns-test-btn").addEventListener("click", nsTest);
+	nsEl("ns-remove-btn").addEventListener("click", nsRemove);
+	nsEl("ns-upload-btn").addEventListener("click", function () { nsEl("ns-file").click(); });
+	nsEl("ns-file").addEventListener("change", function (e) {
+		var f = e.target.files && e.target.files[0];
+		if (f) nsUpload(f);
+		e.target.value = "";
+	});
+	portalCall("functional_demo.portal.get_notification_prefs", {})
+		.then(function (p) {
+			if (p) {
+				_ns.sound_enabled = p.sound_enabled !== false;
+				_ns.sound_url = p.sound_url || "";
+				_ns.volume = (p.volume != null) ? p.volume : 70;
+			}
+			nsRender();
+		})
+		.catch(function () { nsRender(); });
+})();
 		</script>
 {% endblock %}

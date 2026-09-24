@@ -24,3 +24,8 @@ def get_context(context):
 	context.stage_options = MANUAL_LEAD_STAGES
 	context.leads = manual_leads(stage)
 	context.count = len(context.leads)
+	context.form_show_demo_date = False
+	context.form_show_plan = True
+	context.form_show_quotation = True
+	context.form_show_payment = False
+	context.form_show_expiry = False

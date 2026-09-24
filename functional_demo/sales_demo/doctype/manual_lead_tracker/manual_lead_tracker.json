@@ -22,6 +22,8 @@
    "quotation_date",
    "paid_amount",
    "paid_date",
+   "expiry_date",
+   "expiry_reminder_sent",
    "section_remarks",
    "remarks"
   ],
@@ -112,11 +114,23 @@
    "fieldtype": "Currency",
    "label": "Paid Amount"
   },
-  {
-   "fieldname": "paid_date",
-   "fieldtype": "Date",
-   "label": "Paid Date"
-  },
+{
+    "fieldname": "paid_date",
+    "fieldtype": "Date",
+    "label": "Paid Date"
+   },
+   {
+    "fieldname": "expiry_date",
+    "fieldtype": "Date",
+    "label": "Expiry Date"
+   },
+   {
+    "default": "0",
+    "fieldname": "expiry_reminder_sent",
+    "fieldtype": "Check",
+    "hidden": 1,
+    "label": "Expiry Reminder Sent"
+   },
   {
    "fieldname": "section_remarks",
    "fieldtype": "Section Break",
@@ -129,7 +143,7 @@
   }
  ],
  "links": [],
- "modified": "2026-09-24 13:00:00.000000",
+ "modified": "2026-09-24 14:00:00.000000",
  "modified_by": "Administrator",
  "module": "Sales Demo",
  "name": "Manual Lead Tracker",
