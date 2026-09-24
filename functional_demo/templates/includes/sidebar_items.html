@@ -1,0 +1,22 @@
+{% for item in sidebar_items %}
+{% if item.group %}
+<div class="sidebar-group {% if item.expanded %}open{% endif %}">
+	<a class="sidebar-item sidebar-group-toggle {% if item.active %}active{% endif %}" href="{{ item.route }}" onclick="return toggleSidebarGroup(this)">
+		<span class="sidebar-icon">{{ item.icon | safe }}</span>
+		<span class="sidebar-group-label">{{ item.label }}</span>
+		<span class="sidebar-group-carat">&#9654;</span>
+	</a>
+	<div class="sidebar-children">
+		{% for child in item.children %}
+		<a class="sidebar-item sidebar-child {% if child.active %}active{% endif %}" href="{{ child.route }}">
+			<span class="sidebar-icon">{{ child.icon | safe }}</span>{{ child.label }}
+		</a>
+		{% endfor %}
+	</div>
+</div>
+{% else %}
+<a class="sidebar-item {% if item.active %}active{% endif %}" href="{{ item.route }}">
+	<span class="sidebar-icon">{{ item.icon | safe }}</span>{{ item.label }}
+</a>
+{% endif %}
+{% endfor %}

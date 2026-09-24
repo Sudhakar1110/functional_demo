@@ -768,4 +768,9 @@
 	document.addEventListener("DOMContentLoaded", initAllTimePickers);
 	if (document.readyState !== "loading") initAllTimePickers();
 })();
+window.toggleSidebarGroup = function (link) {
+	var group = link.closest ? link.closest(".sidebar-group") : null;
+	if (group) group.classList.toggle("open");
+	return false;
+};
 </script>
