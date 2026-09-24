@@ -370,6 +370,9 @@ def sidebar_items(active):
 			{"label": _("End of Day"), "route": "/sales_portal/daily_update", "icon": ICON_DAILY_UPDATE, "active": active == "daily_update"},
 			{"label": _("Follow-up Tracker"), "route": "/sales_portal/followup_tracker", "icon": ICON_FOLLOWUP_TRACKER, "active": active == "followup_tracker"},
 			{"label": _("Follow-ups Completed"), "route": "/functional_portal/completed_followups", "icon": ICON_FOLLOWUPS, "active": active == "completed_followups"},
+			{"label": _("Demo Completed Leads"), "route": "/sales_portal/completed_leads", "icon": ICON_RESULTS, "active": active == "completed_leads"},
+			{"label": _("Quotation Send Leads"), "route": "/sales_portal/quotation_leads", "icon": ICON_REQUESTS, "active": active == "quotation_leads"},
+			{"label": _("Paid Leads"), "route": "/sales_portal/paid_leads", "icon": ICON_TRIALS, "active": active == "paid_leads"},
 		]
 
 	# Functional Home for all managers

@@ -1,0 +1,353 @@
+<div class="portal-layout">
+	<header class="portal-topbar">
+		<button class="sidebar-toggle" id="sidebar-toggle" aria-label="Menu">&#9776;</button>
+		<a class="topbar-brand" href="/demo_portal">
+			<img class="brand-logo" src="/assets/functional_demo/images/brand_logo.jpg" alt="Brand Logo" />
+			<div class="brand-text">
+				<span class="brand-name">Demo Portal</span>
+				<span class="brand-sub">Sales &amp; Functional</span>
+			</div>
+		</a>
+		<div class="topbar-title">
+			<h1>{{ title }}</h1>
+			<p>{{ subtitle }}</p>
+		</div>
+		<div class="topbar-right">
+			<span class="portal-avatar">{{ full_name[:1] }}</span>
+			<span class="portal-user-name">{{ full_name }}</span>
+			<a class="btn-desk" href="/app">Open Desk</a>
+		</div>
+	</header>
+	<div class="portal-body">
+		<aside class="portal-sidebar" id="portal-sidebar">
+			<div class="sidebar-menu">
+			{% for item in sidebar_items %}
+			<a class="sidebar-item {% if item.active %}active{% endif %}" href="{{ item.route }}">
+				<span class="sidebar-icon">{{ item.icon | safe }}</span>{{ item.label }}
+			</a>
+			{% endfor %}
+		</div>
+		</aside>
+		<div class="sidebar-overlay"></div>
+		<div class="portal-main">
+			<div class="portal-content">
+
+				<style>
+					.ml-toolbar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; }
+					.ml-toolbar .ml-title h1 { font-size: 20px; color: #05133C; margin: 0 0 4px; }
+					.ml-toolbar .ml-title p { font-size: 13px; color: #71717B; margin: 0; }
+					.ml-btn-add { padding: 8px 20px; background: #114EFF; color: #fff; border: none; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; }
+					.ml-btn-add:hover { background: #0B3FDB; }
+					.ml-toolbar .ml-spacer { flex: 1; }
+					.ml-count { font-size: 12px; color: #9CA3AF; }
+
+					.ml-table-scroll { overflow-x: auto; }
+					.ml-table-scroll table { min-width: 1200px; width: 100%; border-collapse: collapse; }
+					.ml-table-scroll th { font-size: 11px; font-weight: 700; color: #71717B; text-transform: uppercase; letter-spacing: 0.04em; padding: 8px 10px; text-align: left; border-bottom: 2px solid #E5E7EB; white-space: nowrap; }
+					.ml-table-scroll td { padding: 10px 10px; font-size: 13px; color: #05133C; border-bottom: 1px solid #F3F4F6; vertical-align: middle; }
+					.ml-table-scroll tr:hover td { background: #F9FAFB; }
+
+					.ml-badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 700; white-space: nowrap; }
+					.b-completed { background: #DCFBEA; color: #009A52; }
+					.b-quotation { background: #FEF3C7; color: #D97706; }
+					.b-paid { background: #DBEAFE; color: #1D4ED8; }
+
+					.ml-action-btn { padding: 5px 12px; border: none; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; }
+					.ml-btn-edit { background: #E0EAFF; color: #114EFF; }
+					.ml-btn-edit:hover { background: #CBD9FF; }
+					.ml-btn-del { background: #FEE2E2; color: #DC2626; }
+					.ml-btn-del:hover { background: #FECACA; }
+					.ml-btn-export { padding: 7px 16px; background: #F3F4F6; color: #71717B; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; }
+					.ml-btn-export:hover { background: #E5E7EB; }
+					.ml-empty { text-align: center; padding: 40px 20px; color: #9CA3AF; }
+					.ml-empty h3 { font-size: 16px; color: #71717B; margin: 10px 0 6px; }
+					.ml-empty p { font-size: 13px; }
+
+					.ml-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 9999; justify-content: center; align-items: center; }
+					.ml-overlay.active { display: flex; }
+					.ml-modal { background: #fff; border-radius: 12px; width: 620px; max-width: 94vw; max-height: 92vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.25); }
+					.ml-modal-head { padding: 18px 24px; border-bottom: 1px solid #E5E7EB; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; background: #fff; }
+					.ml-modal-head h3 { margin: 0; font-size: 16px; font-weight: 700; color: #05133C; }
+					.ml-modal-close { background: none; border: none; font-size: 22px; color: #9CA3AF; cursor: pointer; line-height: 1; }
+					.ml-modal-close:hover { color: #DC2626; }
+					.ml-modal-body { padding: 20px 24px; }
+					.ml-field { margin-bottom: 14px; }
+					.ml-field label { display: block; font-size: 12px; font-weight: 600; color: #374151; margin-bottom: 4px; }
+					.ml-field input, .ml-field select, .ml-field textarea { width: 100%; padding: 8px 12px; border: 1px solid #D1D5DB; border-radius: 6px; font-size: 13px; box-sizing: border-box; font-family: inherit; }
+					.ml-field input:focus, .ml-field select:focus, .ml-field textarea:focus { border-color: #114EFF; outline: none; box-shadow: 0 0 0 3px rgba(17,78,255,0.12); }
+					.ml-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 16px; }
+					.ml-modal-foot { padding: 14px 24px; border-top: 1px solid #E5E7EB; display: flex; justify-content: flex-end; gap: 10px; position: sticky; bottom: 0; background: #fff; }
+					.ml-btn-cancel { padding: 8px 18px; background: #F3F4F6; color: #374151; border: none; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; }
+					.ml-btn-submit { padding: 8px 22px; background: #114EFF; color: #fff; border: none; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; }
+					.ml-btn-submit:disabled { background: #93B4FF; cursor: not-allowed; }
+					.ml-btn-submit:hover:not(:disabled) { background: #0B3FDB; }
+				</style>
+
+				<div class="ml-toolbar">
+					<div class="ml-title">
+						<h1>{{ title }}</h1>
+						<p>{{ count }} record{{ "s" if count != 1 }} — maintained manually by the Sales Manager</p>
+					</div>
+					<div class="ml-spacer"></div>
+					<button class="ml-btn-export" onclick="exportLeadsCSV()">&#128229; Export CSV</button>
+					<button class="ml-btn-add" onclick="openNewLead()">+ Add Lead</button>
+				</div>
+
+				<div class="portal-card">
+					<div class="card-body ml-table-scroll">
+						{% if leads %}
+						<table id="ml-table">
+							<thead>
+								<tr>
+									<th>Lead / Company</th>
+									<th>Contact</th>
+									<th>Phone</th>
+									<th>Email</th>
+									<th>Stage</th>
+									<th>Demo Date</th>
+									<th>Quotation</th>
+									<th>Quotation Value</th>
+									<th>Paid Amount</th>
+									<th>Paid Date</th>
+									<th>Updated</th>
+									<th>Action</th>
+								</tr>
+							</thead>
+							<tbody>
+								{% for lead in leads %}
+								<tr data-name="{{ lead.name }}"
+									data-lead-name="{{ lead.lead_name or '' }}"
+									data-contact-person="{{ lead.contact_person or '' }}"
+									data-contact-number="{{ lead.contact_number or '' }}"
+									data-email="{{ lead.email or '' }}"
+									data-stage="{{ lead.stage or '' }}"
+									data-demo-date="{{ lead.demo_completed_date or '' }}"
+									data-module="{{ lead.interested_module or '' }}"
+									data-quotation-no="{{ lead.quotation_no or '' }}"
+									data-quotation-value="{{ lead.quotation_value or '' }}"
+									data-quotation-date="{{ lead.quotation_date or '' }}"
+									data-paid-amount="{{ lead.paid_amount or '' }}"
+									data-paid-date="{{ lead.paid_date or '' }}"
+									data-remarks="{{ lead.remarks or '' }}">
+									<td><strong>{{ lead.lead_name or "-" }}</strong></td>
+									<td>{{ lead.contact_person or "-" }}</td>
+									<td>{{ lead.contact_number or "-" }}</td>
+									<td>{{ lead.email or "-" }}</td>
+									<td>
+										<span class="ml-badge {% if lead.stage == 'Demo Completed' %}b-completed{% elif lead.stage == 'Quotation Send' %}b-quotation{% else %}b-paid{% endif %}">{{ lead.stage }}</span>
+									</td>
+									<td>{{ lead.demo_completed_date or "-" }}</td>
+									<td>{{ lead.quotation_no or "-" }}<br><span style="font-size:11px; color:#9CA3AF;">{{ lead.quotation_date or "" }}</span></td>
+									<td>{{ lead.quotation_value or "-" }}</td>
+									<td>{{ lead.paid_amount or "-" }}</td>
+									<td>{{ lead.paid_date or "-" }}</td>
+									<td style="font-size:12px; color:#71717B;">{{ lead.modified_display or "-" }}</td>
+									<td style="white-space: nowrap;">
+										<button class="ml-action-btn ml-btn-edit" onclick="openEditLead(this)">Edit</button>
+										<button class="ml-action-btn ml-btn-del" onclick="deleteLead('{{ lead.name }}')">Delete</button>
+									</td>
+								</tr>
+								{% endfor %}
+							</tbody>
+						</table>
+						{% else %}
+						<div class="ml-empty">
+							<div style="font-size: 48px;">&#128230;</div>
+							<h3>No leads in this stage yet</h3>
+							<p>Click "Add Lead" to start a hand-maintained record.</p>
+						</div>
+						{% endif %}
+					</div>
+				</div>
+
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- Add / Edit Modal -->
+<div class="ml-overlay" id="ml-overlay">
+	<div class="ml-modal">
+		<div class="ml-modal-head">
+			<h3 id="ml-modal-title">Add Lead</h3>
+			<button class="ml-modal-close" onclick="closeLeadModal()">&times;</button>
+		</div>
+		<div class="ml-modal-body">
+			<div class="ml-field">
+				<label>Lead / Company Name *</label>
+				<input type="text" id="ml-lead-name" placeholder="e.g. Fresh Farms Pvt Ltd">
+			</div>
+			<div class="ml-grid">
+				<div class="ml-field">
+					<label>Contact Person</label>
+					<input type="text" id="ml-contact-person">
+				</div>
+				<div class="ml-field">
+					<label>Contact Number</label>
+					<input type="text" id="ml-contact-number">
+				</div>
+			</div>
+			<div class="ml-field">
+				<label>Email</label>
+				<input type="email" id="ml-email">
+			</div>
+			<div class="ml-grid">
+				<div class="ml-field">
+					<label>Stage</label>
+					<select id="ml-stage">
+						{% for s in stage_options %}
+						<option value="{{ s }}" {% if s == stage %}selected{% endif %}>{{ s }}</option>
+						{% endfor %}
+					</select>
+				</div>
+				<div class="ml-field">
+					<label>Demo Completed Date</label>
+					<input type="date" id="ml-demo-date" lang="en">
+				</div>
+			</div>
+			<div class="ml-field">
+				<label>Interested Module / Template</label>
+				<input type="text" id="ml-module">
+			</div>
+			<div class="ml-grid">
+				<div class="ml-field">
+					<label>Quotation No</label>
+					<input type="text" id="ml-quotation-no">
+				</div>
+				<div class="ml-field">
+					<label>Quotation Date</label>
+					<input type="date" id="ml-quotation-date" lang="en">
+				</div>
+			</div>
+			<div class="ml-field">
+				<label>Quotation Value</label>
+				<input type="number" id="ml-quotation-value" step="0.01" min="0" placeholder="0.00">
+			</div>
+			<div class="ml-grid">
+				<div class="ml-field">
+					<label>Paid Amount</label>
+					<input type="number" id="ml-paid-amount" step="0.01" min="0" placeholder="0.00">
+				</div>
+				<div class="ml-field">
+					<label>Paid Date</label>
+					<input type="date" id="ml-paid-date" lang="en">
+				</div>
+			</div>
+			<div class="ml-field">
+				<label>Remarks</label>
+				<textarea id="ml-remarks" rows="3"></textarea>
+			</div>
+		</div>
+		<div class="ml-modal-foot">
+			<button class="ml-btn-cancel" onclick="closeLeadModal()">Cancel</button>
+			<button class="ml-btn-submit" id="ml-save-btn" onclick="saveLead()">Save Lead</button>
+		</div>
+	</div>
+</div>
+
+<script>
+var _editLeadName = null;
+
+function openNewLead() {
+	_editLeadName = null;
+	["ml-lead-name", "ml-contact-person", "ml-contact-number", "ml-email", "ml-demo-date",
+	 "ml-module", "ml-quotation-no", "ml-quotation-value", "ml-quotation-date",
+	 "ml-paid-amount", "ml-paid-date", "ml-remarks"].forEach(function (id) {
+		var el = document.getElementById(id);
+		if (el) el.value = "";
+	});
+	document.getElementById("ml-stage").value = "{{ stage }}";
+	document.getElementById("ml-modal-title").textContent = "Add Lead";
+	document.getElementById("ml-overlay").classList.add("active");
+}
+
+function openEditLead(btn) {
+	var row = btn.closest("tr");
+	if (!row) return;
+	_editLeadName = row.getAttribute("data-name");
+	document.getElementById("ml-lead-name").value = row.getAttribute("data-lead-name") || "";
+	document.getElementById("ml-contact-person").value = row.getAttribute("data-contact-person") || "";
+	document.getElementById("ml-contact-number").value = row.getAttribute("data-contact-number") || "";
+	document.getElementById("ml-email").value = row.getAttribute("data-email") || "";
+	document.getElementById("ml-stage").value = row.getAttribute("data-stage") || "{{ stage }}";
+	document.getElementById("ml-demo-date").value = row.getAttribute("data-demo-date") || "";
+	document.getElementById("ml-module").value = row.getAttribute("data-module") || "";
+	document.getElementById("ml-quotation-no").value = row.getAttribute("data-quotation-no") || "";
+	document.getElementById("ml-quotation-value").value = row.getAttribute("data-quotation-value") || "";
+	document.getElementById("ml-quotation-date").value = row.getAttribute("data-quotation-date") || "";
+	document.getElementById("ml-paid-amount").value = row.getAttribute("data-paid-amount") || "";
+	document.getElementById("ml-paid-date").value = row.getAttribute("data-paid-date") || "";
+	document.getElementById("ml-remarks").value = row.getAttribute("data-remarks") || "";
+	document.getElementById("ml-modal-title").textContent = "Edit Lead";
+	document.getElementById("ml-overlay").classList.add("active");
+}
+
+function closeLeadModal() {
+	document.getElementById("ml-overlay").classList.remove("active");
+	_editLeadName = null;
+}
+
+function leadField(id) {
+	var el = document.getElementById(id);
+	return el ? el.value : "";
+}
+
+function saveLead() {
+	if (!leadField("ml-lead-name").trim()) {
+		frappe.msgprint("Lead / Company Name is required.");
+		return;
+	}
+	var btn = document.getElementById("ml-save-btn");
+	btn.disabled = true;
+	portalCall("functional_demo.api.save_manual_lead", {
+		name: _editLeadName || "",
+		lead_name: leadField("ml-lead-name"),
+		contact_person: leadField("ml-contact-person"),
+		contact_number: leadField("ml-contact-number"),
+		email: leadField("ml-email"),
+		stage: leadField("ml-stage"),
+		demo_completed_date: leadField("ml-demo-date"),
+		interested_module: leadField("ml-module"),
+		quotation_no: leadField("ml-quotation-no"),
+		quotation_value: leadField("ml-quotation-value"),
+		quotation_date: leadField("ml-quotation-date"),
+		paid_amount: leadField("ml-paid-amount"),
+		paid_date: leadField("ml-paid-date"),
+		remarks: leadField("ml-remarks")
+	}).then(function (r) {
+		portalAlert("Saved: " + r.name, "ok");
+		setTimeout(function () { window.location.reload(); }, 600);
+	}).catch(function () {
+		btn.disabled = false;
+	});
+}
+
+function deleteLead(name) {
+	if (!confirm("Delete this lead entry?")) return;
+	portalCall("functional_demo.api.delete_manual_lead", { name: name })
+		.then(function () { window.location.reload(); })
+		.catch(function () {});
+}
+
+function exportLeadsCSV() {
+	var table = document.getElementById("ml-table");
+	if (!table) return;
+	var rows = [];
+	var headers = [];
+	table.querySelectorAll("thead th").forEach(function (th) { headers.push(th.textContent.trim()); });
+	rows.push(headers.join(","));
+	table.querySelectorAll("tbody tr").forEach(function (tr) {
+		var cells = [];
+		tr.querySelectorAll("td").forEach(function (td) {
+			cells.push('"' + (td.textContent.trim().replace(/"/g, '""')) + '"');
+		});
+		rows.push(cells.join(","));
+	});
+	var csv = rows.join("\n");
+	var blob = new Blob([csv], { type: "text/csv" });
+	var a = document.createElement("a");
+	a.href = URL.createObjectURL(blob);
+	a.download = "{{ stage|lower|replace(' ', '_') }}_leads.csv";
+	a.click();
+}
+</script>

@@ -1,0 +1,162 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "autoname": "MLT-.YYYY.-.#####",
+ "creation": "2026-09-24 10:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "section_details",
+  "lead_name",
+  "contact_person",
+  "contact_number",
+  "email",
+  "section_stage",
+  "stage",
+  "section_pipeline",
+  "demo_completed_date",
+  "interested_module",
+  "quotation_no",
+  "quotation_value",
+  "quotation_date",
+  "paid_amount",
+  "paid_date",
+  "section_remarks",
+  "remarks"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_details",
+   "fieldtype": "Section Break",
+   "label": "Lead Details"
+  },
+  {
+   "fieldname": "lead_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Lead / Company Name",
+   "reqd": 1
+  },
+  {
+   "fieldname": "contact_person",
+   "fieldtype": "Data",
+   "label": "Contact Person"
+  },
+  {
+   "fieldname": "contact_number",
+   "fieldtype": "Data",
+   "label": "Contact Number"
+  },
+  {
+   "fieldname": "email",
+   "fieldtype": "Data",
+   "label": "Email",
+   "options": "Email"
+  },
+  {
+   "fieldname": "section_stage",
+   "fieldtype": "Section Break",
+   "label": "Stage"
+  },
+  {
+   "default": "Demo Completed",
+   "fieldname": "stage",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Stage",
+   "options": "Demo Completed\nQuotation Send\nPaid",
+   "reqd": 1
+  },
+  {
+   "fieldname": "section_pipeline",
+   "fieldtype": "Section Break",
+   "label": "Demo, Quotation & Payment"
+  },
+  {
+   "fieldname": "demo_completed_date",
+   "fieldtype": "Date",
+   "label": "Demo Completed Date"
+  },
+  {
+   "fieldname": "interested_module",
+   "fieldtype": "Data",
+   "label": "Interested Module / Template"
+  },
+  {
+   "fieldname": "quotation_no",
+   "fieldtype": "Data",
+   "label": "Quotation No"
+  },
+  {
+   "fieldname": "quotation_value",
+   "fieldtype": "Currency",
+   "label": "Quotation Value"
+  },
+  {
+   "fieldname": "quotation_date",
+   "fieldtype": "Date",
+   "label": "Quotation Date"
+  },
+  {
+   "fieldname": "paid_amount",
+   "fieldtype": "Currency",
+   "label": "Paid Amount"
+  },
+  {
+   "fieldname": "paid_date",
+   "fieldtype": "Date",
+   "label": "Paid Date"
+  },
+  {
+   "fieldname": "section_remarks",
+   "fieldtype": "Section Break",
+   "label": "Remarks"
+  },
+  {
+   "fieldname": "remarks",
+   "fieldtype": "Small Text",
+   "label": "Remarks"
+  }
+ ],
+ "links": [],
+ "modified": "2026-09-24 10:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Sales Demo",
+ "name": "Manual Lead Tracker",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Sales Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "quick_entry": 1,
+ "search_fields": "lead_name, contact_person",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "lead_name",
+ "track_changes": 1
+}

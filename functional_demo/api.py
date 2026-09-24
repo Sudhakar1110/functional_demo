@@ -5,7 +5,13 @@
 import frappe
 from frappe import _
 
-from functional_demo.portal import can_manage_consultants, create_notification, is_functional, is_sales
+from functional_demo.portal import (
+	can_manage_consultants,
+	create_notification,
+	is_functional,
+	is_sales,
+	is_sales_manager,
+)
 from functional_demo.sales_demo.doctype.demo_request.demo_request import (
 	change_status,
 	get_primary_contact,
@@ -2210,3 +2216,72 @@ def update_follow_up(follow_up=None, status=None, outcome=None, remarks=None, ne
 
 	frappe.msgprint(_("Follow-up {0} updated.").format(follow_up))
 	return {"status": doc.status, "outcome": doc.outcome}
+
+
+# ---------------------------------------------------------------------------
+# Manual Lead Tracker (hand-maintained, Sales Manager only)
+# ---------------------------------------------------------------------------
+
+def _manual_lead_guard():
+	"""Only Sales Manager (plus Administrator) may maintain the manual tracker."""
+	if frappe.session.user != "Administrator" and not is_sales_manager():
+		frappe.throw(
+			_("You do not have permission to maintain manual leads."),
+			frappe.PermissionError,
+		)
+
+
+@frappe.whitelist()
+def save_manual_lead(
+	name=None,
+	lead_name=None,
+	contact_person=None,
+	contact_number=None,
+	email=None,
+	stage=None,
+	demo_completed_date=None,
+	interested_module=None,
+	quotation_no=None,
+	quotation_value=None,
+	quotation_date=None,
+	paid_amount=None,
+	paid_date=None,
+	remarks=None,
+):
+	"""Create or update a hand-maintained Manual Lead Tracker entry."""
+	_manual_lead_guard()
+	if not stage or stage not in ("Demo Completed", "Quotation Send", "Paid"):
+		frappe.throw(_("Please select a valid stage."))
+	if not lead_name or not str(lead_name).strip():
+		frappe.throw(_("Lead / Company Name is required."))
+
+	if name:
+		doc = frappe.get_doc("Manual Lead Tracker", name)
+	else:
+		doc = frappe.new_doc("Manual Lead Tracker")
+	doc.lead_name = str(lead_name).strip()
+	doc.contact_person = (contact_person or "").strip()
+	doc.contact_number = (contact_number or "").strip()
+	doc.email = (email or "").strip()
+	doc.stage = stage
+	doc.demo_completed_date = demo_completed_date or None
+	doc.interested_module = (interested_module or "").strip()
+	doc.quotation_no = (quotation_no or "").strip()
+	doc.quotation_value = quotation_value
+	doc.quotation_date = quotation_date or None
+	doc.paid_amount = paid_amount
+	doc.paid_date = paid_date or None
+	doc.remarks = (remarks or "").strip()
+	doc.save(ignore_permissions=True)
+	return {"name": doc.name, "stage": doc.stage}
+
+
+@frappe.whitelist()
+def delete_manual_lead(name=None):
+	"""Delete a hand-maintained Manual Lead Tracker entry."""
+	_manual_lead_guard()
+	if not name:
+		frappe.throw(_("Lead entry is missing."))
+	frappe.delete_doc("Manual Lead Tracker", name, ignore_permissions=True, force=1)
+	frappe.db.commit()
+	return {"deleted": name}
