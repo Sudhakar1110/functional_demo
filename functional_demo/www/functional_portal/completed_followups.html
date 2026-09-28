@@ -69,6 +69,34 @@
 							{% if fu.demo_session %}
 							<a class="btn-portal sm" href="/functional_portal/session?name={{ fu.demo_session }}">Session</a>
 							{% endif %}
+							<button class="btn-portal warning sm" type="button" data-toggle-note="{{ fu.name }}"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg> Update</button>
+						</div>
+
+						<div id="note-{{ fu.name }}" style="display: none;" class="portal-form">
+							<div class="divider"></div>
+							<div class="form-row">
+								<div>
+									<label>Status</label>
+									<select class="fu-status" data-name="{{ fu.name }}">
+										{% for s in status_options %}
+										<option value="{{ s }}" {% if fu.status == s %}selected{% endif %}>{{ s }}</option>
+										{% endfor %}
+									</select>
+								</div>
+								<div>
+									<label>Outcome</label>
+									<select class="fu-outcome" data-name="{{ fu.name }}">
+										{% for o in outcome_options %}
+										<option value="{{ o }}" {% if fu.outcome == o %}selected{% endif %}>{{ o }}</option>
+										{% endfor %}
+									</select>
+								</div>
+							</div>
+							<label>Discussion Note</label>
+							<textarea class="fu-note" data-name="{{ fu.name }}" placeholder="What was discussed..."></textarea>
+							<div class="form-actions">
+								<button class="btn-portal sm btn-save-fu" data-name="{{ fu.name }}">Save Update</button>
+							</div>
 						</div>
 						<div style="font-size: 11px; color: #9CA3AF; margin-top: 10px; padding-top: 8px; border-top: 1px solid #EEF0F4;">
 							Created: {{ fu.created_display }} &middot; Completed: {{ fu.completed_display }}
@@ -90,4 +118,35 @@
 	</div>
 	</div>
 </div>
+{% endblock %}
+
+{% block script %}
+{% include "functional_demo/templates/includes/portal_script.html" %}
+<script>
+(function () {
+	"use strict";
+	{% if follow_ups %}
+	document.querySelectorAll("[data-toggle-note]").forEach(function (btn) {
+		btn.addEventListener("click", function () {
+			var el = document.getElementById("note-" + btn.getAttribute("data-toggle-note"));
+			if (el) el.style.display = el.style.display === "none" ? "block" : "none";
+		});
+	});
+	document.querySelectorAll(".btn-save-fu").forEach(function (btn) {
+		btn.addEventListener("click", function () {
+			var name = btn.getAttribute("data-name");
+			var status = document.querySelector('.fu-status[data-name="' + name + '"]').value;
+			var outcome = document.querySelector('.fu-outcome[data-name="' + name + '"]').value;
+			var note = document.querySelector('.fu-note[data-name="' + name + '"]').value.trim();
+			var data = { follow_up: name, status: status, outcome: outcome };
+			if (note) data.discussion_note = note;
+			btn.disabled = true;
+			portalCall("functional_demo.api.update_follow_up", data)
+				.then(function () { window.location.reload(); })
+				.catch(function () { btn.disabled = false; });
+		});
+	});
+	{% endif %}
+})();
+</script>
 {% endblock %}

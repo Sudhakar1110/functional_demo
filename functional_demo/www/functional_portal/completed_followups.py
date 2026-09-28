@@ -6,6 +6,13 @@ from frappe import _
 
 from functional_demo.portal import list_note, portal_context
 
+STATUS_OPTIONS = ["Open", "In Progress", "Completed", "Overdue"]
+OUTCOME_OPTIONS = [
+	"Pending", "Additional Discussion", "Additional Demo Required",
+	"Demo Done", "Trial", "Quotation Send",
+	"Not Interested", "Closed",
+]
+
 
 def get_context(context):
 	portal_context(
@@ -56,6 +63,8 @@ def get_context(context):
 		else:
 			fu["sales_person_display"] = "-"
 	context.follow_ups = follow_ups
+	context.status_options = STATUS_OPTIONS
+	context.outcome_options = OUTCOME_OPTIONS
 	context.list_note = list_note(
 		len(context.follow_ups),
 		frappe.db.count("Demo Follow Up", {"status": "Completed"}),
