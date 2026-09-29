@@ -446,6 +446,7 @@ def sidebar_items(active):
 			items.append({"label": _("Results"), "route": "/sales_portal/results", "icon": ICON_RESULTS, "active": active == "results"})
 		items += [
 			{"label": _("Follow-ups"), "route": "/functional_portal/follow_ups", "icon": ICON_FOLLOWUPS, "active": active == "follow_ups"},
+			{"label": _("Follow-ups Completed"), "route": "/functional_portal/completed_followups", "icon": ICON_FOLLOWUPS, "active": active == "completed_followups"},
 		]
 
 	# Sales Manager-only items: Trial Dashboard, End of Day, Follow-up Tracker
@@ -454,7 +455,6 @@ def sidebar_items(active):
 			{"label": _("Trial Dashboard"), "route": "/sales_portal/trials", "icon": ICON_TRIALS, "active": active == "trials"},
 			{"label": _("End of Day"), "route": "/sales_portal/daily_update", "icon": ICON_DAILY_UPDATE, "active": active == "daily_update"},
 			{"label": _("Follow-up Tracker"), "route": "/sales_portal/followup_tracker", "icon": ICON_FOLLOWUP_TRACKER, "active": active == "followup_tracker"},
-			{"label": _("Follow-ups Completed"), "route": "/functional_portal/completed_followups", "icon": ICON_FOLLOWUPS, "active": active == "completed_followups"},
 			{"label": _("Maintain Leads"), "route": "/sales_portal/completed_leads", "icon": ICON_FOLLOWUPS, "group": True, "expanded": active in ("completed_leads", "quotation_leads", "paid_leads"), "children": [
 				{"label": _("Demo Completed Leads"), "route": "/sales_portal/completed_leads", "icon": ICON_RESULTS, "active": active == "completed_leads"},
 				{"label": _("Quotation Send Leads"), "route": "/sales_portal/quotation_leads", "icon": ICON_REQUESTS, "active": active == "quotation_leads"},
