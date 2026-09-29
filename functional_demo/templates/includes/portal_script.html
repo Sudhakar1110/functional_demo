@@ -235,6 +235,25 @@
 		});
 	};
 
+	/* Live client-side search: hides every element matching `selector` whose
+	   text does not include the input's value. Works on table rows or cards.
+	   When an element has a data-search attribute, that value is used instead
+	   of its full text (so hidden form <select> options never create false
+	   matches). The page's empty-state and server-side filters keep working. */
+	window.portalSearch = function (inputId, selector) {
+		var input = document.getElementById(inputId);
+		if (!input || !selector) return;
+		input.addEventListener("input", function () {
+			var q = input.value.trim().toLowerCase();
+			document.querySelectorAll(selector).forEach(function (el) {
+				var key = el.getAttribute && el.getAttribute("data-search");
+				var hay = (key != null) ? key.toLowerCase() : el.textContent.toLowerCase();
+				var show = !q || hay.indexOf(q) !== -1;
+				el.style.display = show ? "" : "none";
+			});
+		});
+	};
+
 	/* Mobile sidebar toggle */
 	document.addEventListener("DOMContentLoaded", function () {
 		var toggle = document.getElementById("sidebar-toggle");

@@ -31,7 +31,14 @@
 .feedback-scroll::-webkit-scrollbar-thumb { background: #D9DCE3; border-radius: 3px; }
 </style>
 {% endblock %}
-{% block script %}{% include "functional_demo/templates/includes/portal_script.html" %}{% endblock %}
+{% block script %}{% include "functional_demo/templates/includes/portal_script.html" %}
+<script>
+(function () {
+	"use strict";
+	portalSearch("fb-search", "#fb-table tbody tr");
+})();
+</script>
+{% endblock %}
 {% block content %}
 <div class="portal-layout">
 	<header class="portal-topbar">
@@ -131,6 +138,10 @@
 							<option value="{{ t.name }}" {% if t.name == selected_template %}selected{% endif %}>{{ t.name }} ({{ t.count }})</option>
 							{% endfor %}
 						</select>
+						<label class="portal-search" title="Search feedback">
+							<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+							<input type="search" id="fb-search" placeholder="Search feedback..." aria-label="Search feedback" onkeydown="if(event.key==='Enter'){event.preventDefault();return false;}">
+						</label>
 						<noscript><button type="submit" class="btn-portal sm">Filter</button></noscript>
 						{% if selected_template %}<a class="filter-clear" href="/feedback">Clear</a>{% endif %}
 					</form>
@@ -140,7 +151,7 @@
 				<div class="portal-card">
 					{% if feedback %}
 					<div class="card-body flush feedback-scroll">
-						<table class="table-portal" style="min-width: 1200px;">
+						<table class="table-portal" id="fb-table" style="min-width: 1200px;">
 							<thead>
 								<tr>
 									<th style="min-width: 120px;">Session</th>

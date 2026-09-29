@@ -35,7 +35,11 @@
 				{% if list_note %}<div class="muted" style="margin-bottom: 16px;">{{ list_note }}</div>{% endif %}
 				<div class="flex-between mb-16">
 				<h2 style="margin: 0; font-size: 20px; font-weight: 800; color: #05133C;">Demo Requests ({{ requests|length }})</h2>
-				<div style="display: flex; gap: 10px;">
+				<div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+					<label class="portal-search">
+						<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+						<input type="search" id="dr-search" placeholder="Search requests..." aria-label="Search demo requests">
+					</label>
 					<button class="btn-portal secondary" id="btn-bulk-export">Export CSV</button>
 					<a class="btn-portal" href="/sales_portal/demo_request?new=1">+ New Demo Request</a>
 				</div>
@@ -51,7 +55,7 @@
 			<div class="portal-card">
 				{% if requests %}
 				<div class="card-body flush">
-					<table class="table-portal">
+					<table class="table-portal" id="dr-table">
 						<thead>
 							<tr>
 								<th>Request</th>
@@ -100,6 +104,8 @@
 <script>
 (function () {
 	"use strict";
+
+	portalSearch("dr-search", "#dr-table tbody tr");
 
 	/* Export runs entirely in the browser from the already-rendered table
 	   (same approach as followup_tracker's Export CSV). No server round trip

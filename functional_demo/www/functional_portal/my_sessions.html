@@ -36,6 +36,13 @@
 			{% if list_note %}<div class="muted" style="margin-bottom: 16px;">{{ list_note }}</div>{% endif %}
 			<h2 style="margin: 0 0 16px; font-size: 20px; font-weight: 800; color: #05133C;">My Sessions &amp; Assign Demos ({{ all_items|length }})</h2>
 
+			<div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin-bottom: 16px;">
+				<label class="portal-search">
+					<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+					<input type="search" id="ms-search" placeholder="Search sessions..." aria-label="Search sessions">
+				</label>
+			</div>
+
 			<div class="filter-chips">
 				<a class="filter-chip {% if not status %}active{% endif %}" href="/functional_portal/my_sessions">All</a>
 				{% for s in status_options %}
@@ -46,7 +53,7 @@
 			<div class="portal-card">
 				{% if all_items %}
 				<div class="card-body flush" style="overflow-x: auto;">
-					<table class="table-portal" style="min-width: 1100px;">
+					<table class="table-portal" id="ms-table" style="min-width: 1100px;">
 						<thead>
 							<tr>
 								<th style="white-space: nowrap;">Type</th>
@@ -163,6 +170,8 @@
 <script>
 (function () {
 	"use strict";
+
+	portalSearch("ms-search", "#ms-table tbody tr");
 
 	document.querySelectorAll(".edit-session-btn").forEach(function (btn) {
 		btn.addEventListener("click", function () {
