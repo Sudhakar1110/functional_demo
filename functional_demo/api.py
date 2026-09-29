@@ -1058,6 +1058,7 @@ def get_demo_execution_data(demo_session=None):
 			"contact_number": ds.contact_number,
 			"email": ds.email,
 			"company": ds.company or (request_doc.company if request_doc else ""),
+			"preferred_language": request_doc.preferred_language if request_doc else "",
 		},
 		"team": {
 			"sales_person": ds.sales_person,
