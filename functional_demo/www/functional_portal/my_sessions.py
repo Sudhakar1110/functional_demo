@@ -66,6 +66,24 @@ def get_context(context):
 		)
 		s["is_session"] = True
 
+	# Demo Sessions have no location fields of their own - resolve them from
+	# the linked Demo Request in one batch so the list can show the lead's
+	# address / district / state for every session.
+	session_request_names = [s.get("demo_request") for s in context.sessions if s.get("demo_request")]
+	location_map = {}
+	if session_request_names:
+		for row in frappe.get_all(
+			"Demo Request",
+			filters={"name": ["in", session_request_names]},
+			fields=["name", "lead_state", "lead_district", "lead_address"],
+		):
+			location_map[row["name"]] = row
+	for s in context.sessions:
+		loc = location_map.get(s.get("demo_request")) or {}
+		s["lead_state"] = loc.get("lead_state") or ""
+		s["lead_district"] = loc.get("lead_district") or ""
+		s["lead_address"] = loc.get("lead_address") or ""
+
 	# Also fetch Demo Requests assigned to this consultant that do NOT have
 	# an active session yet (i.e. they are in "Assigned" state waiting to
 	# be scheduled).  This lets the consultant see new assignments immediately.
@@ -101,6 +119,7 @@ def get_context(context):
 			fields=[
 				"name", "customer", "lead", "sales_person", "interested_module",
 				"preferred_demo_date", "preferred_demo_time", "status", "creation",
+				"lead_state", "lead_district", "lead_address",
 			],
 			order_by="creation desc",
 			limit_page_length=100,

@@ -82,6 +82,12 @@
 					</div>
 					<div class="form-row">
 						<div style="grid-column: 1 / -1;">
+							<label>Lead Address</label>
+							<input type="text" id="lead_address" name="lead_address" placeholder="Enter lead address..." autocomplete="off">
+						</div>
+					</div>
+					<div class="form-row">
+						<div style="grid-column: 1 / -1;">
 							<label>Functional Consultant <span class="req">*</span> <span class="form-hint">(required)</span></label>
 							<select id="functional_consultant" name="functional_consultant">
 								<option value="">— Select consultant —</option>
@@ -250,6 +256,7 @@
 						<div class="detail-item"><div class="d-label">Lead Contact Number</div><div class="d-value">{{ doc.contact_number or "-" }}</div></div>
 						<div class="detail-item"><div class="d-label">Lead Email</div><div class="d-value">{{ doc.email or "-" }}</div></div>
 						<div class="detail-item"><div class="d-label">Lead Location</div><div class="d-value">{% if doc.lead_state %}{{ doc.lead_state }}{% if doc.lead_district %}, {{ doc.lead_district }}{% endif %}{% else %}-{% endif %}</div></div>
+						{% if doc.lead_address %}<div class="detail-item"><div class="d-label">Lead Address</div><div class="d-value">{{ doc.lead_address }}</div></div>{% endif %}
 						<div class="detail-item"><div class="d-label">Sales Person</div><div class="d-value">{{ sales_person_name or doc.sales_person or "-" }}</div></div>
 						<div class="detail-item"><div class="d-label">Consultant</div><div class="d-value">{{ consultant_display or doc.functional_consultant or "-" }}</div></div>
 					</div>
@@ -442,6 +449,7 @@
 			email: document.getElementById("email").value,
 			lead_state: document.getElementById("lead_state").value,
 			lead_district: document.getElementById("lead_district").value,
+			lead_address: document.getElementById("lead_address").value,
 			interested_module: document.getElementById("interested_module").value,
 			preferred_language: document.getElementById("preferred_language").value,
 			preferred_demo_date: document.getElementById("preferred_demo_date").value,

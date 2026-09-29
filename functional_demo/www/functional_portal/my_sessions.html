@@ -59,6 +59,7 @@
 								<th style="white-space: nowrap;">Type</th>
 								<th style="white-space: nowrap;">Request / Session</th>
 								<th>Leads</th>
+								<th style="white-space: nowrap;">Lead Location</th>
 								<th>Interested Template</th>
 								<th style="white-space: nowrap;">Assigned</th>
 								<th style="white-space: nowrap;">Date</th>
@@ -85,6 +86,12 @@
 									{% endif %}
 								</td>
 								<td>{{ s.customer or s.sales_person or "-" }}</td>
+								<td>
+									{% if s.lead_address or s.lead_state or s.lead_district %}
+									<div>{{ s.lead_address or "" }}</div>
+									<div class="muted" style="font-size: 12px;">{% if s.lead_state %}{{ s.lead_state }}{% endif %}{% if s.lead_state and s.lead_district %}, {% endif %}{% if s.lead_district %}{{ s.lead_district }}{% endif %}</div>
+									{% else %}-{% endif %}
+								</td>
 								<td>{{ s.interested_module or "-" }}</td>
 								<td>{{ s.assigned_display }}</td>
 								<td>{{ s.scheduled_date or s.preferred_demo_date or "-" }}</td>

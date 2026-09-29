@@ -14,8 +14,9 @@
   "contact_number",
   "email",
   "lead_location_section",
-  "lead_state",
-  "lead_district",
+"lead_state",
+   "lead_district",
+   "lead_address",
   "additional_leads",
    "requirement_section",
    "sales_person",
@@ -114,6 +115,11 @@
    "fieldname": "lead_district",
    "fieldtype": "Data",
    "label": "District"
+  },
+  {
+   "fieldname": "lead_address",
+   "fieldtype": "Data",
+   "label": "Lead Address"
   },
   {
    "description": "Extra leads / customers attached to this demo request, each with its own contact details.",
@@ -339,7 +345,7 @@
    "link_fieldname": "demo_request"
   }
  ],
- "modified": "2026-08-11 10:00:00.000000",
+ "modified": "2026-09-29 10:00:00.000000",
  "modified_by": "Administrator",
  "module": "Sales Demo",
  "name": "Demo Request",
