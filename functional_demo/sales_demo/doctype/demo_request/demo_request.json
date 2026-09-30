@@ -107,9 +107,8 @@
   },
   {
    "fieldname": "lead_state",
-   "fieldtype": "Select",
-   "label": "State",
-   "options": "Tamil Nadu\nAndhra Pradesh\nKarnataka\nKerala\nTelangana\nMaharashtra\nDelhi\nGujarat\nRajasthan\nUttar Pradesh\nMadhya Pradesh\nWest Bengal\nBihar\nPunjab\nHaryana\nOdisha\nAssam\nChhattisgarh\nJharkhand\nGoa\nOther"
+   "fieldtype": "Data",
+   "label": "State"
   },
   {
    "fieldname": "lead_district",

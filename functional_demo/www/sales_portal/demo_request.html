@@ -68,16 +68,11 @@
 					<div class="form-row">
 						<div>
 							<label>Lead State</label>
-							<select id="lead_state" name="lead_state">
-								<option value="">— Select state —</option>
-								{% for state in states_districts %}
-								<option value="{{ state }}">{{ state }}</option>
-								{% endfor %}
-							</select>
+							<input type="text" id="lead_state" name="lead_state" placeholder="Enter state..." autocomplete="off">
 						</div>
 						<div>
 							<label>Lead District</label>
-							<select id="lead_district" name="lead_district"><option value="">— Select district —</option></select>
+							<input type="text" id="lead_district" name="lead_district" placeholder="Enter district..." autocomplete="off">
 						</div>
 					</div>
 					<div class="form-row">
@@ -374,20 +369,6 @@
 (function () {
 	"use strict";
 	{% if create_mode %}
-	var STATES_DISTRICTS = {{ states_districts | tojson }};
-	function fillDistricts(stateValue) {
-		var select = document.getElementById("lead_district");
-		var districts = (stateValue && STATES_DISTRICTS[stateValue]) ? STATES_DISTRICTS[stateValue] : [];
-		select.innerHTML = '<option value="">— Select district —</option>';
-		districts.forEach(function (d) {
-			var opt = document.createElement("option");
-			opt.value = d; opt.textContent = d;
-			select.appendChild(opt);
-		});
-	}
-	var leadStateEl = document.getElementById("lead_state");
-	if (leadStateEl) leadStateEl.addEventListener("change", function () { fillDistricts(this.value); });
-
 	function fillContact(value) {
 		if (!value) return;
 		portalCall("functional_demo.api.get_customer_details", { customer: value })
