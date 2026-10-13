@@ -44,7 +44,7 @@ def get_context(context):
 		)
 	}
 	for r in context.requests:
-		r["created_display"] = frappe.utils.format_date(r.get("creation"), "medium") if r.get("creation") else "-"
+		r["created_display"] = frappe.utils.format_date(r.get("creation"), "dd MMM yyyy") if r.get("creation") else "-"
 		r["sales_person_name"] = user_names.get(r.get("sales_person"), "") or ""
 	context.status = status
 	context.status_options = STATUS_OPTIONS
