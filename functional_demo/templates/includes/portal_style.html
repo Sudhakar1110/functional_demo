@@ -622,7 +622,10 @@ body {
 	letter-spacing: -0.2px;
 }
 .portal-card .card-body { padding: 20px; }
-.portal-card .card-body.flush { padding: 0; }
+.portal-card .card-body.flush { padding: 0; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.portal-card .card-body.flush::-webkit-scrollbar { height: 6px; }
+.portal-card .card-body.flush::-webkit-scrollbar-thumb { background: #D9DCE3; border-radius: 3px; }
+.portal-card .card-body.flush::-webkit-scrollbar-thumb:hover { background: #B9BEC9; }
 
 /* Collapsible card (native <details>) used to keep long forms short */
 details.portal-card > summary.card-head {
