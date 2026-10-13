@@ -1529,7 +1529,7 @@ def get_demo_feedback_data():
 		"Demo Session",
 		filters={"demo_status": ["in", ["Completed", "Follow-up Required", "Closed"]]},
 		fields=[
-			"name", "demo_request", "customer", "lead", "scheduled_date", "completed_on",
+			"name", "demo_request", "customer", "lead", "company", "scheduled_date", "completed_on",
 			"overall_feedback", "interested", "requirements_met", "additional_requirements",
 			"requested_changes", "follow_up_required", "follow_up_date", "next_action",
 			"consultant_remarks", "final_result", "functional_consultant", "sales_person",
@@ -1561,15 +1561,17 @@ def get_demo_feedback_data():
 	# falling through to "No Template".
 	request_ids = {s.demo_request for s in sessions if s.demo_request}
 	request_templates = {}
+	request_companies = {}
 	if request_ids:
 		for r in frappe.get_all(
 			"Demo Request",
 			filters={"name": ["in", list(request_ids)]},
-			fields=["name", "interested_module"],
+			fields=["name", "interested_module", "company"],
 			ignore_permissions=True,
 		):
 			if r.interested_module:
 				request_templates[r.name] = r.interested_module
+			request_companies[r.name] = r.company or ""
 
 	# per-session feedback rows (child table, fetched in bulk)
 	items_map = {}
@@ -1616,6 +1618,7 @@ def get_demo_feedback_data():
 			{
 				"name": s.name,
 				"customer": s.customer or "-",
+				"company": s.company or request_companies.get(s.demo_request) or "-",
 				"sales_person": sales_person_names.get(s.sales_person) or s.sales_person or "-",
 				"date": (
 					frappe.utils.format_datetime(s.completed_on or s.scheduled_date, "dd MMM yyyy, hh:mm a")

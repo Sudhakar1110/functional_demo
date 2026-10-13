@@ -156,13 +156,12 @@
 								<tr>
 									<th style="min-width: 120px;">Session</th>
 									<th style="min-width: 140px;">Leads</th>
+									<th style="min-width: 150px;">Company</th>
 									<th style="min-width: 110px;">Sales Person</th>
 									<th style="min-width: 130px;">Template</th>
 									<th style="min-width: 100px;">Date</th>
 									<th style="min-width: 200px;">Overall Feedback</th>
 									<th style="min-width: 100px;">Interested</th>
-									<th style="min-width: 110px;">Requirements Met</th>
-									<th style="min-width: 200px;">Questions / Changes</th>
 									<th style="min-width: 110px;">Result</th>
 								</tr>
 							</thead>
@@ -171,6 +170,7 @@
 								<tr data-status="{{ f.final_result }}">
 									<td><a href="/functional_portal/session?name={{ f.name }}">{{ f.name }}</a></td>
 									<td><strong>{{ f.customer }}</strong><div class="muted">{{ f.consultant }}</div></td>
+									<td>{{ f.company or "-" }}</td>
 									<td>{{ f.sales_person }}</td>
 									<td><a class="chip-link" href="/feedback?template={{ f.template | urlencode }}" title="Show {{ f.template }} feedback"><span class="chip">{{ f.template }}</span></a></td>
 									<td class="muted">{{ f.date }}</td>
@@ -178,14 +178,6 @@
 										<strong style="color: #05133C; background: #FEF3C7; padding: 3px 8px; border-radius: 6px; display: inline-block; border-left: 3px solid #F59E0B; font-size: 13px;">{{ f.overall_feedback or "-" }}</strong>
 									</td>
 									<td>{{ f.interested or "-" }}</td>
-									<td>{{ f.requirements_met or "-" }}</td>
-									<td>
-										{% if f.feedback_items %}
-										<ul style="margin: 0; padding-left: 16px; font-size: 13px;">
-											{% for it in f.feedback_items %}<li><strong>{{ it.item_type }}:</strong> {{ it.description }}</li>{% endfor %}
-										</ul>
-										{% else %}<span class="muted">-</span>{% endif %}
-									</td>
 									<td>{{ display_status(f.final_result) or "-" }}</td>
 								</tr>
 								{% endfor %}
