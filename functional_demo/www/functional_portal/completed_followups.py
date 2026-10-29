@@ -71,6 +71,20 @@ def get_context(context):
 			frappe.utils.format_date(fu.get("follow_up_date"), "medium")
 			if fu.get("follow_up_date") else "-"
 		)
+	# Demo Follow Up has no company field - resolve it from the linked
+	# Demo Request in one batch so each card can show the company name.
+	request_names = [fu.get("demo_request") for fu in follow_ups if fu.get("demo_request")]
+	company_map = {}
+	if request_names:
+		for row in frappe.get_all(
+			"Demo Request",
+			filters={"name": ["in", request_names]},
+			fields=["name", "company"],
+			ignore_permissions=True,
+		):
+			company_map[row["name"]] = row.get("company") or ""
+	for fu in follow_ups:
+		fu["company"] = company_map.get(fu.get("demo_request")) or ""
 		fu["created_display"] = (
 			frappe.utils.format_datetime(fu.get("creation"), "dd MMM yyyy, hh:mm a")
 			if fu.get("creation") else "-"
