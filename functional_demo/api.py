@@ -934,6 +934,22 @@ def export_demo_requests(status=None):
 # Demo Session quick actions (used by the form and the Execution screen)
 # ---------------------------------------------------------------------------
 
+def _sanitize_session_customer(ds):
+	"""Keep the session's customer Link value valid so Frappe's link
+	validation on save() never blocks unrelated edits.
+
+	The session.customer field is a Link to Customer, but the portal Edit
+	modal sends it as free text and older data may hold a name with trailing
+	spaces or a Customer record that was later deleted. Any such value makes
+	ds.save() fail with LinkValidationError - even when the user only wanted
+	to change the date or meeting link. Only a value that resolves to a real
+	Customer is kept; broken values are trimmed or cleared."""
+	if not ds.customer:
+		return
+	val = ds.customer.strip()
+	ds.customer = val if frappe.db.exists("Customer", val) else None
+
+
 def _get_session(name):
 	"""Fetch a Demo Session for a write action, with a friendly error when the
 	name is missing (so a stale client can never raise a TypeError 500)."""
@@ -944,6 +960,9 @@ def _get_session(name):
 		)
 	ds = frappe.get_doc("Demo Session", name)
 	frappe.has_permission("Demo Session", "write", doc=ds, throw=True)
+	# a broken stored customer Link (trailing spaces / deleted Customer)
+	# would fail link validation on every subsequent save of this session
+	_sanitize_session_customer(ds)
 	return ds
 
 
@@ -1307,7 +1326,12 @@ def edit_demo_session(demo_session=None, scheduled_date=None, start_time=None, e
 	if meeting_link is not None:
 		ds.meeting_link = meeting_link
 	if customer is not None:
-		ds.customer = customer
+		val = (customer or "").strip()
+		# customer is a Link to Customer; the Edit modal sends free text, so
+		# only accept a value that actually exists - unknown text would fail
+		# link validation on save() and block the whole edit.
+		if val and frappe.db.exists("Customer", val):
+			ds.customer = val
 	if interested_module is not None:
 		ds.interested_module = interested_module
 	if functional_consultant is not None and functional_consultant:
