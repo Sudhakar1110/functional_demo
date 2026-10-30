@@ -9,6 +9,7 @@ from functional_demo.portal import (
 	can_manage_consultants,
 	create_notification,
 	is_functional,
+	is_functional_manager,
 	is_sales,
 	is_sales_manager,
 )
@@ -1777,7 +1778,7 @@ def export_functional_report(period="week", fmt="xlsx"):
 	PDF. The report covers ALL consultants: consultant name + demo count on
 	top, then one row per demo with consultant, sales person, current status
 	and date."""
-	if frappe.session.user != "Administrator" and not is_functional():
+	if frappe.session.user != "Administrator" and not is_functional_manager():
 		frappe.throw(_("Not permitted."), frappe.PermissionError)
 
 	today = frappe.utils.today()

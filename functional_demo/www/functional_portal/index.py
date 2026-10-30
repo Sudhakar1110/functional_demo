@@ -4,7 +4,7 @@
 import frappe
 from frappe import _
 
-from functional_demo.portal import can_manage_consultants, functional_stats, is_functional, portal_context
+from functional_demo.portal import can_manage_consultants, functional_stats, is_functional_manager, portal_context
 
 
 def get_context(context):
@@ -17,8 +17,8 @@ def get_context(context):
 	)
 	context.stats = functional_stats()
 	context.can_manage_consultants = can_manage_consultants()
-	# weekly / monthly report exports are functional-team only
-	context.show_report_exports = is_functional()
+	# weekly / monthly report exports are admin + functional team manager only
+	context.show_report_exports = is_functional_manager()
 	context.consultant_name = None
 	if context.stats.get("consultant"):
 		context.consultant_name = frappe.db.get_value(
