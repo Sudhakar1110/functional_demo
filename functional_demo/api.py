@@ -1753,6 +1753,30 @@ def _functional_report_html(title, period_label, summary, details):
 		"padding:2px 12px; font-size:10px; font-weight:600; letter-spacing:0.6px; margin-bottom:10px;"
 	)
 
+	# Bizaxl logo, embedded as base64 so wkhtmltopdf never needs an HTTP fetch
+	import base64
+	import os
+
+	logo_data = ""
+	try:
+		logo_path = os.path.join(
+			frappe.get_app_path("functional_demo"), "public", "images", "brand_logo.jpg"
+		)
+		with open(logo_path, "rb") as f:
+			logo_data = "data:image/jpeg;base64," + base64.b64encode(f.read()).decode()
+	except Exception:
+		logo_data = ""
+	logo_cell = ""
+	text_pad_left = "28px"
+	if logo_data:
+		text_pad_left = "12px"
+		logo_cell = (
+			"<td style='padding:16px 6px 18px 28px; width:56px; vertical-align:middle;'>"
+			"<img src='%s' alt='Bizaxl' width='48' height='48' "
+			"style='display:block; border-radius:10px; border:0;'/>"
+			"</td>"
+		) % logo_data
+
 	return "".join([
 		"<!DOCTYPE html><html><head><meta charset='utf-8'></head>",
 		"<body style='margin:0; padding:0; background:#FFFFFF; font-family:\"DM Sans\",",
@@ -1764,9 +1788,11 @@ def _functional_report_html(title, period_label, summary, details):
 		"<td width='33%' style='background:#114EFF; height:7px; font-size:0; line-height:0;'>&nbsp;</td>",
 		"<td width='33%' style='background:#091526; height:7px; font-size:0; line-height:0;'>&nbsp;</td>",
 		"</tr></table>",
-		# navy header band
+		# navy header band (Bizaxl logo + title + meta)
 		"<table cellpadding='0' cellspacing='0' border='0' width='100%' style='border-collapse:collapse; background:#05133C;'>",
-		"<tr><td style='padding:18px 28px 20px;'>",
+		"<tr>",
+		logo_cell,
+		"<td style='padding:16px 28px 18px %s; vertical-align:middle;'>" % text_pad_left,
 		"<div style='color:#14F1B1; font-size:9.5px; font-weight:700; letter-spacing:2.5px;'>BIZAXL</div>",
 		"<div style='color:#FFFFFF; font-size:21px; font-weight:700; margin:5px 0 7px;'>%s</div>" % escape(str(title)),
 		"<div style='color:#A1A1AA; font-size:10.5px;'>%s</div>" % meta,

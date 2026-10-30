@@ -1038,6 +1038,22 @@ details.portal-card[open] > summary.card-head::after {
 	border-top: 1px solid #F3F4F6;
 }
 
+/* Report export modal - three buttons must never overflow / overlap */
+#report-modal .pm-card { width: min(420px, calc(100vw - 32px)); }
+#report-modal .sched-actions {
+	justify-content: center;
+	flex-wrap: wrap;
+}
+#report-modal .sched-actions .btn-portal,
+#report-modal .sched-actions .btn-portal.secondary {
+	min-width: 0;
+	flex: 1 1 calc(50% - 10px);
+	text-align: center;
+}
+#report-modal .sched-actions #report-modal-close {
+	flex-basis: 100%;
+}
+
 /* ==========================================================================
    Template preview sections
    ========================================================================== */
