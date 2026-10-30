@@ -55,6 +55,8 @@
 				</div>
 				<div class="greet-actions">
 					<a class="btn-portal tertiary" href="/functional_portal/my_sessions">My Sessions</a>
+					<button class="btn-portal tertiary" type="button" id="btn-weekly-report">Weekly Report</button>
+					<button class="btn-portal tertiary" type="button" id="btn-monthly-report">Monthly Report</button>
 				</div>
 			</div>
 
@@ -133,10 +135,22 @@
 					<h3>No sessions assigned yet</h3>
 					<p>When the sales team schedules a demo for you, it shows up here.</p>
 				</div>
-				{% endif %}
-			</div>
+{% endif %}
 		</div>
 	</div>
+	</div>
+</div>
+
+<!-- Export Report Modal -->
+<div class="portal-modal" id="report-modal">
+	<div class="pm-card pm-schedule" style="max-width: 420px;">
+		<div class="pm-title" id="report-modal-title">Weekly Report</div>
+		<p class="pm-msg">Choose a format to export the demo report.</p>
+		<div class="sched-actions">
+			<button class="btn-portal" id="report-excel-btn">Excel</button>
+			<button class="btn-portal secondary" id="report-pdf-btn">PDF</button>
+			<button class="btn-portal secondary" id="report-modal-close">Cancel</button>
+		</div>
 	</div>
 </div>
 {% endblock %}
@@ -167,6 +181,52 @@
 	}
 	checkUpcoming();
 	setInterval(checkUpcoming, 60000);
+
+	/* Weekly / Monthly report export (Excel = CSV, PDF) */
+	var reportPeriod = "week";
+	function openReportModal(period) {
+		reportPeriod = period;
+		var t = document.getElementById("report-modal-title");
+		if (t) t.textContent = (period === "month" ? "Monthly" : "Weekly") + " Report";
+		var modal = document.getElementById("report-modal");
+		if (modal) modal.classList.add("show");
+	}
+	function closeReportModal() {
+		var modal = document.getElementById("report-modal");
+		if (modal) modal.classList.remove("show");
+	}
+	var weeklyBtn = document.getElementById("btn-weekly-report");
+	if (weeklyBtn) weeklyBtn.addEventListener("click", function () { openReportModal("week"); });
+	var monthlyBtn = document.getElementById("btn-monthly-report");
+	if (monthlyBtn) monthlyBtn.addEventListener("click", function () { openReportModal("month"); });
+	var reportClose = document.getElementById("report-modal-close");
+	if (reportClose) reportClose.addEventListener("click", closeReportModal);
+
+	function exportReport(fmt) {
+		portalCall("functional_demo.api.export_functional_report", { period: reportPeriod, fmt: fmt }).then(function (res) {
+			if (!res || (!res.content && !res.content_base64)) return;
+			var bin;
+			if (res.content_base64) {
+				bin = Uint8Array.from(atob(res.content_base64), function (c) { return c.charCodeAt(0); });
+			} else {
+				bin = res.content;
+			}
+			var blob = new Blob([bin], { type: res.mime });
+			var url = URL.createObjectURL(blob);
+			var a = document.createElement("a");
+			a.href = url;
+			a.download = res.filename || "demo-report";
+			document.body.appendChild(a);
+			a.click();
+			document.body.removeChild(a);
+			URL.revokeObjectURL(url);
+			closeReportModal();
+		}).catch(function () {});
+	}
+	var excelBtn = document.getElementById("report-excel-btn");
+	if (excelBtn) excelBtn.addEventListener("click", function () { exportReport("csv"); });
+	var pdfBtn = document.getElementById("report-pdf-btn");
+	if (pdfBtn) pdfBtn.addEventListener("click", function () { exportReport("pdf"); });
 })();
 </script>
 {% endblock %}

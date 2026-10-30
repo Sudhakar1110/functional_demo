@@ -1676,6 +1676,173 @@ def get_demo_feedback():
 	return get_demo_feedback_data()
 
 
+def _functional_report_html(title, period_label, summary, details):
+	"""Clean standalone HTML for the weekly/monthly PDF report (inline styles
+	only, so wkhtmltopdf renders it identically everywhere)."""
+	from html import escape
+
+	sum_rows = "".join(
+		"<tr><td>{0}</td><td align='right'>{1}</td></tr>".format(escape(str(c)), n)
+		for c, n in sorted(summary.items())
+	) or "<tr><td colspan='2'>No demos in this period.</td></tr>"
+	det_rows = "".join(
+		"<tr><td>{0}</td><td>{1}</td><td>{2}</td><td>{3}</td><td>{4}</td></tr>".format(
+			escape(str(d["session"])), escape(str(d["consultant"])),
+			escape(str(d["sales_person"])), escape(str(d["status"])),
+			escape(str(d["date"])),
+		)
+		for d in details
+	) or "<tr><td colspan='5'>No demos in this period.</td></tr>"
+
+	th = "background:#EEF1F6; border:1px solid #C9CDD6; padding:5px 7px; font-size:10px; text-align:left;"
+	return (
+		"<!DOCTYPE html><html><head><meta charset='utf-8'></head><body "
+		"style='font-family: Helvetica, Arial, sans-serif; color:#111; font-size:11px; margin:24px;'>"
+		"<div style='font-size:16px; font-weight:bold;'>{0}</div>"
+		"<div style='color:#555; margin:4px 0 16px;'>Period: {1}<br/>Generated: {2}</div>"
+		"<div style='font-size:12px; font-weight:bold; margin:0 0 6px;'>Consultant Summary</div>"
+		"<table style='width:100%; border-collapse:collapse; margin-bottom:16px;'>"
+		"<tr><th style='{3}'>Consultant</th><th style='{3}' align='right'>Demos</th></tr>"
+		"{4}</table>"
+		"<div style='font-size:12px; font-weight:bold; margin:0 0 6px;'>Demo Details</div>"
+		"<table style='width:100%; border-collapse:collapse;'>"
+		"<tr><th style='{3}'>Session</th><th style='{3}'>Consultant</th>"
+		"<th style='{3}'>Sales Person</th><th style='{3}'>Status</th><th style='{3}'>Date</th></tr>"
+		"{5}</table>"
+		"</body></html>"
+	).format(
+		escape(str(title)), escape(str(period_label)),
+		frappe.utils.now_datetime().strftime("%d %b %Y, %I:%M %p"),
+		th, sum_rows, det_rows,
+	)
+
+
+@frappe.whitelist()
+def export_functional_report(period="week", fmt="csv"):
+	"""Weekly / monthly demo report for the Functional Home export buttons.
+
+	Returns {filename, mime, content} for CSV (opens cleanly in Excel) or
+	{filename, mime, content_base64} for PDF. The report lists, per demo:
+	consultant, sales person, current status and date - with a consultant
+	name + demo-count summary on top. A Functional Consultant only exports
+	their own demos; everyone else (managers / sales) exports all."""
+	from functional_demo.portal import consultant_of_user
+
+	if frappe.session.user != "Administrator" and not (is_sales() or is_functional()):
+		frappe.throw(_("Not permitted."), frappe.PermissionError)
+
+	today = frappe.utils.today()
+	if period == "month":
+		start = frappe.utils.getdate(today).replace(day=1)
+		end = frappe.utils.get_last_day(today)
+		label = "Monthly"
+	else:
+		period = "week"
+		start = frappe.utils.add_days(today, -6)
+		end = today
+		label = "Weekly"
+	start, end = str(start)[:10], str(end)[:10]
+
+	filters = {"scheduled_date": ["between", [start, end]]}
+	consultant = consultant_of_user()
+	if consultant:
+		filters["functional_consultant"] = consultant
+	sessions = frappe.get_all(
+		"Demo Session",
+		filters=filters,
+		fields=["name", "functional_consultant", "sales_person", "demo_status", "scheduled_date"],
+		order_by="scheduled_date asc, name asc",
+		limit_page_length=5000,
+		ignore_permissions=True,
+	) or []
+
+	# bulk resolve display names
+	consultant_ids = {s.functional_consultant for s in sessions if s.functional_consultant}
+	consultant_names = {}
+	if consultant_ids:
+		for c in frappe.get_all(
+			"Functional Consultant",
+			filters={"name": ["in", list(consultant_ids)]},
+			fields=["name", "consultant_name"],
+			ignore_permissions=True,
+		):
+			consultant_names[c.name] = c.consultant_name or c.name
+	person_ids = {s.sales_person for s in sessions if s.sales_person}
+	person_names = {}
+	if person_ids:
+		for u in frappe.get_all(
+			"User",
+			filters={"name": ["in", list(person_ids)]},
+			fields=["name", "full_name", "email"],
+			ignore_permissions=True,
+		):
+			person_names[u.name] = u.full_name or u.email or u.name
+
+	summary = {}
+	details = []
+	for s in sessions:
+		cname = consultant_names.get(s.functional_consultant) or s.functional_consultant or "-"
+		summary[cname] = summary.get(cname, 0) + 1
+		details.append({
+			"session": s.name,
+			"consultant": cname,
+			"sales_person": person_names.get(s.sales_person) or s.sales_person or "-",
+			"status": s.demo_status or "-",
+			"date": str(s.scheduled_date or "")[:10],
+		})
+
+	title = "Demo Portal - {0} Demo Report".format(label)
+	period_label = "{0} to {1}".format(
+		frappe.utils.format_date(start, "dd MMM yyyy"),
+		frappe.utils.format_date(end, "dd MMM yyyy"),
+	)
+	filename = "demo-report-{0}-{1}".format(period, today)
+
+	if fmt == "pdf":
+		import base64
+
+		from frappe.utils.pdf import get_pdf
+
+		try:
+			pdf = get_pdf(_functional_report_html(title, period_label, summary, details))
+		except Exception:
+			frappe.log_error(
+				title="Functional report PDF export failed",
+				message=frappe.get_traceback(),
+			)
+			frappe.throw(_("PDF export failed on this site. Please use the Excel export instead."))
+		return {
+			"filename": filename + ".pdf",
+			"mime": "application/pdf",
+			"content_base64": base64.b64encode(pdf).decode(),
+		}
+
+	# CSV - opens cleanly in Excel
+	import csv
+	import io
+
+	buf = io.StringIO()
+	writer = csv.writer(buf)
+	writer.writerow([title])
+	writer.writerow(["Period", period_label])
+	writer.writerow(["Generated", frappe.utils.now_datetime().strftime("%d %b %Y, %I:%M %p")])
+	writer.writerow([])
+	writer.writerow(["Consultant Summary"])
+	writer.writerow(["Consultant", "Demos"])
+	for cname in sorted(summary):
+		writer.writerow([cname, summary[cname]])
+	writer.writerow([])
+	writer.writerow(["Demo Details"])
+	writer.writerow(["Session", "Consultant", "Sales Person", "Status", "Date"])
+	for d in details:
+		writer.writerow([d["session"], d["consultant"], d["sales_person"], d["status"], d["date"]])
+	return {
+		"filename": filename + ".csv",
+		"mime": "text/csv;charset=utf-8",
+		"content": buf.getvalue(),
+	}
+
+
 # ---------------------------------------------------------------------------
 # Portal notifications (bell in the portal topbar - in-app alerts)
 # ---------------------------------------------------------------------------
