@@ -1678,79 +1678,161 @@ def get_demo_feedback():
 
 
 def _functional_report_html(title, period_label, summary, details):
-	"""Clean standalone HTML for the weekly/monthly PDF report (inline styles
-	only, so wkhtmltopdf renders it identically everywhere)."""
+	"""Bizaxl Design System styled standalone HTML for the weekly / monthly PDF
+	report. Inline styles + tables only (no flex / background gradients) so
+	wkhtmltopdf renders it identically everywhere."""
 	from html import escape
 
-	sum_rows = "".join(
-		"<tr><td>{0}</td><td align='right'>{1}</td></tr>".format(escape(str(c)), n)
-		for c, n in sorted(summary.items())
-	) or "<tr><td colspan='2'>No demos in this period.</td></tr>"
-	det_rows = "".join(
-		"<tr><td>{0}</td><td>{1}</td><td>{2}</td><td>{3}</td><td>{4}</td></tr>".format(
-			escape(str(d["session"])), escape(str(d["consultant"])),
-			escape(str(d["sales_person"])), escape(str(d["status"])),
-			escape(str(d["date"])),
-		)
-		for d in details
-	) or "<tr><td colspan='5'>No demos in this period.</td></tr>"
+	def chip(status):
+		st = str(status or "").strip()
+		colors = {
+			"Completed": ("#D6FFF2", "#05133C"),
+			"In Progress": ("#E6ECFF", "#114EFF"),
+			"Rescheduled": ("#EEF2FF", "#114EFF"),
+			"Scheduled": ("#F4F4F5", "#05133C"),
+			"Closed": ("#F4F4F5", "#05133C"),
+			"No Response": ("#F4F4F5", "#71717B"),
+			"Cancelled": ("#FDE7E7", "#B42318"),
+		}
+		bg, fg = colors.get(st, ("#F4F4F5", "#05133C"))
+		return (
+			"<span style='background:%s; color:%s; border-radius:999px; padding:2px 10px; "
+			"font-size:9.5px; font-weight:600; white-space:nowrap;'>%s</span>"
+		) % (bg, fg, escape(st or "-"))
 
-	th = "background:#EEF1F6; border:1px solid #C9CDD6; padding:5px 7px; font-size:10px; text-align:left;"
-	return (
-		"<!DOCTYPE html><html><head><meta charset='utf-8'></head><body "
-		"style='font-family: Helvetica, Arial, sans-serif; color:#111; font-size:11px; margin:24px;'>"
-		"<div style='font-size:16px; font-weight:bold;'>{0}</div>"
-		"<div style='color:#555; margin:4px 0 16px;'>Period: {1}<br/>Generated: {2}</div>"
-		"<div style='font-size:12px; font-weight:bold; margin:0 0 6px;'>Consultant Summary</div>"
-		"<table style='width:100%; border-collapse:collapse; margin-bottom:16px;'>"
-		"<tr><th style='{3}'>Consultant</th><th style='{3}' align='right'>Demos</th></tr>"
-		"{4}</table>"
-		"<div style='font-size:12px; font-weight:bold; margin:0 0 6px;'>Demo Details</div>"
-		"<table style='width:100%; border-collapse:collapse;'>"
-		"<tr><th style='{3}'>Session</th><th style='{3}'>Consultant</th>"
-		"<th style='{3}'>Sales Person</th><th style='{3}'>Status</th><th style='{3}'>Date</th></tr>"
-		"{5}</table>"
-		"</body></html>"
-	).format(
-		escape(str(title)), escape(str(period_label)),
-		frappe.utils.now_datetime().strftime("%d %b %Y, %I:%M %p"),
-		th, sum_rows, det_rows,
+	th = (
+		"background:#05133C; color:#FFFFFF; font-weight:600; font-size:9.5px; "
+		"letter-spacing:0.5px; text-transform:uppercase; padding:7px 9px; text-align:left;"
 	)
+	td = "padding:6px 9px; font-size:10.5px; color:#0A0A0A; border-bottom:1px solid #F4F4F5;"
+	td_alt = td + "background:#F8F8F9;"
+
+	sum_rows = []
+	for idx, (cname, n) in enumerate(sorted(summary.items())):
+		st = td_alt if idx % 2 else td
+		sum_rows.append(
+			"<tr><td style='%s'>%s</td>"
+			"<td style='%s text-align:right; font-weight:700; color:#05133C;'>%s</td></tr>"
+			% (st, escape(str(cname)), st, n)
+		)
+	if not sum_rows:
+		sum_rows.append(
+			"<tr><td colspan='2' style='%s color:#71717B;'>No demos in this period.</td></tr>" % td
+		)
+
+	det_rows = []
+	for idx, d in enumerate(details):
+		st = td_alt if idx % 2 else td
+		det_rows.append(
+			"<tr><td style='%s font-weight:600; color:#05133C;'>%s</td>"
+			"<td style='%s'>%s</td><td style='%s'>%s</td>"
+			"<td style='%s'>%s</td>"
+			"<td style='%s color:#71717B;'>%s</td></tr>"
+			% (
+				st, escape(str(d["session"])),
+				st, escape(str(d["consultant"])),
+				st, escape(str(d["sales_person"])),
+				st, chip(d["status"]),
+				st, escape(str(d["date"])),
+			)
+		)
+	if not det_rows:
+		det_rows.append(
+			"<tr><td colspan='5' style='%s color:#71717B;'>No demos in this period.</td></tr>" % td
+		)
+
+	total = 0
+	for n in summary.values():
+		total += int(n or 0)
+	generated = frappe.utils.now_datetime().strftime("%d %b %Y, %I:%M %p")
+	meta = "Period: %s &nbsp;&bull;&nbsp; Generated: %s &nbsp;&bull;&nbsp; %s demo(s)" % (
+		escape(str(period_label)), escape(generated), total,
+	)
+	pill = (
+		"display:inline-block; background:#F4F4F5; color:#05133C; border-radius:999px; "
+		"padding:2px 12px; font-size:10px; font-weight:600; letter-spacing:0.6px; margin-bottom:10px;"
+	)
+
+	return "".join([
+		"<!DOCTYPE html><html><head><meta charset='utf-8'></head>",
+		"<body style='margin:0; padding:0; background:#FFFFFF; font-family:\"DM Sans\",",
+		"\"Segoe UI\",Helvetica,Arial,sans-serif;'>",
+		# brand accent strip: mint -> bright blue -> navy base
+		"<table cellpadding='0' cellspacing='0' border='0' width='100%' style='border-collapse:collapse;'>",
+		"<tr>",
+		"<td width='34%' style='background:#14F1B1; height:7px; font-size:0; line-height:0;'>&nbsp;</td>",
+		"<td width='33%' style='background:#114EFF; height:7px; font-size:0; line-height:0;'>&nbsp;</td>",
+		"<td width='33%' style='background:#091526; height:7px; font-size:0; line-height:0;'>&nbsp;</td>",
+		"</tr></table>",
+		# navy header band
+		"<table cellpadding='0' cellspacing='0' border='0' width='100%' style='border-collapse:collapse; background:#05133C;'>",
+		"<tr><td style='padding:18px 28px 20px;'>",
+		"<div style='color:#14F1B1; font-size:9.5px; font-weight:700; letter-spacing:2.5px;'>BIZAXL</div>",
+		"<div style='color:#FFFFFF; font-size:21px; font-weight:700; margin:5px 0 7px;'>%s</div>" % escape(str(title)),
+		"<div style='color:#A1A1AA; font-size:10.5px;'>%s</div>" % meta,
+		"</td></tr></table>",
+		# content
+		"<div style='padding:22px 28px 8px;'>",
+		"<div style='%s'>CONSULTANT SUMMARY</div>" % pill,
+		"<table cellpadding='0' cellspacing='0' border='0' width='100%' style='border-collapse:collapse; margin-bottom:22px;'>",
+		"<tr><th style='%s'>Consultant</th><th style='%s text-align:right;'>Demos</th></tr>" % (th, th),
+		"".join(sum_rows),
+		"</table>",
+		"<div style='%s'>DEMO DETAILS</div>" % pill,
+		"<table cellpadding='0' cellspacing='0' border='0' width='100%' style='border-collapse:collapse;'>",
+		"<tr><th style='%s'>Session</th><th style='%s'>Consultant</th>"
+		"<th style='%s'>Sales Person</th><th style='%s'>Status</th>"
+		"<th style='%s'>Date</th></tr>" % (th, th, th, th, th),
+		"".join(det_rows),
+		"</table>",
+		"<div style='border-top:1px solid #F4F4F5; margin-top:24px; padding-top:10px; "
+		"color:#71717B; font-size:9px;'>Bizaxl Functional Demo Portal &nbsp;&bull;&nbsp; Confidential</div>",
+		"</div></body></html>",
+	])
 
 
 def _functional_report_xlsx(title, period_label, summary, details):
-	"""Clean Excel (.xlsx) workbook for the weekly/monthly report."""
+	"""Bizaxl-branded Excel (.xlsx) workbook for the weekly/monthly report."""
 	import io
 
 	from openpyxl import Workbook
-	from openpyxl.styles import Font
+	from openpyxl.styles import Font, PatternFill
 
+	navy = "FF05133C"
+	navy_font = Font(bold=True, color="FFFFFFFF")
+	navy_fill = PatternFill(start_color=navy, end_color=navy, fill_type="solid")
+	section_font = Font(bold=True, color=navy)
 	bold = Font(bold=True)
 	wb = Workbook()
 	ws = wb.active
 	ws.title = "Demo Report"
 	ws["A1"] = title
-	ws["A1"].font = Font(bold=True, size=14)
+	ws["A1"].font = Font(bold=True, size=14, color=navy)
 	ws["A2"] = "Period"
 	ws["B2"] = period_label
 	ws["A3"] = "Generated"
 	ws["B3"] = frappe.utils.now_datetime().strftime("%d %b %Y, %I:%M %p")
 
 	row = 5
-	ws.cell(row=row, column=1, value="Consultant Summary").font = bold
+	ws.cell(row=row, column=1, value="CONSULTANT SUMMARY").font = section_font
 	row += 1
-	ws.cell(row=row, column=1, value="Consultant").font = bold
-	ws.cell(row=row, column=2, value="Demos").font = bold
+	for col, heading in enumerate(["Consultant", "Demos"], start=1):
+		cell = ws.cell(row=row, column=col, value=heading)
+		cell.font = navy_font
+		cell.fill = navy_fill
 	for cname in sorted(summary):
 		row += 1
 		ws.cell(row=row, column=1, value=cname)
-		ws.cell(row=row, column=2, value=summary[cname])
+		count_cell = ws.cell(row=row, column=2, value=summary[cname])
+		count_cell.font = bold
 
 	row += 2
-	ws.cell(row=row, column=1, value="Demo Details").font = bold
+	ws.cell(row=row, column=1, value="DEMO DETAILS").font = section_font
 	row += 1
 	for col, heading in enumerate(["Session", "Consultant", "Sales Person", "Status", "Date"], start=1):
-		ws.cell(row=row, column=col, value=heading).font = bold
+		cell = ws.cell(row=row, column=col, value=heading)
+		cell.font = navy_font
+		cell.fill = navy_fill
 	for d in details:
 		row += 1
 		ws.cell(row=row, column=1, value=d["session"])
