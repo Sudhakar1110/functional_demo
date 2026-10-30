@@ -1717,18 +1717,67 @@ def _functional_report_html(title, period_label, summary, details):
 	)
 
 
+def _functional_report_xlsx(title, period_label, summary, details):
+	"""Clean Excel (.xlsx) workbook for the weekly/monthly report."""
+	import io
+
+	from openpyxl import Workbook
+	from openpyxl.styles import Font
+
+	bold = Font(bold=True)
+	wb = Workbook()
+	ws = wb.active
+	ws.title = "Demo Report"
+	ws["A1"] = title
+	ws["A1"].font = Font(bold=True, size=14)
+	ws["A2"] = "Period"
+	ws["B2"] = period_label
+	ws["A3"] = "Generated"
+	ws["B3"] = frappe.utils.now_datetime().strftime("%d %b %Y, %I:%M %p")
+
+	row = 5
+	ws.cell(row=row, column=1, value="Consultant Summary").font = bold
+	row += 1
+	ws.cell(row=row, column=1, value="Consultant").font = bold
+	ws.cell(row=row, column=2, value="Demos").font = bold
+	for cname in sorted(summary):
+		row += 1
+		ws.cell(row=row, column=1, value=cname)
+		ws.cell(row=row, column=2, value=summary[cname])
+
+	row += 2
+	ws.cell(row=row, column=1, value="Demo Details").font = bold
+	row += 1
+	for col, heading in enumerate(["Session", "Consultant", "Sales Person", "Status", "Date"], start=1):
+		ws.cell(row=row, column=col, value=heading).font = bold
+	for d in details:
+		row += 1
+		ws.cell(row=row, column=1, value=d["session"])
+		ws.cell(row=row, column=2, value=d["consultant"])
+		ws.cell(row=row, column=3, value=d["sales_person"])
+		ws.cell(row=row, column=4, value=d["status"])
+		ws.cell(row=row, column=5, value=d["date"])
+
+	ws.column_dimensions["A"].width = 24
+	ws.column_dimensions["B"].width = 24
+	ws.column_dimensions["C"].width = 24
+	ws.column_dimensions["D"].width = 16
+	ws.column_dimensions["E"].width = 14
+	buf = io.BytesIO()
+	wb.save(buf)
+	return buf.getvalue()
+
+
 @frappe.whitelist()
-def export_functional_report(period="week", fmt="csv"):
-	"""Weekly / monthly demo report for the Functional Home export buttons.
+def export_functional_report(period="week", fmt="xlsx"):
+	"""Weekly / monthly demo report for the Functional Home export buttons
+	(Functional Consultant + Functional Team Manager only).
 
-	Returns {filename, mime, content} for CSV (opens cleanly in Excel) or
-	{filename, mime, content_base64} for PDF. The report lists, per demo:
-	consultant, sales person, current status and date - with a consultant
-	name + demo-count summary on top. A Functional Consultant only exports
-	their own demos; everyone else (managers / sales) exports all."""
-	from functional_demo.portal import consultant_of_user
-
-	if frappe.session.user != "Administrator" and not (is_sales() or is_functional()):
+	Returns {filename, mime, content_base64} - a real Excel (.xlsx) file or a
+	PDF. The report covers ALL consultants: consultant name + demo count on
+	top, then one row per demo with consultant, sales person, current status
+	and date."""
+	if frappe.session.user != "Administrator" and not is_functional():
 		frappe.throw(_("Not permitted."), frappe.PermissionError)
 
 	today = frappe.utils.today()
@@ -1743,13 +1792,10 @@ def export_functional_report(period="week", fmt="csv"):
 		label = "Weekly"
 	start, end = str(start)[:10], str(end)[:10]
 
-	filters = {"scheduled_date": ["between", [start, end]]}
-	consultant = consultant_of_user()
-	if consultant:
-		filters["functional_consultant"] = consultant
+	# every consultant's demos in the period (not just the current user's)
 	sessions = frappe.get_all(
 		"Demo Session",
-		filters=filters,
+		filters={"scheduled_date": ["between", [start, end]]},
 		fields=["name", "functional_consultant", "sales_person", "demo_status", "scheduled_date"],
 		order_by="scheduled_date asc, name asc",
 		limit_page_length=5000,
@@ -1817,29 +1863,21 @@ def export_functional_report(period="week", fmt="csv"):
 			"content_base64": base64.b64encode(pdf).decode(),
 		}
 
-	# CSV - opens cleanly in Excel
-	import csv
-	import io
+	# Excel (.xlsx)
+	import base64
 
-	buf = io.StringIO()
-	writer = csv.writer(buf)
-	writer.writerow([title])
-	writer.writerow(["Period", period_label])
-	writer.writerow(["Generated", frappe.utils.now_datetime().strftime("%d %b %Y, %I:%M %p")])
-	writer.writerow([])
-	writer.writerow(["Consultant Summary"])
-	writer.writerow(["Consultant", "Demos"])
-	for cname in sorted(summary):
-		writer.writerow([cname, summary[cname]])
-	writer.writerow([])
-	writer.writerow(["Demo Details"])
-	writer.writerow(["Session", "Consultant", "Sales Person", "Status", "Date"])
-	for d in details:
-		writer.writerow([d["session"], d["consultant"], d["sales_person"], d["status"], d["date"]])
+	try:
+		xlsx = _functional_report_xlsx(title, period_label, summary, details)
+	except Exception:
+		frappe.log_error(
+			title="Functional report Excel export failed",
+			message=frappe.get_traceback(),
+		)
+		frappe.throw(_("Excel export failed on this site. Please use the PDF export instead."))
 	return {
-		"filename": filename + ".csv",
-		"mime": "text/csv;charset=utf-8",
-		"content": buf.getvalue(),
+		"filename": filename + ".xlsx",
+		"mime": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+		"content_base64": base64.b64encode(xlsx).decode(),
 	}
 
 

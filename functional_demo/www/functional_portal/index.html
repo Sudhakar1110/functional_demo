@@ -55,8 +55,10 @@
 				</div>
 				<div class="greet-actions">
 					<a class="btn-portal tertiary" href="/functional_portal/my_sessions">My Sessions</a>
+					{% if show_report_exports %}
 					<button class="btn-portal tertiary" type="button" id="btn-weekly-report">Weekly Report</button>
 					<button class="btn-portal tertiary" type="button" id="btn-monthly-report">Monthly Report</button>
+					{% endif %}
 				</div>
 			</div>
 
@@ -224,7 +226,7 @@
 		}).catch(function () {});
 	}
 	var excelBtn = document.getElementById("report-excel-btn");
-	if (excelBtn) excelBtn.addEventListener("click", function () { exportReport("csv"); });
+	if (excelBtn) excelBtn.addEventListener("click", function () { exportReport("xlsx"); });
 	var pdfBtn = document.getElementById("report-pdf-btn");
 	if (pdfBtn) pdfBtn.addEventListener("click", function () { exportReport("pdf"); });
 })();
