@@ -53,7 +53,7 @@
 			<div class="portal-card">
 				{% if all_items %}
 				<div class="card-body flush" style="overflow-x: auto;">
-					<table class="table-portal" id="ms-table" style="min-width: 1100px;">
+					<table class="table-portal" id="ms-table" style="min-width: 1240px;">
 						<thead>
 							<tr>
 								<th style="white-space: nowrap;">Type</th>
@@ -64,6 +64,7 @@
 								<th style="white-space: nowrap;">Assigned</th>
 								<th style="white-space: nowrap;">Date</th>
 								<th style="white-space: nowrap;">Time</th>
+								<th style="white-space: nowrap;">Meeting</th>
 							<th style="white-space: nowrap;">Status</th>
 							<th style="white-space: nowrap; text-align: center;">Action</th>
 							</tr>
@@ -94,6 +95,9 @@
 								<td>{{ s.scheduled_date or s.preferred_demo_date or "-" }}</td>
 								<td>
 									{% if s.is_session %}{% if s.start_time %}{{ format_time_12h(s.start_time) }}{% if s.end_time %} – {{ format_time_12h(s.end_time) }}{% endif %}{% else %}-{% endif %}{% else %}{{ format_time_12h(s.preferred_demo_time) or "-" }}{% endif %}
+								</td>
+								<td>
+									{% if s.meeting_link %}<a href="{{ s.meeting_link }}" target="_blank" rel="noopener" style="white-space: nowrap;">Join &rarr;</a>{% else %}-{% endif %}
 								</td>
 								<td>
 									{% if s.is_session %}

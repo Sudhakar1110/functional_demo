@@ -200,7 +200,7 @@ def get_context(context):
 	portal_context(
 		context,
 		_("Demo Request"),
-		["Sales User", "Sales Manager", "Functional Team Manager"],
+		["Sales User", "Sales Manager", "Functional Team Manager", "Functional Consultant"],
 		active="requests",
 		subtitle=_("Create or review a demo request"),
 	)

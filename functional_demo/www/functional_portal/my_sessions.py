@@ -53,7 +53,7 @@ def get_context(context):
 		fields=[
 			"name", "customer", "lead", "sales_person", "interested_module", "scheduled_date",
 			"start_time", "end_time", "demo_status", "final_result", "demo_request", "creation",
-			"functional_consultant",
+			"functional_consultant", "meeting_link",
 		],
 		order_by="creation desc",
 		limit_page_length=1000,
@@ -119,7 +119,7 @@ def get_context(context):
 			fields=[
 				"name", "customer", "lead", "sales_person", "interested_module",
 				"preferred_demo_date", "preferred_demo_time", "status", "creation",
-				"lead_state", "lead_district", "lead_address",
+				"lead_state", "lead_district", "lead_address", "meeting_link",
 			],
 			order_by="creation desc",
 			limit_page_length=100,

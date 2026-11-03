@@ -17,7 +17,7 @@ def get_context(context):
 	portal_context(
 		context,
 		_("Demo Requests"),
-		["Sales User", "Sales Manager", "Functional Team Manager"],
+		["Sales User", "Sales Manager", "Functional Team Manager", "Functional Consultant"],
 		active="requests",
 		subtitle=_("All demo requests you can see"),
 	)
@@ -43,9 +43,22 @@ def get_context(context):
 			"User", fields=["name", "full_name"], ignore_permissions=True,
 		)
 	}
+	# Resolve the assigned consultant's display name in one batch so the list
+	# can show it beside the sales person for every sales / functional role.
+	consultant_names = {}
+	_consultant_ids = list({r.get("functional_consultant") for r in context.requests if r.get("functional_consultant")})
+	if _consultant_ids:
+		for c in frappe.get_all(
+			"Functional Consultant",
+			filters={"name": ["in", _consultant_ids]},
+			fields=["name", "consultant_name"],
+			ignore_permissions=True,
+		):
+			consultant_names[c["name"]] = c.get("consultant_name") or c["name"]
 	for r in context.requests:
 		r["created_display"] = frappe.utils.format_date(r.get("creation"), "dd MMM yyyy") if r.get("creation") else "-"
 		r["sales_person_name"] = user_names.get(r.get("sales_person"), "") or ""
+		r["consultant_display"] = consultant_names.get(r.get("functional_consultant"), "") or ""
 	context.status = status
 	context.status_options = STATUS_OPTIONS
 	context.list_note = list_note(

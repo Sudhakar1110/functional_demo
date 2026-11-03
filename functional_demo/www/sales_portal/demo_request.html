@@ -109,10 +109,16 @@
 						<div class="form-row">
 							<div style="grid-column: 1 / -1;"><label>Preferred Language</label><input type="text" id="preferred_language" name="preferred_language" placeholder="e.g. English, Hindi, Kannada..." value="{{ prefill.preferred_language or '' }}" autocomplete="off"></div>
 						</div>
-						<div class="form-row">
-							<div><label>Preferred Demo Date <span class="req">*</span></label><input type="date" id="preferred_demo_date" name="preferred_demo_date" required></div>
-							<div><label>Preferred Demo Time <span class="req">*</span></label><input type="time" lang="en-US" id="preferred_demo_time" name="preferred_demo_time" required></div>
+					<div class="form-row">
+						<div><label>Preferred Demo Date <span class="req">*</span></label><input type="date" id="preferred_demo_date" name="preferred_demo_date" required></div>
+						<div><label>Preferred Demo Time <span class="req">*</span></label><input type="time" lang="en-US" id="preferred_demo_time" name="preferred_demo_time" required></div>
+					</div>
+					<div class="form-row">
+						<div style="grid-column: 1 / -1;">
+							<label>Google Meet Link <span class="req">*</span> <span class="form-hint">(required)</span></label>
+							<input type="url" id="meeting_link" name="meeting_link" placeholder="https://meet.google.com/xxx-xxxx-xxx" autocomplete="off" required>
 						</div>
+					</div>
 						<label>Leads Requirements</label>
 						<textarea id="customer_requirements" name="customer_requirements" placeholder="What does the lead need?"></textarea>
 						<label>Business Process Requirements</label>
@@ -267,6 +273,7 @@
 						<div class="detail-item"><div class="d-label">Demo Type</div><div class="d-value">{{ doc.demo_type or "-" }}</div></div>
 						<div class="detail-item"><div class="d-label">Preferred Date</div><div class="d-value">{{ doc.preferred_demo_date or "-" }}</div></div>
 						<div class="detail-item"><div class="d-label">Preferred Time</div><div class="d-value">{{ format_time_12h(doc.preferred_demo_time) or "-" }}</div></div>
+						<div class="detail-item" style="grid-column: 1 / -1;"><div class="d-label">Google Meet Link</div><div class="d-value">{% if doc.meeting_link %}<a href="{{ doc.meeting_link }}" target="_blank" rel="noopener">{{ doc.meeting_link }}</a>{% else %}-{% endif %}</div></div>
 					</div>
 					<div class="detail-grid" style="margin-top: 16px;">
 						<div class="detail-item"><div class="d-label">Leads Requirements</div><div class="d-value wrap">{{ doc.customer_requirements or "-" }}</div></div>
@@ -416,6 +423,11 @@
 			window.portalModal("Time Required", "Please select a Preferred Demo Time. This is required to schedule the demo.", "err");
 			return;
 		}
+		var meetLink = document.getElementById("meeting_link").value.trim();
+		if (!meetLink) {
+			window.portalModal("Google Meet Link Required", "Please paste the Google Meet link for the demo. It is required so the consultant and the lead can join the session.", "err");
+			return;
+		}
 		/* Company is optional - if the typed name is not a saved Company record
 		   the server keeps it in the remarks instead of blocking the request. */
 		var company = document.getElementById("company") ? document.getElementById("company").value.trim() : "";
@@ -438,6 +450,7 @@
 			customer_requirements: document.getElementById("customer_requirements").value,
 			business_process_requirements: document.getElementById("business_process_requirements").value,
 			sales_remarks: document.getElementById("sales_remarks").value,
+			meeting_link: meetLink,
 		}).then(function (res) {
 			if (res && res.name) {
 				/* The server returns a note when it had to auto-assign a
@@ -497,6 +510,9 @@
 		if (prefDate) document.getElementById("sched-date").value = prefDate;
 		var prefTime = '{{ doc.preferred_demo_time or "" }}';
 		if (prefTime) window.setTimePickerValue("sched-start", prefTime.substring(0, 5));
+		/* Pre-fill the meeting link captured when the request was created */
+		var prefLink = '{{ doc.meeting_link or "" }}';
+		if (prefLink) document.getElementById("sched-link").value = prefLink;
 		var modal = document.getElementById("schedule-modal");
 		if (modal) modal.classList.add("show");
 	});

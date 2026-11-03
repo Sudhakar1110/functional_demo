@@ -474,6 +474,11 @@ def sidebar_items(active):
 			{"label": _("My Sessions"), "route": "/functional_portal/my_sessions", "icon": ICON_SESSIONS, "active": active == "sessions"},
 		]
 
+	# Demo Requests are shared too - the functional team opens the list from
+	# here (sales users already have the link in their own section above).
+	if is_functional() and not is_sales():
+		items += [{"label": _("Demo Requests"), "route": "/sales_portal/demo_requests", "icon": ICON_REQUESTS, "active": active == "requests"}]
+
 	# The Drive is consultant-only - the sales team never sees it
 	if is_functional():
 		items += [{"label": _("Drive"), "route": "/functional_portal/drive", "icon": ICON_DRIVE, "active": active == "drive"}]

@@ -332,6 +332,10 @@ def schedule_demo(demo_request=None, scheduled_date=None, start_time=None, end_t
 	dr = frappe.get_doc("Demo Request", demo_request)
 	frappe.has_permission("Demo Request", "write", doc=dr, throw=True)
 
+	# The Google Meet link captured when the request was created is the
+	# fallback whenever the scheduling dialog sends an empty value.
+	meeting_link = (meeting_link or "").strip() or (dr.get("meeting_link") or "").strip()
+
 	# Auto-fill the date when the click sends none: first the request's
 	# preferred date, then today. Scheduling should never be blocked by an
 	# empty date (stale page, forgotten picker, or a request created without
@@ -2190,7 +2194,7 @@ def create_lead(lead_name=None, company_name=None, email=None, phone=None, statu
 
 
 @frappe.whitelist()
-def create_demo_request(customer=None, company=None, contact_person=None, contact_number=None, email=None, interested_module=None, customer_requirements=None, business_process_requirements=None, priority="Medium", preferred_demo_date=None, preferred_demo_time=None, demo_type=None, sales_remarks=None, functional_consultant=None, preferred_language=None, lead_state=None, lead_district=None, lead_address=None):
+def create_demo_request(customer=None, company=None, contact_person=None, contact_number=None, email=None, interested_module=None, customer_requirements=None, business_process_requirements=None, priority="Medium", preferred_demo_date=None, preferred_demo_time=None, demo_type=None, sales_remarks=None, functional_consultant=None, preferred_language=None, lead_state=None, lead_district=None, lead_address=None, meeting_link=None):
 	"""Create a Demo Request from the Sales Portal web form.
 
 	The sales_person is always auto-set to the logged-in user — no dropdown needed.
@@ -2209,6 +2213,12 @@ def create_demo_request(customer=None, company=None, contact_person=None, contac
 		frappe.throw(_("Preferred Demo Date is required. Please select a date."), title=_("Date Required"))
 	if not preferred_demo_time:
 		frappe.throw(_("Preferred Demo Time is required. Please select a time."), title=_("Time Required"))
+	meeting_link = (meeting_link or "").strip()
+	if not meeting_link:
+		frappe.throw(
+			_("Google Meet Link is required. Please paste the meeting link so the consultant and lead can join the demo."),
+			title=_("Meeting Link Required"),
+		)
 
 	# A party (Customer/Lead) and contact details are OPTIONAL - the sales team
 	# can create a request with only a Functional Consultant and fill in the
@@ -2257,6 +2267,7 @@ def create_demo_request(customer=None, company=None, contact_person=None, contac
 	doc.lead_state = lead_state
 	doc.lead_district = lead_district
 	doc.lead_address = lead_address
+	doc.meeting_link = meeting_link
 	doc.interested_module = interested_module
 	doc.customer_requirements = customer_requirements
 	doc.business_process_requirements = business_process_requirements
