@@ -77,8 +77,9 @@
    {
     "fieldname": "company",
     "fieldtype": "Data",
-    "label": "Company"
-   },
+    "label": "Company",
+   "maxlen": 300
+  },
   {
    "fieldname": "contact_person",
    "fieldtype": "Link",
@@ -91,7 +92,8 @@
    "fetch_if_empty": 1,
    "fieldname": "contact_number",
    "fieldtype": "Data",
-   "label": "Lead Contact Number"
+   "label": "Lead Contact Number",
+   "maxlen": 200
   },
 {
    "fetch_from": "contact_person.email_id",
@@ -99,7 +101,8 @@
    "fieldname": "email",
    "fieldtype": "Data",
    "label": "Lead Email",
-   "options": "Email"
+   "options": "Email",
+   "maxlen": 300
   },
   {
    "fieldname": "lead_location_section",
@@ -109,17 +112,20 @@
   {
    "fieldname": "lead_state",
    "fieldtype": "Data",
-   "label": "State"
+   "label": "State",
+   "maxlen": 200
   },
   {
    "fieldname": "lead_district",
    "fieldtype": "Data",
-   "label": "District"
+   "label": "District",
+   "maxlen": 200
   },
   {
    "fieldname": "lead_address",
    "fieldtype": "Data",
-   "label": "Lead Address"
+   "label": "Lead Address",
+   "maxlen": 500
   },
   {
    "description": "Extra leads / customers attached to this demo request, each with its own contact details.",
@@ -147,13 +153,15 @@
     "fieldtype": "Autocomplete",
     "in_standard_filter": 1,
     "label": "Interested Template",
-    "options": "Law Management\nHospitality\nMedical Store\nRetail & Supermarket\nManufacturing\nEducation\nHealthcare\nReal Estate\nLogistics & Transport\nAgriculture\nIT Services\nBanking & Finance\nFood & Beverage\nConstruction\nEnergy & Utilities\nOther"
-   },
+    "options": "Law Management\nHospitality\nMedical Store\nRetail & Supermarket\nManufacturing\nEducation\nHealthcare\nReal Estate\nLogistics & Transport\nAgriculture\nIT Services\nBanking & Finance\nFood & Beverage\nConstruction\nEnergy & Utilities\nOther",
+   "maxlen": 300
+  },
    {
     "fieldname": "preferred_language",
     "fieldtype": "Data",
-    "label": "Preferred Language"
-   },
+    "label": "Preferred Language",
+   "maxlen": 200
+  },
    {
     "fieldname": "customer_requirements",
    "fieldtype": "Text",
@@ -201,7 +209,8 @@
    "fieldname": "meeting_link",
    "fieldtype": "Data",
    "label": "Google Meet Link",
-   "insert_after": "demo_type"
+   "insert_after": "demo_type",
+   "maxlen": 500
   },
   {
    "fieldname": "functional_consultant",
@@ -251,7 +260,8 @@
   {
    "fieldname": "next_action",
    "fieldtype": "Small Text",
-   "label": "Next Action"
+   "label": "Next Action",
+   "maxlen": 500
   },
   {
    "depends_on": "eval:doc.status == \"Converted\"",
@@ -324,7 +334,8 @@
   {
    "fieldname": "sales_remarks",
    "fieldtype": "Small Text",
-   "label": "Sales Remarks"
+   "label": "Sales Remarks",
+   "maxlen": 2000
   },
   {
    "collapsible": 1,
@@ -352,7 +363,7 @@
    "link_fieldname": "demo_request"
   }
  ],
- "modified": "2026-11-03 10:00:00.000000",
+ "modified": "2026-11-04 10:00:00.000000",
  "modified_by": "Administrator",
  "module": "Sales Demo",
  "name": "Demo Request",
