@@ -333,6 +333,62 @@ functional_demo/
 └── setup.py
 ```
 
+## Architecture Overview
+
+### Application Structure
+
+```
+functional_demo/
+├── functional_demo/           # Main importable app package
+│   ├── hooks.py              # App configuration, permissions, schedulers, events
+│   ├── api.py                # Whitelisted API endpoints (scheduling, sessions, follow-ups)
+│   ├── install.py            # Install/migrate hooks & scheduled jobs
+│   ├── portal.py             # Portal helpers, roles, notifications, sidebar
+│   ├── roles.py              # Custom role definitions
+│   ├── setup_demo_data.py    # Demo data generator
+│   ├── fixtures/             # Role & Workflow fixtures
+│   ├── patches/              # Migration patches
+│   ├── sales_demo/           # Main module
+│   │   ├── doctype/          # All DocTypes with controllers
+│   │   ├── report/           # Script reports (12 reports)
+│   │   ├── notification/     # Legacy notifications (disabled)
+│   │   ├── page/             # Desk pages (Demo Execution, Demo Feedback)
+│   │   ├── workspace/        # Workspaces
+│   │   ├── dashboard_chart/  # Charts
+│   │   └── number_card/      # Number cards
+│   ├── templates/            # Portal templates & includes
+│   ├── www/                  # Role-based web portal pages
+│   └── public/               # Client scripts & CSS
+├── pyproject.toml
+└── setup.py
+```
+
+### Core DocTypes
+
+| DocType | Purpose |
+| --- | --- |
+| **Demo Request** | Central request linking Lead/Customer, requirements, consultant, status/workflow, SLA, trial period |
+| **Demo Session** | Scheduled demo instance with immutable template snapshot, execution details, feedback, results |
+| **Functional Consultant** | Consultant master linked to User with skills, modules, availability, workload tracking |
+| **Functional Demo Template** | Consultant-specific reusable templates (copied as snapshots to sessions) |
+| **Demo Follow Up** | Follow-up tracking with ToDo integration and automated reminders |
+| **Session Feedback** | Manager feedback to development team about completed sessions |
+
+### Key Integrations
+
+- **ERPNext**: Uses Lead, Customer, Contact, Opportunity, Employee, User, Event, ToDo, Communication
+- **Auto-Opportunity Creation**: Converting a demo automatically creates an ERPNext Opportunity
+- **Event/Calendar**: Demo sessions sync to ERPNext Events
+- **Notifications**: In-app (Notification Log), email (branded), optional Web Push with VAPID
+- **Workflow Engine**: Custom workflow with role-based transitions and path-finding
+
+### Security Model
+
+- Row-level permissions via `permission_query_conditions` hooks
+- Document-level permissions via `has_permission` hooks
+- Role-based portal access with strict segregation (Sales/Functional/Manager/Developer)
+- Consultant action gating (start/complete/cancel) in controllers
+
 ## License
 
 GNU General Public License (v3). See [LICENSE](LICENSE).
