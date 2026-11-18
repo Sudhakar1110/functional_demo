@@ -51,6 +51,21 @@ def get_context(context):
 			else "-"
 		)
 		fu["due_display"] = frappe.utils.format_date(fu.get("follow_up_date"), "medium") if fu.get("follow_up_date") else "-"
+		# fetch daily discussion notes
+		notes = frappe.get_all(
+			"Follow Up Note",
+			filters={"parent": fu["name"], "parenttype": "Demo Follow Up"},
+			fields=["note_date", "note_by", "note"],
+			order_by="note_date desc",
+			limit_page_length=50,
+		) or []
+		for n in notes:
+			n["note_date_display"] = (
+				frappe.utils.format_datetime(n.get("note_date"), "dd MMM yyyy, hh:mm a")
+				if n.get("note_date")
+				else "-"
+			)
+		fu["discussion_notes"] = notes
 	context.status_options = STATUS_OPTIONS
 	context.outcome_options = OUTCOME_OPTIONS
 	context.list_note = list_note(
