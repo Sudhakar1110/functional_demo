@@ -33,25 +33,10 @@
 	<div class="sidebar-overlay"></div>
 	<div class="portal-main">
 		<div class="portal-content">
-			{% if can_manage_consultants %}
-			<div class="portal-card">
-				<div class="card-head">
-					<h2>Consultant Profiles <span class="muted" style="font-weight:500;">(Functional Team Manager)</span></h2>
-					<div style="display: flex; gap: 8px; flex-wrap: wrap;">
-						<a class="btn-portal sm" href="/functional_portal/consultants">View All</a>
-					</div>
-				</div>
-				<div class="card-body">
-					<p class="text-muted" style="margin-top:0;">Consultants are managed in the ERPNext desk. Create a user and assign the <strong>Functional Consultant</strong> role — a consultant profile is automatically created and they appear here.</p>
-				</div>
-			</div>
-			{% endif %}
-
 			<div class="dash-greet">
 				<div>
 					<span class="greet-eyebrow">● {{ today_pretty }}</span>
 					<h1>{{ greeting }}, {{ consultant_name or full_name }}</h1>
-					<p>Here's your demo day at a glance.</p>
 				</div>
 				<div class="greet-actions">
 					<a class="btn-portal tertiary" href="/functional_portal/my_sessions">My Sessions</a>

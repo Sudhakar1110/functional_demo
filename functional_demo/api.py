@@ -1999,21 +1999,26 @@ def export_functional_report(period="week", fmt="xlsx"):
 # ---------------------------------------------------------------------------
 
 @frappe.whitelist()
-def get_portal_notifications(limit=8):
-	"""Recent in-app notifications (Notification Log) for the current user, used
-	by the notification bell in the portal topbar."""
+def get_portal_notifications(limit=0):
+	"""All in-app notifications (Notification Log) for the current user, used
+	by the notification bell in the portal topbar.
+
+	By default every notification is returned so the bell shows the complete
+	history instead of only the newest few. A positive ``limit`` is still
+	honoured for any caller that explicitly wants a shorter list."""
 	user = frappe.session.user
 	if not user or user == "Guest":
 		return {"unread": 0, "items": []}
 	# ignore_permissions: a user must always see their own notifications even
 	# if their role has no generic read on the Notification Log doctype - the
 	# desk bell does the same.
+	page_length = int(limit) if limit and int(limit) > 0 else 1000000
 	items = frappe.get_all(
 		"Notification Log",
 		filters={"for_user": user},
 		fields=["name", "subject", "type", "document_type", "document_name", "creation", "read"],
 		order_by="creation desc",
-		limit_page_length=int(limit) or 8,
+		limit_page_length=page_length,
 		ignore_permissions=True,
 	) or []
 	unread = frappe.db.count("Notification Log", {"for_user": user, "read": 0})

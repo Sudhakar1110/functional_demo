@@ -1,5 +1,7 @@
 {% for item in sidebar_items %}
-{% if item.group %}
+{% if item.header %}
+<div class="sidebar-header">{{ item.header }}</div>
+{% elif item.group %}
 <div class="sidebar-group {% if item.expanded %}open{% endif %}">
 	<a class="sidebar-item sidebar-group-toggle {% if item.active %}active{% endif %}" href="{{ item.route }}" onclick="return toggleSidebarGroup(this)">
 		<span class="sidebar-icon">{{ item.icon | safe }}</span>

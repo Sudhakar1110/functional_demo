@@ -433,24 +433,30 @@ def sidebar_items(active):
 			{"label": _("Settings"), "route": "/portal_settings", "icon": ICON_MANAGER, "active": active == "settings"},
 		]
 
+	# Items are grouped by team and shown under labelled section headers so the
+	# menu reads in a clear, predictable order. Role checks are unchanged - each
+	# group (and each item inside it) is only shown to the roles that could see
+	# it before.
 	items = [{"label": _("Home"), "route": "/demo_portal", "icon": ICON_HOME, "active": active == "home"}]
 
-	results_hidden = is_results_hidden()
+	# ---- SALES ----
 	if is_sales():
+		items.append({"header": _("Sales")})
 		items += [
 			{"label": _("Sales Home"), "route": "/sales_portal", "icon": ICON_SALES, "active": active == "sales"},
 			{"label": _("Sales"), "route": "/sales_portal/my_leads", "icon": ICON_LEADS, "active": active == "leads"},
 			{"label": _("Demo Requests"), "route": "/sales_portal/demo_requests", "icon": ICON_REQUESTS, "active": active == "requests"},
 		]
-		if not results_hidden or is_admin():
+		if not is_results_hidden() or is_admin():
 			items.append({"label": _("Results"), "route": "/sales_portal/results", "icon": ICON_RESULTS, "active": active == "results"})
 		items += [
 			{"label": _("Follow-ups"), "route": "/functional_portal/follow_ups", "icon": ICON_FOLLOWUPS, "active": active == "follow_ups"},
 			{"label": _("Follow-ups Completed"), "route": "/functional_portal/completed_followups", "icon": ICON_FOLLOWUPS, "active": active == "completed_followups"},
 		]
 
-	# Sales Manager-only items: Trial Dashboard, End of Day, Follow-up Tracker
+	# ---- SALES MANAGEMENT (Sales Manager only) ----
 	if is_sales_manager():
+		items.append({"header": _("Sales Management")})
 		items += [
 			{"label": _("Trial Dashboard"), "route": "/sales_portal/trials", "icon": ICON_TRIALS, "active": active == "trials"},
 			{"label": _("End of Day"), "route": "/sales_portal/daily_update", "icon": ICON_DAILY_UPDATE, "active": active == "daily_update"},
@@ -462,44 +468,40 @@ def sidebar_items(active):
 			]},
 		]
 
-	# Functional Home for all managers
-	if is_manager():
-		items += [
-			{"label": _("Functional Home"), "route": "/functional_portal", "icon": ICON_FUNCTIONAL, "active": active == "functional"},
-		]
+	# ---- FUNCTIONAL ----
+	if is_manager() or is_sales() or is_functional():
+		items.append({"header": _("Functional")})
+		# Functional Home for all managers
+		if is_manager():
+			items.append({"label": _("Functional Home"), "route": "/functional_portal", "icon": ICON_FUNCTIONAL, "active": active == "functional"})
+		# My Sessions is shared - the sales team sees it too
+		items.append({"label": _("My Sessions"), "route": "/functional_portal/my_sessions", "icon": ICON_SESSIONS, "active": active == "sessions"})
+		# Demo Requests are shared too - the functional team opens the list from
+		# here (sales users already have the link in their own section above).
+		if is_functional() and not is_sales():
+			items.append({"label": _("Demo Requests"), "route": "/sales_portal/demo_requests", "icon": ICON_REQUESTS, "active": active == "requests"})
+		# The Drive is consultant-only - the sales team never sees it
+		if is_functional():
+			items.append({"label": _("Drive"), "route": "/functional_portal/drive", "icon": ICON_DRIVE, "active": active == "drive"})
 
-	# Functional sections are shared - the sales team sees My Sessions
-	if is_sales() or is_functional() or is_manager():
-		items += [
-			{"label": _("My Sessions"), "route": "/functional_portal/my_sessions", "icon": ICON_SESSIONS, "active": active == "sessions"},
-		]
+	# ---- MANAGEMENT ----
+	if is_manager() or can_manage_consultants():
+		items.append({"header": _("Management")})
+		if is_manager():
+			items.append({"label": _("Manager Dashboard"), "route": "/manager_portal", "icon": ICON_MANAGER, "active": active == "manager"})
+		if can_manage_consultants():
+			items.append({"label": _("Consultants"), "route": "/functional_portal/consultants", "icon": ICON_FUNCTIONAL, "active": active == "consultants"})
+		# Consultant Activity — Functional Team Manager only (not Sales Manager)
+		if "Functional Team Manager" in user_roles():
+			items.append({"label": _("Consultant Activity"), "route": "/consultant_calendar", "icon": ICON_CONSULTANT_ACTIVITY, "active": active in ("consultant_activity", "consultant_calendar")})
+			items.append({"label": _("Assign Demo"), "route": "/assigned_demo", "icon": ICON_ASSIGNED, "active": active == "assigned_demo"})
+		# Feedback is only visible to managers (Functional Team Manager / Sales Manager)
+		if is_manager():
+			items.append({"label": _("Feedback"), "route": "/feedback", "icon": ICON_FEEDBACK, "active": active == "feedback"})
+			items.append({"label": _("Session Feedback"), "route": "/session_feedback", "icon": ICON_FEEDBACK, "active": active == "session_feedback"})
 
-	# Demo Requests are shared too - the functional team opens the list from
-	# here (sales users already have the link in their own section above).
-	if is_functional() and not is_sales():
-		items += [{"label": _("Demo Requests"), "route": "/sales_portal/demo_requests", "icon": ICON_REQUESTS, "active": active == "requests"}]
-
-	# The Drive is consultant-only - the sales team never sees it
-	if is_functional():
-		items += [{"label": _("Drive"), "route": "/functional_portal/drive", "icon": ICON_DRIVE, "active": active == "drive"}]
-
-	if is_manager():
-		items += [{"label": _("Manager Dashboard"), "route": "/manager_portal", "icon": ICON_MANAGER, "active": active == "manager"}]
-
-	if can_manage_consultants():
-		items += [{"label": _("Consultants"), "route": "/functional_portal/consultants", "icon": ICON_FUNCTIONAL, "active": active == "consultants"}]
-
-	# Consultant Activity — Functional Team Manager only (not Sales Manager)
-	if "Functional Team Manager" in user_roles():
-		items.append({"label": _("Consultant Activity"), "route": "/consultant_calendar", "icon": ICON_CONSULTANT_ACTIVITY, "active": active == "consultant_activity" or active == "consultant_calendar"})
-		items.append({"label": _("Assign Demo"), "route": "/assigned_demo", "icon": ICON_ASSIGNED, "active": active == "assigned_demo"})
-
-	# Feedback is only visible to managers (Functional Team Manager / Sales Manager)
-	if is_manager():
-		items.append({"label": _("Feedback"), "route": "/feedback", "icon": ICON_FEEDBACK, "active": active == "feedback"})
-		items.append({"label": _("Session Feedback"), "route": "/session_feedback", "icon": ICON_FEEDBACK, "active": active == "session_feedback"})
-
-	# Settings (all logged-in users)
+	# ---- GENERAL (all logged-in users) ----
+	items.append({"header": _("General")})
 	items.append({"label": _("Settings"), "route": "/portal_settings", "icon": ICON_MANAGER, "active": active == "settings"})
 
 	return items
@@ -1005,14 +1007,13 @@ def manager_stats(role=None):
 # ---------------------------------------------------------------------------
 
 def list_note(shown, total, label):
-	"""Return a short 'showing latest X of Y' note when a portal list was
-	truncated (shown < total), else an empty string. Pages set this on the
-	context so templates can surface the truncation instead of hiding it."""
-	if not total or shown >= total:
-		return ""
-	return _("Showing the latest {0} of {1} {2}. Narrow the filters to see older records.").format(
-		shown, total, label
-	)
+	"""Kept for backwards compatibility with the portal page contexts.
+
+	The 'Showing the latest X of Y ...' notice is no longer displayed in any
+	portal, so this always returns an empty string and every ``{% if list_note %}``
+	block in the templates is skipped. The signature is unchanged so no calling
+	page needs to be touched."""
+	return ""
 
 
 def get_standard_portal_menu_items():
