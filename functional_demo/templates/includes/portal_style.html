@@ -1410,6 +1410,10 @@ details.portal-card[open] > summary.card-head::after {
 	cursor: pointer;
 }
 .portal-notif-markall:hover { text-decoration: underline; }
+.portal-notif-list {
+	max-height: 320px;
+	overflow-y: auto;
+}
 .portal-notif-item {
 	display: block;
 	padding: 10px 14px;
@@ -1434,6 +1438,46 @@ details.portal-card[open] > summary.card-head::after {
 	border-top: 1px solid #EEF0F3;
 }
 .portal-notif-viewall:hover { background: #F8FAFC; }
+
+/* ---- full notifications page (sidebar > Notifications) ---- */
+.notif-page-badge {
+	display: inline-block;
+	margin-left: 8px;
+	padding: 2px 9px;
+	border-radius: 99px;
+	background: #EFF6FF;
+	color: #1F4E79;
+	font-size: 11px;
+	font-weight: 700;
+	vertical-align: middle;
+}
+.notif-page-list { display: block; }
+.notif-page-item {
+	display: flex;
+	align-items: flex-start;
+	gap: 12px;
+	padding: 14px 20px;
+	border-bottom: 1px solid #F1F5F9;
+	text-decoration: none;
+	color: #334155;
+	transition: background 0.15s ease;
+}
+.notif-page-item:last-child { border-bottom: 0; }
+.notif-page-item:hover { background: #F8FAFC; text-decoration: none; }
+.notif-page-item.unread { background: #EFF6FF; }
+.notif-page-dot {
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+	background: transparent;
+	margin-top: 6px;
+	flex-shrink: 0;
+}
+.notif-page-item.unread .notif-page-dot { background: #2E7CF6; box-shadow: 0 0 0 3px rgba(46, 124, 246, 0.15); }
+.notif-page-main { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.notif-page-subject { font-size: 14px; line-height: 1.45; color: #0F172A; }
+.notif-page-item.unread .notif-page-subject { font-weight: 600; }
+.notif-page-meta { font-size: 12px; color: #94A3B8; }
 
 /* ---- popup toast for new notifications (top-right, auto-hides) ---- */
 .portal-toast {

@@ -1,0 +1,105 @@
+{% extends "templates/web.html" %}
+{% block banner %}{% endblock %}
+{% block navbar %}{% endblock %}
+{% block footer %}{% endblock %}
+{% block style %}{% include "functional_demo/templates/includes/portal_style.html" %}{% endblock %}
+{% block script %}
+{% include "functional_demo/templates/includes/portal_script.html" %}
+<script>
+	document.addEventListener("DOMContentLoaded", function () {
+		var btn = document.getElementById("notif-mark-all");
+		if (!btn) return;
+		btn.addEventListener("click", function () {
+			btn.disabled = true;
+			window.portalCall("functional_demo.api.mark_portal_notifications_read", {})
+				.then(function () {
+					var unread = document.querySelectorAll(".notif-page-item.unread");
+					for (var i = 0; i < unread.length; i++) unread[i].classList.remove("unread");
+					var badge = document.getElementById("notif-unread-badge");
+					if (badge) badge.style.display = "none";
+					btn.style.display = "none";
+				})
+				.catch(function () {
+					btn.disabled = false;
+				});
+		});
+	});
+</script>
+{% endblock %}
+{% block content %}
+<div class="portal-layout">
+	<header class="portal-topbar">
+		<button class="sidebar-toggle" id="sidebar-toggle" aria-label="Menu">&#9776;</button>
+		<a class="topbar-brand" href="/demo_portal">
+			<img class="brand-logo" src="/assets/functional_demo/images/brand_logo.jpg" alt="Brand Logo" />
+			<div class="brand-text">
+				<span class="brand-name">Demo Portal</span>
+				<span class="brand-sub">Sales &amp; Functional</span>
+			</div>
+		</a>
+		<div class="topbar-title">
+			<h1>{{ title }}</h1>
+			<p>{{ subtitle }}</p>
+		</div>
+		<div class="topbar-right">
+			<span class="portal-avatar">{{ full_name[:1] }}</span>
+			<span class="portal-user-name">{{ full_name }}</span>
+			<a class="btn-desk" href="/app">Open Desk</a>
+		</div>
+	</header>
+	<div class="portal-body">
+		<aside class="portal-sidebar" id="portal-sidebar">
+			<div class="sidebar-menu">
+			{% include "functional_demo/templates/includes/sidebar_items.html" %}
+		</div>
+	</aside>
+	<div class="sidebar-overlay"></div>
+	<div class="portal-main">
+		<div class="portal-content">
+			<div class="dash-greet">
+				<div>
+					<span class="greet-eyebrow">● {{ today_pretty }}</span>
+					<h1>{{ greeting }}, {{ full_name }}</h1>
+				</div>
+				<div class="greet-actions">
+					{% if unread_count %}
+					<button class="btn-portal" type="button" id="notif-mark-all">Mark all read</button>
+					{% endif %}
+					<a class="btn-portal secondary" href="/demo_portal">← Back to Home</a>
+				</div>
+			</div>
+
+			<div class="portal-card">
+				<div class="card-head">
+					<h2>
+						Notifications
+						{% if unread_count %}
+						<span class="notif-page-badge" id="notif-unread-badge">{{ unread_count }} unread</span>
+						{% endif %}
+					</h2>
+				</div>
+				<div class="card-body flush">
+					{% if notifications %}
+					<div class="notif-page-list">
+						{% for n in notifications %}
+						<a class="notif-page-item {% if not n.read %}unread{% endif %}" href="{{ n.doc_href }}">
+							<span class="notif-page-dot"></span>
+							<span class="notif-page-main">
+								<span class="notif-page-subject">{{ n.subject }}</span>
+								<span class="notif-page-meta">{{ n.when }}{% if n.document_type %} · {{ n.document_type }}{% endif %}</span>
+							</span>
+						</a>
+						{% endfor %}
+					</div>
+					{% else %}
+					<div class="empty-state">
+						<h3>No notifications yet</h3>
+						<p>Notifications about demo requests, sessions and follow-ups will appear here.</p>
+					</div>
+					{% endif %}
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+{% endblock %}

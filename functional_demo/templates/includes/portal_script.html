@@ -329,7 +329,10 @@
 				+ "<span>Notifications</span>"
 				+ (unread ? '<button type="button" class="portal-notif-markall" id="portal-notif-markall">Mark all read</button>' : "")
 				+ "</div>"
-				+ (rows || '<div class="portal-notif-empty">No notifications yet.</div>');
+				+ '<div class="portal-notif-list">'
+				+ (rows || '<div class="portal-notif-empty">No notifications yet.</div>')
+				+ "</div>"
+				+ '<a class="portal-notif-viewall" href="/notifications">View More</a>';
 		}
 		/* ---- popup notifications ----
 		   The bell polls the Notification Log; when a notification the user has
