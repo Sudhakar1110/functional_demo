@@ -767,6 +767,127 @@
 		document.head.appendChild(apple);
 	})();
 
+	/* ---- sidebar quick search (Ctrl/Cmd+K) ----
+	   The search box sits at the top of the sidebar (before Home). Typing
+	   filters the menu in place, a section header is hidden when none of its
+	   items match, and a collapsed group auto-opens when one of its children
+	   matches. Ctrl/Cmd+K focuses the box from anywhere on the page. */
+	(function () {
+		function initSidebarSearch() {
+			var input = document.getElementById("sidebar-search-input");
+			if (!input) return;
+			var menu = input.closest ? input.closest(".sidebar-menu") : null;
+			if (!menu) return;
+
+			function txt(el) {
+				return (el.textContent || "").toLowerCase().replace(/\s+/g, " ").trim();
+			}
+			function hit(el, q) { return !q || txt(el).indexOf(q) !== -1; }
+
+			function reset() {
+				var all = menu.querySelectorAll(".sidebar-item, .sidebar-group, .sidebar-header");
+				for (var i = 0; i < all.length; i++) all[i].style.display = "";
+				var opened = menu.querySelectorAll(".sidebar-group.filter-open");
+				for (var j = 0; j < opened.length; j++) opened[j].classList.remove("open", "filter-open");
+			}
+
+			function apply() {
+				var q = input.value.toLowerCase().trim();
+				if (!q) { reset(); return; }
+
+				var children = menu.children;
+				for (var i = 0; i < children.length; i++) {
+					var child = children[i];
+					if (child.classList.contains("sidebar-search")) continue;
+					if (child.classList.contains("sidebar-header")) {
+						child.style.display = "none"; /* re-shown below when an item matches */
+						continue;
+					}
+					if (child.classList.contains("sidebar-group")) {
+						var labelEl = child.querySelector(".sidebar-group-label");
+						var groupMatch = hit(labelEl || child, q);
+						var kids = child.querySelectorAll(".sidebar-child");
+						var anyKid = false;
+						for (var k = 0; k < kids.length; k++) {
+							var km = hit(kids[k], q);
+							kids[k].style.display = km || groupMatch ? "" : "none";
+							if (km) anyKid = true;
+						}
+						var visible = groupMatch || anyKid;
+						child.style.display = visible ? "" : "none";
+						if (visible && anyKid && !groupMatch) {
+							child.classList.add("open", "filter-open");
+						}
+						continue;
+					}
+					if (child.classList.contains("sidebar-item")) {
+						child.style.display = hit(child, q) ? "" : "none";
+					}
+				}
+
+				/* a section header is visible only when an item below it is */
+				var header = null, hasVisible = false;
+				for (var m = 0; m < children.length; m++) {
+					var node = children[m];
+					if (node.classList.contains("sidebar-search")) continue;
+					if (node.classList.contains("sidebar-header")) {
+						if (header) header.style.display = hasVisible ? "" : "none";
+						header = node;
+						hasVisible = false;
+					} else if (node.style.display !== "none") {
+						hasVisible = true;
+					}
+				}
+				if (header) header.style.display = hasVisible ? "" : "none";
+			}
+
+			input.addEventListener("input", apply);
+			input.addEventListener("keydown", function (e) {
+				if (e.key === "Escape") {
+					input.value = "";
+					apply();
+					input.blur();
+				} else if (e.key === "Enter") {
+					var q = input.value.toLowerCase().trim();
+					var links = menu.querySelectorAll("a.sidebar-item");
+					var firstAny = null, firstHit = null;
+					for (var i = 0; i < links.length; i++) {
+						var a = links[i];
+						if (a.style.display === "none") continue;
+						if (!firstAny) firstAny = a;
+						if (q && txt(a).indexOf(q) !== -1) { firstHit = a; break; }
+					}
+					var target = firstHit || firstAny;
+					if (target && target.getAttribute("href")) {
+						e.preventDefault();
+						window.location.href = target.getAttribute("href");
+					}
+				}
+			});
+
+			document.addEventListener("keydown", function (e) {
+				if ((e.ctrlKey || e.metaKey) && !e.altKey && (e.key === "k" || e.key === "K")) {
+					e.preventDefault();
+					/* on mobile open the off-canvas sidebar so the box is visible */
+					var sidebar = document.getElementById("portal-sidebar");
+					if (sidebar) {
+						sidebar.classList.add("open");
+						var ov = document.querySelector(".sidebar-overlay");
+						if (ov) ov.classList.add("show");
+					}
+					input.focus();
+					input.select();
+				}
+			});
+		}
+
+		if (document.readyState === "loading") {
+			document.addEventListener("DOMContentLoaded", initSidebarSearch);
+		} else {
+			initSidebarSearch();
+		}
+	})();
+
 	/* KPI card filtering: click a KPI card to filter the table below */
 	window.kpiFilter = function(status, el) {
 		document.querySelectorAll(".kpi-card").forEach(function(c) { c.classList.remove("active-kpi"); });

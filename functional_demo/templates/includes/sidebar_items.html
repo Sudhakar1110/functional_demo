@@ -1,3 +1,8 @@
+<div class="sidebar-search" id="sidebar-search">
+	<input type="text" id="sidebar-search-input" class="sidebar-search-input"
+		placeholder="Search…  (Ctrl K)" autocomplete="off" spellcheck="false"
+		aria-label="Search menu" />
+</div>
 {% for item in sidebar_items %}
 {% if item.header %}
 <div class="sidebar-header">{{ item.header }}</div>

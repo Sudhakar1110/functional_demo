@@ -245,6 +245,26 @@ body {
 .sidebar-menu::-webkit-scrollbar { width: 4px; }
 .sidebar-menu::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.18); border-radius: 99px; }
 
+.sidebar-search { padding: 2px 2px 12px; }
+.sidebar-search-input {
+	width: 100%;
+	box-sizing: border-box;
+	padding: 9px 12px;
+	border: 1px solid rgba(255, 255, 255, 0.18);
+	border-radius: 8px;
+	background: rgba(255, 255, 255, 0.08);
+	color: #fff;
+	font-size: 13px;
+	outline: none;
+	transition: border-color 0.16s ease, background 0.16s ease, box-shadow 0.16s ease;
+}
+.sidebar-search-input::placeholder { color: rgba(255, 255, 255, 0.5); }
+.sidebar-search-input:focus {
+	border-color: rgba(20, 241, 177, 0.7);
+	background: rgba(255, 255, 255, 0.12);
+	box-shadow: 0 0 0 3px rgba(20, 241, 177, 0.15);
+}
+
 .sidebar-header {
 	padding: 14px 12px 6px;
 	margin-top: 6px;
