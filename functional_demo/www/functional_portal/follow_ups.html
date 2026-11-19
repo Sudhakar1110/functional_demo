@@ -65,12 +65,12 @@
 						</div>
 						{% if fu.discussion_notes %}
 						<div style="margin-top: 12px; padding-top: 10px; border-top: 1px solid #EEF0F4;">
-							<div class="d-label" style="margin-bottom: 6px;">Daily Updates ({{ fu.discussion_notes|length }})</div>
-							<div style="max-height: 200px; overflow-y: auto;">
+							<div class="d-label" style="margin-bottom: 8px; font-size: 12px; color: #374151;">Daily Updates ({{ fu.discussion_notes|length }})</div>
+							<div style="max-height: 220px; overflow-y: auto; background: #FAFAFA; border: 1px solid #E5E7EB; border-radius: 8px; padding: 10px 12px;">
 								{% for dn in fu.discussion_notes %}
-								<div style="padding: 6px 0; border-bottom: 1px dashed #E5E7EB; font-size: 12px;">
-									<div style="color: #6B7280;">{{ dn.note_date_display }}{% if dn.note_by %} · {{ dn.note_by }}{% endif %}</div>
-									<div class="wrap" style="color: #05133C; margin-top: 2px;">{{ dn.note }}</div>
+								<div style="padding: 8px 0; {% if not loop.last %}border-bottom: 1px solid #E5E7EB;{% endif %} font-size: 12px;">
+									<div style="color: #6B7280; font-size: 11px; margin-bottom: 3px;">{{ dn.note_date_display }}{% if dn.note_by %} · {{ dn.note_by }}{% endif %}</div>
+									<div class="wrap" style="color: #05133C; line-height: 1.5;">{{ dn.note }}</div>
 								</div>
 								{% endfor %}
 							</div>

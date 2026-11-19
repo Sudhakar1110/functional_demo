@@ -71,21 +71,6 @@ def get_context(context):
 			frappe.utils.format_date(fu.get("follow_up_date"), "medium")
 			if fu.get("follow_up_date") else "-"
 		)
-		# fetch daily discussion notes
-		notes = frappe.get_all(
-			"Follow Up Note",
-			filters={"parent": fu["name"], "parenttype": "Demo Follow Up"},
-			fields=["note_date", "note_by", "note"],
-			order_by="note_date desc",
-			limit_page_length=50,
-		) or []
-		for n in notes:
-			n["note_date_display"] = (
-				frappe.utils.format_datetime(n.get("note_date"), "dd MMM yyyy, hh:mm a")
-				if n.get("note_date")
-				else "-"
-			)
-		fu["discussion_notes"] = notes
 	# Demo Follow Up has no company field - resolve it from the linked
 	# Demo Request in one batch so each card can show the company name.
 	request_names = [fu.get("demo_request") for fu in follow_ups if fu.get("demo_request")]

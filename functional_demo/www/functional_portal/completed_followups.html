@@ -79,19 +79,6 @@
 							<div class="detail-item"><div class="d-label">Assigned To</div><div class="d-value">{{ fu.assigned_display }}</div></div>
 							<div class="detail-item"><div class="d-label">Sales Person</div><div class="d-value">{{ fu.sales_person_display }}</div></div>
 						</div>
-						{% if fu.discussion_notes %}
-						<div style="margin-top: 12px; padding-top: 10px; border-top: 1px solid #EEF0F4;">
-							<div class="d-label" style="margin-bottom: 8px; font-size: 12px; color: #374151;">Daily Updates ({{ fu.discussion_notes|length }})</div>
-							<div style="max-height: 220px; overflow-y: auto; background: #FAFAFA; border: 1px solid #E5E7EB; border-radius: 8px; padding: 10px 12px;">
-								{% for dn in fu.discussion_notes %}
-								<div style="padding: 8px 0; {% if not loop.last %}border-bottom: 1px solid #E5E7EB;{% endif %} font-size: 12px;">
-									<div style="color: #6B7280; font-size: 11px; margin-bottom: 3px;">{{ dn.note_date_display }}{% if dn.note_by %} · {{ dn.note_by }}{% endif %}</div>
-									<div class="wrap" style="color: #05133C; line-height: 1.5;">{{ dn.note }}</div>
-								</div>
-								{% endfor %}
-							</div>
-						</div>
-						{% endif %}
 						<div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px;">
 							{% if fu.demo_request %}
 							<a class="btn-portal secondary sm" href="/sales_portal/demo_request?name={{ fu.demo_request }}">Request</a>
